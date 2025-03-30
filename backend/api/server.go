@@ -18,7 +18,7 @@ type ServerConfig struct {
 
 func DefaultServerConfig() ServerConfig {
 	return ServerConfig{
-		Host:         "localhost",
+		Host:         "127.0.0.1",
 		Port:         "7001",
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -40,17 +40,24 @@ func createServer(config ServerConfig) (*http.Server, error) {
 	return server, nil
 }
 
-func StartServer(config ServerConfig) {
-	log.Api.Info().Msg("Starting server...")
+func StartServer(config ServerConfig) (*http.Server, chan struct{}, error) {
 	server, err := createServer(config)
 
 	if err != nil {
-		log.Api.Error().Msg("Error creating server: " + err.Error())
-		return
+		log.Api.Error().Err(err).Msg("Error creating API server")
+		return nil, nil, err
 	}
 
-	log.Api.Info().Msgf("Server listening on %s", server.Addr)
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Api.Error().Msgf("Server error: %v", err)
-	}
+	// Create a done channel to signal when server is shut down
+	done := make(chan struct{})
+
+	// Start server in a goroutine
+	go func() {
+		log.Api.Info().Msgf("API server listening on %s", server.Addr)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Api.Error().Err(err).Msgf("Error starting API server: %v", err)
+		}
+	}()
+
+	return server, done, nil
 }
