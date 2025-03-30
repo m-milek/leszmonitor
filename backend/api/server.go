@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/log"
 	"net"
 	"net/http"
@@ -27,9 +28,12 @@ func DefaultServerConfig() ServerConfig {
 func createServer(config ServerConfig) (*http.Server, error) {
 	router := http.NewServeMux()
 	SetupRouter(router)
+
+	handler := middleware.Logger(router)
+
 	server := &http.Server{
 		Addr:         net.JoinHostPort(config.Host, config.Port),
-		Handler:      router,
+		Handler:      handler,
 		ReadTimeout:  config.ReadTimeout,
 		WriteTimeout: config.WriteTimeout,
 	}
