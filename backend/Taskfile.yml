@@ -21,7 +21,10 @@ tasks:
       - '{{.BIN_DIR}}/{{.APP_NAME}}'
 
   run:
-    - "{{.BIN_DIR}}/{{.APP_NAME}}"
+    deps: [build]
+    alias: r
+    cmds:
+      - "{{.BIN_DIR}}/{{.APP_NAME}}"
 
   air:
     desc: Run the backend with air
