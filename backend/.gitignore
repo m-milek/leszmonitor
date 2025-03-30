@@ -29,3 +29,4 @@ leszmonitor
 .task
 bin
 tmp
+.env*
