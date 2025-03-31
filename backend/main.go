@@ -3,46 +3,62 @@ package main
 import (
 	"context"
 	"github.com/m-milek/leszmonitor/api"
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logs"
+	"github.com/m-milek/leszmonitor/uptime"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	var wg sync.WaitGroup
+
 	var serverConfig = api.DefaultServerConfig()
 
 	// Start the server
-	log.Main.Info().Msg("Starting API server...")
+	logger.Main.Info().Msg("Starting API server...")
 	server, done, err := api.StartServer(serverConfig)
 	if err != nil {
-		log.Main.Error().Err(err).Msg("Failed to start API server")
+		logger.Main.Error().Err(err).Msg("Failed to start API server")
 		os.Exit(1)
+	}
+	logger.Main.Info().Msg("API server started successfully")
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		uptime.StartUptimeWorker(ctx)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		logs.StartLogWorker(ctx)
+	}()
+
+	<-ctx.Done()
+	logger.Main.Info().Msg("Shutdown signal received")
+
+	// Create a timeout context for graceful shutdown
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	// Shutdown API server
+	logger.Main.Info().Msg("Shutting down API server...")
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Main.Error().Err(err).Msg("API server shutdown error")
 	} else {
-		log.Main.Info().Msg("API server started successfully")
+		logger.Main.Info().Msg("API server stopped gracefully")
 	}
-
-	// Create a channel to listen for interrupt signals
-	signalCh := make(chan os.Signal, 1)
-	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
-
-	// Wait for interrupt signal
-	<-signalCh
-	log.Main.Info().Msg("Shutdown signal received")
-
-	// Create a timeout context for shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Attempt graceful shutdown
-	log.Main.Info().Msg("Shutting down API server...")
-	if err := server.Shutdown(ctx); err != nil {
-		log.Main.Error().Err(err).Msg("API server shutdown error")
-		os.Exit(1)
-	}
-
-	// Signal that we're done
 	close(done)
-	log.Main.Info().Msg("API server stopped gracefully")
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+	logger.Main.Info().Msg("All processes terminated successfully")
 }

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/logger"
 	"net/http"
 	"time"
 )
@@ -19,7 +19,7 @@ func Logger(next http.Handler) http.Handler {
 		next.ServeHTTP(rw, r)
 
 		duration := time.Since(start).Truncate(1 * time.Microsecond)
-		log.Api.Trace().
+		logger.Api.Trace().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
 			Str("remote_addr", r.RemoteAddr).
