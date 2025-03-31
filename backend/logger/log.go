@@ -9,7 +9,7 @@
 //	log.Main.Info().Msg("Application started")
 //	log.Api.Error().Err(err).Msg("Failed to process request")
 //	log.Uptime.Debug().Int("status", status).Msg("Health check completed")
-package log
+package logger
 
 import (
 	"fmt"
