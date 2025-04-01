@@ -13,7 +13,7 @@ tasks:
     cmds:
       - echo "Building {{.APP_NAME}}..."
       - mkdir -p {{.BACKEND_BIN_DIR}}
-      - cd src && go build -o "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}" main.go
+      - cd src && go build -v -o "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}" main.go
       - echo "Build complete. Binary at {{.BACKEND_BIN_DIR}}/{{.APP_NAME}}."
     sources:
       - '**/*.go'
@@ -39,4 +39,14 @@ tasks:
     cmds:
       - rm -r {{.BACKEND_BIN_DIR}}/{{.APP_NAME}} || true
     sources:
+      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
+
+  backend:test:
+    desc: Run the backend tests
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - go test -v ./...
+    sources:
+      - '**/*.go'
+    generates:
       - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
