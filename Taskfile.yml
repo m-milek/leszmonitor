@@ -43,7 +43,7 @@ tasks:
 
   backend:test:
     desc: Run the backend tests
-    dir: '{{.BACKEND_DIR}}'
+    dir: '{{.BACKEND_SRC_DIR}}'
     cmds:
       - go test -v .
     sources:
