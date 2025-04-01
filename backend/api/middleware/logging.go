@@ -12,9 +12,6 @@ func Logger(next http.Handler) http.Handler {
 
 		rw := newResponseWriter(w)
 
-		// Log the request details
-		// log.Api.Trace().Str("method", r.Method).Str("path", r.URL.Path).Msg("Request received")
-
 		// Call the next handler in the chain
 		next.ServeHTTP(rw, r)
 
@@ -25,7 +22,7 @@ func Logger(next http.Handler) http.Handler {
 			Str("remote_addr", r.RemoteAddr).
 			Int("status_code", rw.statusCode).
 			Dur("duration", duration).
-			Msg("Request completed")
+			Msg("")
 	})
 }
 
