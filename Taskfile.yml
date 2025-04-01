@@ -3,17 +3,17 @@ version: '3'
 vars:
   APP_NAME: 'leszmonitor'
   BACKEND_DIR: '{{.TASKFILE_DIR}}/backend'
+  BACKEND_SRC_DIR: '{{.BACKEND_DIR}}/src'
   BACKEND_BIN_DIR: '{{.TASKFILE_DIR}}/backend/bin'
 
 tasks:
   backend:build:
     desc: Build the backend binary
     dir: '{{.BACKEND_DIR}}'
-    alias: b
     cmds:
       - echo "Building {{.APP_NAME}}..."
       - mkdir -p {{.BACKEND_BIN_DIR}}
-      - go build -o "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}" main.go
+      - cd src && go build -o "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}" main.go
       - echo "Build complete. Binary at {{.BACKEND_BIN_DIR}}/{{.APP_NAME}}."
     sources:
       - '**/*.go'
@@ -24,13 +24,19 @@ tasks:
     desc: Run the backend binary
     deps: [backend:build]
     dir: '{{.BACKEND_DIR}}'
-    alias: r
     cmds:
       - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
 
   backend:dev:
     desc: Run the backend dev server with air
     dir: '{{.BACKEND_DIR}}'
-    alias: d
     cmds:
       - air
+
+  backend:clean:
+    desc: Clean the backend build artifacts
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - rm -r {{.BACKEND_BIN_DIR}}/{{.APP_NAME}} || true
+    sources:
+      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
