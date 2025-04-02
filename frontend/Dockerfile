@@ -14,6 +14,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Ensure public directory exists in builder
+RUN mkdir -p ./public
+
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm install --no-audit --no-fund
@@ -31,7 +34,7 @@ ENV HOSTNAME 0.0.0.0
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \
-  adduser --system --uid 1001 nextjs
+ adduser --system --uid 1001 nextjs
 
 # Copy only necessary files
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -39,7 +42,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Handle public directory properly
 RUN mkdir -p ./public
-COPY --from=builder --chown=nextjs:nodejs /app/public/. ./public/ || true
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Set the correct permissions
 USER nextjs
