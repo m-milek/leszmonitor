@@ -1,4 +1,4 @@
-name: Build & Push Docker Images
+name: Build Docker images
 
 on:
   push:
@@ -16,6 +16,6 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      - name: Build NLP image
+      - name: Build the backend image
         run: |
           docker build -t leszmonitor/backend .
