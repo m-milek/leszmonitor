@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  docker_nlp:
+  docker_backend:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -16,6 +16,22 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Build the backend image
         run: |
           docker build -t leszmonitor/backend .
+
+  docker_frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Build the frontend image
+        run: |
+          docker build -t leszmonitor/frontend .
