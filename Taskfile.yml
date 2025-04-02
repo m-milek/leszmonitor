@@ -5,6 +5,7 @@ vars:
   BACKEND_DIR: '{{.TASKFILE_DIR}}/backend'
   BACKEND_SRC_DIR: '{{.BACKEND_DIR}}/src'
   BACKEND_BIN_DIR: '{{.TASKFILE_DIR}}/backend/bin'
+  FRONTEND_DIR: '{{.TASKFILE_DIR}}/frontend'
 
 tasks:
   backend:build:
@@ -50,3 +51,112 @@ tasks:
       - '**/*.go'
     generates:
       - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
+
+  frontend:install:
+    desc: Install frontend dependencies
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - npm ci
+    sources:
+      - 'package.json'
+      - 'package-lock.json'
+    generates:
+      - 'node_modules/**/*'
+
+  frontend:dev:
+    desc: Run the frontend development server
+    dir: '{{.FRONTEND_DIR}}'
+    deps: [frontend:install]
+    cmds:
+      - npm run dev
+    sources:
+      - 'app/**/*'
+      - 'public/**/*'
+      - 'next.config.ts'
+
+  frontend:build:
+    desc: Build the frontend for production
+    dir: '{{.FRONTEND_DIR}}'
+    deps: [frontend:install]
+    cmds:
+      - npm run build
+    sources:
+      - 'app/**/*'
+      - 'public/**/*'
+      - 'next.config.ts'
+      - 'package.json'
+    generates:
+      - '.next/**/*'
+
+  frontend:start:
+    desc: Start the frontend production server
+    dir: '{{.FRONTEND_DIR}}'
+    deps: [frontend:build]
+    cmds:
+      - npm run start
+
+  frontend:lint:
+    desc: Lint the frontend code
+    dir: '{{.FRONTEND_DIR}}'
+    deps: [frontend:install]
+    cmds:
+      - npm run lint
+    sources:
+      - 'app/**/*.{js,ts,jsx,tsx}'
+      - '.eslintrc.json'
+
+  frontend:clean:
+    desc: Clean frontend build artifacts
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - rm -rf .next || true
+      - rm -rf node_modules/.cache || true
+
+  frontend:docker:build:
+    desc: Build the frontend Docker image
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - docker build -t {{.APP_NAME}}-frontend:latest .
+    sources:
+      - 'app/**/*'
+      - 'public/**/*'
+      - 'Dockerfile'
+      - 'next.config.ts'
+      - 'package.json'
+
+  frontend:docker:run:
+    desc: Run the frontend Docker container
+    deps: [frontend:docker:build]
+    cmds:
+      - docker run -p 3000:3000 --name {{.APP_NAME}}-frontend {{.APP_NAME}}-frontend:latest
+
+  frontend:docker:stop:
+    desc: Stop the frontend Docker container
+    cmds:
+      - docker stop {{.APP_NAME}}-frontend || true
+      - docker rm {{.APP_NAME}}-frontend || true
+
+  # Combined tasks
+  dev:
+    desc: Run both frontend and backend in development mode
+    cmds:
+      - task: backend:dev
+      - task: frontend:dev
+
+  build:
+    desc: Build both frontend and backend
+    cmds:
+      - task: backend:build
+      - task: frontend:build
+
+  docker:build:
+    desc: Build Docker images for frontend and backend
+    cmds:
+      - task: frontend:docker:build
+      # Add backend docker build when available
+
+  clean:
+    desc: Clean all build artifacts
+    cmds:
+      - task: frontend:clean
+      - task: backend:clean
