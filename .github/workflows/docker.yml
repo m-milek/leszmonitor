@@ -1,0 +1,21 @@
+name: Build & Push Docker Images
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  docker_nlp:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Build NLP image
+        run: |
+          docker build -t leszmonitor/backend .
