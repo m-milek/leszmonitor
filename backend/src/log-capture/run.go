@@ -1,4 +1,4 @@
-package logs
+package log_capture
 
 import (
 	"context"
@@ -17,7 +17,7 @@ func StartLogWorker(ctx context.Context) {
 			logger.Logs.Info().Msg("Log worker shutting down...")
 			return
 		case <-ticker.C:
-			logger.Logs.Trace().Msg("Log worker is running...")
+			logger.Logs.Trace().Msg("Worker LogCapture - running")
 		}
 	}
 }

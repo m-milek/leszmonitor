@@ -4,13 +4,14 @@ vars:
   APP_NAME: 'leszmonitor'
   BACKEND_DIR: '{{.TASKFILE_DIR}}/backend'
   BACKEND_SRC_DIR: '{{.BACKEND_DIR}}/src'
-  BACKEND_BIN_DIR: '{{.TASKFILE_DIR}}/backend/bin'
+  BACKEND_BIN_DIR: '{{.BACKEND_DIR}}/bin'
   FRONTEND_DIR: '{{.TASKFILE_DIR}}/frontend'
 
 env:
   "LOG_LEVEL": 'TRACE'
   "ENV": 'DEV'
   "API_PORT": '7001'
+  "LOG_FILE_PATH": '{{.BACKEND_DIR}}/logs/{{.APP_NAME}}.log'
 
 tasks:
   backend:build:
@@ -174,3 +175,11 @@ tasks:
     cmds:
       - task: frontend:clean
       - task: backend:clean
+
+  logs:clean:
+    desc: Remove logs
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - rm ${LOG_FILE_PATH} || true
+    sources:
+      - 'logs/*'
