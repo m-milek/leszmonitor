@@ -27,7 +27,6 @@ type LogDestination int
 
 const (
 	Stdout LogDestination = iota
-	File
 	Both
 )
 
@@ -46,13 +45,10 @@ var (
 		Destination: Stdout,
 	}
 
-	// The shared writer for all loggers
-	logWriter io.Writer = os.Stdout
-
 	// Mutex for thread-safe operations
 	mu sync.Mutex
 
-	tmpLogger = getTemporaryLogger()
+	tmpLogger = GetTemporaryLogger()
 
 	Main   zerolog.Logger
 	Api    zerolog.Logger
@@ -60,91 +56,104 @@ var (
 	Uptime zerolog.Logger
 )
 
-// setupLoggers configures all loggers with the given writer
-func setupLoggers(writer io.Writer) {
-	Main = createLogger("main", writer)
-	Api = createLogger("http", writer)
-	Logs = createLogger("logs", writer)
-	Uptime = createLogger("uptm", writer)
+func formatLogLevel(i interface{}) string {
+	level := strings.ToUpper(fmt.Sprintf("%s", i))
+
+	if i == nil {
+		level = "LOG"
+	}
+
+	// Define color codes
+	var colorCode string
+	switch level {
+	case "TRACE":
+		colorCode = "\033[90m" // bright black/gray
+	case "DEBUG":
+		colorCode = "\033[36m" // cyan
+	case "INFO":
+		colorCode = "\033[32m" // green
+	case "WARN":
+		colorCode = "\033[33m" // yellow
+	case "ERROR":
+		colorCode = "\033[31m" // red
+	case "FATAL":
+		colorCode = "\033[35m" // magenta
+	case "PANIC":
+		colorCode = "\033[41;37m" // white on red
+	default:
+		colorCode = "\033[0m" // default
+	}
+
+	boldCode := "\033[1m"
+	resetCode := "\033[0m"
+
+	return fmt.Sprintf("%s%s%-5s%s",
+		boldCode,
+		colorCode,
+		level,
+		resetCode)
 }
 
-func getTemporaryLogger() zerolog.Logger {
+func GetTemporaryLogger() zerolog.Logger {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
-	output.FormatLevel = func(i interface{}) string {
-		level := strings.ToUpper(fmt.Sprintf("%s", i))
-		if i == nil {
-			level = "LOG"
-		}
-		return fmt.Sprintf("[%s] %-5s", "init", level)
+	output.FormatTimestamp = func(i interface{}) string {
+		timestamp := fmt.Sprintf("%s", i)
+		return fmt.Sprintf("%s [%s]", timestamp, "init")
 	}
+	output.FormatLevel = formatLogLevel
+
 	return zerolog.New(output).With().Timestamp().Logger()
 }
 
-// createLogger creates a new zerolog logger with the given component name
-func createLogger(component string, writer io.Writer) zerolog.Logger {
-	output := zerolog.ConsoleWriter{Out: writer, TimeFormat: time.RFC3339}
+// createComponentLogger creates a logger with the specified component name
+func createComponentLogger(component string, consoleWriter *zerolog.ConsoleWriter, fileWriter io.Writer) zerolog.Logger {
+	// Create a nop logger as a base
+	logger := zerolog.Nop()
 
-	output.FormatLevel = func(i interface{}) string {
-		level := strings.ToUpper(fmt.Sprintf("%s", i))
-
-		if i == nil {
-			level = "LOG"
+	// If we have a console writer, set up console logging
+	if consoleWriter != nil {
+		consoleCopy := *consoleWriter
+		consoleCopy.FormatTimestamp = func(i interface{}) string {
+			timestamp := fmt.Sprintf("%s", i)
+			return fmt.Sprintf("%s [%s]", timestamp, component)
 		}
-
-		if output.NoColor {
-			return fmt.Sprintf("[%s] %-5s", component, level)
-		}
-
-		// Define color codes
-		var colorCode string
-		switch level {
-		case "TRACE":
-			colorCode = "\033[90m" // bright black/gray
-		case "DEBUG":
-			colorCode = "\033[36m" // cyan
-		case "INFO":
-			colorCode = "\033[32m" // green
-		case "WARN":
-			colorCode = "\033[33m" // yellow
-		case "ERROR":
-			colorCode = "\033[31m" // red
-		case "FATAL":
-			colorCode = "\033[35m" // magenta
-		case "PANIC":
-			colorCode = "\033[41;37m" // white on red
-		default:
-			colorCode = "\033[0m" // default
-		}
-
-		boldCode := "\033[1m"
-		resetCode := "\033[0m"
-
-		return fmt.Sprintf("[%s] %s%s%-5s%s",
-			component,
-			boldCode,
-			colorCode,
-			level,
-			resetCode)
+		logger = zerolog.New(consoleCopy).Level(defaultConfig.Level).With().Timestamp().Logger()
 	}
 
-	return zerolog.New(output).
-		Level(defaultConfig.Level).
-		With().
-		Timestamp().
-		Logger()
+	// If we have a file writer, set up file logging with a hook
+	if fileWriter != nil {
+		// Create a direct file logger
+		fileLogger := zerolog.New(fileWriter).Level(defaultConfig.Level).With().
+			Timestamp().
+			Str("component", component).
+			Logger()
+
+		// Add a hook to the main logger to also log to the file
+		logger = logger.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
+			if level >= defaultConfig.Level {
+				// Create a new event with the same level
+				fileEvent := fileLogger.WithLevel(level)
+
+				// Log the message to the file
+				fileEvent.Msg(message)
+			}
+		}))
+	}
+
+	// If no writers were provided, default to stdout
+	if consoleWriter == nil && fileWriter == nil {
+		logger = zerolog.New(os.Stdout).Level(defaultConfig.Level).With().Timestamp().Logger()
+	}
+
+	return logger
 }
 
-// threadSafeWriter provides synchronized access to the underlying writer
-type threadSafeWriter struct {
-	mu     sync.Mutex
-	writer io.Writer
-}
-
-// Write implements io.Writer with thread safety
-func (t *threadSafeWriter) Write(p []byte) (n int, err error) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.writer.Write(p)
+// setupLoggers initializes all component loggers
+func setupLoggers(consoleWriter *zerolog.ConsoleWriter, fileWriter io.Writer) {
+	Main = createComponentLogger("main", consoleWriter, fileWriter)
+	Api = createComponentLogger("http", consoleWriter, fileWriter)
+	Logs = createComponentLogger("logc", consoleWriter, fileWriter)
+	Uptime = createComponentLogger("uptm", consoleWriter, fileWriter)
 }
 
 // InitLogging sets up logging with the given configuration
@@ -155,50 +164,42 @@ func InitLogging(cfg Config) error {
 	// Update the configuration
 	defaultConfig = cfg
 
-	// If no file path is specified, just use stdout
-	if cfg.FilePath == "" {
-		tmpLogger.Warn().Msg("No log file path specified, using stdout only")
-		logWriter = os.Stdout
-		setupLoggers(logWriter)
-		return nil
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	consoleWriter.FormatLevel = formatLogLevel
+	// The FormatTimestamp will be overridden for each component logger
+
+	if cfg.FilePath == "" && cfg.Destination != Stdout {
+		tmpLogger.Fatal().Msg("No log file path specified, defaulting to stdout")
+		cfg.Destination = Stdout
 	}
 
-	// Ensure the directory exists
-	dir := filepath.Dir(cfg.FilePath)
-	if dir != "." {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			tmpLogger.Error().Msg("Failed to create log directory")
-			return err
+	var fileWriter io.Writer
+	if cfg.Destination != Stdout {
+		// Ensure the directory exists
+		dir := filepath.Dir(cfg.FilePath)
+		if dir != "." {
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				tmpLogger.Error().Msg("Failed to create log directory")
+				return err
+			}
 		}
-	}
 
-	// Create the appropriate writer
-	var writer io.Writer
-
-	if cfg.Destination == Stdout {
-		writer = os.Stdout
-		tmpLogger.Debug().Msg("Logging to stdout only")
-	} else {
 		file, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			tmpLogger.Error().Msg("Failed to open log file")
 			return err
 		}
-
-		if cfg.Destination == Both {
-			writer = io.MultiWriter(file, os.Stdout)
-			tmpLogger.Debug().Msg("Logging to both stdout and file")
-		} else if cfg.Destination == File {
-			writer = file
-			tmpLogger.Debug().Msg("Logging to file only")
-		}
+		fileWriter = file
 	}
 
-	// Wrap with thread-safe writer
-	logWriter = &threadSafeWriter{writer: writer}
-
-	// Set up the loggers with the new writer
-	setupLoggers(logWriter)
+	switch cfg.Destination {
+	case Stdout:
+		tmpLogger.Debug().Msg("Logging to stdout only")
+		setupLoggers(&consoleWriter, nil)
+	case Both:
+		tmpLogger.Debug().Msg("Logging to both stdout and file")
+		setupLoggers(&consoleWriter, fileWriter)
+	}
 
 	return nil
 }
@@ -223,10 +224,27 @@ func GetLoggerConfig() Config {
 		tmpLogger.Warn().Msg("Invalid log level, defaulting to 'INFO'")
 	}
 
-	// Check if the environment variable is set
+	envFilePath := os.Getenv(env.LOG_FILE_PATH)
+	var filePath string
+
+	if envFilePath != "" {
+		filePath = envFilePath
+	} else {
+		filePath = defaultConfig.FilePath
+	}
+
+	currentEnv := os.Getenv(string(env.ENV))
+	var destination LogDestination
+
+	if currentEnv == "DEV" {
+		destination = Stdout
+	} else {
+		destination = Both
+	}
 
 	return Config{
-		Level:    logLevel,
-		FilePath: defaultConfig.FilePath,
+		Level:       logLevel,
+		FilePath:    filePath,
+		Destination: destination,
 	}
 }

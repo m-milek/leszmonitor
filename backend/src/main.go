@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"github.com/m-milek/leszmonitor/api"
+	"github.com/m-milek/leszmonitor/env"
+	"github.com/m-milek/leszmonitor/log-capture"
 	"github.com/m-milek/leszmonitor/logger"
-	"github.com/m-milek/leszmonitor/logs"
 	"github.com/m-milek/leszmonitor/uptime"
 	"os"
 	"os/signal"
@@ -23,22 +24,27 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		logs.StartLogWorker(ctx)
+		log_capture.StartLogWorker(ctx)
 	}()
 }
-
-var LogFilePath = "./logs/leszmonitor.log"
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	var wg sync.WaitGroup
+	initLogger := logger.GetTemporaryLogger()
+
+	err := env.Validate()
+	if err != nil {
+		initLogger.Fatal().Err(err).Msg("Environment variable validation failed")
+	}
+	initLogger.Info().Msg("Environment variable validation passed")
 
 	// Initialize logger
 	var logConfig = logger.GetLoggerConfig()
 
-	err := logger.InitLogging(logConfig)
+	err = logger.InitLogging(logConfig)
 	if err != nil {
 		logger.Main.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
