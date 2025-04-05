@@ -33,13 +33,12 @@ func main() {
 	defer cancel()
 
 	var wg sync.WaitGroup
-	initLogger := logger.GetTemporaryLogger()
 
 	err := env.Validate()
 	if err != nil {
-		initLogger.Fatal().Err(err).Msg("Environment variable validation failed")
+		logger.Init.Fatal().Err(err).Msg("Environment variable validation failed")
 	}
-	initLogger.Info().Msg("Environment variable validation passed")
+	logger.Init.Info().Msg("Environment variable validation passed")
 
 	// Initialize logger
 	var logConfig = logger.GetLoggerConfig()
