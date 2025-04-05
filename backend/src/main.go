@@ -13,11 +13,36 @@ import (
 	"time"
 )
 
+func runComponents(ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		uptime.StartUptimeWorker(ctx)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		logs.StartLogWorker(ctx)
+	}()
+}
+
+var LogFilePath = "./logs/leszmonitor.log"
+
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	var wg sync.WaitGroup
+
+	// Initialize logger
+	var logConfig = logger.GetLoggerConfig()
+
+	err := logger.InitLogging(logConfig)
+	if err != nil {
+		logger.Main.Fatal().Err(err).Msg("Failed to initialize logger")
+	}
+	logger.Main.Info().Msg("Logger initialized successfully")
 
 	var serverConfig = api.DefaultServerConfig()
 
@@ -30,17 +55,7 @@ func main() {
 	}
 	logger.Main.Info().Msg("API server started successfully")
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		uptime.StartUptimeWorker(ctx)
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		logs.StartLogWorker(ctx)
-	}()
+	runComponents(ctx, &wg)
 
 	<-ctx.Done()
 	logger.Main.Info().Msg("Shutdown signal received")
