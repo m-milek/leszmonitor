@@ -48,8 +48,7 @@ var (
 	// Mutex for thread-safe operations
 	mu sync.Mutex
 
-	tmpLogger = GetTemporaryLogger()
-
+	Init   = getTemporaryLogger()
 	Main   zerolog.Logger
 	Api    zerolog.Logger
 	Logs   zerolog.Logger
@@ -94,7 +93,7 @@ func formatLogLevel(i interface{}) string {
 		resetCode)
 }
 
-func GetTemporaryLogger() zerolog.Logger {
+func getTemporaryLogger() zerolog.Logger {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	output.FormatTimestamp = func(i interface{}) string {
 		timestamp := fmt.Sprintf("%s", i)
@@ -169,7 +168,7 @@ func InitLogging(cfg Config) error {
 	// The FormatTimestamp will be overridden for each component logger
 
 	if cfg.FilePath == "" && cfg.Destination != Stdout {
-		tmpLogger.Fatal().Msg("No log file path specified, defaulting to stdout")
+		Init.Fatal().Msg("No log file path specified, defaulting to stdout")
 		cfg.Destination = Stdout
 	}
 
@@ -179,14 +178,14 @@ func InitLogging(cfg Config) error {
 		dir := filepath.Dir(cfg.FilePath)
 		if dir != "." {
 			if err := os.MkdirAll(dir, 0755); err != nil {
-				tmpLogger.Error().Msg("Failed to create log directory")
+				Init.Error().Msg("Failed to create log directory")
 				return err
 			}
 		}
 
 		file, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			tmpLogger.Error().Msg("Failed to open log file")
+			Init.Error().Msg("Failed to open log file")
 			return err
 		}
 		fileWriter = file
@@ -194,10 +193,10 @@ func InitLogging(cfg Config) error {
 
 	switch cfg.Destination {
 	case Stdout:
-		tmpLogger.Debug().Msg("Logging to stdout only")
+		Init.Debug().Msg("Logging to stdout only")
 		setupLoggers(&consoleWriter, nil)
 	case Both:
-		tmpLogger.Debug().Msg("Logging to both stdout and file")
+		Init.Debug().Msg("Logging to both stdout and file")
 		setupLoggers(&consoleWriter, fileWriter)
 	}
 
@@ -221,7 +220,7 @@ func GetLoggerConfig() Config {
 		logLevel = zerolog.ErrorLevel
 	default:
 		logLevel = zerolog.InfoLevel
-		tmpLogger.Warn().Msg("Invalid log level, defaulting to 'INFO'")
+		Init.Warn().Msg("Invalid log level, defaulting to 'INFO'")
 	}
 
 	envFilePath := os.Getenv(env.LOG_FILE_PATH)
