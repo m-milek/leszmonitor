@@ -7,6 +7,11 @@ vars:
   BACKEND_BIN_DIR: '{{.TASKFILE_DIR}}/backend/bin'
   FRONTEND_DIR: '{{.TASKFILE_DIR}}/frontend'
 
+env:
+  "LOG_LEVEL": 'TRACE'
+  "ENV": 'DEV'
+  "API_PORT": '7001'
+
 tasks:
   backend:build:
     desc: Build the backend binary
@@ -30,9 +35,18 @@ tasks:
 
   backend:dev:
     desc: Run the backend dev server with air
-    dir: '{{.BACKEND_DIR}}'
+    dir: '{{.BACKEND_SRC_DIR}}'
     cmds:
       - air
+
+  backend:run-prod:
+    desc: Run the backend binary in production mode
+    deps: [backend:build]
+    dir: '{{.BACKEND_DIR}}'
+    env:
+      "ENV": 'PROD'
+    cmds:
+      - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
 
   backend:clean:
     desc: Clean the backend build artifacts
