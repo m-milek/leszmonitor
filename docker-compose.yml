@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "7001:7001"
+    volumes:
+      - ./backend/logs:/app/logs
+      - ./backend/src:/app/src:ro
+    environment:
+      - ENV=PROD
+      - API_PORT=7001
+      - LOG_LEVEL=TRACE
+      - LOG_FILE_PATH=/app/logs/backend.log
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:7001
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  backend-logs:
