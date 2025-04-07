@@ -188,6 +188,7 @@ func InitLogging(cfg Config) error {
 			Init.Error().Msg("Failed to open log file")
 			return err
 		}
+		Init.Debug().Msg("Logging to file: " + cfg.FilePath)
 		fileWriter = file
 	}
 
