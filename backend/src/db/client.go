@@ -28,7 +28,7 @@ var dbClient Client
 const timeoutDuration = 10 * time.Second
 
 func InitDbClient(baseCtx context.Context) error {
-	ctx, cancel := context.WithTimeout(baseCtx, 10*time.Second)
+	_, cancel := context.WithTimeout(baseCtx, 10*time.Second)
 	defer cancel()
 
 	uri := os.Getenv(env.MONGODB_URI)
@@ -38,17 +38,17 @@ func InitDbClient(baseCtx context.Context) error {
 		return err
 	}
 
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		logger.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
-	}
-	logger.Db.Info().Msg("MongoDB connection established")
-
 	dbClient = Client{
 		uri:     uri,
 		client:  client,
 		baseCtx: baseCtx,
 	}
+
+	_, err = Ping()
+	if err != nil {
+		logger.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
+	}
+	logger.Db.Info().Msg("MongoDB connection established.")
 
 	return nil
 }
@@ -87,7 +87,8 @@ func logDbOperation[T any](operationName string, result dbResult[T], err error) 
 		logger.Db.Error().Err(err).Msgf("DB operation %s failed", operationName)
 		return
 	}
-	logger.Db.Info().Msgf("DB operation %s took %v", operationName, result.Duration)
+	logger.Db.Debug().Dur("duration", result.Duration).Msgf("DB operation %s completed", operationName)
+	logger.Db.Trace().Any("result", result.Result).Msg("DB operation result")
 }
 
 func Ping() (int64, error) {
