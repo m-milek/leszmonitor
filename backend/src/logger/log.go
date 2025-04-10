@@ -53,6 +53,7 @@ var (
 	Api    zerolog.Logger
 	Logs   zerolog.Logger
 	Uptime zerolog.Logger
+	Db     zerolog.Logger
 )
 
 func formatLogLevel(i interface{}) string {
@@ -153,6 +154,7 @@ func setupLoggers(consoleWriter *zerolog.ConsoleWriter, fileWriter io.Writer) {
 	Api = createComponentLogger("http", consoleWriter, fileWriter)
 	Logs = createComponentLogger("logc", consoleWriter, fileWriter)
 	Uptime = createComponentLogger("uptm", consoleWriter, fileWriter)
+	Db = createComponentLogger("mgdb", consoleWriter, fileWriter)
 }
 
 // InitLogging sets up logging with the given configuration

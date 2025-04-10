@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/m-milek/leszmonitor/api"
+	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/log-capture"
 	"github.com/m-milek/leszmonitor/logger"
@@ -49,9 +50,13 @@ func main() {
 	}
 	logger.Main.Info().Msg("Logger initialized successfully")
 
-	var serverConfig = api.DefaultServerConfig()
+	err = db.InitDbClient(ctx)
+	if err != nil {
+		logger.Init.Fatal().Err(err).Msg("Failed to initialize MongoDB connection")
+	}
 
 	// Start the server
+	var serverConfig = api.DefaultServerConfig()
 	logger.Main.Info().Msg("Starting API server...")
 	server, done, err := api.StartServer(serverConfig)
 	if err != nil {
