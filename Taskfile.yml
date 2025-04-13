@@ -6,15 +6,17 @@ vars:
   BACKEND_SRC_DIR: '{{.BACKEND_DIR}}/src'
   BACKEND_BIN_DIR: '{{.BACKEND_DIR}}/bin'
   FRONTEND_DIR: '{{.TASKFILE_DIR}}/frontend'
+  DB_DIR: '{{.TASKFILE_DIR}}/mongodb'
 
 env:
-  "LOG_FILE_PATH": '{{.BACKEND_DIR}}/logs/{{.APP_NAME}}.log'
+  "LOG_FILE_PATH": '{{.BACKEND_DIR}}/.dev-logs/backend.log'
+  "LOG_LEVEL": 'TRACE'
 
 dotenv: ['./backend/.env', './frontend/.env']
 
 tasks:
   backend:build:
-    desc: Build the backend binary
+    desc: Build the back-end binary
     dir: '{{.BACKEND_DIR}}'
     cmds:
       - echo "Building {{.APP_NAME}}..."
@@ -27,29 +29,21 @@ tasks:
       - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
 
   backend:run:
-    desc: Run the backend binary
-    deps: [backend:build]
+    desc: Run the back-end binary
+    deps: [backend:build, db:run]
     dir: '{{.BACKEND_DIR}}'
     cmds:
       - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
 
   backend:dev:
-    desc: Run the backend dev server with air
+    desc: Run the back-end dev server with air for live reload
+    deps: [db:run]
     dir: '{{.BACKEND_SRC_DIR}}'
     cmds:
       - air
 
-  backend:run-prod:
-    desc: Run the backend binary in production mode
-    deps: [backend:build]
-    dir: '{{.BACKEND_DIR}}'
-    env:
-      "ENV": 'PROD'
-    cmds:
-      - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
-
   backend:clean:
-    desc: Clean the backend build artifacts
+    desc: Clean the back-end build artifacts
     dir: '{{.BACKEND_DIR}}'
     cmds:
       - rm -r {{.BACKEND_BIN_DIR}}/{{.APP_NAME}} || true
@@ -57,7 +51,7 @@ tasks:
       - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
 
   backend:test:
-    desc: Run the backend tests
+    desc: Run the back-end tests
     dir: '{{.BACKEND_SRC_DIR}}'
     cmds:
       - go test -v .
@@ -67,7 +61,7 @@ tasks:
       - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
 
   frontend:install:
-    desc: Install frontend dependencies
+    desc: Install front-end dependencies
     dir: '{{.FRONTEND_DIR}}'
     cmds:
       - npm ci
@@ -78,7 +72,7 @@ tasks:
       - 'node_modules/**/*'
 
   frontend:dev:
-    desc: Run the frontend development server
+    desc: Run the front-end development server
     dir: '{{.FRONTEND_DIR}}'
     deps: [frontend:install]
     cmds:
@@ -89,7 +83,7 @@ tasks:
       - 'next.config.ts'
 
   frontend:build:
-    desc: Build the frontend for production
+    desc: Build the front-end for production
     dir: '{{.FRONTEND_DIR}}'
     deps: [frontend:install]
     cmds:
@@ -103,14 +97,14 @@ tasks:
       - '.next/**/*'
 
   frontend:start:
-    desc: Start the frontend production server
+    desc: Start the front-end production server
     dir: '{{.FRONTEND_DIR}}'
     deps: [frontend:build]
     cmds:
       - npm run start
 
   frontend:lint:
-    desc: Lint the frontend code
+    desc: Lint the front-end code
     dir: '{{.FRONTEND_DIR}}'
     deps: [frontend:install]
     cmds:
@@ -120,14 +114,14 @@ tasks:
       - '.eslintrc.json'
 
   frontend:clean:
-    desc: Clean frontend build artifacts
+    desc: Clean front-end build artifacts
     dir: '{{.FRONTEND_DIR}}'
     cmds:
       - rm -rf .next || true
       - rm -rf node_modules/.cache || true
 
   frontend:docker:build:
-    desc: Build the frontend Docker image
+    desc: Build the front-end Docker image
     dir: '{{.FRONTEND_DIR}}'
     cmds:
       - docker build -t {{.APP_NAME}}-frontend:latest .
@@ -139,16 +133,36 @@ tasks:
       - 'package.json'
 
   frontend:docker:run:
-    desc: Run the frontend Docker container
+    desc: Run the front-end Docker container
     deps: [frontend:docker:build]
     cmds:
       - docker run -p 3000:3000 --name {{.APP_NAME}}-frontend {{.APP_NAME}}-frontend:latest
 
   frontend:docker:stop:
-    desc: Stop the frontend Docker container
+    desc: Stop the front-end Docker container
     cmds:
       - docker stop {{.APP_NAME}}-frontend || true
       - docker rm {{.APP_NAME}}-frontend || true
+
+  db:build:
+    desc: Build the MongoDB Docker image
+    dir: '{{.DB_DIR}}'
+    cmds:
+      - docker build -t {{.APP_NAME}}-mongodb:latest .
+
+  db:run:
+    desc: Run the MongoDB Docker container
+    cmds:
+      - docker ps -a | grep {{.APP_NAME}}-mongodb || task db:build
+      - task: db:stop
+      - docker run -d --name leszmonitor-mongodb --restart unless-stopped -v {{.APP_NAME}}_mongodb_data:/data/db -v {{.APP_NAME}}_mongodb_config:/data/configdb -p 27017:27017 leszmonitor-mongodb:latest
+      - echo "MongoDB container started on port 27017"
+
+  db:stop:
+    desc: Stop the MongoDB Docker container
+    cmds:
+      - docker stop {{.APP_NAME}}-mongodb || true
+      - docker rm {{.APP_NAME}}-mongodb || true
 
   # Combined tasks
   dev:
@@ -166,8 +180,8 @@ tasks:
   docker:build:
     desc: Build Docker images for frontend and backend
     cmds:
+      - task: backend:docker:build
       - task: frontend:docker:build
-      # Add backend docker build when available
 
   clean:
     desc: Clean all build artifacts
@@ -177,8 +191,9 @@ tasks:
 
   logs:clean:
     desc: Remove logs
-    dir: '{{.BACKEND_DIR}}'
     cmds:
       - rm ${LOG_FILE_PATH} || true
+      - rm ./.logs/* || true
     sources:
-      - 'logs/*'
+      - './.logs/*'
+      - './backend/logs/*'

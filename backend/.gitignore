@@ -30,4 +30,4 @@ leszmonitor
 bin
 tmp
 .env*
-logs
+.dev-logs

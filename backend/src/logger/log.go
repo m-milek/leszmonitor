@@ -23,17 +23,9 @@ import (
 	"time"
 )
 
-type LogDestination int
-
-const (
-	Stdout LogDestination = iota
-	Both
-)
-
 type Config struct {
 	Level       zerolog.Level
-	Destination LogDestination
-	FilePath    string
+	LogFilePath string
 }
 
 // Global variables
@@ -41,14 +33,13 @@ var (
 	// Configuration with defaults
 	defaultConfig = Config{
 		Level:       zerolog.InfoLevel,
-		FilePath:    "", // Empty means stdout only
-		Destination: Stdout,
+		LogFilePath: "", // Empty means stdout only
 	}
 
 	// Mutex for thread-safe operations
 	mu sync.Mutex
 
-	Init   = getTemporaryLogger()
+	Init   = getInitLogger()
 	Main   zerolog.Logger
 	Api    zerolog.Logger
 	Logs   zerolog.Logger
@@ -94,7 +85,7 @@ func formatLogLevel(i interface{}) string {
 		resetCode)
 }
 
-func getTemporaryLogger() zerolog.Logger {
+func getInitLogger() zerolog.Logger {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	output.FormatTimestamp = func(i interface{}) string {
 		timestamp := fmt.Sprintf("%s", i)
@@ -105,56 +96,31 @@ func getTemporaryLogger() zerolog.Logger {
 	return zerolog.New(output).With().Timestamp().Logger()
 }
 
-// createComponentLogger creates a logger with the specified component name
-func createComponentLogger(component string, consoleWriter *zerolog.ConsoleWriter, fileWriter io.Writer) zerolog.Logger {
-	// Create a nop logger as a base
-	logger := zerolog.Nop()
-
-	// If we have a console writer, set up console logging
-	if consoleWriter != nil {
-		consoleCopy := *consoleWriter
-		consoleCopy.FormatTimestamp = func(i interface{}) string {
-			timestamp := fmt.Sprintf("%s", i)
-			return fmt.Sprintf("%s [%s]", timestamp, component)
-		}
-		logger = zerolog.New(consoleCopy).Level(defaultConfig.Level).With().Timestamp().Logger()
+func createComponentLogger(component string, consoleWriter zerolog.ConsoleWriter, fileWriter io.Writer, level zerolog.Level) zerolog.Logger {
+	// Configure console writer with component-specific timestamp
+	consoleWriter.FormatTimestamp = func(i interface{}) string {
+		return fmt.Sprintf("%s [%s]", i, component)
 	}
 
-	// If we have a file writer, set up file logging with a hook
+	// Use MultiLevelWriter if both console and file writers are provided
+	var writer io.Writer
 	if fileWriter != nil {
-		// Create a direct file logger
-		fileLogger := zerolog.New(fileWriter).Level(defaultConfig.Level).With().
-			Timestamp().
-			Str("component", component).
-			Logger()
-
-		// Add a hook to the main logger to also log to the file
-		logger = logger.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
-			if level >= defaultConfig.Level {
-				// Create a new event with the same level
-				fileEvent := fileLogger.WithLevel(level)
-
-				// Log the message to the file
-				fileEvent.Msg(message)
-			}
-		}))
+		writer = zerolog.MultiLevelWriter(fileWriter, consoleWriter)
+	} else {
+		writer = consoleWriter
 	}
 
-	// If no writers were provided, default to stdout
-	if consoleWriter == nil && fileWriter == nil {
-		logger = zerolog.New(os.Stdout).Level(defaultConfig.Level).With().Timestamp().Logger()
-	}
-
-	return logger
+	// Create and return the logger
+	return zerolog.New(writer).Level(level).With().Timestamp().Logger()
 }
 
 // setupLoggers initializes all component loggers
-func setupLoggers(consoleWriter *zerolog.ConsoleWriter, fileWriter io.Writer) {
-	Main = createComponentLogger("main", consoleWriter, fileWriter)
-	Api = createComponentLogger("http", consoleWriter, fileWriter)
-	Logs = createComponentLogger("logc", consoleWriter, fileWriter)
-	Uptime = createComponentLogger("uptm", consoleWriter, fileWriter)
-	Db = createComponentLogger("mgdb", consoleWriter, fileWriter)
+func setupLoggers(consoleWriter zerolog.ConsoleWriter, fileWriter io.Writer, level zerolog.Level) {
+	Main = createComponentLogger("main", consoleWriter, fileWriter, level)
+	Api = createComponentLogger("http", consoleWriter, fileWriter, level)
+	Logs = createComponentLogger("logc", consoleWriter, fileWriter, level)
+	Uptime = createComponentLogger("uptm", consoleWriter, fileWriter, level)
+	Db = createComponentLogger("mgdb", consoleWriter, fileWriter, level)
 }
 
 // InitLogging sets up logging with the given configuration
@@ -162,46 +128,41 @@ func InitLogging(cfg Config) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	// Update the configuration
-	defaultConfig = cfg
-
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	consoleWriter.FormatLevel = formatLogLevel
-	// The FormatTimestamp will be overridden for each component logger
 
-	if cfg.FilePath == "" && cfg.Destination != Stdout {
-		Init.Fatal().Msg("No log file path specified, defaulting to stdout")
-		cfg.Destination = Stdout
+	if os.Getenv(env.LOG_FILE_PATH) == "" {
+		Init.Warn().Msg("No log file path specified, defaulting to stdout")
 	}
 
-	var fileWriter io.Writer
-	if cfg.Destination != Stdout {
-		// Ensure the directory exists
-		dir := filepath.Dir(cfg.FilePath)
-		if dir != "." {
-			if err := os.MkdirAll(dir, 0755); err != nil {
-				Init.Error().Msg("Failed to create log directory")
-				return err
-			}
-		}
+	shouldLogToFile := cfg.LogFilePath != ""
 
-		file, err := os.OpenFile(cfg.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			Init.Error().Msg("Failed to open log file")
+	if shouldLogToFile {
+		Init.Debug().Msg("Log file path: " + cfg.LogFilePath)
+	} else {
+		Init.Debug().Msg("Logging to stdout only")
+		setupLoggers(consoleWriter, nil, cfg.Level)
+		return nil
+	}
+
+	// Ensure the directory exists
+	dir := filepath.Dir(cfg.LogFilePath)
+	if dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			Init.Error().Msg("Failed to create log directory")
 			return err
 		}
-		Init.Debug().Msg("Logging to file: " + cfg.FilePath)
-		fileWriter = file
 	}
 
-	switch cfg.Destination {
-	case Stdout:
-		Init.Debug().Msg("Logging to stdout only")
-		setupLoggers(&consoleWriter, nil)
-	case Both:
-		Init.Debug().Msg("Logging to both stdout and file")
-		setupLoggers(&consoleWriter, fileWriter)
+	// Open the log file
+	file, err := os.OpenFile(cfg.LogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		Init.Error().Msg("Failed to open log file")
+		return err
 	}
+
+	Init.Debug().Msg("Initialized logging to file: " + file.Name())
+	setupLoggers(consoleWriter, file, cfg.Level)
 
 	return nil
 }
@@ -230,23 +191,14 @@ func GetLoggerConfig() Config {
 	var filePath string
 
 	if envFilePath != "" {
+		Init.Debug().Msg("Log file path from environment variable: " + envFilePath)
 		filePath = envFilePath
 	} else {
-		filePath = defaultConfig.FilePath
-	}
-
-	currentEnv := os.Getenv(string(env.ENV))
-	var destination LogDestination
-
-	if currentEnv == "DEV" {
-		destination = Stdout
-	} else {
-		destination = Both
+		Init.Warn().Msg("No log file path specified, using default")
 	}
 
 	return Config{
 		Level:       logLevel,
-		FilePath:    filePath,
-		Destination: destination,
+		LogFilePath: filePath,
 	}
 }

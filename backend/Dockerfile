@@ -33,8 +33,8 @@ COPY --from=builder /app/src/main .
 # Copy any necessary environment files
 COPY .env* ./
 
-# Create directories for logs if needed
-RUN mkdir -p logs
+# Create log directory
+RUN mkdir -p /var/log/leszmonitor
 
 # Expose port 7001
 EXPOSE 7001
