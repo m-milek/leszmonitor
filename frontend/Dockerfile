@@ -34,7 +34,7 @@ ENV HOSTNAME 0.0.0.0
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \
- adduser --system --uid 1001 nextjs
+adduser --system --uid 1001 nextjs
 
 # Copy only necessary files
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -43,6 +43,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Handle public directory properly
 RUN mkdir -p ./public
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Create log directory and set permissions
+RUN mkdir -p /var/log/leszmonitor && \
+   chown -R nextjs:nodejs /var/log/leszmonitor
 
 # Set the correct permissions
 USER nextjs

@@ -25,11 +25,13 @@ type dbResult[T any] struct {
 
 var dbClient Client
 
-const timeoutDuration = 10 * time.Second
+const timeoutDuration = 5 * time.Second
 
 func InitDbClient(baseCtx context.Context) error {
 	_, cancel := context.WithTimeout(baseCtx, 10*time.Second)
 	defer cancel()
+
+	logger.Db.Info().Msg("Connecting to MongoDB...")
 
 	uri := os.Getenv(env.MONGODB_URI)
 

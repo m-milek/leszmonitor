@@ -11,6 +11,8 @@ services:
       - backend
     env_file:
       - ./frontend/.env
+    volumes:
+      - log-data:/var/log/leszmonitor
     restart: unless-stopped
     networks:
       - app-network
@@ -22,10 +24,29 @@ services:
     ports:
       - "7001:7001"
     volumes:
-      - ./backend/logs:/app/logs
-      - ./backend/src:/app/src:ro
+      - log-data:/var/log/leszmonitor
+      - type: bind
+        source: ./backend/src
+        target: /app/src
+        read_only: true
     env_file:
       - ./backend/.env
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - LOG_FILE_PATH=/var/log/leszmonitor/backend.log
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  mongodb:
+    build:
+      context: ./mongodb
+      dockerfile: Dockerfile
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
     restart: unless-stopped
     networks:
       - app-network
@@ -35,4 +56,11 @@ networks:
     driver: bridge
 
 volumes:
-  backend-logs:
+  log-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/.logs
+      o: bind
+  mongodb_data:
+  mongodb_config:
