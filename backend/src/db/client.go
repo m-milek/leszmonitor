@@ -7,6 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/model"
+	"github.com/m-milek/leszmonitor/uptime/monitors"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -15,11 +16,22 @@ import (
 )
 
 type Client struct {
-	uri             string
-	client          *mongo.Client
-	database        *mongo.Database
-	usersCollection *mongo.Collection
-	baseCtx         context.Context
+	uri      string
+	client   *mongo.Client
+	database *mongo.Database
+	baseCtx  context.Context
+}
+
+func (*Client) getDatabase() *mongo.Database {
+	return dbClient.client.Database(DatabaseName)
+}
+
+func (*Client) getUsersCollection() *mongo.Collection {
+	return dbClient.getDatabase().Collection(UsersCollectionName)
+}
+
+func (*Client) getMonitorsCollection() *mongo.Collection {
+	return dbClient.getDatabase().Collection(MonitorsCollectionName)
 }
 
 type dbResult[T any] struct {
@@ -37,6 +49,12 @@ var dbClient Client
 
 const timeoutDuration = 5 * time.Second
 
+const (
+	DatabaseName           = "leszmonitor"
+	UsersCollectionName    = "users"
+	MonitorsCollectionName = "monitors"
+)
+
 func InitDbClient(baseCtx context.Context) error {
 	_, cancel := context.WithTimeout(baseCtx, 10*time.Second)
 	defer cancel()
@@ -51,11 +69,10 @@ func InitDbClient(baseCtx context.Context) error {
 	}
 
 	dbClient = Client{
-		uri:             uri,
-		client:          client,
-		database:        nil,
-		usersCollection: nil,
-		baseCtx:         baseCtx,
+		uri:      uri,
+		client:   client,
+		database: nil,
+		baseCtx:  baseCtx,
 	}
 
 	_, err = Ping()
@@ -63,7 +80,7 @@ func InitDbClient(baseCtx context.Context) error {
 		logger.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
 	}
 
-	database := client.Database("leszmonitor")
+	database := client.Database(DatabaseName)
 	dbClient.database = database
 
 	err = initSchema()
@@ -77,14 +94,38 @@ func InitDbClient(baseCtx context.Context) error {
 }
 
 func initSchema() error {
-	database := dbClient.client.Database("leszmonitor")
-	users, err := initUsersCollection(*database)
-	if err == nil {
-		dbClient.usersCollection = users
-	} else {
+	database := dbClient.getDatabase()
+	err := initUsersCollection(*database)
+	if err != nil {
 		logger.Db.Error().Err(err).Msg("Failed to initialize users collection")
 		return err
 	}
+
+	err = initMonitorsCollection(database)
+	if err != nil {
+		logger.Db.Error().Err(err).Msg("Failed to initialize monitors collection")
+		return err
+	}
+
+	monitor := monitors.HttpMonitor{
+		Base: monitors.BaseMonitor{
+			Name:        "Test Monitor",
+			Description: "This is a test monitor",
+			Interval:    60,
+			Timeout:     5,
+			OwnerId:     "test_owner",
+			Type:        monitors.MonitorTypeHttp,
+		},
+		HttpMethod:           "GET",
+		Url:                  "https://example.com",
+		Headers:              map[string]string{"Content-Type": "application/json"},
+		Body:                 "",
+		ExpectedStatusCode:   200,
+		ExpectedBodyRegex:    "",
+		ExpectedHeaders:      map[string]string{"Content-Type": "application/json"},
+		ExpectedResponseTime: 1000,
+	}
+	_, err = AddMonitor(&monitor)
 
 	return err
 }
@@ -131,18 +172,17 @@ func createCollection(ctx context.Context, database *mongo.Database, collectionN
 	return nil
 }
 
-func initUsersCollection(database mongo.Database) (*mongo.Collection, error) {
-	err := createCollection(dbClient.baseCtx, &database, "users")
+func initUsersCollection(database mongo.Database) error {
+	err := createCollection(dbClient.baseCtx, &database, UsersCollectionName)
 	if err != nil {
-		if errors.Is(err, CollectionAlreadyExistsError("users")) {
+		if errors.Is(err, CollectionAlreadyExistsError(UsersCollectionName)) {
 			logger.Db.Info().Msg("Users collection already exists.")
-			return nil, nil
+			return nil
 		}
-		logger.Db.Fatal().Err(err).Msg("Failed to create users collection")
-		return nil, err
+		return err
 	}
 
-	usersCollection := database.Collection("users")
+	usersCollection := database.Collection(UsersCollectionName)
 	indexName, err := usersCollection.Indexes().CreateOne(
 		dbClient.baseCtx,
 		mongo.IndexModel{
@@ -157,8 +197,19 @@ func initUsersCollection(database mongo.Database) (*mongo.Collection, error) {
 	} else {
 		logger.Db.Info().Msgf("Index created: %s", indexName)
 	}
-	return dbClient.usersCollection, nil
+	return nil
+}
 
+func initMonitorsCollection(database *mongo.Database) error {
+	err := createCollection(dbClient.baseCtx, database, MonitorsCollectionName)
+	if err != nil {
+		if errors.Is(err, CollectionAlreadyExistsError(MonitorsCollectionName)) {
+			logger.Db.Info().Msg("Monitors collection already exists.")
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 // withTimeout creates a child context with timeout and handles cancellation
@@ -217,10 +268,9 @@ func Ping() (int64, error) {
 	return result.Result, nil
 }
 
-func InsertUser(user model.User) (*mongo.InsertOneResult, error) {
+func AddUser(user model.User) (*mongo.InsertOneResult, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
-		collection := dbClient.client.Database("leszmonitor").Collection("users")
-		res, err := collection.InsertOne(ctx, user)
+		res, err := dbClient.getUsersCollection().InsertOne(ctx, user)
 		if err != nil {
 			return nil, err
 		}
@@ -228,6 +278,23 @@ func InsertUser(user model.User) (*mongo.InsertOneResult, error) {
 	})
 
 	logDbOperation("InsertUser", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func AddMonitor(monitor monitors.IMonitor) (*mongo.InsertOneResult, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
+		res, err := dbClient.getMonitorsCollection().InsertOne(ctx, monitor)
+		if err != nil {
+			return nil, err
+		}
+		return res, nil
+	})
+
+	logDbOperation("InsertMonitor", dbRes, err)
 
 	if err != nil {
 		return nil, err
