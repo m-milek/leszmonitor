@@ -95,7 +95,8 @@ func InitDbClient(baseCtx context.Context) error {
 
 func initSchema() error {
 	database := dbClient.getDatabase()
-	err := initUsersCollection(*database)
+
+	err := initUsersCollection(database)
 	if err != nil {
 		logger.Db.Error().Err(err).Msg("Failed to initialize users collection")
 		return err
@@ -106,26 +107,6 @@ func initSchema() error {
 		logger.Db.Error().Err(err).Msg("Failed to initialize monitors collection")
 		return err
 	}
-
-	monitor := monitors.HttpMonitor{
-		Base: monitors.BaseMonitor{
-			Name:        "Test Monitor",
-			Description: "This is a test monitor",
-			Interval:    60,
-			Timeout:     5,
-			OwnerId:     "test_owner",
-			Type:        monitors.MonitorTypeHttp,
-		},
-		HttpMethod:           "GET",
-		Url:                  "https://example.com",
-		Headers:              map[string]string{"Content-Type": "application/json"},
-		Body:                 "",
-		ExpectedStatusCode:   200,
-		ExpectedBodyRegex:    "",
-		ExpectedHeaders:      map[string]string{"Content-Type": "application/json"},
-		ExpectedResponseTime: 1000,
-	}
-	_, err = AddMonitor(&monitor)
 
 	return err
 }
@@ -172,8 +153,8 @@ func createCollection(ctx context.Context, database *mongo.Database, collectionN
 	return nil
 }
 
-func initUsersCollection(database mongo.Database) error {
-	err := createCollection(dbClient.baseCtx, &database, UsersCollectionName)
+func initUsersCollection(database *mongo.Database) error {
+	err := createCollection(dbClient.baseCtx, database, UsersCollectionName)
 	if err != nil {
 		if errors.Is(err, CollectionAlreadyExistsError(UsersCollectionName)) {
 			logger.Db.Info().Msg("Users collection already exists.")
@@ -268,7 +249,7 @@ func Ping() (int64, error) {
 	return result.Result, nil
 }
 
-func AddUser(user model.User) (*mongo.InsertOneResult, error) {
+func AddUser(user *model.User) (*mongo.InsertOneResult, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
 		res, err := dbClient.getUsersCollection().InsertOne(ctx, user)
 		if err != nil {
@@ -278,6 +259,24 @@ func AddUser(user model.User) (*mongo.InsertOneResult, error) {
 	})
 
 	logDbOperation("InsertUser", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func GetUser(username string) (*model.User, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*model.User, error) {
+		var user model.User
+		err := dbClient.getUsersCollection().FindOne(ctx, bson.M{"username": username}).Decode(&user)
+		if err != nil {
+			return nil, err
+		}
+		return &user, nil
+	})
+
+	logDbOperation("GetUser", dbRes, err)
 
 	if err != nil {
 		return nil, err
