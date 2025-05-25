@@ -26,10 +26,27 @@ func DefaultServerConfig() ServerConfig {
 }
 
 func createServer(config ServerConfig) (*http.Server, error) {
-	router := http.NewServeMux()
-	SetupRouter(router)
+	publicRouter := http.NewServeMux()
+	protectedRouter := http.NewServeMux()
 
-	handler := middleware.Logger(router)
+	SetupRouters(publicRouter, protectedRouter)
+
+	combinedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		// Check if this is a public path
+		if path == "/auth/register" || path == "/auth/login" {
+			logger.Api.Debug().Msg("Handling public path: " + path)
+			publicRouter.ServeHTTP(w, r)
+			return
+		}
+
+		// Apply JWT auth to all other paths
+		logger.Api.Debug().Msg("Handling protected path: " + path)
+		middleware.JwtAuth(protectedRouter).ServeHTTP(w, r)
+	})
+
+	handler := middleware.Logger(combinedHandler)
 
 	server := &http.Server{
 		Addr:         net.JoinHostPort(config.Host, config.Port),
