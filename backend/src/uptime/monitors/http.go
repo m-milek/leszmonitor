@@ -24,9 +24,34 @@ func (m *HttpMonitor) Run() error {
 		Timeout: time.Duration(m.Base.Timeout) * time.Second,
 	}
 
-	req := &http.Request{
+	request, err := m.createRequest()
+
+	if err != nil {
+		logger.Uptime.Error().Msg("Error creating HTTP request")
+	}
+
+	response, err := client.Do(request)
+
+	if err != nil {
+		logger.Uptime.Error().Err(err).Msg("Error while sending HTTP request")
+		return err
+	}
+
+	logger.Uptime.Trace().Any("response", response).Msg("HTTP response")
+
+	return nil
+}
+
+func (m *HttpMonitor) createRequest() (*http.Request, error) {
+	parsedUrl, err := url.Parse(m.Url)
+	if err != nil {
+		logger.Uptime.Error().Err(err).Msg("Invalid URL in HTTP monitor")
+		return nil, err
+	}
+
+	req := http.Request{
 		Method: m.HttpMethod,
-		URL:    &url.URL{Path: m.Url},
+		URL:    parsedUrl,
 		Header: make(http.Header),
 	}
 
@@ -34,14 +59,11 @@ func (m *HttpMonitor) Run() error {
 		req.Header.Set(key, value)
 	}
 
-	response, err := client.Do(req)
-
-	if err != nil {
-		logger.Uptime.Error().Err(err).Msg("Error while sending HTTP request")
+	if m.Body != "" {
+		req.Body = http.NoBody // Set the body if needed
 	}
-	logger.Uptime.Trace().Any("response", response).Msg("HTTP response")
 
-	return nil
+	return &req, nil
 }
 
 func (m *HttpMonitor) GetName() string {
