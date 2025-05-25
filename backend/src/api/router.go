@@ -5,9 +5,12 @@ import (
 	"net/http"
 )
 
-func SetupRouter(
-	router *http.ServeMux,
+func SetupRouters(
+	publicRouter *http.ServeMux,
+	protectedRouter *http.ServeMux,
 ) {
-	router.HandleFunc("/health", handlers.GetHealthCheckHandler)
-	router.HandleFunc("/user/register", handlers.UserRegisterHandler)
+	protectedRouter.HandleFunc("/health", handlers.GetHealthCheckHandler)
+
+	publicRouter.HandleFunc("/auth/register", handlers.UserRegisterHandler)
+	publicRouter.HandleFunc("/auth/login", handlers.LoginHandler)
 }
