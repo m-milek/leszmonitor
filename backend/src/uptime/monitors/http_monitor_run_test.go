@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var httpClient HttpClient = newHttpClient()
+var httpClient httpClient = newHttpClient()
 
 func TestHttpMonitorRunSuccess(t *testing.T) {
 	// Save the original client and restore it after the test
@@ -64,7 +64,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 	if response, ok := response.(*HttpMonitorResponse); ok {
 		assert.NoError(t, err)
 		assert.EqualValues(t, Failure, response.Base.Status)
-		assert.Contains(t, response.FailedAspects, StatusCodeAspect)
+		assert.Contains(t, response.FailedAspects, statusCodeAspect)
 		assert.Len(t, response.FailedAspects, 1)
 	} else {
 		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
@@ -123,9 +123,9 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	if response, ok := response.(*HttpMonitorResponse); ok {
 		assert.NoError(t, err)
 		assert.EqualValues(t, Failure, response.Base.Status)
-		assert.Contains(t, response.FailedAspects, StatusCodeAspect)
-		assert.Contains(t, response.FailedAspects, BodyAspect)
-		assert.Contains(t, response.FailedAspects, HeadersAspect)
+		assert.Contains(t, response.FailedAspects, statusCodeAspect)
+		assert.Contains(t, response.FailedAspects, bodyAspect)
+		assert.Contains(t, response.FailedAspects, headersAspect)
 		assert.Len(t, response.FailedAspects, 3)
 	} else {
 		t.Fatalf("Expected HttpMonitorResponse, got %T", response)

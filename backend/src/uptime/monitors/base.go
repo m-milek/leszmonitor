@@ -51,7 +51,7 @@ type IMonitorResponse interface {
 }
 
 type IMonitor interface {
-	Run(client HttpClient) (IMonitorResponse, error)
+	Run(client httpClient) (IMonitorResponse, error)
 	GetName() string
 	GetDescription() string
 	GetInterval() int
