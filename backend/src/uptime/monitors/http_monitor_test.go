@@ -22,7 +22,7 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 
 // Setup test helper functions
 func setupTestHttpMonitor() *HttpMonitor {
-	baseMonitor := BaseMonitor{
+	baseMonitor := baseMonitor{
 		Name:        "Test HTTP Monitor",
 		Description: "Test Description",
 		Interval:    60,

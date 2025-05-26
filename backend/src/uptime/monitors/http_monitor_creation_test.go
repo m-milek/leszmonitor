@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewHttpMonitor(t *testing.T) {
-	baseMonitor := BaseMonitor{
+	baseMonitor := baseMonitor{
 		Name:        "Test Monitor",
 		Description: "Test Description",
 		Interval:    60,
