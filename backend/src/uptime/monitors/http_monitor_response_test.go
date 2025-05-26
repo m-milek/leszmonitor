@@ -59,21 +59,21 @@ func TestHttpMonitorResponseAddFailedAspect(t *testing.T) {
 	response := newHttpMonitorResponse()
 
 	// Add one aspect
-	response.addFailedAspect(StatusCodeAspect)
+	response.addFailedAspect(statusCodeAspect)
 	assert.EqualValues(t, Failure, response.Base.Status)
-	assert.Contains(t, response.FailedAspects, StatusCodeAspect)
+	assert.Contains(t, response.FailedAspects, statusCodeAspect)
 	assert.Len(t, response.FailedAspects, 1)
 
 	// Add another aspect
-	response.addFailedAspect(BodyAspect)
+	response.addFailedAspect(bodyAspect)
 	assert.EqualValues(t, Failure, response.Base.Status)
-	assert.Contains(t, response.FailedAspects, StatusCodeAspect)
-	assert.Contains(t, response.FailedAspects, BodyAspect)
+	assert.Contains(t, response.FailedAspects, statusCodeAspect)
+	assert.Contains(t, response.FailedAspects, bodyAspect)
 	assert.Len(t, response.FailedAspects, 2)
 
 	// Set status to Error and add another aspect
 	response.setStatus(Error)
-	response.addFailedAspect(HeadersAspect)
+	response.addFailedAspect(headersAspect)
 	assert.EqualValues(t, Error, response.Base.Status) // Status should remain Error
 	assert.Len(t, response.FailedAspects, 3)
 }

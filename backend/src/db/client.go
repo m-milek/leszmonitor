@@ -320,7 +320,7 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 			}
 
 			// Get the monitor type
-			typeValue, ok := rawDoc["base"].(bson.M)["type"]
+			typeValue, ok := rawDoc["type"]
 			if !ok {
 				return nil, fmt.Errorf("monitor type not found in document")
 			}

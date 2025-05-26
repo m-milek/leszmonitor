@@ -23,7 +23,7 @@ func TestValidateStatusCode(t *testing.T) {
 	monitorResponse = newHttpMonitorResponse()
 	monitor.validateStatusCode(response, monitorResponse)
 	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, StatusCodeAspect)
+	assert.Contains(t, monitorResponse.FailedAspects, statusCodeAspect)
 	assert.Contains(t, monitorResponse.Base.Failures[0], "Unexpected status code")
 }
 
@@ -42,7 +42,7 @@ func TestValidateResponseTime(t *testing.T) {
 	monitorResponse = newHttpMonitorResponse()
 	monitor.validateResponseTime(elapsed, monitorResponse)
 	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, ResponseTimeAspect)
+	assert.Contains(t, monitorResponse.FailedAspects, responseTimeAspect)
 	assert.Contains(t, monitorResponse.Base.Failures[0], "Response time exceeded")
 }
 
@@ -65,7 +65,7 @@ func TestValidateResponseHeaders(t *testing.T) {
 	monitorResponse = newHttpMonitorResponse()
 	monitor.validateResponseHeaders(response, monitorResponse)
 	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, HeadersAspect)
+	assert.Contains(t, monitorResponse.FailedAspects, headersAspect)
 	assert.Contains(t, monitorResponse.Base.Failures[0], "Header mismatch")
 }
 
@@ -86,6 +86,6 @@ func TestValidateResponseBody(t *testing.T) {
 	monitorResponse = newHttpMonitorResponse()
 	monitor.validateResponseBody(response, monitorResponse)
 	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, BodyAspect)
+	assert.Contains(t, monitorResponse.FailedAspects, bodyAspect)
 	assert.Contains(t, monitorResponse.Base.Failures[0], "Response body does not match regex")
 }

@@ -23,38 +23,8 @@ type HttpMonitor struct {
 	ExpectedResponseTime *int              `json:"expected_response_time" bson:"expected_response_time"` // in milliseconds
 }
 
-type HttpMonitorResponse struct {
-	Base            BaseMonitorResponse `json:"base" bson:"base,inline"`
-	RawHttpResponse *http.Response      `json:"raw_response" bson:"raw_response"`
-	FailedAspects   []HttpCheckAspect   `json:"failed_aspects" bson:"failed_aspects"` // Aspects that failed during the check
-}
-
-func (b *HttpMonitorResponse) GetStatus() MonitorResponseStatus {
-	return b.Base.Status
-}
-func (b *HttpMonitorResponse) GetDuration() int64 {
-	return b.Base.Duration
-}
-func (b *HttpMonitorResponse) GetTimestamp() int64 {
-	return b.Base.Timestamp
-}
-func (b *HttpMonitorResponse) GetErrors() []string {
-	return b.Base.Errors
-}
-func (b *HttpMonitorResponse) GetFailures() []string {
-	return b.Base.Failures
-}
-
-type HttpCheckAspect string
-
-const (
-	StatusCodeAspect   HttpCheckAspect = "StatusCode"
-	ResponseTimeAspect HttpCheckAspect = "ResponseTime"
-	BodyAspect         HttpCheckAspect = "Body"
-	HeadersAspect      HttpCheckAspect = "Headers"
-)
-
-type HttpClient interface {
+// httpClient is needed for mocking HTTP requests in tests
+type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
@@ -78,7 +48,7 @@ func NewHttpMonitor(base BaseMonitor, httpMethod, url string, headers map[string
 	return monitor, nil
 }
 
-func (m *HttpMonitor) Run(httpClient HttpClient) (IMonitorResponse, error) {
+func (m *HttpMonitor) Run(httpClient httpClient) (IMonitorResponse, error) {
 	monitorResponse := newHttpMonitorResponse()
 
 	response, elapsed, err := m.executeRequest(httpClient)
@@ -110,7 +80,7 @@ func (m *HttpMonitor) Run(httpClient HttpClient) (IMonitorResponse, error) {
 }
 
 // Encapsulates request creation and execution
-func (m *HttpMonitor) executeRequest(httpClient HttpClient) (*http.Response, time.Duration, error) {
+func (m *HttpMonitor) executeRequest(httpClient httpClient) (*http.Response, time.Duration, error) {
 	request, err := m.createRequest()
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to create request: %w", err)
@@ -127,23 +97,6 @@ func (m *HttpMonitor) executeRequest(httpClient HttpClient) (*http.Response, tim
 	return response, elapsed, nil
 }
 
-// getMismatchedHeaders checks the response headers against the expected headers
-func (m *HttpMonitor) getMismatchedHeaders(response *http.Response) map[string]string {
-	mismatchedHeaders := map[string]string{}
-	if len(m.ExpectedHeaders) == 0 {
-		return mismatchedHeaders
-	}
-
-	for key, expectedValue := range m.ExpectedHeaders {
-		actualValue := response.Header.Get(key)
-		if actualValue != expectedValue {
-			mismatchedHeaders[key] = actualValue
-		}
-	}
-
-	return mismatchedHeaders
-}
-
 func (m *HttpMonitor) validateStatusCode(response *http.Response, monitorResponse *HttpMonitorResponse) {
 	if m.ExpectedStatusCode == nil {
 		return
@@ -151,7 +104,7 @@ func (m *HttpMonitor) validateStatusCode(response *http.Response, monitorRespons
 	if response.StatusCode != *m.ExpectedStatusCode {
 		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected %d", response.StatusCode, *m.ExpectedStatusCode)
 		monitorResponse.addFailureMsg(failureMsg)
-		monitorResponse.addFailedAspect(StatusCodeAspect)
+		monitorResponse.addFailedAspect(statusCodeAspect)
 	}
 }
 
@@ -162,7 +115,7 @@ func (m *HttpMonitor) validateResponseTime(elapsed time.Duration, monitorRespons
 	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTime) {
 		failureMsg := fmt.Sprintf("Response time exceeded: got %dms, expected <= %dms", elapsed.Milliseconds(), *m.ExpectedResponseTime)
 		monitorResponse.addFailureMsg(failureMsg)
-		monitorResponse.addFailedAspect(ResponseTimeAspect)
+		monitorResponse.addFailedAspect(responseTimeAspect)
 	}
 }
 
@@ -176,7 +129,7 @@ func (m *HttpMonitor) validateResponseHeaders(response *http.Response, monitorRe
 		if actualValue != expectedValue {
 			failureMsg := fmt.Sprintf("Header mismatch for %s: got %s, expected %s", key, actualValue, expectedValue)
 			monitorResponse.addFailureMsg(failureMsg)
-			monitorResponse.addFailedAspect(HeadersAspect)
+			monitorResponse.addFailedAspect(headersAspect)
 		}
 	}
 }
@@ -202,8 +155,25 @@ func (m *HttpMonitor) validateResponseBody(response *http.Response, monitorRespo
 	if !matched {
 		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
 		monitorResponse.addFailureMsg(failureMsg)
-		monitorResponse.addFailedAspect(BodyAspect)
+		monitorResponse.addFailedAspect(bodyAspect)
 	}
+}
+
+// getMismatchedHeaders checks the response headers against the expected headers
+func (m *HttpMonitor) getMismatchedHeaders(response *http.Response) map[string]string {
+	mismatchedHeaders := map[string]string{}
+	if len(m.ExpectedHeaders) == 0 {
+		return mismatchedHeaders
+	}
+
+	for key, expectedValue := range m.ExpectedHeaders {
+		actualValue := response.Header.Get(key)
+		if actualValue != expectedValue {
+			mismatchedHeaders[key] = actualValue
+		}
+	}
+
+	return mismatchedHeaders
 }
 
 // createRequest constructs an HTTP request based on the monitor's configuration
@@ -233,7 +203,7 @@ func (m *HttpMonitor) createRequest() (*http.Request, error) {
 	return &req, nil
 }
 
-func newHttpClient() HttpClient {
+func newHttpClient() httpClient {
 	return &http.Client{
 		Timeout: 10 * time.Second, // Default timeout for HTTP requests
 	}
@@ -246,7 +216,7 @@ func newHttpMonitorResponse() *HttpMonitorResponse {
 			Status: Success,
 			Errors: []string{},
 		},
-		FailedAspects: []HttpCheckAspect{},
+		FailedAspects: []httpCheckAspect{},
 	}
 }
 
@@ -339,9 +309,9 @@ func (b *HttpMonitorResponse) addFailureMsg(err string) {
 	b.Base.addFailureMsg(err)
 }
 
-func (b *HttpMonitorResponse) addFailedAspect(aspect HttpCheckAspect) {
+func (b *HttpMonitorResponse) addFailedAspect(aspect httpCheckAspect) {
 	if b.FailedAspects == nil {
-		b.FailedAspects = make([]HttpCheckAspect, 0)
+		b.FailedAspects = make([]httpCheckAspect, 0)
 	}
 	b.FailedAspects = append(b.FailedAspects, aspect)
 	if b.Base.Status != Error {
