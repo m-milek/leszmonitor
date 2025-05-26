@@ -31,12 +31,12 @@ func TestHttpMonitorResponseAddErrorMsg(t *testing.T) {
 	response := newHttpMonitorResponse()
 
 	// Add an error message
-	response.AddErrorMsg("Test error")
+	response.addErrorMsg("Test error")
 	assert.Contains(t, response.Base.Errors, "Test error")
 	assert.Len(t, response.Base.Errors, 1)
 
 	// Add another error message
-	response.AddErrorMsg("Another error")
+	response.addErrorMsg("Another error")
 	assert.Contains(t, response.Base.Errors, "Another error")
 	assert.Len(t, response.Base.Errors, 2)
 }
@@ -45,12 +45,12 @@ func TestHttpMonitorResponseAddFailureMsg(t *testing.T) {
 	response := newHttpMonitorResponse()
 
 	// Add a failure message
-	response.AddFailureMsg("Test failure")
+	response.addFailureMsg("Test failure")
 	assert.Contains(t, response.Base.Failures, "Test failure")
 	assert.Len(t, response.Base.Failures, 1)
 
 	// Add another failure message
-	response.AddFailureMsg("Another failure")
+	response.addFailureMsg("Another failure")
 	assert.Contains(t, response.Base.Failures, "Another failure")
 	assert.Len(t, response.Base.Failures, 2)
 }
@@ -59,13 +59,13 @@ func TestHttpMonitorResponseAddFailedAspect(t *testing.T) {
 	response := newHttpMonitorResponse()
 
 	// Add one aspect
-	response.AddFailedAspect(StatusCodeAspect)
+	response.addFailedAspect(StatusCodeAspect)
 	assert.EqualValues(t, Failure, response.Base.Status)
 	assert.Contains(t, response.FailedAspects, StatusCodeAspect)
 	assert.Len(t, response.FailedAspects, 1)
 
 	// Add another aspect
-	response.AddFailedAspect(BodyAspect)
+	response.addFailedAspect(BodyAspect)
 	assert.EqualValues(t, Failure, response.Base.Status)
 	assert.Contains(t, response.FailedAspects, StatusCodeAspect)
 	assert.Contains(t, response.FailedAspects, BodyAspect)
@@ -73,7 +73,7 @@ func TestHttpMonitorResponseAddFailedAspect(t *testing.T) {
 
 	// Set status to Error and add another aspect
 	response.setStatus(Error)
-	response.AddFailedAspect(HeadersAspect)
+	response.addFailedAspect(HeadersAspect)
 	assert.EqualValues(t, Error, response.Base.Status) // Status should remain Error
 	assert.Len(t, response.FailedAspects, 3)
 }

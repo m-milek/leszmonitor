@@ -71,7 +71,7 @@ func (m *HttpMonitor) Run(httpClient HttpClient) (*HttpMonitorResponse, error) {
 	if err != nil {
 		// If the request failed altogether, there's no point in checking the response
 		monitorResponse.setStatus(Error)
-		monitorResponse.AddErrorMsg(fmt.Sprintf("HTTP request failed: %s", err.Error()))
+		monitorResponse.addErrorMsg(fmt.Sprintf("HTTP request failed: %s", err.Error()))
 		logger.Uptime.Error().Err(err).Msg("HTTP monitor run failed")
 		return monitorResponse, err
 	}
@@ -134,8 +134,8 @@ func (m *HttpMonitor) validateStatusCode(response *http.Response, monitorRespons
 	}
 	if response.StatusCode != *m.ExpectedStatusCode {
 		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected %d", response.StatusCode, *m.ExpectedStatusCode)
-		monitorResponse.AddFailureMsg(failureMsg)
-		monitorResponse.AddFailedAspect(StatusCodeAspect)
+		monitorResponse.addFailureMsg(failureMsg)
+		monitorResponse.addFailedAspect(StatusCodeAspect)
 	}
 }
 
@@ -145,8 +145,8 @@ func (m *HttpMonitor) validateResponseTime(elapsed time.Duration, monitorRespons
 	}
 	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTime) {
 		failureMsg := fmt.Sprintf("Response time exceeded: got %dms, expected <= %dms", elapsed.Milliseconds(), *m.ExpectedResponseTime)
-		monitorResponse.AddFailureMsg(failureMsg)
-		monitorResponse.AddFailedAspect(ResponseTimeAspect)
+		monitorResponse.addFailureMsg(failureMsg)
+		monitorResponse.addFailedAspect(ResponseTimeAspect)
 	}
 }
 
@@ -159,8 +159,8 @@ func (m *HttpMonitor) validateResponseHeaders(response *http.Response, monitorRe
 		actualValue := response.Header.Get(key)
 		if actualValue != expectedValue {
 			failureMsg := fmt.Sprintf("Header mismatch for %s: got %s, expected %s", key, actualValue, expectedValue)
-			monitorResponse.AddFailureMsg(failureMsg)
-			monitorResponse.AddFailedAspect(HeadersAspect)
+			monitorResponse.addFailureMsg(failureMsg)
+			monitorResponse.addFailedAspect(HeadersAspect)
 		}
 	}
 }
@@ -172,21 +172,21 @@ func (m *HttpMonitor) validateResponseBody(response *http.Response, monitorRespo
 
 	responseBody, err := readResponseBody(response)
 	if err != nil {
-		monitorResponse.AddErrorMsg("Error reading response body: " + err.Error())
+		monitorResponse.addErrorMsg("Error reading response body: " + err.Error())
 		return
 	}
 
 	matched, err := regexp.MatchString(m.ExpectedBodyRegex, responseBody)
 	if err != nil {
 		errMsg := fmt.Sprintf("Error matching response body regex: %s", err.Error())
-		monitorResponse.AddErrorMsg(errMsg)
+		monitorResponse.addErrorMsg(errMsg)
 		return
 	}
 
 	if !matched {
 		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
-		monitorResponse.AddFailureMsg(failureMsg)
-		monitorResponse.AddFailedAspect(BodyAspect)
+		monitorResponse.addFailureMsg(failureMsg)
+		monitorResponse.addFailedAspect(BodyAspect)
 	}
 }
 
@@ -315,15 +315,15 @@ func (m *HttpMonitorResponse) setStatus(status MonitorResponseStatus) {
 	m.Base.Status = status
 }
 
-func (m *HttpMonitorResponse) AddErrorMsg(err string) {
-	m.Base.AddErrorMsg(err)
+func (m *HttpMonitorResponse) addErrorMsg(err string) {
+	m.Base.addErrorMsg(err)
 }
 
-func (m *HttpMonitorResponse) AddFailureMsg(err string) {
-	m.Base.AddFailureMsg(err)
+func (m *HttpMonitorResponse) addFailureMsg(err string) {
+	m.Base.addFailureMsg(err)
 }
 
-func (m *HttpMonitorResponse) AddFailedAspect(aspect HttpCheckAspect) {
+func (m *HttpMonitorResponse) addFailedAspect(aspect HttpCheckAspect) {
 	if m.FailedAspects == nil {
 		m.FailedAspects = make([]HttpCheckAspect, 0)
 	}

@@ -64,7 +64,7 @@ func (m *BaseMonitor) validate() error {
 	return nil
 }
 
-func (m *BaseMonitorResponse) AddErrorMsg(err string) {
+func (m *BaseMonitorResponse) addErrorMsg(err string) {
 	if m.Errors == nil {
 		m.Errors = make([]string, 0)
 	}
@@ -72,7 +72,7 @@ func (m *BaseMonitorResponse) AddErrorMsg(err string) {
 	m.Status = Error
 }
 
-func (m *BaseMonitorResponse) AddFailureMsg(err string) {
+func (m *BaseMonitorResponse) addFailureMsg(err string) {
 	if m.Failures == nil {
 		m.Failures = make([]string, 0)
 	}
