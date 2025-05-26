@@ -300,3 +300,70 @@ func AddMonitor(monitor monitors.IMonitor) (*mongo.InsertOneResult, error) {
 	}
 	return dbRes.Result, nil
 }
+
+func GetAllMonitors() ([]monitors.IMonitor, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) ([]monitors.IMonitor, error) {
+		cursor, err := dbClient.getMonitorsCollection().Find(ctx, bson.D{})
+		if err != nil {
+			return nil, err
+		}
+		defer cursor.Close(ctx)
+
+		var monitorsList []monitors.IMonitor
+
+		// First decode into a map to determine the monitor type
+		for cursor.Next(ctx) {
+			// Decode into a raw document first
+			var rawDoc bson.M
+			if err := cursor.Decode(&rawDoc); err != nil {
+				return nil, err
+			}
+
+			// Get the monitor type
+			typeValue, ok := rawDoc["base"].(bson.M)["type"]
+			if !ok {
+				return nil, fmt.Errorf("monitor type not found in document")
+			}
+
+			monitorType, ok := typeValue.(string)
+			if !ok {
+				return nil, fmt.Errorf("monitor type is not a string")
+			}
+
+			// Create the appropriate concrete type based on the monitor type
+			var monitor monitors.IMonitor
+
+			switch monitors.MonitorType(monitorType) {
+			case monitors.Http:
+				httpMonitor := &monitors.HttpMonitor{}
+				// Re-encode and decode to the concrete type
+				data, err := bson.Marshal(rawDoc)
+				if err != nil {
+					return nil, err
+				}
+				if err := bson.Unmarshal(data, httpMonitor); err != nil {
+					return nil, err
+				}
+				monitor = httpMonitor
+
+			default:
+				return nil, fmt.Errorf("unknown monitor type: %s", monitorType)
+			}
+
+			monitorsList = append(monitorsList, monitor)
+		}
+
+		if err := cursor.Err(); err != nil {
+			return nil, err
+		}
+
+		return monitorsList, nil
+	})
+
+	logDbOperation("GetAllMonitors", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
