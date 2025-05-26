@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 var httpClient HttpClient = newHttpClient()
@@ -30,9 +29,14 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(successResponse, nil).Once()
 
 	response, err := monitor.Run(mockClient)
-	require.NoError(t, err)
-	assert.EqualValues(t, Success, response.Base.Status)
-	assert.Empty(t, response.FailedAspects)
+
+	if response, ok := response.(*HttpMonitorResponse); ok {
+		assert.NoError(t, err)
+		assert.EqualValues(t, Success, response.Base.Status)
+		assert.Empty(t, response.FailedAspects)
+	} else {
+		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
+	}
 
 	mockClient.AssertExpectations(t)
 }
@@ -56,9 +60,15 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
 
 	response, err := monitor.Run(mockClient)
-	assert.NoError(t, err) // No error returned, but status is Failure
-	assert.EqualValues(t, Failure, response.Base.Status)
-	assert.Contains(t, response.FailedAspects, StatusCodeAspect)
+
+	if response, ok := response.(*HttpMonitorResponse); ok {
+		assert.NoError(t, err)
+		assert.EqualValues(t, Failure, response.Base.Status)
+		assert.Contains(t, response.FailedAspects, StatusCodeAspect)
+		assert.Len(t, response.FailedAspects, 1)
+	} else {
+		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
+	}
 
 	mockClient.AssertExpectations(t)
 }
@@ -78,9 +88,14 @@ func TestHttpMonitorRunError(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(nil, errors.New("connection refused")).Once()
 
 	response, err := monitor.Run(mockClient)
-	assert.Error(t, err)
-	assert.EqualValues(t, Error, response.Base.Status)
-	assert.Contains(t, response.Base.Errors[0], "connection refused")
+
+	if response, ok := response.(*HttpMonitorResponse); ok {
+		assert.Error(t, err)
+		assert.EqualValues(t, Error, response.Base.Status)
+		assert.Contains(t, response.Base.Errors[0], "connection refused")
+	} else {
+		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
+	}
 
 	mockClient.AssertExpectations(t)
 }
@@ -104,12 +119,17 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
 
 	response, err := monitor.Run(mockClient)
-	assert.NoError(t, err)
-	assert.EqualValues(t, Failure, response.Base.Status)
-	assert.Contains(t, response.FailedAspects, StatusCodeAspect)
-	assert.Contains(t, response.FailedAspects, BodyAspect)
-	assert.Contains(t, response.FailedAspects, HeadersAspect)
-	assert.Len(t, response.FailedAspects, 3)
+
+	if response, ok := response.(*HttpMonitorResponse); ok {
+		assert.NoError(t, err)
+		assert.EqualValues(t, Failure, response.Base.Status)
+		assert.Contains(t, response.FailedAspects, StatusCodeAspect)
+		assert.Contains(t, response.FailedAspects, BodyAspect)
+		assert.Contains(t, response.FailedAspects, HeadersAspect)
+		assert.Len(t, response.FailedAspects, 3)
+	} else {
+		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
+	}
 
 	mockClient.AssertExpectations(t)
 }

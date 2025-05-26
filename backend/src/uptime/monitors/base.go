@@ -26,8 +26,32 @@ type BaseMonitorResponse struct {
 	Failures  []string              `json:"failures,omitempty" bson:"failures,omitempty"` // List of specific failures, if any
 }
 
+func (b *BaseMonitorResponse) GetStatus() MonitorResponseStatus {
+	return b.Status
+}
+func (b *BaseMonitorResponse) GetDuration() int64 {
+	return b.Duration
+}
+func (b *BaseMonitorResponse) GetTimestamp() int64 {
+	return b.Timestamp
+}
+func (b *BaseMonitorResponse) GetErrors() []string {
+	return b.Errors
+}
+func (b *BaseMonitorResponse) GetFailures() []string {
+	return b.Failures
+}
+
+type IMonitorResponse interface {
+	GetStatus() MonitorResponseStatus
+	GetDuration() int64
+	GetTimestamp() int64
+	GetErrors() []string
+	GetFailures() []string
+}
+
 type IMonitor interface {
-	Run() error
+	Run(client HttpClient) (IMonitorResponse, error)
 	GetName() string
 	GetDescription() string
 	GetInterval() int
@@ -64,22 +88,22 @@ func (m *BaseMonitor) validate() error {
 	return nil
 }
 
-func (m *BaseMonitorResponse) addErrorMsg(err string) {
-	if m.Errors == nil {
-		m.Errors = make([]string, 0)
+func (b *BaseMonitorResponse) addErrorMsg(err string) {
+	if b.Errors == nil {
+		b.Errors = make([]string, 0)
 	}
-	m.Errors = append(m.Errors, err)
-	m.Status = Error
+	b.Errors = append(b.Errors, err)
+	b.Status = Error
 }
 
-func (m *BaseMonitorResponse) addFailureMsg(err string) {
-	if m.Failures == nil {
-		m.Failures = make([]string, 0)
+func (b *BaseMonitorResponse) addFailureMsg(err string) {
+	if b.Failures == nil {
+		b.Failures = make([]string, 0)
 	}
-	m.Failures = append(m.Failures, err)
+	b.Failures = append(b.Failures, err)
 
 	// If the status is not already set to Error, set it to Failure. Error always takes precedence.
-	if m.Status != Error {
-		m.Status = Failure
+	if b.Status != Error {
+		b.Status = Failure
 	}
 }

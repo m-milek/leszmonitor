@@ -29,6 +29,22 @@ type HttpMonitorResponse struct {
 	FailedAspects   []HttpCheckAspect   `json:"failed_aspects" bson:"failed_aspects"` // Aspects that failed during the check
 }
 
+func (b *HttpMonitorResponse) GetStatus() MonitorResponseStatus {
+	return b.Base.Status
+}
+func (b *HttpMonitorResponse) GetDuration() int64 {
+	return b.Base.Duration
+}
+func (b *HttpMonitorResponse) GetTimestamp() int64 {
+	return b.Base.Timestamp
+}
+func (b *HttpMonitorResponse) GetErrors() []string {
+	return b.Base.Errors
+}
+func (b *HttpMonitorResponse) GetFailures() []string {
+	return b.Base.Failures
+}
+
 type HttpCheckAspect string
 
 const (
@@ -62,7 +78,7 @@ func NewHttpMonitor(base BaseMonitor, httpMethod, url string, headers map[string
 	return monitor, nil
 }
 
-func (m *HttpMonitor) Run(httpClient HttpClient) (*HttpMonitorResponse, error) {
+func (m *HttpMonitor) Run(httpClient HttpClient) (IMonitorResponse, error) {
 	monitorResponse := newHttpMonitorResponse()
 
 	response, elapsed, err := m.executeRequest(httpClient)
@@ -311,24 +327,24 @@ func (m *HttpMonitor) GetType() MonitorType {
 	return Http
 }
 
-func (m *HttpMonitorResponse) setStatus(status MonitorResponseStatus) {
-	m.Base.Status = status
+func (b *HttpMonitorResponse) setStatus(status MonitorResponseStatus) {
+	b.Base.Status = status
 }
 
-func (m *HttpMonitorResponse) addErrorMsg(err string) {
-	m.Base.addErrorMsg(err)
+func (b *HttpMonitorResponse) addErrorMsg(err string) {
+	b.Base.addErrorMsg(err)
 }
 
-func (m *HttpMonitorResponse) addFailureMsg(err string) {
-	m.Base.addFailureMsg(err)
+func (b *HttpMonitorResponse) addFailureMsg(err string) {
+	b.Base.addFailureMsg(err)
 }
 
-func (m *HttpMonitorResponse) addFailedAspect(aspect HttpCheckAspect) {
-	if m.FailedAspects == nil {
-		m.FailedAspects = make([]HttpCheckAspect, 0)
+func (b *HttpMonitorResponse) addFailedAspect(aspect HttpCheckAspect) {
+	if b.FailedAspects == nil {
+		b.FailedAspects = make([]HttpCheckAspect, 0)
 	}
-	m.FailedAspects = append(m.FailedAspects, aspect)
-	if m.Base.Status != Error {
-		m.Base.Status = Failure
+	b.FailedAspects = append(b.FailedAspects, aspect)
+	if b.Base.Status != Error {
+		b.Base.Status = Failure
 	}
 }

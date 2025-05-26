@@ -12,6 +12,14 @@ func StartUptimeWorker(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
+	allMonitors, err := db.GetAllMonitors()
+
+	if err != nil {
+		logger.Uptime.Error().Err(err).Msg("Failed to retrieve monitors from database")
+		return
+	}
+	logger.Uptime.Info().Any("monitors", allMonitors).Msgf("Found %d monitors to check", len(allMonitors))
+
 	for {
 		select {
 		case <-ctx.Done():
