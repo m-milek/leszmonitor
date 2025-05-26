@@ -54,9 +54,7 @@ tasks:
     desc: Run the back-end tests
     dir: '{{.BACKEND_SRC_DIR}}'
     cmds:
-      - go test -v .
-    sources:
-      - '**/*.go'
+      - go test -v ./...
     generates:
       - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
 
