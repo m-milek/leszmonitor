@@ -8,16 +8,16 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var httpClient httpClient = newHttpClient()
+var client httpClient = newHttpClient()
 
 func TestHttpMonitorRunSuccess(t *testing.T) {
 	// Save the original client and restore it after the test
-	originalClient := httpClient
-	defer func() { httpClient = originalClient }()
+	originalClient := client
+	defer func() { client = originalClient }()
 
 	// Create a mock client
 	mockClient := new(MockHTTPClient)
-	httpClient = mockClient
+	client = mockClient
 
 	monitor := setupTestHttpMonitor()
 
@@ -43,12 +43,12 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 
 func TestHttpMonitorRunFailure(t *testing.T) {
 	// Save the original client and restore it after the test
-	originalClient := httpClient
-	defer func() { httpClient = originalClient }()
+	originalClient := client
+	defer func() { client = originalClient }()
 
 	// Create a mock client
 	mockClient := new(MockHTTPClient)
-	httpClient = mockClient
+	client = mockClient
 
 	monitor := setupTestHttpMonitor()
 
@@ -75,12 +75,12 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 
 func TestHttpMonitorRunError(t *testing.T) {
 	// Save the original client and restore it after the test
-	originalClient := httpClient
-	defer func() { httpClient = originalClient }()
+	originalClient := client
+	defer func() { client = originalClient }()
 
 	// Create a mock client
 	mockClient := new(MockHTTPClient)
-	httpClient = mockClient
+	client = mockClient
 
 	monitor := setupTestHttpMonitor()
 
@@ -102,12 +102,12 @@ func TestHttpMonitorRunError(t *testing.T) {
 
 func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	// Save the original client and restore it after the test
-	originalClient := httpClient
-	defer func() { httpClient = originalClient }()
+	originalClient := client
+	defer func() { client = originalClient }()
 
 	// Create a mock client
 	mockClient := new(MockHTTPClient)
-	httpClient = mockClient
+	client = mockClient
 
 	monitor := setupTestHttpMonitor()
 

@@ -12,7 +12,7 @@ import (
 )
 
 type HttpMonitor struct {
-	Base                 BaseMonitor       `json:"base" bson:"base,inline"`
+	Base                 baseMonitor       `json:"base" bson:"base,inline"`
 	HttpMethod           string            `json:"http_method" bson:"http_method"`
 	Url                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
@@ -28,7 +28,7 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewHttpMonitor(base BaseMonitor, httpMethod, url string, headers map[string]string, body string, expectedStatusCode int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpMonitor, error) {
+func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string]string, body string, expectedStatusCode int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpMonitor, error) {
 	monitor := &HttpMonitor{
 		Base:                 base,
 		HttpMethod:           httpMethod,
@@ -159,23 +159,6 @@ func (m *HttpMonitor) validateResponseBody(response *http.Response, monitorRespo
 	}
 }
 
-// getMismatchedHeaders checks the response headers against the expected headers
-func (m *HttpMonitor) getMismatchedHeaders(response *http.Response) map[string]string {
-	mismatchedHeaders := map[string]string{}
-	if len(m.ExpectedHeaders) == 0 {
-		return mismatchedHeaders
-	}
-
-	for key, expectedValue := range m.ExpectedHeaders {
-		actualValue := response.Header.Get(key)
-		if actualValue != expectedValue {
-			mismatchedHeaders[key] = actualValue
-		}
-	}
-
-	return mismatchedHeaders
-}
-
 // createRequest constructs an HTTP request based on the monitor's configuration
 func (m *HttpMonitor) createRequest() (*http.Request, error) {
 	parsedUrl, err := url.Parse(m.Url)
@@ -212,7 +195,7 @@ func newHttpClient() httpClient {
 // Helper function to create a new response object with default values
 func newHttpMonitorResponse() *HttpMonitorResponse {
 	return &HttpMonitorResponse{
-		Base: BaseMonitorResponse{
+		Base: baseMonitorResponse{
 			Status: Success,
 			Errors: []string{},
 		},

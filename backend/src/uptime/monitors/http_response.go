@@ -3,7 +3,7 @@ package monitors
 import "net/http"
 
 type HttpMonitorResponse struct {
-	Base            BaseMonitorResponse `json:"base" bson:"base,inline"`
+	Base            baseMonitorResponse `json:"base" bson:"base,inline"`
 	RawHttpResponse *http.Response      `json:"raw_response" bson:"raw_response"`
 	FailedAspects   []httpCheckAspect   `json:"failed_aspects" bson:"failed_aspects"` // Aspects that failed during the check
 }
