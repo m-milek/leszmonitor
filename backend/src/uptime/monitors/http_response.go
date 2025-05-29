@@ -2,6 +2,15 @@ package monitors
 
 import "net/http"
 
+type httpCheckAspect string
+
+const (
+	statusCodeAspect   httpCheckAspect = "StatusCode"
+	responseTimeAspect httpCheckAspect = "ResponseTime"
+	bodyAspect         httpCheckAspect = "Body"
+	headersAspect      httpCheckAspect = "Headers"
+)
+
 type HttpMonitorResponse struct {
 	Base            baseMonitorResponse `json:"base" bson:"base,inline"`
 	RawHttpResponse *http.Response      `json:"raw_response" bson:"raw_response"`
@@ -23,12 +32,3 @@ func (b *HttpMonitorResponse) GetErrors() []string {
 func (b *HttpMonitorResponse) GetFailures() []string {
 	return b.Base.Failures
 }
-
-type httpCheckAspect string
-
-const (
-	statusCodeAspect   httpCheckAspect = "StatusCode"
-	responseTimeAspect httpCheckAspect = "ResponseTime"
-	bodyAspect         httpCheckAspect = "Body"
-	headersAspect      httpCheckAspect = "Headers"
-)

@@ -16,51 +16,51 @@ func TestNewHttpMonitor(t *testing.T) {
 	}
 
 	tests := []struct {
-		name               string
-		httpMethod         string
-		url                string
-		expectedStatusCode int
-		expectError        bool
-		errorMessage       string
+		name                string
+		httpMethod          string
+		url                 string
+		expectedStatusCodes []int
+		expectError         bool
+		errorMessage        string
 	}{
 		{
-			name:               "Valid HTTP Monitor",
-			httpMethod:         "GET",
-			url:                "https://example.com",
-			expectedStatusCode: 200,
-			expectError:        false,
+			name:                "Valid HTTP Monitor",
+			httpMethod:          "GET",
+			url:                 "https://example.com",
+			expectedStatusCodes: []int{200},
+			expectError:         false,
 		},
 		{
-			name:               "Empty URL",
-			httpMethod:         "GET",
-			url:                "",
-			expectedStatusCode: 200,
-			expectError:        true,
-			errorMessage:       "URL cannot be empty in HTTP monitor",
+			name:                "Empty URL",
+			httpMethod:          "GET",
+			url:                 "",
+			expectedStatusCodes: []int{200},
+			expectError:         true,
+			errorMessage:        "URL cannot be empty",
 		},
 		{
-			name:               "Empty HTTP Method",
-			httpMethod:         "",
-			url:                "https://example.com",
-			expectedStatusCode: 200,
-			expectError:        true,
-			errorMessage:       "HTTP method cannot be empty in HTTP monitor",
+			name:                "Empty HTTP Method",
+			httpMethod:          "",
+			url:                 "https://example.com",
+			expectedStatusCodes: []int{200},
+			expectError:         true,
+			errorMessage:        "HTTP method cannot be empty",
 		},
 		{
-			name:               "Invalid Status Code",
-			httpMethod:         "GET",
-			url:                "https://example.com",
-			expectedStatusCode: 600,
-			expectError:        true,
-			errorMessage:       "expected status code must be between 100 and 599 in HTTP monitor",
+			name:                "Invalid Status Code",
+			httpMethod:          "GET",
+			url:                 "https://example.com",
+			expectedStatusCodes: []int{600},
+			expectError:         true,
+			errorMessage:        "expected status codes must be between 100 and 599",
 		},
 		{
-			name:               "Invalid URL Scheme",
-			httpMethod:         "GET",
-			url:                "ftp://example.com",
-			expectedStatusCode: 200,
-			expectError:        true,
-			errorMessage:       "URL scheme must be either http or https in HTTP monitor",
+			name:                "Invalid URL Scheme",
+			httpMethod:          "GET",
+			url:                 "ftp://example.com",
+			expectedStatusCodes: []int{200},
+			expectError:         true,
+			errorMessage:        "URL scheme must be either http or https",
 		},
 	}
 
@@ -72,7 +72,7 @@ func TestNewHttpMonitor(t *testing.T) {
 				tt.url,
 				map[string]string{},
 				"",
-				tt.expectedStatusCode,
+				tt.expectedStatusCodes,
 				"",
 				map[string]string{},
 				1000,
@@ -87,7 +87,7 @@ func TestNewHttpMonitor(t *testing.T) {
 				assert.NotNil(t, monitor)
 				assert.Equal(t, tt.httpMethod, monitor.HttpMethod)
 				assert.Equal(t, tt.url, monitor.Url)
-				assert.Equal(t, tt.expectedStatusCode, *monitor.ExpectedStatusCode)
+				assert.Equal(t, tt.expectedStatusCodes, monitor.ExpectedStatusCodes)
 			}
 		})
 	}

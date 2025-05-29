@@ -1,91 +1,261 @@
 package monitors
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func TestHttpMonitor_Validate(t *testing.T) {
+	// Setup function to create a valid monitor
+	setupValidMonitor := func() *HttpMonitor {
+		return &HttpMonitor{
+			Base: baseMonitor{
+				Name:     "Test Monitor",
+				Timeout:  100,
+				Interval: 60,
+			},
+			Url:        "https://example.com",
+			HttpMethod: "GET",
+		}
+	}
+
+	// Test valid monitor
+	t.Run("Valid HTTP Monitor", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		err := monitor.validate()
+		assert.NoError(t, err)
+		assert.Equal(t, Http, monitor.Base.Type)
+	})
+
+	// Test base validation failure
+	t.Run("Base Validation Failure", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		monitor.Base.Name = "" // Make base invalid
+		err := monitor.validate()
+		assert.Error(t, err)
+	})
+
+	// Test empty URL
+	t.Run("Empty URL", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		monitor.Url = ""
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "URL cannot be empty")
+	})
+
+	// Test empty HTTP method
+	t.Run("Empty HTTP Method", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		monitor.HttpMethod = ""
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "HTTP method cannot be empty")
+	})
+
+	// Test invalid HTTP method
+	t.Run("Invalid HTTP Method", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		monitor.HttpMethod = "INVALID"
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid HTTP method")
+	})
+
+	// Test empty expected status codes
+	t.Run("Empty Expected Status Codes", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		emptyCodes := []int{}
+		monitor.ExpectedStatusCodes = emptyCodes
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "expected status codes cannot be empty")
+	})
+
+	// Test invalid status code range (too low)
+	t.Run("Status Code Too Low", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		invalidCodes := []int{50, 200}
+		monitor.ExpectedStatusCodes = invalidCodes
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "expected status codes must be between 100 and 599")
+	})
+
+	// Test invalid status code range (too high)
+	t.Run("Status Code Too High", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		invalidCodes := []int{200, 600}
+		monitor.ExpectedStatusCodes = invalidCodes
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "expected status codes must be between 100 and 599")
+	})
+
+	// Test invalid URL format
+	t.Run("Invalid URL Format", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		monitor.Url = "not-a-valid-url"
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid URL format")
+	})
+
+	// Test invalid URL scheme
+	t.Run("Invalid URL Scheme", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		monitor.Url = "ftp://example.com"
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "URL scheme must be either http or https")
+	})
+
+	// Test negative expected response time
+	t.Run("Negative Expected Response Time", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		negativeTime := -500
+		monitor.ExpectedResponseTime = &negativeTime
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "expected response time cannot be negative")
+	})
+
+	// Test valid status codes
+	t.Run("Valid Status Codes", func(t *testing.T) {
+		monitor := setupValidMonitor()
+		validCodes := []int{200, 201, 204}
+		monitor.ExpectedStatusCodes = validCodes
+		err := monitor.validate()
+		assert.NoError(t, err)
+	})
+
+	// Test all valid HTTP methods
+	validMethods := []string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}
+	for _, method := range validMethods {
+		t.Run("Valid HTTP Method: "+method, func(t *testing.T) {
+			monitor := setupValidMonitor()
+			monitor.HttpMethod = method
+			err := monitor.validate()
+			assert.NoError(t, err)
+		})
+	}
+}
+
 func TestValidateStatusCode(t *testing.T) {
-	monitor := setupTestHttpMonitor()
-	response := createMockResponse(200, "", nil)
+	setupTest := func() (*HttpMonitor, *http.Response, *HttpMonitorResponse) {
+		monitor := setupTestHttpMonitor()
+		response := createMockResponse(200, "", nil)
+		monitorResponse := newHttpMonitorResponse()
+		return monitor, response, monitorResponse
+	}
 
-	// Test matching status code
-	monitorResponse := newHttpMonitorResponse()
-	monitor.validateStatusCode(response, monitorResponse)
-	assert.Equal(t, Success, monitorResponse.Base.Status)
-	assert.Empty(t, monitorResponse.FailedAspects)
+	t.Run("Matching Status Code", func(t *testing.T) {
+		monitor, response, monitorResponse := setupTest()
 
-	// Test mismatched status code
-	wrongStatus := 404
-	monitor.ExpectedStatusCode = &wrongStatus
-	monitorResponse = newHttpMonitorResponse()
-	monitor.validateStatusCode(response, monitorResponse)
-	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, statusCodeAspect)
-	assert.Contains(t, monitorResponse.Base.Failures[0], "Unexpected status code")
+		monitor.validateStatusCode(response, monitorResponse)
+
+		assert.Equal(t, Success, monitorResponse.Base.Status)
+		assert.Empty(t, monitorResponse.FailedAspects)
+	})
+
+	t.Run("Mismatched Status Code", func(t *testing.T) {
+		monitor, response, monitorResponse := setupTest()
+		monitor.ExpectedStatusCodes = []int{404}
+
+		monitor.validateStatusCode(response, monitorResponse)
+
+		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.Contains(t, monitorResponse.FailedAspects, statusCodeAspect)
+		assert.Contains(t, monitorResponse.Base.Failures[0], "Unexpected status code")
+	})
 }
 
 func TestValidateResponseTime(t *testing.T) {
-	monitor := setupTestHttpMonitor()
+	setupTest := func() (*HttpMonitor, *HttpMonitorResponse) {
+		monitor := setupTestHttpMonitor()
+		monitorResponse := newHttpMonitorResponse()
+		return monitor, monitorResponse
+	}
 
-	// Test response time within limit
-	monitorResponse := newHttpMonitorResponse()
-	elapsed := 500 * time.Millisecond
-	monitor.validateResponseTime(elapsed, monitorResponse)
-	assert.EqualValues(t, Success, monitorResponse.Base.Status)
-	assert.Empty(t, monitorResponse.FailedAspects)
+	t.Run("Response Time Within Limit", func(t *testing.T) {
+		monitor, monitorResponse := setupTest()
+		elapsed := 500 * time.Millisecond
 
-	// Test response time exceeding limit
-	elapsed = 1500 * time.Millisecond
-	monitorResponse = newHttpMonitorResponse()
-	monitor.validateResponseTime(elapsed, monitorResponse)
-	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, responseTimeAspect)
-	assert.Contains(t, monitorResponse.Base.Failures[0], "Response time exceeded")
+		monitor.validateResponseTime(elapsed, monitorResponse)
+
+		assert.EqualValues(t, Success, monitorResponse.Base.Status)
+		assert.Empty(t, monitorResponse.FailedAspects)
+	})
+
+	t.Run("Response Time Exceeding Limit", func(t *testing.T) {
+		monitor, monitorResponse := setupTest()
+		elapsed := 1500 * time.Millisecond
+
+		monitor.validateResponseTime(elapsed, monitorResponse)
+
+		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.Contains(t, monitorResponse.FailedAspects, responseTimeAspect)
+		assert.Contains(t, monitorResponse.Base.Failures[0], "Response time exceeded")
+	})
 }
 
 func TestValidateResponseHeaders(t *testing.T) {
-	monitor := setupTestHttpMonitor()
+	setupTest := func(headers map[string]string) (*HttpMonitor, *http.Response, *HttpMonitorResponse) {
+		monitor := setupTestHttpMonitor()
+		response := createMockResponse(200, "", headers)
+		monitorResponse := newHttpMonitorResponse()
+		return monitor, response, monitorResponse
+	}
 
-	// Test matching headers
-	headers := map[string]string{"Content-Type": "application/json"}
-	response := createMockResponse(200, "", headers)
+	t.Run("Matching Headers", func(t *testing.T) {
+		headers := map[string]string{"Content-Type": "application/json"}
+		monitor, response, monitorResponse := setupTest(headers)
 
-	monitorResponse := newHttpMonitorResponse()
-	monitor.validateResponseHeaders(response, monitorResponse)
-	assert.EqualValues(t, Success, monitorResponse.Base.Status)
-	assert.Empty(t, monitorResponse.FailedAspects)
+		monitor.validateResponseHeaders(response, monitorResponse)
 
-	// Test mismatched headers
-	headers = map[string]string{"Content-Type": "text/html"}
-	response = createMockResponse(200, "", headers)
+		assert.EqualValues(t, Success, monitorResponse.Base.Status)
+		assert.Empty(t, monitorResponse.FailedAspects)
+	})
 
-	monitorResponse = newHttpMonitorResponse()
-	monitor.validateResponseHeaders(response, monitorResponse)
-	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, headersAspect)
-	assert.Contains(t, monitorResponse.Base.Failures[0], "Header mismatch")
+	t.Run("Mismatched Headers", func(t *testing.T) {
+		headers := map[string]string{"Content-Type": "text/html"}
+		monitor, response, monitorResponse := setupTest(headers)
+
+		monitor.validateResponseHeaders(response, monitorResponse)
+
+		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.Contains(t, monitorResponse.FailedAspects, headersAspect)
+		assert.Contains(t, monitorResponse.Base.Failures[0], "Header mismatch")
+	})
 }
 
 func TestValidateResponseBody(t *testing.T) {
-	monitor := setupTestHttpMonitor()
+	setupTest := func(body string) (*HttpMonitor, *http.Response, *HttpMonitorResponse) {
+		monitor := setupTestHttpMonitor()
+		response := createMockResponse(200, body, nil)
+		monitorResponse := newHttpMonitorResponse()
+		return monitor, response, monitorResponse
+	}
 
-	// Test matching body
-	response := createMockResponse(200, "success message", nil)
+	t.Run("Matching Body", func(t *testing.T) {
+		monitor, response, monitorResponse := setupTest("success message")
 
-	monitorResponse := newHttpMonitorResponse()
-	monitor.validateResponseBody(response, monitorResponse)
-	assert.EqualValues(t, Success, monitorResponse.Base.Status)
-	assert.Empty(t, monitorResponse.FailedAspects)
+		monitor.validateResponseBody(response, monitorResponse)
 
-	// Test non-matching body
-	response = createMockResponse(200, "error message", nil)
+		assert.EqualValues(t, Success, monitorResponse.Base.Status)
+		assert.Empty(t, monitorResponse.FailedAspects)
+	})
 
-	monitorResponse = newHttpMonitorResponse()
-	monitor.validateResponseBody(response, monitorResponse)
-	assert.EqualValues(t, Failure, monitorResponse.Base.Status)
-	assert.Contains(t, monitorResponse.FailedAspects, bodyAspect)
-	assert.Contains(t, monitorResponse.Base.Failures[0], "Response body does not match regex")
+	t.Run("Non-Matching Body", func(t *testing.T) {
+		monitor, response, monitorResponse := setupTest("error message")
+
+		monitor.validateResponseBody(response, monitorResponse)
+
+		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.Contains(t, monitorResponse.FailedAspects, bodyAspect)
+		assert.Contains(t, monitorResponse.Base.Failures[0], "Response body does not match regex")
+	})
 }

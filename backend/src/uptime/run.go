@@ -20,6 +20,10 @@ func StartUptimeWorker(ctx context.Context) {
 	}
 	logger.Uptime.Info().Any("monitors", allMonitors).Msgf("Found %d monitors to check", len(allMonitors))
 
+	for _, monitor := range allMonitors {
+		logger.Uptime.Debug().Type("type", monitor).Msgf("Starting uptime monitor: %s", monitor.GetName())
+	}
+
 	for {
 		select {
 		case <-ctx.Done():

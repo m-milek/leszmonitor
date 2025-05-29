@@ -30,7 +30,6 @@ func setupTestHttpMonitor() *HttpMonitor {
 		Type:        Http,
 	}
 
-	statusCode := 200
 	responseTime := 1000
 
 	return &HttpMonitor{
@@ -39,7 +38,7 @@ func setupTestHttpMonitor() *HttpMonitor {
 		Url:                  "https://example.com",
 		Headers:              map[string]string{"Accept": "application/json"},
 		Body:                 "",
-		ExpectedStatusCode:   &statusCode,
+		ExpectedStatusCodes:  []int{200},
 		ExpectedBodyRegex:    "success",
 		ExpectedHeaders:      map[string]string{"Content-Type": "application/json"},
 		ExpectedResponseTime: &responseTime,
