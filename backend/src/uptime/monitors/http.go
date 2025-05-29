@@ -3,6 +3,7 @@ package monitors
 import (
 	"fmt"
 	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/util"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,7 +18,7 @@ type HttpMonitor struct {
 	Url                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
 	Body                 string            `json:"body" bson:"body"`
-	ExpectedStatusCode   *int              `json:"expected_status_code" bson:"expected_status_code"`
+	ExpectedStatusCodes  []int             `json:"expected_status_codes" bson:"expected_status_codes"`
 	ExpectedBodyRegex    string            `json:"expected_body_regex" bson:"expected_body_regex"`
 	ExpectedHeaders      map[string]string `json:"expected_headers" bson:"expected_headers"`
 	ExpectedResponseTime *int              `json:"expected_response_time" bson:"expected_response_time"` // in milliseconds
@@ -28,14 +29,14 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string]string, body string, expectedStatusCode int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpMonitor, error) {
+func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string]string, body string, expectedStatusCodes []int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpMonitor, error) {
 	monitor := &HttpMonitor{
 		Base:                 base,
 		HttpMethod:           httpMethod,
 		Url:                  url,
 		Headers:              headers,
 		Body:                 body,
-		ExpectedStatusCode:   &expectedStatusCode,
+		ExpectedStatusCodes:  expectedStatusCodes,
 		ExpectedBodyRegex:    expectedBodyRegex,
 		ExpectedHeaders:      expectedHeaders,
 		ExpectedResponseTime: &expectedResponseTime,
@@ -98,11 +99,12 @@ func (m *HttpMonitor) executeRequest(httpClient httpClient) (*http.Response, tim
 }
 
 func (m *HttpMonitor) validateStatusCode(response *http.Response, monitorResponse *HttpMonitorResponse) {
-	if m.ExpectedStatusCode == nil {
+	if m.ExpectedStatusCodes == nil {
 		return
 	}
-	if response.StatusCode != *m.ExpectedStatusCode {
-		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected %d", response.StatusCode, *m.ExpectedStatusCode)
+
+	if !util.SliceContains(m.ExpectedStatusCodes, response.StatusCode) {
+		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected one of %d", response.StatusCode, m.ExpectedStatusCodes)
 		monitorResponse.addFailureMsg(failureMsg)
 		monitorResponse.addFailedAspect(statusCodeAspect)
 	}
@@ -214,28 +216,39 @@ func (m *HttpMonitor) validate() error {
 	}
 
 	if m.Url == "" {
-		return fmt.Errorf("URL cannot be empty in HTTP monitor")
+		return fmt.Errorf("URL cannot be empty")
 	}
 
 	if m.HttpMethod == "" {
-		return fmt.Errorf("HTTP method cannot be empty in HTTP monitor")
+		return fmt.Errorf("HTTP method cannot be empty")
 	}
 
-	if m.ExpectedStatusCode != nil && (*m.ExpectedStatusCode < 100 || *m.ExpectedStatusCode > 599) {
-		return fmt.Errorf("expected status code must be between 100 and 599 in HTTP monitor")
+	if !util.SliceContains([]string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, m.HttpMethod) {
+		return fmt.Errorf("invalid HTTP method: %s", m.HttpMethod)
+	}
+
+	if m.ExpectedStatusCodes != nil && len(m.ExpectedStatusCodes) == 0 {
+		return fmt.Errorf("expected status codes cannot be empty")
+	}
+
+	if m.ExpectedStatusCodes != nil && len(m.ExpectedStatusCodes) > 0 {
+		minValue, maxValue := util.SliceMinMax(m.ExpectedStatusCodes)
+		if minValue < 100 || maxValue > 599 {
+			return fmt.Errorf("expected status codes must be between 100 and 599")
+		}
 	}
 
 	parsedUrl, err := url.Parse(m.Url)
 	if err != nil || parsedUrl.Scheme == "" || parsedUrl.Host == "" {
-		return fmt.Errorf("invalid URL format in HTTP monitor: %s", m.Url)
+		return fmt.Errorf("invalid URL format: %s", m.Url)
 	}
 
 	if parsedUrl.Scheme != "http" && parsedUrl.Scheme != "https" {
-		return fmt.Errorf("URL scheme must be either http or https in HTTP monitor: %s", m.Url)
+		return fmt.Errorf("URL scheme must be either http or https: %s", m.Url)
 	}
 
 	if m.ExpectedResponseTime != nil && *m.ExpectedResponseTime < 0 {
-		return fmt.Errorf("expected response time cannot be negative in HTTP monitor")
+		return fmt.Errorf("expected response time cannot be negative")
 	}
 
 	return nil
