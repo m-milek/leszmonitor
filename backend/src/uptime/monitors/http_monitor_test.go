@@ -26,7 +26,6 @@ func setupTestHttpMonitor() *HttpMonitor {
 		Name:        "Test HTTP Monitor",
 		Description: "Test Description",
 		Interval:    60,
-		Timeout:     10,
 		Type:        Http,
 	}
 

@@ -12,7 +12,6 @@ func TestNewHttpMonitor(t *testing.T) {
 		Name:        "Test Monitor",
 		Description: "Test Description",
 		Interval:    60,
-		Timeout:     10,
 	}
 
 	tests := []struct {

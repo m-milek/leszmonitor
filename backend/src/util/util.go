@@ -1,6 +1,9 @@
 package util
 
-import "golang.org/x/exp/constraints"
+import (
+	"golang.org/x/exp/constraints"
+	"time"
+)
 
 func SliceContains[T comparable](slice []T, item T) bool {
 	for _, v := range slice {
@@ -25,4 +28,12 @@ func SliceMinMax[T constraints.Ordered](slice []T) (min T, max T) {
 		}
 	}
 	return
+}
+
+func GetUnixTimestamp() int64 {
+	return time.Now().Unix()
+}
+
+func GetUnixTimestampMillis() int64 {
+	return time.Now().UnixMilli()
 }
