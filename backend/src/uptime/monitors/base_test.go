@@ -10,7 +10,6 @@ func createTestBaseMonitor() baseMonitor {
 		Name:        "Test Monitor",
 		Description: "Test Description",
 		Interval:    60,
-		Timeout:     10,
 		Type:        Http,
 		OwnerId:     "test-owner-id",
 	}
@@ -44,22 +43,6 @@ func TestBaseMonitorValidateNegativeInterval(t *testing.T) {
 	err := monitor.validate()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "interval must be greater than zero")
-}
-
-func TestBaseMonitorValidateZeroTimeout(t *testing.T) {
-	monitor := createTestBaseMonitor()
-	monitor.Timeout = 0
-	err := monitor.validate()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "timeout must be greater than zero")
-}
-
-func TestBaseMonitorValidateNegativeTimeout(t *testing.T) {
-	monitor := createTestBaseMonitor()
-	monitor.Timeout = -5
-	err := monitor.validate()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "timeout must be greater than zero")
 }
 
 func TestBaseMonitorValidateEmptyType(t *testing.T) {

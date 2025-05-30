@@ -14,7 +14,6 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		return &HttpMonitor{
 			Base: baseMonitor{
 				Name:     "Test Monitor",
-				Timeout:  100,
 				Interval: 60,
 			},
 			Url:        "https://example.com",

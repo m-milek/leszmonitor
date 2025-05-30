@@ -46,6 +46,8 @@ func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string
 		return nil, err
 	}
 
+	base.Type = Http
+
 	return monitor, nil
 }
 
@@ -283,10 +285,6 @@ func (m *HttpMonitor) GetDescription() string {
 
 func (m *HttpMonitor) GetInterval() int {
 	return m.Base.Interval
-}
-
-func (m *HttpMonitor) GetTimeout() int {
-	return m.Base.Timeout
 }
 
 func (m *HttpMonitor) GetType() MonitorType {
