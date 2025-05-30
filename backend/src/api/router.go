@@ -9,8 +9,8 @@ func SetupRouters(
 	publicRouter *http.ServeMux,
 	protectedRouter *http.ServeMux,
 ) {
-	protectedRouter.HandleFunc("/health", handlers.GetHealthCheckHandler)
+	protectedRouter.HandleFunc("GET /health", handlers.GetHealthCheckHandler)
 
-	publicRouter.HandleFunc("/auth/register", handlers.UserRegisterHandler)
-	publicRouter.HandleFunc("/auth/login", handlers.LoginHandler)
+	publicRouter.HandleFunc("POST /auth/register", handlers.UserRegisterHandler)
+	publicRouter.HandleFunc("POST /auth/login", handlers.LoginHandler)
 }
