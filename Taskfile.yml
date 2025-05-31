@@ -40,7 +40,7 @@ tasks:
     deps: [db:run]
     dir: '{{.BACKEND_SRC_DIR}}'
     cmds:
-      - air -build.stop_on_error true
+      - $GOPATH/bin/air -build.stop_on_error true
 
   backend:clean:
     desc: Clean the back-end build artifacts

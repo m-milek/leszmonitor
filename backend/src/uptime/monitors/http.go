@@ -13,7 +13,7 @@ import (
 )
 
 type HttpMonitor struct {
-	baseMonitor
+	Base                 baseMonitor       `json:"base" bson:"base,inline"`
 	HttpMethod           string            `json:"http_method" bson:"http_method"`
 	Url                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
@@ -31,7 +31,7 @@ type httpClient interface {
 
 func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string]string, body string, expectedStatusCodes []int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpMonitor, error) {
 	monitor := &HttpMonitor{
-		baseMonitor:          base,
+		Base:                 base,
 		HttpMethod:           httpMethod,
 		Url:                  url,
 		Headers:              headers,
@@ -81,9 +81,9 @@ func (m *HttpMonitor) Run() (IMonitorResponse, error) {
 	m.checkResponseBody(response, monitorResponse)
 
 	if monitorResponse.Base.Status == Error {
-		errMsg := fmt.Sprintf("HTTP monitor run %s finished with errors: %v", m.Name, monitorResponse.Base.Errors)
+		errMsg := fmt.Sprintf("HTTP monitor run %s finished with errors: %v", m.Base.Name, monitorResponse.Base.Errors)
 		logger.Uptime.Error().Any("monitor_response", monitorResponse).Msg(errMsg)
-		return monitorResponse, fmt.Errorf("HTTP monitor run %s finished with errors: %v", m.Name, monitorResponse.Base.Errors)
+		return monitorResponse, fmt.Errorf("HTTP monitor run %s finished with errors: %v", m.Base.Name, monitorResponse.Base.Errors)
 	}
 
 	logger.Uptime.Debug().Any("monitor_response", monitorResponse).Msg("HTTP monitor run completed successfully")
@@ -216,7 +216,7 @@ func (m *HttpMonitor) validateBase() error {
 // validate checks if the HTTP monitor configuration is valid
 // It ensures that required fields are set and that the URL is properly formatted.
 func (m *HttpMonitor) validate() error {
-	m.Type = Http
+	m.Base.Type = Http
 
 	baseValidationErr := m.validateBase()
 	if baseValidationErr != nil {
@@ -282,19 +282,19 @@ func readResponseBody(response *http.Response) (string, error) {
 }
 
 func (m *HttpMonitor) GetId() string {
-	return m.Id
+	return m.Base.Id
 }
 
 func (m *HttpMonitor) GetName() string {
-	return m.Name
+	return m.Base.Name
 }
 
 func (m *HttpMonitor) GetDescription() string {
-	return m.Description
+	return m.Base.Description
 }
 
 func (m *HttpMonitor) GetInterval() int {
-	return m.Interval
+	return m.Base.Interval
 }
 
 func (m *HttpMonitor) GetType() MonitorType {
@@ -302,12 +302,13 @@ func (m *HttpMonitor) GetType() MonitorType {
 }
 
 func (m *HttpMonitor) setBase(base baseMonitor) {
-	m.Name = base.Name
-	m.Description = base.Description
-	m.Interval = base.Interval
-	m.Id = base.Id
-	m.OwnerId = base.OwnerId
-	m.Type = base.Type
+	m.Base = base
+	//m.Name = base.Name
+	//m.Description = base.Description
+	//m.Interval = base.Interval
+	//m.Id = base.Id
+	//m.OwnerId = base.OwnerId
+	//m.Type = base.Type
 }
 
 func (b *HttpMonitorResponse) setStatus(status MonitorResponseStatus) {

@@ -338,6 +338,7 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 			case monitors.Http:
 				httpMonitor := &monitors.HttpMonitor{}
 				// Re-encode and decode to the concrete type
+				logger.Db.Trace().Any("raw", rawDoc).Msg("Decoding HTTP monitor from BSON")
 				data, err := bson.Marshal(rawDoc)
 				if err != nil {
 					return nil, err
@@ -345,6 +346,7 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 				if err := bson.Unmarshal(data, httpMonitor); err != nil {
 					return nil, err
 				}
+				logger.Db.Trace().Str("monitor_id", httpMonitor.GetId()).Msg("Decoded HTTP monitor from BSON")
 				monitor = httpMonitor
 
 			case monitors.Ping:
@@ -394,6 +396,31 @@ func DeleteMonitor(id string) (bool, error) {
 
 	if err != nil {
 		return false, err
+	}
+	return dbRes.Result, nil
+}
+
+func GetMonitorById(id string) (monitors.IMonitor, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (monitors.IMonitor, error) {
+		var rawDoc bson.M
+		err := dbClient.getMonitorsCollection().FindOne(ctx, bson.M{"id": id}).Decode(&rawDoc)
+		if err != nil {
+			return nil, err
+		}
+		logger.Db.Trace().Any("rawDoc", rawDoc).Msg("Found monitor by ID")
+		monitor, err := monitors.MapFromBson(rawDoc)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to map monitor from BSON: %w", err)
+		}
+
+		return monitor, nil
+	})
+
+	logDbOperation("GetMonitorById", dbRes, err)
+
+	if err != nil {
+		return nil, err
 	}
 	return dbRes.Result, nil
 }

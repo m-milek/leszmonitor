@@ -27,7 +27,7 @@ func setupTestHttpMonitor() *HttpMonitor {
 	responseTime := 1000
 
 	return &HttpMonitor{
-		baseMonitor:          baseMonitor,
+		Base:                 baseMonitor,
 		HttpMethod:           "GET",
 		Url:                  "https://example.com",
 		Headers:              map[string]string{"Accept": "application/json"},
