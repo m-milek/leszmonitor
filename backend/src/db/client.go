@@ -284,19 +284,20 @@ func GetUser(username string) (*model.User, error) {
 	return dbRes.Result, nil
 }
 
-func AddMonitor(monitor monitors.IMonitor) (*mongo.InsertOneResult, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
-		res, err := dbClient.getMonitorsCollection().InsertOne(ctx, monitor)
+// AddMonitor adds a new monitor to the database and returns its ID (short ID).
+func AddMonitor(monitor monitors.IMonitor) (string, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (string, error) {
+		_, err := dbClient.getMonitorsCollection().InsertOne(ctx, monitor)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
-		return res, nil
+		return monitor.GetId(), nil
 	})
 
 	logDbOperation("InsertMonitor", dbRes, err)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return dbRes.Result, nil
 }

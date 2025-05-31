@@ -29,6 +29,10 @@ func mapMonitorType(typeTag string) reflect.Type {
 	return nil
 }
 
+type AddMonitorResponse struct {
+	MonitorId string `json:"monitor_id"`
+}
+
 // AddMonitor handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func AddMonitor(w http.ResponseWriter, r *http.Request) {
@@ -73,4 +77,8 @@ func AddMonitor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.Api.Debug().Any("monitor", monitorInstance).Msg("Parsed monitor configuration")
+
+	util.RespondJSON(w, http.StatusCreated, AddMonitorResponse{
+		MonitorId: monitor.GetId(),
+	})
 }
