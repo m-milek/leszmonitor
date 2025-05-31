@@ -29,6 +29,10 @@ type PingMonitor struct {
 	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
+func (m *PingMonitor) GetId() string {
+	return m.Base.Id
+}
+
 func (m *PingMonitor) GetName() string {
 	return m.Base.Name
 }

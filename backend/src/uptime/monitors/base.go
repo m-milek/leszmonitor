@@ -3,10 +3,13 @@ package monitors
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog/log"
+	"github.com/teris-io/shortid"
 )
 
 type IMonitor interface {
 	Run() (IMonitorResponse, error)
+	GetId() string
 	GetName() string
 	GetDescription() string
 	GetInterval() int
@@ -15,6 +18,7 @@ type IMonitor interface {
 }
 
 type baseMonitor struct {
+	Id          string      `json:"id" bson:"id"`                   // Unique identifier for the monitor
 	Name        string      `json:"name" bson:"name"`               // Name of the monitor
 	Description string      `json:"description" bson:"description"` // Description of the monitor
 	Interval    int         `json:"interval" bson:"interval"`       // How often to run the monitor in seconds
@@ -28,6 +32,17 @@ const (
 	Http MonitorType = "http"
 	Ping MonitorType = "ping"
 )
+
+func NewBaseMonitor(name, description string, interval int, ownerId string, monitorType MonitorType) *baseMonitor {
+	return &baseMonitor{
+		Id:          generateMonitorId(),
+		Name:        name,
+		Description: description,
+		Interval:    interval,
+		OwnerId:     ownerId,
+		Type:        monitorType,
+	}
+}
 
 func (m *baseMonitor) validate() error {
 	if m.Name == "" {
@@ -50,7 +65,23 @@ func UnmarshalMonitor(rawData []byte, monitorData IMonitor) error {
 	if err := json.Unmarshal(rawData, &monitorData); err != nil {
 		return err
 	}
+
+	if base.Id == "" {
+		log.Trace().Msg("Monitor ID is empty, generating a new one")
+		base.Id = generateMonitorId()
+	} else {
+		log.Trace().Msgf("Monitor ID is set: %s", base.Id)
+	}
+
 	monitorData.setBase(base)
 
 	return nil
+}
+
+func generateMonitorId() string {
+	id, err := shortid.Generate()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate monitor ID: %v", err))
+	}
+	return id
 }

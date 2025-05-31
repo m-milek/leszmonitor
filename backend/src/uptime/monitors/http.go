@@ -277,6 +277,10 @@ func readResponseBody(response *http.Response) (string, error) {
 	return string(bodyBytes), nil
 }
 
+func (m *HttpMonitor) GetId() string {
+	return m.Base.Id
+}
+
 func (m *HttpMonitor) GetName() string {
 	return m.Base.Name
 }
