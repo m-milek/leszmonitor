@@ -347,6 +347,18 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 				}
 				monitor = httpMonitor
 
+			case monitors.Ping:
+				pingMonitor := &monitors.PingMonitor{}
+				// Re-encode and decode to the concrete type
+				data, err := bson.Marshal(rawDoc)
+				if err != nil {
+					return nil, err
+				}
+				if err := bson.Unmarshal(data, pingMonitor); err != nil {
+					return nil, err
+				}
+				monitor = pingMonitor
+
 			default:
 				return nil, fmt.Errorf("unknown monitor type: %s", monitorType)
 			}
@@ -365,6 +377,23 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 
 	if err != nil {
 		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func DeleteMonitor(id string) (bool, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
+		result, err := dbClient.getMonitorsCollection().DeleteOne(ctx, bson.M{"id": id})
+		if err != nil {
+			return false, err
+		}
+		return result.DeletedCount > 0, nil
+	})
+
+	logDbOperation("DeleteMonitor", dbRes, err)
+
+	if err != nil {
+		return false, err
 	}
 	return dbRes.Result, nil
 }

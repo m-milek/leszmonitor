@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/m-milek/leszmonitor/api/util"
+	"github.com/m-milek/leszmonitor/api/api_util"
+	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/uptime/monitors"
 	"net/http"
@@ -33,9 +34,9 @@ type AddMonitorResponse struct {
 	MonitorId string `json:"monitor_id"`
 }
 
-// AddMonitor handles the addition of a new monitor.
+// AddMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
-func AddMonitor(w http.ResponseWriter, r *http.Request) {
+func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	var rawData json.RawMessage
 	if err := json.NewDecoder(r.Body).Decode(&rawData); err != nil {
 		logger.Api.Trace().Err(err).Msg("Failed to decode request body")
@@ -76,9 +77,44 @@ func AddMonitor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Api.Debug().Any("monitor", monitorInstance).Msg("Parsed monitor configuration")
+	logger.Api.Debug().Any("monitor", monitor).Msg("Parsed monitor configuration")
+
+	id, err := db.AddMonitor(monitor)
+	if err != nil {
+		logger.Api.Error().Err(err).Msg("Failed to add monitor to database")
+		util.RespondMessage(w, http.StatusInternalServerError, "Failed to add monitor")
+		return
+	}
+	logger.Api.Debug().Str("monitor_id", id).Msg("Monitor added successfully")
 
 	util.RespondJSON(w, http.StatusCreated, AddMonitorResponse{
 		MonitorId: monitor.GetId(),
 	})
+}
+
+func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		logger.Api.Trace().Msg("Monitor ID is required for deletion")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
+		return
+	}
+
+	wasDeleted, err := db.DeleteMonitor(id)
+
+	if err != nil {
+		msg := "Failed to delete monitor"
+		logger.Api.Error().Err(err).Str("monitor_id", id).Msg(msg)
+		util.RespondMessage(w, http.StatusInternalServerError, msg)
+		return
+	}
+
+	if !wasDeleted {
+		msg := "Monitor not found or already deleted"
+		logger.Api.Warn().Str("monitor_id", id).Msg(msg)
+		util.RespondMessage(w, http.StatusNotFound, msg)
+		return
+	}
+
+	util.RespondMessage(w, http.StatusOK, "Monitor deleted successfully")
 }
