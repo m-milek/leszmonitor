@@ -14,7 +14,9 @@ type IMonitor interface {
 	GetDescription() string
 	GetInterval() int
 	validate() error
+	validateBase() error
 	setBase(base baseMonitor)
+	GetType() MonitorType
 }
 
 type baseMonitor struct {
@@ -44,15 +46,18 @@ func NewBaseMonitor(name, description string, interval int, ownerId string, moni
 	}
 }
 
-func (m *baseMonitor) validate() error {
-	if m.Name == "" {
+func validateBaseMonitor(b IMonitor) error {
+	if b.GetName() == "" {
 		return fmt.Errorf("monitor name cannot be empty")
 	}
-	if m.Interval <= 0 {
+	if b.GetInterval() <= 0 {
 		return fmt.Errorf("monitor interval must be greater than zero")
 	}
-	if m.Type == "" {
+	if b.GetType() == "" {
 		return fmt.Errorf("monitor type cannot be empty")
+	}
+	if b.GetId() == "" {
+		return fmt.Errorf("monitor ID cannot be empty")
 	}
 	return nil
 }
@@ -84,4 +89,40 @@ func generateMonitorId() string {
 		panic(fmt.Sprintf("Failed to generate monitor ID: %v", err))
 	}
 	return id
+}
+
+func (b baseMonitor) Run() (IMonitorResponse, error) {
+	return nil, fmt.Errorf("run method not implemented for baseMonitor")
+}
+
+func (b baseMonitor) GetId() string {
+	return b.Id
+}
+
+func (b baseMonitor) GetName() string {
+	return b.Name
+}
+
+func (b baseMonitor) GetDescription() string {
+	return b.Description
+}
+
+func (b baseMonitor) GetInterval() int {
+	return b.Interval
+}
+
+func (b baseMonitor) validate() error {
+	return validateBaseMonitor(b)
+}
+
+func (b baseMonitor) validateBase() error {
+	return validateBaseMonitor(b)
+}
+
+func (b baseMonitor) setBase(base baseMonitor) {
+	return // baseMonitor does not have a setBase method, this is a no-op
+}
+
+func (b baseMonitor) GetType() MonitorType {
+	return b.Type
 }

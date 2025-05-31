@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// MockHTTPClient is a mock implementation of the HTTP client
+// MockHTTPClient is a mock implementation of the HTTP mockHttpClient
 type MockHTTPClient struct {
 	mock.Mock
 }
@@ -22,17 +22,12 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 
 // Setup test helper functions
 func setupTestHttpMonitor() *HttpMonitor {
-	baseMonitor := baseMonitor{
-		Name:        "Test HTTP Monitor",
-		Description: "Test Description",
-		Interval:    60,
-		Type:        Http,
-	}
+	baseMonitor := createTestBaseMonitor()
 
 	responseTime := 1000
 
 	return &HttpMonitor{
-		Base:                 baseMonitor,
+		baseMonitor:          baseMonitor,
 		HttpMethod:           "GET",
 		Url:                  "https://example.com",
 		Headers:              map[string]string{"Accept": "application/json"},

@@ -118,3 +118,26 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 
 	util.RespondMessage(w, http.StatusOK, "Monitor deleted successfully")
 }
+
+func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
+	monitorsList, err := db.GetAllMonitors()
+	if err != nil {
+		logger.Api.Error().Err(err).Msg("Failed to retrieve monitors from database")
+		util.RespondMessage(w, http.StatusInternalServerError, "Failed to retrieve monitors")
+		return
+	}
+
+	logger.Api.Debug().Int("count", len(monitorsList)).Msg("Retrieved all monitors")
+
+	util.RespondJSON(w, http.StatusOK, monitorsList)
+}
+
+func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
+	id := request.PathValue("id")
+
+	if id == "" {
+		logger.Api.Trace().Msg("Monitor ID is required")
+		util.RespondMessage(writer, http.StatusBadRequest, "Monitor ID is required")
+		return
+	}
+}
