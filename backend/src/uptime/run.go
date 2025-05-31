@@ -30,11 +30,11 @@ func StartUptimeWorker(ctx context.Context) {
 			logger.Uptime.Info().Msg("Uptime worker shutting down...")
 			return
 		case <-ticker.C:
-			res, err := db.Ping()
-			if err != nil {
-				println(res)
-			}
-			logger.Uptime.Trace().Msg("Worker Uptime - running")
+			//res, err := db.Ping()
+			//if err != nil {
+			//	println(res)
+			//}
+			// logger.Uptime.Trace().Msg("Worker Uptime - running")
 		}
 	}
 }
