@@ -45,6 +45,10 @@ func (m *PingMonitor) GetInterval() int {
 	return m.Base.Interval
 }
 
+func (m *PingMonitor) GetType() MonitorType {
+	return m.Base.Type
+}
+
 func (m *PingMonitor) setBase(base baseMonitor) {
 	m.Base = base
 }
@@ -72,8 +76,12 @@ func (m *PingMonitor) Run() (IMonitorResponse, error) {
 	return monitorResponse, nil
 }
 
+func (m *PingMonitor) validateBase() error {
+	return validateBaseMonitor(m)
+}
+
 func (m *PingMonitor) validate() error {
-	baseErr := m.Base.validate()
+	baseErr := m.validateBase()
 	if baseErr != nil {
 		return baseErr
 	}

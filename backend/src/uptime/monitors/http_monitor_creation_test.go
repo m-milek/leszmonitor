@@ -8,11 +8,7 @@ import (
 )
 
 func TestNewHttpMonitor(t *testing.T) {
-	baseMonitor := baseMonitor{
-		Name:        "Test Monitor",
-		Description: "Test Description",
-		Interval:    60,
-	}
+	baseMonitor := createTestBaseMonitor()
 
 	tests := []struct {
 		name                string

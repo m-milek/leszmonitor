@@ -7,6 +7,7 @@ import (
 
 func createTestBaseMonitor() baseMonitor {
 	return baseMonitor{
+		Id:          generateMonitorId(),
 		Name:        "Test Monitor",
 		Description: "Test Description",
 		Interval:    60,
@@ -17,7 +18,7 @@ func createTestBaseMonitor() baseMonitor {
 
 func TestBaseMonitorValidateSuccess(t *testing.T) {
 	monitor := createTestBaseMonitor()
-	err := monitor.validate()
+	err := validateBaseMonitor(monitor)
 	assert.NoError(t, err)
 }
 

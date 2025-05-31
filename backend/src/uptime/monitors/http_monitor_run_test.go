@@ -8,16 +8,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var client httpClient = newHttpClient()
-
 func TestHttpMonitorRunSuccess(t *testing.T) {
-	// Save the original client and restore it after the test
-	originalClient := client
-	defer func() { client = originalClient }()
-
-	// Create a mock client
-	mockClient := new(MockHTTPClient)
-	client = mockClient
+	mockHttpClient := &MockHTTPClient{}
 
 	monitor := setupTestHttpMonitor()
 
@@ -26,9 +18,10 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 		"Content-Type": "application/json",
 	})
 
-	mockClient.On("Do", mock.Anything).Return(successResponse, nil).Once()
+	mockHttpClient.On("Do", mock.Anything).Return(successResponse, nil).Once()
+	httpClientOrMock = mockHttpClient
 
-	response, err := monitor.Run(mockClient)
+	response, err := monitor.Run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
 		assert.NoError(t, err)
@@ -38,17 +31,11 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
 	}
 
-	mockClient.AssertExpectations(t)
+	mockHttpClient.AssertExpectations(t)
 }
 
 func TestHttpMonitorRunFailure(t *testing.T) {
-	// Save the original client and restore it after the test
-	originalClient := client
-	defer func() { client = originalClient }()
-
-	// Create a mock client
 	mockClient := new(MockHTTPClient)
-	client = mockClient
 
 	monitor := setupTestHttpMonitor()
 
@@ -58,8 +45,9 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 	})
 
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
+	httpClientOrMock = mockClient
 
-	response, err := monitor.Run(mockClient)
+	response, err := monitor.Run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
 		assert.NoError(t, err)
@@ -74,20 +62,15 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 }
 
 func TestHttpMonitorRunError(t *testing.T) {
-	// Save the original client and restore it after the test
-	originalClient := client
-	defer func() { client = originalClient }()
-
-	// Create a mock client
 	mockClient := new(MockHTTPClient)
-	client = mockClient
 
 	monitor := setupTestHttpMonitor()
 
 	// Test error response - HTTP client error
 	mockClient.On("Do", mock.Anything).Return(nil, errors.New("connection refused")).Once()
+	httpClientOrMock = mockClient
 
-	response, err := monitor.Run(mockClient)
+	response, err := monitor.Run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
 		assert.Error(t, err)
@@ -101,13 +84,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 }
 
 func TestHttpMonitorRunMultipleFailures(t *testing.T) {
-	// Save the original client and restore it after the test
-	originalClient := client
-	defer func() { client = originalClient }()
-
-	// Create a mock client
 	mockClient := new(MockHTTPClient)
-	client = mockClient
 
 	monitor := setupTestHttpMonitor()
 
@@ -117,8 +94,9 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	})
 
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
+	httpClientOrMock = mockClient
 
-	response, err := monitor.Run(mockClient)
+	response, err := monitor.Run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
 		assert.NoError(t, err)

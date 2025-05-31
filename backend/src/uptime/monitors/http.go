@@ -13,7 +13,7 @@ import (
 )
 
 type HttpMonitor struct {
-	Base                 baseMonitor       `json:"base,inline" bson:"base,inline"`
+	baseMonitor
 	HttpMethod           string            `json:"http_method" bson:"http_method"`
 	Url                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
@@ -31,7 +31,7 @@ type httpClient interface {
 
 func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string]string, body string, expectedStatusCodes []int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpMonitor, error) {
 	monitor := &HttpMonitor{
-		Base:                 base,
+		baseMonitor:          base,
 		HttpMethod:           httpMethod,
 		Url:                  url,
 		Headers:              headers,
@@ -51,12 +51,18 @@ func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string
 	return monitor, nil
 }
 
-var httpClientInstance = newHttpClient()
+func newHttpClient() httpClient {
+	return &http.Client{
+		Timeout: 10 * time.Second, // Default timeout for HTTP requests
+	}
+}
+
+var httpClientOrMock httpClient = newHttpClient()
 
 func (m *HttpMonitor) Run() (IMonitorResponse, error) {
 	monitorResponse := newHttpMonitorResponse()
 
-	response, elapsed, err := m.executeRequest(httpClientInstance)
+	response, elapsed, err := m.executeRequest(&httpClientOrMock)
 
 	monitorResponse.Base.Duration = elapsed.Milliseconds()
 	if err != nil {
@@ -69,15 +75,15 @@ func (m *HttpMonitor) Run() (IMonitorResponse, error) {
 
 	monitorResponse.RawHttpResponse = response
 
-	m.validateStatusCode(response, monitorResponse)
-	m.validateResponseTime(elapsed, monitorResponse)
-	m.validateResponseHeaders(response, monitorResponse)
-	m.validateResponseBody(response, monitorResponse)
+	m.checkStatusCode(response, monitorResponse)
+	m.checkResponseTime(elapsed, monitorResponse)
+	m.checkResponseHeaders(response, monitorResponse)
+	m.checkResponseBody(response, monitorResponse)
 
 	if monitorResponse.Base.Status == Error {
-		errMsg := fmt.Sprintf("HTTP monitor run %s finished with errors: %v", m.Base.Name, monitorResponse.Base.Errors)
+		errMsg := fmt.Sprintf("HTTP monitor run %s finished with errors: %v", m.Name, monitorResponse.Base.Errors)
 		logger.Uptime.Error().Any("monitor_response", monitorResponse).Msg(errMsg)
-		return monitorResponse, fmt.Errorf("HTTP monitor run %s finished with errors: %v", m.Base.Name, monitorResponse.Base.Errors)
+		return monitorResponse, fmt.Errorf("HTTP monitor run %s finished with errors: %v", m.Name, monitorResponse.Base.Errors)
 	}
 
 	logger.Uptime.Debug().Any("monitor_response", monitorResponse).Msg("HTTP monitor run completed successfully")
@@ -85,14 +91,14 @@ func (m *HttpMonitor) Run() (IMonitorResponse, error) {
 }
 
 // Encapsulates request creation and execution
-func (m *HttpMonitor) executeRequest(httpClient httpClient) (*http.Response, time.Duration, error) {
+func (m *HttpMonitor) executeRequest(httpClient *httpClient) (*http.Response, time.Duration, error) {
 	request, err := m.createRequest()
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	start := time.Now()
-	response, err := httpClient.Do(request)
+	response, err := (*httpClient).Do(request)
 	elapsed := time.Since(start)
 
 	if err != nil {
@@ -102,7 +108,7 @@ func (m *HttpMonitor) executeRequest(httpClient httpClient) (*http.Response, tim
 	return response, elapsed, nil
 }
 
-func (m *HttpMonitor) validateStatusCode(response *http.Response, monitorResponse *HttpMonitorResponse) {
+func (m *HttpMonitor) checkStatusCode(response *http.Response, monitorResponse *HttpMonitorResponse) {
 	if m.ExpectedStatusCodes == nil {
 		return
 	}
@@ -114,7 +120,7 @@ func (m *HttpMonitor) validateStatusCode(response *http.Response, monitorRespons
 	}
 }
 
-func (m *HttpMonitor) validateResponseTime(elapsed time.Duration, monitorResponse *HttpMonitorResponse) {
+func (m *HttpMonitor) checkResponseTime(elapsed time.Duration, monitorResponse *HttpMonitorResponse) {
 	if m.ExpectedResponseTime == nil {
 		return
 	}
@@ -125,7 +131,7 @@ func (m *HttpMonitor) validateResponseTime(elapsed time.Duration, monitorRespons
 	}
 }
 
-func (m *HttpMonitor) validateResponseHeaders(response *http.Response, monitorResponse *HttpMonitorResponse) {
+func (m *HttpMonitor) checkResponseHeaders(response *http.Response, monitorResponse *HttpMonitorResponse) {
 	if len(m.ExpectedHeaders) == 0 {
 		return
 	}
@@ -140,7 +146,7 @@ func (m *HttpMonitor) validateResponseHeaders(response *http.Response, monitorRe
 	}
 }
 
-func (m *HttpMonitor) validateResponseBody(response *http.Response, monitorResponse *HttpMonitorResponse) {
+func (m *HttpMonitor) checkResponseBody(response *http.Response, monitorResponse *HttpMonitorResponse) {
 	if m.ExpectedBodyRegex == "" {
 		return
 	}
@@ -192,12 +198,6 @@ func (m *HttpMonitor) createRequest() (*http.Request, error) {
 	return &req, nil
 }
 
-func newHttpClient() httpClient {
-	return &http.Client{
-		Timeout: 10 * time.Second, // Default timeout for HTTP requests
-	}
-}
-
 // Helper function to create a new response object with default values
 func newHttpMonitorResponse() *HttpMonitorResponse {
 	return &HttpMonitorResponse{
@@ -209,12 +209,16 @@ func newHttpMonitorResponse() *HttpMonitorResponse {
 	}
 }
 
+func (m *HttpMonitor) validateBase() error {
+	return validateBaseMonitor(m)
+}
+
 // validate checks if the HTTP monitor configuration is valid
 // It ensures that required fields are set and that the URL is properly formatted.
 func (m *HttpMonitor) validate() error {
-	m.Base.Type = Http
+	m.Type = Http
 
-	baseValidationErr := m.Base.validate()
+	baseValidationErr := m.validateBase()
 	if baseValidationErr != nil {
 		return baseValidationErr
 	}
@@ -278,19 +282,19 @@ func readResponseBody(response *http.Response) (string, error) {
 }
 
 func (m *HttpMonitor) GetId() string {
-	return m.Base.Id
+	return m.Id
 }
 
 func (m *HttpMonitor) GetName() string {
-	return m.Base.Name
+	return m.Name
 }
 
 func (m *HttpMonitor) GetDescription() string {
-	return m.Base.Description
+	return m.Description
 }
 
 func (m *HttpMonitor) GetInterval() int {
-	return m.Base.Interval
+	return m.Interval
 }
 
 func (m *HttpMonitor) GetType() MonitorType {
@@ -298,7 +302,12 @@ func (m *HttpMonitor) GetType() MonitorType {
 }
 
 func (m *HttpMonitor) setBase(base baseMonitor) {
-	m.Base = base
+	m.Name = base.Name
+	m.Description = base.Description
+	m.Interval = base.Interval
+	m.Id = base.Id
+	m.OwnerId = base.OwnerId
+	m.Type = base.Type
 }
 
 func (b *HttpMonitorResponse) setStatus(status MonitorResponseStatus) {
