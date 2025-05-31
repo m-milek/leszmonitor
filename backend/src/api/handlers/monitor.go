@@ -14,22 +14,6 @@ type MonitorTypeExtractor struct {
 	Type monitors.MonitorType `json:"type"`
 }
 
-var monitorTypeMap = map[string]reflect.Type{
-	string(monitors.Http): reflect.TypeOf(monitors.HttpMonitor{}),
-	string(monitors.Ping): reflect.TypeOf(monitors.PingMonitor{}),
-}
-
-func mapMonitorType(typeTag string) reflect.Type {
-	monitorType := monitors.MonitorType(typeTag)
-	if monitorType == "" {
-		return nil
-	}
-	if monitorType, ok := monitorTypeMap[string(monitorType)]; ok {
-		return monitorType
-	}
-	return nil
-}
-
 type AddMonitorResponse struct {
 	MonitorId string `json:"monitor_id"`
 }
@@ -52,7 +36,7 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Map the monitor type to its concrete type
-	monitorType := mapMonitorType(string(typeExtractor.Type))
+	monitorType := monitors.MapMonitorType(string(typeExtractor.Type))
 	if monitorType == nil {
 		logger.Api.Trace().Str("type", string(typeExtractor.Type)).Msg("Unknown monitor type")
 		util.RespondMessage(w, http.StatusBadRequest, "Unknown monitor type")
@@ -140,4 +124,19 @@ func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
 		util.RespondMessage(writer, http.StatusBadRequest, "Monitor ID is required")
 		return
 	}
+
+	monitor, err := db.GetMonitorById(id)
+	if err != nil {
+		logger.Api.Error().Err(err).Str("monitor_id", id).Msg("Failed to retrieve monitor from database")
+		util.RespondMessage(writer, http.StatusInternalServerError, "Failed to retrieve monitor")
+		return
+	}
+
+	if monitor == nil {
+		logger.Api.Warn().Str("monitor_id", id).Msg("Monitor not found")
+		util.RespondMessage(writer, http.StatusNotFound, "Monitor not found")
+		return
+	}
+
+	util.RespondJSON(writer, http.StatusOK, monitor)
 }

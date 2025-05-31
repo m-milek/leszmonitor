@@ -14,13 +14,13 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		err := monitor.validate()
 		assert.NoError(t, err)
-		assert.Equal(t, Http, monitor.Type)
+		assert.Equal(t, Http, monitor.Base.Type)
 	})
 
 	// Test base validation failure
 	t.Run("Base Validation Failure", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
-		monitor.Name = "" // Make base invalid
+		monitor.Base.Name = "" // Make base invalid
 		err := monitor.validate()
 		assert.Error(t, err)
 	})
