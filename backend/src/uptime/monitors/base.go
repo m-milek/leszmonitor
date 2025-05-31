@@ -1,15 +1,17 @@
 package monitors
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
 type IMonitor interface {
-	Run(client httpClient) (IMonitorResponse, error)
+	Run() (IMonitorResponse, error)
 	GetName() string
 	GetDescription() string
 	GetInterval() int
 	validate() error
+	setBase(base baseMonitor)
 }
 
 type baseMonitor struct {
@@ -37,5 +39,18 @@ func (m *baseMonitor) validate() error {
 	if m.Type == "" {
 		return fmt.Errorf("monitor type cannot be empty")
 	}
+	return nil
+}
+
+func UnmarshalMonitor(rawData []byte, monitorData IMonitor) error {
+	var base baseMonitor
+	if err := json.Unmarshal(rawData, &base); err != nil {
+		return err
+	}
+	if err := json.Unmarshal(rawData, &monitorData); err != nil {
+		return err
+	}
+	monitorData.setBase(base)
+
 	return nil
 }

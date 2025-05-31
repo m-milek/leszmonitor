@@ -7,16 +7,6 @@ import (
 	"time"
 )
 
-type PingMonitor struct {
-	base            baseMonitor `json:"base" bson:"base,inline"`
-	Host            string      `json:"host" bson:"host"`               // Host to ping
-	Port            string      `json:"port" bson:"port"`               // Port to ping
-	Protocol        string      `json:"protocol" bson:"protocol"`       // Protocol to use (tcp, udp, etc.)
-	Timeout         int         `json:"timeout" bson:"timeout"`         // Timeout in seconds for each ping
-	RetryCount      int         `json:"retry_count" bson:"retry_count"` // Number of retries on failure
-	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
-}
-
 var (
 	validProtocols = []string{
 		"tcp",  // Transmission Control Protocol
@@ -29,7 +19,33 @@ var (
 	retryTimeout = 1 * time.Second // Default retry timeout
 )
 
-func (m *PingMonitor) Run() (*PingMonitorResponse, error) {
+type PingMonitor struct {
+	Base            baseMonitor `json:"base" bson:"base,inline"`
+	Host            string      `json:"host" bson:"host"`               // Host to ping
+	Port            string      `json:"port" bson:"port"`               // Port to ping
+	Protocol        string      `json:"protocol" bson:"protocol"`       // Protocol to use (tcp, udp, etc.)
+	Timeout         int         `json:"timeout" bson:"timeout"`         // Timeout in seconds for each ping
+	RetryCount      int         `json:"retry_count" bson:"retry_count"` // Number of retries on failure
+	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
+}
+
+func (m *PingMonitor) GetName() string {
+	return m.Base.Name
+}
+
+func (m *PingMonitor) GetDescription() string {
+	return m.Base.Description
+}
+
+func (m *PingMonitor) GetInterval() int {
+	return m.Base.Interval
+}
+
+func (m *PingMonitor) setBase(base baseMonitor) {
+	m.Base = base
+}
+
+func (m *PingMonitor) Run() (IMonitorResponse, error) {
 	monitorResponse := NewPingMonitorResponse()
 
 	// Handles IPv6 as well
@@ -53,7 +69,7 @@ func (m *PingMonitor) Run() (*PingMonitorResponse, error) {
 }
 
 func (m *PingMonitor) validate() error {
-	baseErr := m.base.validate()
+	baseErr := m.Base.validate()
 	if baseErr != nil {
 		return baseErr
 	}
@@ -106,7 +122,7 @@ func NewPingMonitor(base baseMonitor, host, port, protocol string, timeout, retr
 	base.Type = Ping
 
 	monitor := &PingMonitor{
-		base:            base,
+		Base:            base,
 		Host:            host,
 		Port:            port,
 		Protocol:        protocol,

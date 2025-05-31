@@ -22,6 +22,6 @@ func Logger(next http.Handler) http.Handler {
 			Str("remote_addr", r.RemoteAddr).
 			Int("status_code", rw.statusCode).
 			Dur("duration", duration).
-			Msg("")
+			Msg("Request processed")
 	})
 }

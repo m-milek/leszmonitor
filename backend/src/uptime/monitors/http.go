@@ -13,7 +13,7 @@ import (
 )
 
 type HttpMonitor struct {
-	Base                 baseMonitor       `json:"base" bson:"base,inline"`
+	Base                 baseMonitor       `json:"base,inline" bson:"base,inline"`
 	HttpMethod           string            `json:"http_method" bson:"http_method"`
 	Url                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
@@ -51,10 +51,12 @@ func NewHttpMonitor(base baseMonitor, httpMethod, url string, headers map[string
 	return monitor, nil
 }
 
-func (m *HttpMonitor) Run(httpClient httpClient) (IMonitorResponse, error) {
+var httpClientInstance = newHttpClient()
+
+func (m *HttpMonitor) Run() (IMonitorResponse, error) {
 	monitorResponse := newHttpMonitorResponse()
 
-	response, elapsed, err := m.executeRequest(httpClient)
+	response, elapsed, err := m.executeRequest(httpClientInstance)
 
 	monitorResponse.Base.Duration = elapsed.Milliseconds()
 	if err != nil {
@@ -289,6 +291,10 @@ func (m *HttpMonitor) GetInterval() int {
 
 func (m *HttpMonitor) GetType() MonitorType {
 	return Http
+}
+
+func (m *HttpMonitor) setBase(base baseMonitor) {
+	m.Base = base
 }
 
 func (b *HttpMonitorResponse) setStatus(status MonitorResponseStatus) {
