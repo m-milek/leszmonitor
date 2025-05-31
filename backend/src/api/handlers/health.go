@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/m-milek/leszmonitor/api/util"
+	"github.com/m-milek/leszmonitor/api/api_util"
 	"net/http"
 	"time"
 )

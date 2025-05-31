@@ -36,13 +36,11 @@ func createServer(config ServerConfig) (*http.Server, error) {
 
 		// Check if this is a public path
 		if path == "/auth/register" || path == "/auth/login" {
-			logger.Api.Debug().Msg("Handling public path: " + path)
 			publicRouter.ServeHTTP(w, r)
 			return
 		}
 
 		// Apply JWT auth to all other paths
-		logger.Api.Debug().Msg("Handling protected path: " + path)
 		middleware.JwtAuth(protectedRouter).ServeHTTP(w, r)
 	})
 

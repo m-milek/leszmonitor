@@ -3,11 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/api/util"
+	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/common"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logger"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
 	"strconv"
@@ -32,13 +33,15 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		Str("email", payload.Email).
 		Msg("User registration")
 
-	user, err := model.NewUser(payload.Username, payload.Password, payload.Email)
+	hashedPassword, err := hashPassword(payload.Password)
 	if err != nil {
-		msg := "Failed to create user"
+		msg := "Failed to hash password"
 		logger.Api.Error().Err(err).Str("username", payload.Username).Msg(msg)
-		util.RespondMessage(w, http.StatusInternalServerError, msg)
+		util.RespondMessage(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+
+	user := model.NewUser(payload.Username, hashedPassword, payload.Email)
 
 	_, err = db.AddUser(user)
 
@@ -89,7 +92,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	matches := util.CheckPasswordHash(payload.Password, user.PasswordHash)
+	matches := checkPasswordHash(payload.Password, user.PasswordHash)
 
 	if !matches {
 		msg := "Invalid password"
@@ -130,4 +133,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Msg(msg)
 
 	util.RespondJSON(w, http.StatusOK, map[string]string{"jwt": token})
+}
+
+func hashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
