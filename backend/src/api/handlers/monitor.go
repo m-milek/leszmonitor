@@ -7,11 +7,11 @@ import (
 	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/uptime/monitors"
 	"net/http"
-	"reflect"
 )
 
-type MonitorTypeExtractor struct {
-	Type monitors.MonitorType `json:"type"`
+type MonitorDataExtractor struct {
+	Type      monitors.MonitorConfigType `json:"type"`
+	RawConfig json.RawMessage            `json:"config"`
 }
 
 type AddMonitorResponse struct {
@@ -28,48 +28,23 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var typeExtractor MonitorTypeExtractor
-	if err := json.Unmarshal(rawData, &typeExtractor); err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to extract monitor type from request payload")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor type in request payload")
+	// unmarshal the raw data into a monitor instance
+	var monitor monitors.Monitor
+	if err := json.Unmarshal(rawData, &monitor); err != nil {
+		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor data")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor data")
 		return
 	}
 
-	// Map the monitor type to its concrete type
-	monitorType := monitors.MapMonitorType(string(typeExtractor.Type))
-	if monitorType == nil {
-		logger.Api.Trace().Str("type", string(typeExtractor.Type)).Msg("Unknown monitor type")
-		util.RespondMessage(w, http.StatusBadRequest, "Unknown monitor type")
-		return
-	}
+	monitor.GenerateId()
 
-	monitorInstance := reflect.New(monitorType).Interface()
-
-	// Check if it implements IMonitor
-	monitor, ok := monitorInstance.(monitors.IMonitor)
-	if !ok {
-		logger.Api.Trace().Str("type", string(typeExtractor.Type)).Msg("Monitor type does not implement IMonitor interface")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor type")
-		return
-	}
-
-	// Unmarshal the monitor configuration
-	err := monitors.UnmarshalMonitor(rawData, monitor)
-	if err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
-		util.RespondMessage(w, http.StatusBadRequest, "Failed to parse monitor configuration")
+	if err := monitor.Validate(); err != nil {
+		logger.Api.Trace().Err(err).Msg("Monitor validation failed")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor configuration: "+err.Error())
 		return
 	}
 
 	logger.Api.Debug().Any("monitor", monitor).Msg("Parsed monitor configuration")
-
-	id, err := db.AddMonitor(monitor)
-	if err != nil {
-		logger.Api.Error().Err(err).Msg("Failed to add monitor to database")
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to add monitor")
-		return
-	}
-	logger.Api.Debug().Str("monitor_id", id).Msg("Monitor added successfully")
 
 	util.RespondJSON(w, http.StatusCreated, AddMonitorResponse{
 		MonitorId: monitor.GetId(),

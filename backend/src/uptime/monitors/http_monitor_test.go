@@ -21,12 +21,12 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 // Setup test helper functions
-func setupTestHttpMonitor() *HttpMonitor {
+func setupTestHttpMonitor() *HttpMonitorConfig {
 	baseMonitor := createTestBaseMonitor()
 
 	responseTime := 1000
 
-	return &HttpMonitor{
+	return &HttpMonitorConfig{
 		Base:                 baseMonitor,
 		HttpMethod:           "GET",
 		Url:                  "https://example.com",

@@ -65,13 +65,13 @@ func (m *MockConn) SetWriteDeadline(t time.Time) error {
 }
 
 // Setup function for tests
-func setupPingMonitor() *PingMonitor {
-	base := NewBaseMonitor("Test Ping Monitor", "Test Description", 60, "owner-id", Ping)
+func setupPingMonitor() *PingMonitorConfig {
+	base := NewMonitor("Test Ping Monitor", "Test Description", 60, "owner-id", Ping)
 	monitor, err := NewPingMonitor(*base, "example.com", "80", "tcp", 5, 3)
 	monitor.pingAddressFunc = pingAddressFunc // Use the global function for testing
 
 	if err != nil {
-		panic("Failed to create PingMonitor: " + err.Error())
+		panic("Failed to create PingMonitorConfig: " + err.Error())
 	}
 	return monitor
 }
