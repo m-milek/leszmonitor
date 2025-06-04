@@ -19,7 +19,7 @@ type IMonitor interface {
 
 type IMonitorConfig interface {
 	run() IMonitorResponse
-	Validate() error
+	validate() error
 }
 
 type Monitor struct {
@@ -57,7 +57,7 @@ func (m *Monitor) Validate() error {
 	if m.Config == nil {
 		return fmt.Errorf("monitor configuration cannot be nil")
 	}
-	if err := m.Config.Validate(); err != nil {
+	if err := m.Config.validate(); err != nil {
 		return fmt.Errorf("monitor configuration validation failed: %w", err)
 	}
 	return nil
