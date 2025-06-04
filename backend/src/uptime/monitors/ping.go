@@ -37,7 +37,7 @@ func (m *PingMonitorConfig) run() IMonitorResponse {
 	for i := 0; i < m.RetryCount; i++ {
 		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Second)
 		if success {
-			monitorResponse.base.Duration = duration.Milliseconds()
+			monitorResponse.Duration = duration.Milliseconds()
 			return monitorResponse
 		}
 		if i < m.RetryCount-1 {
@@ -46,7 +46,7 @@ func (m *PingMonitorConfig) run() IMonitorResponse {
 	}
 
 	// If we reach here, all retries failed
-	monitorResponse.base.addFailureMsg(fmt.Sprintf("Failed to ping %s after %d retries", address, m.RetryCount))
+	monitorResponse.addFailureMsg(fmt.Sprintf("Failed to ping %s after %d retries", address, m.RetryCount))
 
 	return monitorResponse
 }
@@ -116,12 +116,12 @@ func NewPingMonitor(base Monitor, host, port, protocol string, timeout, retryCou
 }
 
 type PingMonitorResponse struct {
-	base baseMonitorResponse `json:"base" bson:"base,inline"`
+	baseMonitorResponse `bson:",inline"`
 }
 
 func NewPingMonitorResponse() *PingMonitorResponse {
 	return &PingMonitorResponse{
-		base: baseMonitorResponse{
+		baseMonitorResponse: baseMonitorResponse{
 			Status:    Success,
 			Timestamp: util.GetUnixTimestamp(),
 		},
@@ -129,17 +129,17 @@ func NewPingMonitorResponse() *PingMonitorResponse {
 }
 
 func (m *PingMonitorResponse) GetStatus() MonitorResponseStatus {
-	return m.base.Status
+	return m.Status
 }
 func (m *PingMonitorResponse) GetDuration() int64 {
-	return m.base.Duration
+	return m.Duration
 }
 func (m *PingMonitorResponse) GetTimestamp() int64 {
-	return m.base.Timestamp
+	return m.Timestamp
 }
 func (m *PingMonitorResponse) GetErrors() []string {
-	return m.base.Errors
+	return m.Errors
 }
 func (m *PingMonitorResponse) GetFailures() []string {
-	return m.base.Failures
+	return m.Failures
 }
