@@ -79,14 +79,14 @@ func setupPingMonitor() *PingMonitorConfig {
 func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Valid Configuration", func(t *testing.T) {
 		monitor := setupPingMonitor()
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.NoError(t, err)
 	})
 
 	t.Run("Empty Host", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.Host = ""
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "host cannot be empty")
 	})
@@ -94,7 +94,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Empty Port", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.Port = ""
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "port cannot be empty")
 	})
@@ -102,7 +102,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Invalid RetryCount", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.RetryCount = 0
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "count must be greater than zero")
 	})
@@ -110,7 +110,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Invalid Protocol", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.Protocol = "invalid"
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid protocol")
 	})
@@ -119,7 +119,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 		for _, protocol := range validProtocols {
 			monitor := setupPingMonitor()
 			monitor.Protocol = protocol
-			err := monitor.Validate()
+			err := monitor.validate()
 			assert.NoError(t, err, "Protocol %s should be valid", protocol)
 		}
 	})

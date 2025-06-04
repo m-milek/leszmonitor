@@ -87,12 +87,12 @@ func TestNewHttpMonitor(t *testing.T) {
 
 func TestHttpMonitorValidate(t *testing.T) {
 	monitor := setupTestHttpMonitor()
-	err := monitor.Validate()
+	err := monitor.validate()
 	assert.NoError(t, err)
 
 	// Test invalid URL
 	monitor.Url = "invalid-url"
-	err = monitor.Validate()
+	err = monitor.validate()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid URL format")
 
@@ -100,7 +100,7 @@ func TestHttpMonitorValidate(t *testing.T) {
 	monitor = setupTestHttpMonitor()
 	negativeTime := -100
 	monitor.ExpectedResponseTime = &negativeTime
-	err = monitor.Validate()
+	err = monitor.validate()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "expected response time cannot be negative")
 }

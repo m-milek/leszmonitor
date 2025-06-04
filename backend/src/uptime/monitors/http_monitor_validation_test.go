@@ -12,7 +12,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	// Test valid monitor
 	t.Run("Valid HTTP Monitor", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.NoError(t, err)
 	})
 
@@ -20,7 +20,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	t.Run("Empty URL", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		monitor.Url = ""
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "URL cannot be empty")
 	})
@@ -29,7 +29,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	t.Run("Empty HTTP Method", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		monitor.HttpMethod = ""
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "HTTP method cannot be empty")
 	})
@@ -38,7 +38,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	t.Run("Invalid HTTP Method", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		monitor.HttpMethod = "INVALID"
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid HTTP method")
 	})
@@ -48,7 +48,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		emptyCodes := []int{}
 		monitor.ExpectedStatusCodes = emptyCodes
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "expected status codes cannot be empty")
 	})
@@ -58,7 +58,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		invalidCodes := []int{50, 200}
 		monitor.ExpectedStatusCodes = invalidCodes
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "expected status codes must be between 100 and 599")
 	})
@@ -68,7 +68,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		invalidCodes := []int{200, 600}
 		monitor.ExpectedStatusCodes = invalidCodes
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "expected status codes must be between 100 and 599")
 	})
@@ -77,7 +77,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	t.Run("Invalid URL Format", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		monitor.Url = "not-a-valid-url"
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid URL format")
 	})
@@ -86,7 +86,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	t.Run("Invalid URL Scheme", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		monitor.Url = "ftp://example.com"
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "URL scheme must be either http or https")
 	})
@@ -96,7 +96,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		negativeTime := -500
 		monitor.ExpectedResponseTime = &negativeTime
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "expected response time cannot be negative")
 	})
@@ -106,7 +106,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		validCodes := []int{200, 201, 204}
 		monitor.ExpectedStatusCodes = validCodes
-		err := monitor.Validate()
+		err := monitor.validate()
 		assert.NoError(t, err)
 	})
 
@@ -116,7 +116,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		t.Run("Valid HTTP Method: "+method, func(t *testing.T) {
 			monitor := setupTestHttpMonitor()
 			monitor.HttpMethod = method
-			err := monitor.Validate()
+			err := monitor.validate()
 			assert.NoError(t, err)
 		})
 	}

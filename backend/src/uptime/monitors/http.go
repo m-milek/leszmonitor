@@ -40,7 +40,7 @@ func NewHttpMonitor(httpMethod, url string, headers map[string]string, body stri
 		ExpectedResponseTime: &expectedResponseTime,
 	}
 
-	if err := monitor.Validate(); err != nil {
+	if err := monitor.validate(); err != nil {
 		return nil, err
 	}
 
@@ -199,7 +199,7 @@ func newHttpMonitorResponse() *HttpMonitorResponse {
 
 // Validate checks if the HTTP monitor configuration is valid
 // It ensures that required fields are set and that the URL is properly formatted.
-func (m *HttpMonitorConfig) Validate() error {
+func (m *HttpMonitorConfig) validate() error {
 	if m.Url == "" {
 		return fmt.Errorf("URL cannot be empty")
 	}

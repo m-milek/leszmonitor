@@ -51,7 +51,7 @@ func (m *PingMonitorConfig) run() IMonitorResponse {
 	return monitorResponse
 }
 
-func (m *PingMonitorConfig) Validate() error {
+func (m *PingMonitorConfig) validate() error {
 	if m.Host == "" {
 		return fmt.Errorf("host cannot be empty")
 	}
@@ -108,7 +108,7 @@ func NewPingMonitor(base Monitor, host, port, protocol string, timeout, retryCou
 		pingAddressFunc: pingAddress,
 	}
 
-	if err := monitor.Validate(); err != nil {
+	if err := monitor.validate(); err != nil {
 		return nil, fmt.Errorf("failed to create PingMonitorConfig: %w", err)
 	}
 
