@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func createTestBaseMonitor() baseMonitor {
-	return baseMonitor{
+func createTestBaseMonitor() Monitor {
+	return Monitor{
 		Id:          generateMonitorId(),
 		Name:        "Test Monitor",
 		Description: "Test Description",

@@ -3,40 +3,44 @@ package monitors
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/teris-io/shortid"
 )
 
 type IMonitor interface {
 	Run() (IMonitorResponse, error)
+	Validate() error
 	GetId() string
 	GetName() string
 	GetDescription() string
 	GetInterval() int
-	validate() error
-	validateBase() error
-	setBase(base baseMonitor)
-	GetType() MonitorType
+	GetType() MonitorConfigType
+	setConfig(IMonitorConfig)
 }
 
-type baseMonitor struct {
-	Id          string      `json:"id" bson:"id"`                   // Unique identifier for the monitor
-	Name        string      `json:"name" bson:"name"`               // Name of the monitor
-	Description string      `json:"description" bson:"description"` // Description of the monitor
-	Interval    int         `json:"interval" bson:"interval"`       // How often to run the monitor in seconds
-	OwnerId     string      `json:"owner_id" bson:"owner_id"`       // ID of the owner of the monitor
-	Type        MonitorType `json:"type" bson:"type"`               // Type of the monitor (http, ping, etc.)
+type IMonitorConfig interface {
+	run() IMonitorResponse
+	Validate() error
 }
 
-type MonitorType string
+type Monitor struct {
+	Id          string            `json:"id" bson:"id"`                   // Unique identifier for the monitor
+	Name        string            `json:"name" bson:"name"`               // Name of the monitor
+	Description string            `json:"description" bson:"description"` // Description of the monitor
+	Interval    int               `json:"interval" bson:"interval"`       // How often to run the monitor in seconds
+	OwnerId     string            `json:"owner_id" bson:"owner_id"`       // ID of the owner of the monitor
+	Type        MonitorConfigType `json:"type" bson:"type"`               // Type of the monitor (http, ping, etc.)
+	Config      IMonitorConfig    `json:"config" bson:"config"`           // Configuration specific to the monitor type
+}
+
+type MonitorConfigType string
 
 const (
-	Http MonitorType = "http"
-	Ping MonitorType = "ping"
+	Http MonitorConfigType = "http"
+	Ping MonitorConfigType = "ping"
 )
 
-func NewBaseMonitor(name, description string, interval int, ownerId string, monitorType MonitorType) *baseMonitor {
-	return &baseMonitor{
+func NewMonitor(name, description string, interval int, ownerId string, monitorType MonitorConfigType) *Monitor {
+	return &Monitor{
 		Id:          generateMonitorId(),
 		Name:        name,
 		Description: description,
@@ -46,39 +50,114 @@ func NewBaseMonitor(name, description string, interval int, ownerId string, moni
 	}
 }
 
-func validateBaseMonitor(b IMonitor) error {
-	if b.GetName() == "" {
+func (m *Monitor) Validate() error {
+	if err := m.validateBase(); err != nil {
+		return fmt.Errorf("monitor validation failed: %w", err)
+	}
+	if m.Config == nil {
+		return fmt.Errorf("monitor configuration cannot be nil")
+	}
+	if err := m.Config.Validate(); err != nil {
+		return fmt.Errorf("monitor configuration validation failed: %w", err)
+	}
+	return nil
+}
+
+func (m *Monitor) validateBase() error {
+	if m.GetName() == "" {
 		return fmt.Errorf("monitor name cannot be empty")
 	}
-	if b.GetInterval() <= 0 {
+	if m.GetInterval() <= 0 {
 		return fmt.Errorf("monitor interval must be greater than zero")
 	}
-	if b.GetType() == "" {
+	if m.GetType() == "" {
 		return fmt.Errorf("monitor type cannot be empty")
 	}
-	if b.GetId() == "" {
+	if m.GetId() == "" {
 		return fmt.Errorf("monitor ID cannot be empty")
 	}
 	return nil
 }
 
-func UnmarshalMonitor(rawData []byte, monitorData IMonitor) error {
-	var base baseMonitor
-	if err := json.Unmarshal(rawData, &base); err != nil {
-		return err
+func (m *Monitor) GenerateId() {
+	if m.Id == "" {
+		m.Id = generateMonitorId()
 	}
-	if err := json.Unmarshal(rawData, &monitorData); err != nil {
-		return err
+}
+
+func (m *Monitor) UnmarshalJSON(data []byte) error {
+	// Define an alias type to avoid the recursion
+	type alias Monitor
+
+	// Create a map to hold the raw JSON
+	var rawMap map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawMap); err != nil {
+		return fmt.Errorf("failed to parse monitor JSON: %w", err)
 	}
 
-	if base.Id == "" {
-		log.Trace().Msg("Monitor ID is empty, generating a new one")
-		base.Id = generateMonitorId()
+	// Extract the type field to determine the monitor type
+	var monitorType MonitorConfigType
+	if typeData, exists := rawMap["type"]; exists {
+		if err := json.Unmarshal(typeData, &monitorType); err != nil {
+			return fmt.Errorf("failed to parse monitor type: %w", err)
+		}
 	} else {
-		log.Trace().Msgf("Monitor ID is set: %s", base.Id)
+		return fmt.Errorf("missing type field in monitor JSON")
 	}
 
-	monitorData.setBase(base)
+	// Create the appropriate config type
+	config := MapMonitorType(monitorType)
+	if config == nil {
+		return fmt.Errorf("unknown monitor type: %s", monitorType)
+	}
+
+	// Extract the config data
+	if configData, exists := rawMap["config"]; exists {
+		if err := json.Unmarshal(configData, &config); err != nil {
+			return fmt.Errorf("failed to unmarshal monitor configuration: %w", err)
+		}
+	} else {
+		return fmt.Errorf("missing config field in monitor JSON")
+	}
+
+	// Remove the config field from the raw map to avoid unmarshaling it twice
+	delete(rawMap, "config")
+
+	// Re-encode the remaining fields
+	modifiedData, err := json.Marshal(rawMap)
+	if err != nil {
+		return fmt.Errorf("failed to re-encode monitor data: %w", err)
+	}
+
+	// Unmarshal into the alias type (which will not trigger this custom UnmarshalJSON)
+	aux := (*alias)(m)
+	if err := json.Unmarshal(modifiedData, aux); err != nil {
+		return fmt.Errorf("failed to unmarshal monitor base fields: %w", err)
+	}
+
+	// Set the config
+	m.Config = config
+
+	return nil
+}
+
+func UnmarshalMonitor(rawData []byte, monitorData IMonitor) error {
+	//var base Monitor
+	//if err := json.Unmarshal(rawData, &base); err != nil {
+	//	return err
+	//}
+	//if err := json.Unmarshal(rawData, &monitorData); err != nil {
+	//	return err
+	//}
+	//
+	//if base.Id == "" {
+	//	log.Trace().Msg("Monitor ID is empty, generating a new one")
+	//	base.Id = generateMonitorId()
+	//} else {
+	//	log.Trace().Msgf("Monitor ID is set: %s", base.Id)
+	//}
+	//
+	//monitorData.setBase(base)
 
 	return nil
 }
@@ -91,38 +170,36 @@ func generateMonitorId() string {
 	return id
 }
 
-func (b baseMonitor) Run() (IMonitorResponse, error) {
-	return nil, fmt.Errorf("run method not implemented for baseMonitor")
+func (m *Monitor) Run() (IMonitorResponse, error) {
+	if err := m.Validate(); err != nil {
+		return nil, fmt.Errorf("monitor validation failed: %w", err)
+	}
+
+	response := m.Config.run()
+
+	return response, nil
 }
 
-func (b baseMonitor) GetId() string {
-	return b.Id
+func (m *Monitor) GetId() string {
+	return m.Id
 }
 
-func (b baseMonitor) GetName() string {
-	return b.Name
+func (m *Monitor) GetName() string {
+	return m.Name
 }
 
-func (b baseMonitor) GetDescription() string {
-	return b.Description
+func (m *Monitor) GetDescription() string {
+	return m.Description
 }
 
-func (b baseMonitor) GetInterval() int {
-	return b.Interval
+func (m *Monitor) GetInterval() int {
+	return m.Interval
 }
 
-func (b baseMonitor) validate() error {
-	return validateBaseMonitor(b)
+func (m *Monitor) GetType() MonitorConfigType {
+	return m.Type
 }
 
-func (b baseMonitor) validateBase() error {
-	return validateBaseMonitor(b)
-}
-
-func (b baseMonitor) setBase(base baseMonitor) {
-	return // baseMonitor does not have a setBase method, this is a no-op
-}
-
-func (b baseMonitor) GetType() MonitorType {
-	return b.Type
+func (m *Monitor) setConfig(config IMonitorConfig) {
+	m.Config = config
 }

@@ -19,41 +19,16 @@ var (
 	retryTimeout = 1 * time.Second // Default retry timeout
 )
 
-type PingMonitor struct {
-	Base            baseMonitor `json:"base" bson:"base,inline"`
-	Host            string      `json:"host" bson:"host"`               // Host to ping
-	Port            string      `json:"port" bson:"port"`               // Port to ping
-	Protocol        string      `json:"protocol" bson:"protocol"`       // Protocol to use (tcp, udp, etc.)
-	Timeout         int         `json:"timeout" bson:"timeout"`         // Timeout in seconds for each ping
-	RetryCount      int         `json:"retry_count" bson:"retry_count"` // Number of retries on failure
+type PingMonitorConfig struct {
+	Host            string `json:"host" bson:"host"`               // Host to ping
+	Port            string `json:"port" bson:"port"`               // Port to ping
+	Protocol        string `json:"protocol" bson:"protocol"`       // Protocol to use (tcp, udp, etc.)
+	Timeout         int    `json:"timeout" bson:"timeout"`         // Timeout in seconds for each ping
+	RetryCount      int    `json:"retry_count" bson:"retry_count"` // Number of retries on failure
 	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
-func (m *PingMonitor) GetId() string {
-	return m.Base.Id
-}
-
-func (m *PingMonitor) GetName() string {
-	return m.Base.Name
-}
-
-func (m *PingMonitor) GetDescription() string {
-	return m.Base.Description
-}
-
-func (m *PingMonitor) GetInterval() int {
-	return m.Base.Interval
-}
-
-func (m *PingMonitor) GetType() MonitorType {
-	return m.Base.Type
-}
-
-func (m *PingMonitor) setBase(base baseMonitor) {
-	m.Base = base
-}
-
-func (m *PingMonitor) Run() (IMonitorResponse, error) {
+func (m *PingMonitorConfig) run() IMonitorResponse {
 	monitorResponse := NewPingMonitorResponse()
 
 	// Handles IPv6 as well
@@ -63,7 +38,7 @@ func (m *PingMonitor) Run() (IMonitorResponse, error) {
 		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Second)
 		if success {
 			monitorResponse.base.Duration = duration.Milliseconds()
-			return monitorResponse, nil
+			return monitorResponse
 		}
 		if i < m.RetryCount-1 {
 			time.Sleep(retryTimeout)
@@ -73,19 +48,10 @@ func (m *PingMonitor) Run() (IMonitorResponse, error) {
 	// If we reach here, all retries failed
 	monitorResponse.base.addFailureMsg(fmt.Sprintf("Failed to ping %s after %d retries", address, m.RetryCount))
 
-	return monitorResponse, nil
+	return monitorResponse
 }
 
-func (m *PingMonitor) validateBase() error {
-	return validateBaseMonitor(m)
-}
-
-func (m *PingMonitor) validate() error {
-	baseErr := m.validateBase()
-	if baseErr != nil {
-		return baseErr
-	}
-
+func (m *PingMonitorConfig) Validate() error {
 	if m.Host == "" {
 		return fmt.Errorf("host cannot be empty")
 	}
@@ -130,11 +96,10 @@ func pingAddress(protocol string, address string, timeout time.Duration) (bool, 
 	return true, duration
 }
 
-func NewPingMonitor(base baseMonitor, host, port, protocol string, timeout, retryCount int) (*PingMonitor, error) {
+func NewPingMonitor(base Monitor, host, port, protocol string, timeout, retryCount int) (*PingMonitorConfig, error) {
 	base.Type = Ping
 
-	monitor := &PingMonitor{
-		Base:            base,
+	monitor := &PingMonitorConfig{
 		Host:            host,
 		Port:            port,
 		Protocol:        protocol,
@@ -143,8 +108,8 @@ func NewPingMonitor(base baseMonitor, host, port, protocol string, timeout, retr
 		pingAddressFunc: pingAddress,
 	}
 
-	if err := monitor.validate(); err != nil {
-		return nil, fmt.Errorf("failed to create PingMonitor: %w", err)
+	if err := monitor.Validate(); err != nil {
+		return nil, fmt.Errorf("failed to create PingMonitorConfig: %w", err)
 	}
 
 	return monitor, nil
