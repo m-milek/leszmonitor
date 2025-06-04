@@ -79,14 +79,14 @@ func setupPingMonitor() *PingMonitorConfig {
 func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Valid Configuration", func(t *testing.T) {
 		monitor := setupPingMonitor()
-		err := monitor.validate()
+		err := monitor.Validate()
 		assert.NoError(t, err)
 	})
 
 	t.Run("Empty Host", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.Host = ""
-		err := monitor.validate()
+		err := monitor.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "host cannot be empty")
 	})
@@ -94,7 +94,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Empty Port", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.Port = ""
-		err := monitor.validate()
+		err := monitor.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "port cannot be empty")
 	})
@@ -102,7 +102,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Invalid RetryCount", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.RetryCount = 0
-		err := monitor.validate()
+		err := monitor.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "count must be greater than zero")
 	})
@@ -110,7 +110,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Invalid Protocol", func(t *testing.T) {
 		monitor := setupPingMonitor()
 		monitor.Protocol = "invalid"
-		err := monitor.validate()
+		err := monitor.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid protocol")
 	})
@@ -119,7 +119,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 		for _, protocol := range validProtocols {
 			monitor := setupPingMonitor()
 			monitor.Protocol = protocol
-			err := monitor.validate()
+			err := monitor.Validate()
 			assert.NoError(t, err, "Protocol %s should be valid", protocol)
 		}
 	})
@@ -171,8 +171,7 @@ func TestPingMonitor_Run(t *testing.T) {
 			return true, 100 * time.Millisecond
 		}
 
-		response, err := monitor.Run()
-		assert.NoError(t, err)
+		response := monitor.run()
 		assert.EqualValues(t, Success, response.GetStatus())
 		assert.Equal(t, int64(100), response.GetDuration())
 		assert.Empty(t, response.GetFailures())
@@ -188,8 +187,7 @@ func TestPingMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response, err := monitor.Run()
-		assert.NoError(t, err)
+		response := monitor.run()
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
 		assert.NotEmpty(t, response.GetFailures())
 		assert.Contains(t, response.GetFailures()[0], "Failed to ping")
@@ -208,8 +206,7 @@ func TestPingMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response, err := monitor.Run()
-		assert.NoError(t, err)
+		response := monitor.run()
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
 		assert.EqualValues(t, Success, response.GetStatus())
 		assert.Equal(t, int64(150), response.GetDuration())
@@ -228,10 +225,10 @@ func TestPingMonitorResponse(t *testing.T) {
 
 	t.Run("Response Getters", func(t *testing.T) {
 		response := NewPingMonitorResponse()
-		response.base.Status = Failure
-		response.base.Duration = 200
-		response.base.Errors = []string{"Test error"}
-		response.base.Failures = []string{"Test failure"}
+		response.Status = Failure
+		response.Duration = 200
+		response.Errors = []string{"Test error"}
+		response.Failures = []string{"Test failure"}
 
 		assert.EqualValues(t, Failure, response.GetStatus())
 		assert.Equal(t, int64(200), response.GetDuration())
