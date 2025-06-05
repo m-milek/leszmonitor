@@ -23,7 +23,7 @@ type PingMonitorConfig struct {
 	Host            string `json:"host" bson:"host"`               // Host to ping
 	Port            string `json:"port" bson:"port"`               // Port to ping
 	Protocol        string `json:"protocol" bson:"protocol"`       // Protocol to use (tcp, udp, etc.)
-	Timeout         int    `json:"timeout" bson:"timeout"`         // Timeout in seconds for each ping
+	PingTimeout     int    `json:"timeout" bson:"timeout"`         // PingTimeout in seconds for each ping
 	RetryCount      int    `json:"retry_count" bson:"retry_count"` // Number of retries on failure
 	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
@@ -35,7 +35,7 @@ func (m *PingMonitorConfig) run() IMonitorResponse {
 	address := net.JoinHostPort(m.Host, m.Port)
 
 	for i := 0; i < m.RetryCount; i++ {
-		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Second)
+		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.PingTimeout)*time.Second)
 		if success {
 			monitorResponse.Duration = duration.Milliseconds()
 			return monitorResponse
@@ -64,11 +64,11 @@ func (m *PingMonitorConfig) validate() error {
 		return fmt.Errorf("count must be greater than zero")
 	}
 
-	if m.Timeout <= 0 {
+	if m.PingTimeout <= 0 {
 		return fmt.Errorf("timeout must be greater than zero")
 	}
 
-	if m.Timeout > 60 {
+	if m.PingTimeout > 60 {
 		return fmt.Errorf("timeout must not exceed 60 seconds")
 	}
 
@@ -103,7 +103,7 @@ func NewPingMonitor(base Monitor, host, port, protocol string, timeout, retryCou
 		Host:            host,
 		Port:            port,
 		Protocol:        protocol,
-		Timeout:         timeout,
+		PingTimeout:     timeout,
 		RetryCount:      retryCount,
 		pingAddressFunc: pingAddress,
 	}

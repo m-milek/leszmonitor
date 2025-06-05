@@ -70,7 +70,7 @@ func StartServer(config ServerConfig) (*http.Server, chan struct{}, error) {
 	go func() {
 		logger.Api.Info().Msgf("API server listening on %s", server.Addr)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Api.Error().Err(err).Msgf("Error starting API server: %v", err)
+			logger.Api.Fatal().Err(err).Msgf("Error starting API server: %v", err)
 		}
 	}()
 

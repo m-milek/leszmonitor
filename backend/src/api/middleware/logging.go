@@ -8,6 +8,12 @@ import (
 
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger.Api.Trace().
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Str("remote_addr", r.RemoteAddr).
+			Msg("Received request")
+
 		start := time.Now()
 
 		rw := newResponseWriter(w)
@@ -16,12 +22,12 @@ func Logger(next http.Handler) http.Handler {
 		next.ServeHTTP(rw, r)
 
 		duration := time.Since(start).Truncate(1 * time.Microsecond)
-		logger.Api.Debug().
+		logger.Api.Trace().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
 			Str("remote_addr", r.RemoteAddr).
 			Int("status_code", rw.statusCode).
-			Dur("duration", duration).
-			Msg("Request processed")
+			Dur("duration_ms", duration).
+			Msg("Processed request")
 	})
 }

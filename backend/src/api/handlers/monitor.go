@@ -46,6 +46,13 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 
 	logger.Api.Debug().Any("monitor", monitor).Msg("Parsed monitor configuration")
 
+	_, err := db.AddMonitor(&monitor)
+	if err != nil {
+		logger.Api.Error().Err(err).Msg("Failed to add monitor to database")
+		util.RespondMessage(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
 	util.RespondJSON(w, http.StatusCreated, AddMonitorResponse{
 		MonitorId: monitor.GetId(),
 	})
