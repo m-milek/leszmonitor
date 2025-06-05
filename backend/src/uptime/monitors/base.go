@@ -3,6 +3,7 @@ package monitors
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/m-milek/leszmonitor/logger"
 	"github.com/teris-io/shortid"
 )
 
@@ -63,26 +64,18 @@ func (m *Monitor) Validate() error {
 	return nil
 }
 
-func (m *Monitor) validateBase() error {
-	if m.GetName() == "" {
-		return fmt.Errorf("monitor name cannot be empty")
+func (m *Monitor) Run() (IMonitorResponse, error) {
+	if err := m.Validate(); err != nil {
+		return nil, fmt.Errorf("monitor validation failed: %w", err)
 	}
-	if m.GetInterval() <= 0 {
-		return fmt.Errorf("monitor interval must be greater than zero")
-	}
-	if m.GetType() == "" {
-		return fmt.Errorf("monitor type cannot be empty")
-	}
-	if m.GetId() == "" {
-		return fmt.Errorf("monitor ID cannot be empty")
-	}
-	return nil
-}
 
-func (m *Monitor) GenerateId() {
-	if m.Id == "" {
-		m.Id = generateMonitorId()
+	response := m.Config.run()
+
+	if len(response.GetErrors()) > 0 {
+		logger.Uptime.Debug().Any("errors", response.GetErrors()).Msg("Monitor run encountered an error")
 	}
+
+	return response, nil
 }
 
 func (m *Monitor) UnmarshalJSON(data []byte) error {
@@ -141,25 +134,8 @@ func (m *Monitor) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func UnmarshalMonitor(rawData []byte, monitorData IMonitor) error {
-	//var base Monitor
-	//if err := json.Unmarshal(rawData, &base); err != nil {
-	//	return err
-	//}
-	//if err := json.Unmarshal(rawData, &monitorData); err != nil {
-	//	return err
-	//}
-	//
-	//if base.Id == "" {
-	//	log.Trace().Msg("Monitor ID is empty, generating a new one")
-	//	base.Id = generateMonitorId()
-	//} else {
-	//	log.Trace().Msgf("Monitor ID is set: %s", base.Id)
-	//}
-	//
-	//monitorData.setBase(base)
-
-	return nil
+func (m *Monitor) UnmarshalBSON() ([]byte, error) {
+	return nil, fmt.Errorf("UnmarshalBSON is not implemented yet")
 }
 
 func generateMonitorId() string {
@@ -170,14 +146,26 @@ func generateMonitorId() string {
 	return id
 }
 
-func (m *Monitor) Run() (IMonitorResponse, error) {
-	if err := m.Validate(); err != nil {
-		return nil, fmt.Errorf("monitor validation failed: %w", err)
+func (m *Monitor) validateBase() error {
+	if m.GetName() == "" {
+		return fmt.Errorf("monitor name cannot be empty")
 	}
+	if m.GetInterval() <= 0 {
+		return fmt.Errorf("monitor interval must be greater than zero")
+	}
+	if m.GetType() == "" {
+		return fmt.Errorf("monitor type cannot be empty")
+	}
+	if m.GetId() == "" {
+		return fmt.Errorf("monitor ID cannot be empty")
+	}
+	return nil
+}
 
-	response := m.Config.run()
-
-	return response, nil
+func (m *Monitor) GenerateId() {
+	if m.Id == "" {
+		m.Id = generateMonitorId()
+	}
 }
 
 func (m *Monitor) GetId() string {
