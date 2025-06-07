@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Dev Backend" type="TaskRunConfiguration" factoryName="TaskRunConfiguration">
+    <taskfile taskPath="" filename="$PROJECT_DIR$/Taskfile.yml" task="backend:dev" workingDirectory="" arguments="" pty="false">
+      <envs>
+        <env name="GOPATH" value="$USER_HOME$/Software/go" />
+      </envs>
+      <vars />
+    </taskfile>
+    <method v="2" />
+  </configuration>
+</component>
