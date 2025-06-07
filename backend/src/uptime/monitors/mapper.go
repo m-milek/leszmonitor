@@ -5,17 +5,17 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var monitorTypeMap = map[MonitorConfigType]IMonitorConfig{
-	Http: &HttpMonitorConfig{},
-	Ping: &PingMonitorConfig{},
+var monitorTypeMap = map[MonitorConfigType]IMonitor{
+	Http: &HttpMonitor{},
+	Ping: &PingMonitor{},
 }
 
-func MapMonitorType(typeTag MonitorConfigType) IMonitorConfig {
+func MapMonitorType(typeTag MonitorConfigType) IMonitor {
 	if typeTag == "" {
 		return nil
 	}
-	if monitorType, ok := monitorTypeMap[typeTag]; ok {
-		return monitorType
+	if monitorInstance, ok := monitorTypeMap[typeTag]; ok {
+		return monitorInstance
 	}
 	return nil
 }
@@ -41,7 +41,7 @@ func MapFromBson(rawDoc bson.M) (IMonitor, error) {
 	//// Check if the instance implements IMonitor
 	//monitor, ok := monitorInstance.(IMonitor)
 	//if !ok {
-	//	logger.Uptime.Trace().Any("monitor", monitorInstance).Msg("Monitor type does not implement IMonitor interface")
+	//	logger.Uptime.Trace().Any("monitor", monitorInstance).Msg("BaseMonitor type does not implement IMonitor interface")
 	//	return nil, fmt.Errorf("monitor type %s does not implement IMonitor interface", monitorType)
 	//}
 	//

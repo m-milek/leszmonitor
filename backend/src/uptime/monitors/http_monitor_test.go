@@ -21,10 +21,10 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 // Setup test helper functions
-func setupTestHttpMonitor() *HttpMonitorConfig {
+func setupTestHttpMonitor() *HttpConfig {
 	responseTime := 1000
 
-	return &HttpMonitorConfig{
+	return &HttpConfig{
 		HttpMethod:           "GET",
 		Url:                  "https://example.com",
 		Headers:              map[string]string{"Accept": "application/json"},
