@@ -105,9 +105,7 @@ func pingAddress(protocol string, address string, timeout time.Duration) (bool, 
 	return true, duration
 }
 
-func NewPingMonitor(base BaseMonitor, host, port, protocol string, timeout, retryCount int) (*PingConfig, error) {
-	base.Type = Ping
-
+func NewPingConfig(host, port, protocol string, timeout, retryCount int) (*PingConfig, error) {
 	monitor := &PingConfig{
 		Host:            host,
 		Port:            port,

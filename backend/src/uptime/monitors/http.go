@@ -28,7 +28,7 @@ type HttpMonitor struct {
 	Config      HttpConfig `json:"config" bson:"config"`
 }
 
-func (m HttpMonitor) Run() IMonitorResponse {
+func (m *HttpMonitor) Run() IMonitorResponse {
 	return m.Config.run()
 }
 

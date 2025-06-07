@@ -41,7 +41,7 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := model.NewUser(payload.Username, hashedPassword, payload.Email)
+	user := common.NewUser(payload.Username, hashedPassword, payload.Email)
 
 	_, err = db.AddUser(user)
 

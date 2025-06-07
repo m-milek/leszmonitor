@@ -249,7 +249,7 @@ func Ping() (int64, error) {
 	return result.Result, nil
 }
 
-func AddUser(user *model.User) (*mongo.InsertOneResult, error) {
+func AddUser(user *common.User) (*mongo.InsertOneResult, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
 		res, err := dbClient.getUsersCollection().InsertOne(ctx, user)
 		if err != nil {
@@ -266,9 +266,9 @@ func AddUser(user *model.User) (*mongo.InsertOneResult, error) {
 	return dbRes.Result, nil
 }
 
-func GetUser(username string) (*model.User, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*model.User, error) {
-		var user model.User
+func GetUser(username string) (*common.User, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*common.User, error) {
+		var user common.User
 		err := dbClient.getUsersCollection().FindOne(ctx, bson.M{"username": username}).Decode(&user)
 		if err != nil {
 			return nil, err
