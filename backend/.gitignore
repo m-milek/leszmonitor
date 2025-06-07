@@ -31,3 +31,4 @@ bin
 tmp
 .env*
 .dev-logs
+backend.log
