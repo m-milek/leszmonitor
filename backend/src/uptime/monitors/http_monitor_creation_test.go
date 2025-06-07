@@ -17,7 +17,7 @@ func TestNewHttpMonitor(t *testing.T) {
 		errorMessage        string
 	}{
 		{
-			name:                "Valid HTTP Monitor",
+			name:                "Valid HTTP BaseMonitor",
 			httpMethod:          "GET",
 			url:                 "https://example.com",
 			expectedStatusCodes: []int{200},

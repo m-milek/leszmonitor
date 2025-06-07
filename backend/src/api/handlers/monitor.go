@@ -9,11 +9,6 @@ import (
 	"net/http"
 )
 
-type MonitorDataExtractor struct {
-	Type      monitors.MonitorConfigType `json:"type"`
-	RawConfig json.RawMessage            `json:"config"`
-}
-
 type AddMonitorResponse struct {
 	MonitorId string `json:"monitor_id"`
 }
@@ -28,8 +23,22 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var monitorTypeExtractor monitors.MonitorTypeExtractor
+	if err := json.Unmarshal(rawData, &monitorTypeExtractor); err != nil {
+		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor type")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor type")
+		return
+	}
+
+	// Map the monitor type to the appropriate config type
+	monitor := monitors.MapMonitorType(monitorTypeExtractor.Type)
+	if monitor == nil {
+		logger.Api.Trace().Msgf("Unknown monitor type: %s", monitorTypeExtractor.Type)
+		util.RespondMessage(w, http.StatusBadRequest, "Unknown monitor type: "+string(monitorTypeExtractor.Type))
+		return
+	}
+
 	// unmarshal the raw data into a monitor instance
-	var monitor monitors.Monitor
 	if err := json.Unmarshal(rawData, &monitor); err != nil {
 		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor data")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor data")
@@ -39,14 +48,14 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitor.GenerateId()
 
 	if err := monitor.Validate(); err != nil {
-		logger.Api.Trace().Err(err).Msg("Monitor validation failed")
+		logger.Api.Trace().Err(err).Msg("BaseMonitor validation failed")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor configuration: "+err.Error())
 		return
 	}
 
 	logger.Api.Debug().Any("monitor", monitor).Msg("Parsed monitor configuration")
 
-	_, err := db.AddMonitor(&monitor)
+	_, err := db.AddMonitor(monitor)
 	if err != nil {
 		logger.Api.Error().Err(err).Msg("Failed to add monitor to database")
 		util.RespondMessage(w, http.StatusInternalServerError, "Internal server error")
@@ -61,8 +70,8 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		logger.Api.Trace().Msg("Monitor ID is required for deletion")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
+		logger.Api.Trace().Msg("BaseMonitor ID is required for deletion")
+		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor ID is required")
 		return
 	}
 
@@ -76,13 +85,13 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !wasDeleted {
-		msg := "Monitor not found or already deleted"
+		msg := "BaseMonitor not found or already deleted"
 		logger.Api.Warn().Str("monitor_id", id).Msg(msg)
 		util.RespondMessage(w, http.StatusNotFound, msg)
 		return
 	}
 
-	util.RespondMessage(w, http.StatusOK, "Monitor deleted successfully")
+	util.RespondMessage(w, http.StatusOK, "BaseMonitor deleted successfully")
 }
 
 func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
@@ -102,8 +111,8 @@ func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
 	id := request.PathValue("id")
 
 	if id == "" {
-		logger.Api.Trace().Msg("Monitor ID is required")
-		util.RespondMessage(writer, http.StatusBadRequest, "Monitor ID is required")
+		logger.Api.Trace().Msg("BaseMonitor ID is required")
+		util.RespondMessage(writer, http.StatusBadRequest, "BaseMonitor ID is required")
 		return
 	}
 
@@ -115,8 +124,8 @@ func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if monitor == nil {
-		logger.Api.Warn().Str("monitor_id", id).Msg("Monitor not found")
-		util.RespondMessage(writer, http.StatusNotFound, "Monitor not found")
+		logger.Api.Warn().Str("monitor_id", id).Msg("BaseMonitor not found")
+		util.RespondMessage(writer, http.StatusNotFound, "BaseMonitor not found")
 		return
 	}
 

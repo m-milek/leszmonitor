@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-func createTestBaseMonitor() Monitor {
-	return Monitor{
+func createTestBaseMonitor() BaseMonitor {
+	return BaseMonitor{
 		Id:          generateMonitorId(),
-		Name:        "Test Monitor",
+		Name:        "Test BaseMonitor",
 		Description: "Test Description",
 		Interval:    60,
 		Type:        Http,

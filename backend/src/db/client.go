@@ -322,86 +322,34 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 
 			logger.Db.Trace().Any("rawDoc", rawDoc).Msg("Found monitor document")
 
-			// Now map the raw document to a monitor instance
+			// Extract the monitor type
+			monitorType, ok := rawDoc["type"].(string)
+			if !ok {
+				return nil, fmt.Errorf("monitor document missing 'type' field or not a string")
+			}
+
+			// Create the appropriate monitor instance
+			var monitor monitors.IMonitor
+			switch monitorType {
+			case "http":
+				monitor = &monitors.HttpMonitor{}
+			case "ping":
+				monitor = &monitors.PingMonitor{}
+			default:
+				return nil, fmt.Errorf("unknown monitor type: %s", monitorType)
+			}
+
+			// Convert the document to BSON and unmarshal it into the monitor
 			data, err := bson.Marshal(rawDoc)
 			if err != nil {
-				return nil, fmt.Errorf("failed to marshal raw document: %w", err)
+				return nil, fmt.Errorf("failed to marshal document: %w", err)
 			}
 
-			var monitor monitors.Monitor
-			err = bson.Unmarshal(data, &monitor)
-			if err != nil {
-				return nil, fmt.Errorf("failed to unmarshal raw document into monitor: %w", err)
+			if err := bson.Unmarshal(data, monitor); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal document into monitor: %w", err)
 			}
 
-			logger.Db.Trace().
-				Any("monitor", rawDoc).Str("id", rawDoc["id"].(string)).
-				Msg("Successfully decoded monitor from BSON")
-
-			//// Get the monitor type
-			//typeValue, ok := rawDoc["type"]
-			//if !ok {
-			//	return nil, fmt.Errorf("monitor type not found in document")
-			//}
-			//
-			//monitorType, ok := typeValue.(string)
-			//if !ok {
-			//	return nil, fmt.Errorf("monitor type is not a string")
-			//}
-			//
-			//// Create the appropriate concrete type based on the monitor type
-			//var monitor monitors.IMonitor
-			//
-			//switch monitors.MonitorConfigType(monitorType) {
-			//case monitors.Http:
-			//	httpMonitor := &monitors.Monitor{}
-			//	// Re-encode and decode to the concrete type
-			//	logger.Db.Trace().Any("raw", rawDoc).Msg("Decoding HTTP monitor from BSON")
-			//	data, err := bson.Marshal(rawDoc)
-			//	if err != nil {
-			//		return nil, err
-			//	}
-			//	if err := bson.Unmarshal(data, httpMonitor); err != nil {
-			//		return nil, err
-			//	}
-			//	logger.Db.Trace().Str("monitor_id", httpMonitor.GetId()).Msg("Decoded HTTP monitor from BSON")
-			//	monitor = httpMonitor
-			//
-			//case monitors.Ping:
-			//	pingMonitor := &monitors.Monitor{}
-			//	pingConfig := &monitors.PingMonitorConfig{}
-			//
-			//	rawConfig := rawDoc["config"]
-			//	if rawConfig == nil {
-			//		return nil, fmt.Errorf("monitor config not found in document")
-			//	}
-			//
-			//	// unmarshal the config first
-			//	configData, err := bson.Marshal(rawConfig)
-			//	if err != nil {
-			//		return nil, fmt.Errorf("failed to marshal monitor config: %w", err)
-			//	}
-			//	if err := bson.Unmarshal(configData, pingConfig); err != nil {
-			//		return nil, fmt.Errorf("failed to unmarshal monitor config: %w", err)
-			//	}
-			//
-			//	// Now unmarshal the rest of the monitor
-			//	rawDoc["config"] = pingConfig // Replace the config field with the unmarshaled config
-			//	data, err := bson.Marshal(rawDoc)
-			//	if err != nil {
-			//		return nil, fmt.Errorf("failed to marshal monitor data: %w", err)
-			//	}
-			//	if err := bson.Unmarshal(data, pingMonitor); err != nil {
-			//		return nil, fmt.Errorf("failed to unmarshal monitor data: %w", err)
-			//	}
-			//
-			//	monitor = pingMonitor
-			//
-			//default:
-			//	return nil, fmt.Errorf("unknown monitor type: %s", monitorType)
-			//}
-
-			//monitorsList = append(monitorsList, monitor)
+			monitorsList = append(monitorsList, monitor)
 		}
 
 		if err := cursor.Err(); err != nil {

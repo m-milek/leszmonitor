@@ -10,7 +10,7 @@ import (
 
 func TestHttpMonitor_Validate(t *testing.T) {
 	// Test valid monitor
-	t.Run("Valid HTTP Monitor", func(t *testing.T) {
+	t.Run("Valid HTTP BaseMonitor", func(t *testing.T) {
 		monitor := setupTestHttpMonitor()
 		err := monitor.validate()
 		assert.NoError(t, err)
@@ -123,7 +123,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 }
 
 func TestValidateStatusCode(t *testing.T) {
-	setupTest := func() (*HttpMonitorConfig, *http.Response, *HttpMonitorResponse) {
+	setupTest := func() (*HttpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitor()
 		response := createMockResponse(200, "", nil)
 		monitorResponse := newHttpMonitorResponse()
@@ -152,7 +152,7 @@ func TestValidateStatusCode(t *testing.T) {
 }
 
 func TestValidateResponseTime(t *testing.T) {
-	setupTest := func() (*HttpMonitorConfig, *HttpMonitorResponse) {
+	setupTest := func() (*HttpConfig, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitor()
 		monitorResponse := newHttpMonitorResponse()
 		return monitor, monitorResponse
@@ -181,7 +181,7 @@ func TestValidateResponseTime(t *testing.T) {
 }
 
 func TestValidateResponseHeaders(t *testing.T) {
-	setupTest := func(headers map[string]string) (*HttpMonitorConfig, *http.Response, *HttpMonitorResponse) {
+	setupTest := func(headers map[string]string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitor()
 		response := createMockResponse(200, "", headers)
 		monitorResponse := newHttpMonitorResponse()
@@ -211,7 +211,7 @@ func TestValidateResponseHeaders(t *testing.T) {
 }
 
 func TestValidateResponseBody(t *testing.T) {
-	setupTest := func(body string) (*HttpMonitorConfig, *http.Response, *HttpMonitorResponse) {
+	setupTest := func(body string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitor()
 		response := createMockResponse(200, body, nil)
 		monitorResponse := newHttpMonitorResponse()

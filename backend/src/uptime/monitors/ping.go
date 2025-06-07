@@ -19,7 +19,7 @@ var (
 	retryTimeout = 1 * time.Second // Default retry timeout
 )
 
-type PingMonitorConfig struct {
+type PingConfig struct {
 	Host            string `json:"host" bson:"host"`               // Host to ping
 	Port            string `json:"port" bson:"port"`               // Port to ping
 	Protocol        string `json:"protocol" bson:"protocol"`       // Protocol to use (tcp, udp, etc.)
@@ -28,7 +28,16 @@ type PingMonitorConfig struct {
 	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
-func (m *PingMonitorConfig) run() IMonitorResponse {
+type PingMonitor struct {
+	BaseMonitor `bson:",inline"` // Embed BaseMonitor for common fields
+	Config      PingConfig       `json:"config" bson:"config"`
+}
+
+func (m PingMonitor) Run() IMonitorResponse {
+	return m.Config.run()
+}
+
+func (m *PingConfig) run() IMonitorResponse {
 	monitorResponse := NewPingMonitorResponse()
 
 	// Handles IPv6 as well
@@ -51,7 +60,7 @@ func (m *PingMonitorConfig) run() IMonitorResponse {
 	return monitorResponse
 }
 
-func (m *PingMonitorConfig) validate() error {
+func (m *PingConfig) validate() error {
 	if m.Host == "" {
 		return fmt.Errorf("host cannot be empty")
 	}
@@ -96,10 +105,10 @@ func pingAddress(protocol string, address string, timeout time.Duration) (bool, 
 	return true, duration
 }
 
-func NewPingMonitor(base Monitor, host, port, protocol string, timeout, retryCount int) (*PingMonitorConfig, error) {
+func NewPingMonitor(base BaseMonitor, host, port, protocol string, timeout, retryCount int) (*PingConfig, error) {
 	base.Type = Ping
 
-	monitor := &PingMonitorConfig{
+	monitor := &PingConfig{
 		Host:            host,
 		Port:            port,
 		Protocol:        protocol,
@@ -109,7 +118,7 @@ func NewPingMonitor(base Monitor, host, port, protocol string, timeout, retryCou
 	}
 
 	if err := monitor.validate(); err != nil {
-		return nil, fmt.Errorf("failed to create PingMonitorConfig: %w", err)
+		return nil, fmt.Errorf("failed to create PingConfig: %w", err)
 	}
 
 	return monitor, nil
@@ -142,4 +151,9 @@ func (m *PingMonitorResponse) GetErrors() []string {
 }
 func (m *PingMonitorResponse) GetFailures() []string {
 	return m.Failures
+}
+func (m *PingMonitor) GenerateId() {
+	if m.Id == "" {
+		m.Id = generateMonitorId()
+	}
 }
