@@ -46,6 +46,7 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 
 	for {
 		select {
+
 		case <-time.After(monitor.GetInterval()):
 			// Run the monitor's check method
 			err := monitor.Validate()
@@ -63,8 +64,31 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 			//	if err != nil {
 			//		logger.Uptime.Error().Err(err).Msgf("Failed to save result for monitor %s", monitor.GetName())
 			//	}
+		case msg := <-monitors.MessageBroadcaster:
+			if msg.Id != monitor.GetId() {
+				break
+			}
+			if msg.Status == monitors.Edited {
+				monitor = *msg.Monitor
+				logger.Uptime.Debug().Msgf("Updating monitor: %s - %s", monitor.GetName(), monitor.GetId())
+				break
+			}
+			if msg.Status == monitors.Deleted {
+				logger.Uptime.Info().Msgf("Deleting monitor: %s - %s", monitor.GetName(), monitor.GetId())
+				return
+			}
+			if msg.Status == monitors.Disabled {
+				logger.Uptime.Info().Msgf("Disabling monitor: %s - %s", monitor.GetName(), monitor.GetId())
+				return
+			}
+			if msg.Status == monitors.Enabled {
+				break
+			}
+			if msg.Status == monitors.Created {
+				break
+			}
 		case <-ctx.Done():
-			logger.Uptime.Info().Msgf("Stopping monitor: %s", monitor.GetName())
+			logger.Uptime.Info().Msgf("Stopping monitor: %s - %s", monitor.GetName(), monitor.GetId())
 			return
 		}
 	}
