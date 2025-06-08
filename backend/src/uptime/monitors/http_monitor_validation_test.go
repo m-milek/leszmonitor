@@ -11,14 +11,14 @@ import (
 func TestHttpMonitor_Validate(t *testing.T) {
 	// Test valid monitor
 	t.Run("Valid HTTP BaseMonitor", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		err := monitor.validate()
 		assert.NoError(t, err)
 	})
 
 	// Test empty URL
 	t.Run("Empty URL", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		monitor.Url = ""
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -27,7 +27,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test empty HTTP method
 	t.Run("Empty HTTP Method", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		monitor.HttpMethod = ""
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -36,7 +36,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test invalid HTTP method
 	t.Run("Invalid HTTP Method", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		monitor.HttpMethod = "INVALID"
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -45,7 +45,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test empty expected status codes
 	t.Run("Empty Expected Status Codes", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		emptyCodes := []int{}
 		monitor.ExpectedStatusCodes = emptyCodes
 		err := monitor.validate()
@@ -55,7 +55,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test invalid status code range (too low)
 	t.Run("Status Code Too Low", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		invalidCodes := []int{50, 200}
 		monitor.ExpectedStatusCodes = invalidCodes
 		err := monitor.validate()
@@ -65,7 +65,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test invalid status code range (too high)
 	t.Run("Status Code Too High", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		invalidCodes := []int{200, 600}
 		monitor.ExpectedStatusCodes = invalidCodes
 		err := monitor.validate()
@@ -75,7 +75,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test invalid URL format
 	t.Run("Invalid URL Format", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		monitor.Url = "not-a-valid-url"
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -84,7 +84,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test invalid URL scheme
 	t.Run("Invalid URL Scheme", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		monitor.Url = "ftp://example.com"
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -93,7 +93,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test negative expected response time
 	t.Run("Negative Expected Response Time", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		negativeTime := -500
 		monitor.ExpectedResponseTime = &negativeTime
 		err := monitor.validate()
@@ -103,7 +103,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 	// Test valid status codes
 	t.Run("Valid Status Codes", func(t *testing.T) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		validCodes := []int{200, 201, 204}
 		monitor.ExpectedStatusCodes = validCodes
 		err := monitor.validate()
@@ -114,7 +114,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	validMethods := []string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}
 	for _, method := range validMethods {
 		t.Run("Valid HTTP Method: "+method, func(t *testing.T) {
-			monitor := setupTestHttpMonitor()
+			monitor := setupTestHttpMonitorConfig()
 			monitor.HttpMethod = method
 			err := monitor.validate()
 			assert.NoError(t, err)
@@ -124,7 +124,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 
 func TestValidateStatusCode(t *testing.T) {
 	setupTest := func() (*HttpConfig, *http.Response, *HttpMonitorResponse) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, "", nil)
 		monitorResponse := newHttpMonitorResponse()
 		return monitor, response, monitorResponse
@@ -153,7 +153,7 @@ func TestValidateStatusCode(t *testing.T) {
 
 func TestValidateResponseTime(t *testing.T) {
 	setupTest := func() (*HttpConfig, *HttpMonitorResponse) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		monitorResponse := newHttpMonitorResponse()
 		return monitor, monitorResponse
 	}
@@ -182,7 +182,7 @@ func TestValidateResponseTime(t *testing.T) {
 
 func TestValidateResponseHeaders(t *testing.T) {
 	setupTest := func(headers map[string]string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, "", headers)
 		monitorResponse := newHttpMonitorResponse()
 		return monitor, response, monitorResponse
@@ -212,7 +212,7 @@ func TestValidateResponseHeaders(t *testing.T) {
 
 func TestValidateResponseBody(t *testing.T) {
 	setupTest := func(body string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
-		monitor := setupTestHttpMonitor()
+		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, body, nil)
 		monitorResponse := newHttpMonitorResponse()
 		return monitor, response, monitorResponse

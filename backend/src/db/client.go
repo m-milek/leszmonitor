@@ -61,7 +61,7 @@ func InitDbClient(baseCtx context.Context) error {
 
 	logger.Db.Info().Msg("Connecting to MongoDB...")
 
-	uri := os.Getenv(env.MONGODB_URI)
+	uri := os.Getenv(env.MongoDbUri)
 
 	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
@@ -193,7 +193,7 @@ func initMonitorsCollection(database *mongo.Database) error {
 	return nil
 }
 
-// withTimeout creates a child context with timeout and handles cancellation
+// withTimeout creates a child context with timeout and handles cancellation.
 func withTimeout[T any](operation func(ctx context.Context) (T, error)) (dbResult[T], error) {
 	ctx, cancel := context.WithTimeout(dbClient.baseCtx, timeoutDuration)
 	defer cancel()
@@ -392,7 +392,31 @@ func GetMonitorById(id string) (monitors.IMonitor, error) {
 			return nil, err
 		}
 		logger.Db.Trace().Any("rawDoc", rawDoc).Msg("Found monitor by ID")
-		monitor, err := monitors.MapFromBson(rawDoc)
+
+		// Extract the monitor type
+		monitorType, ok := rawDoc["type"].(string)
+		if !ok {
+			return nil, fmt.Errorf("monitor document missing 'type' field or not a string")
+		}
+		// Create the appropriate monitor instance
+		var monitor monitors.IMonitor
+		switch monitorType {
+		case "http":
+			monitor = &monitors.HttpMonitor{}
+		case "ping":
+			monitor = &monitors.PingMonitor{}
+		}
+		// Convert the document to BSON and unmarshal it into the monitor
+		data, err := bson.Marshal(rawDoc)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal document: %w", err)
+		}
+		if err := bson.Unmarshal(data, monitor); err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, fmt.Errorf("monitor with ID %s not found", id)
+			}
+			return nil, fmt.Errorf("failed to unmarshal document into monitor: %w", err)
+		}
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to map monitor from BSON: %w", err)

@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/common"
@@ -9,7 +11,7 @@ import (
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logger"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
+
 	"os"
 	"strconv"
 	"time"
@@ -101,9 +103,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiryHours, err := strconv.Atoi(os.Getenv(env.JWT_EXPIRY_HOURS))
+	expiryHours, err := strconv.Atoi(os.Getenv(env.JwtExpiryHours))
 	if err != nil {
-		logger.Api.Error().Err(err).Msg("Invalid JWT_EXPIRY_HOURS value")
+		logger.Api.Error().Err(err).Msg("Invalid JwtExpiryHours value")
 		return
 	}
 	validFor := time.Duration(expiryHours) * time.Hour
@@ -118,7 +120,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			"exp":      jwt2.NewNumericDate(expiryDate),
 		},
 	)
-	token, err := jwt.SignedString([]byte(os.Getenv(env.JWT_SECRET)))
+	token, err := jwt.SignedString([]byte(os.Getenv(env.JwtSecret)))
 
 	if err != nil {
 		msg := "Failed to log in"

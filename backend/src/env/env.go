@@ -5,36 +5,34 @@ import (
 	"os"
 )
 
-type EnvVar string
-
 const (
-	API_PORT         EnvVar = "API_PORT"
-	LOG_LEVEL               = "LOG_LEVEL" // TRACE, DEBUG, INFO, WARN, ERROR
-	LOG_FILE_PATH           = "LOG_FILE_PATH"
-	MONGODB_URI             = "MONGODB_URI"
-	JWT_SECRET              = "JWT_SECRET"
-	JWT_EXPIRY_HOURS        = "JWT_EXPIRY_HOURS"
+	ApiPort        = "API_PORT"
+	LogLevel       = "LOG_LEVEL" // TRACE, DEBUG, INFO, WARN, ERROR
+	LogFilePath    = "LOG_FILE_PATH"
+	MongoDbUri     = "MONGODB_URI"
+	JwtSecret      = "JWT_SECRET"
+	JwtExpiryHours = "JWT_EXPIRY_HOURS"
 )
 
 func Validate() error {
-	envApiPort := os.Getenv(string(API_PORT))
+	envApiPort := os.Getenv(ApiPort)
 	if envApiPort == "" {
-		return fmt.Errorf("environment variable %s is not set", API_PORT)
+		return fmt.Errorf("environment variable %s is not set", ApiPort)
 	}
 
-	envMongoDBURI := os.Getenv(MONGODB_URI)
+	envMongoDBURI := os.Getenv(MongoDbUri)
 	if envMongoDBURI == "" {
-		return fmt.Errorf("environment variable %s is not set", MONGODB_URI)
+		return fmt.Errorf("environment variable %s is not set", MongoDbUri)
 	}
 
-	envJwtSecret := os.Getenv(JWT_SECRET)
+	envJwtSecret := os.Getenv(JwtSecret)
 	if envJwtSecret == "" {
-		return fmt.Errorf("environment variable %s is not set", JWT_SECRET)
+		return fmt.Errorf("environment variable %s is not set", JwtSecret)
 	}
 
-	envJwtValidHours := os.Getenv(JWT_EXPIRY_HOURS)
+	envJwtValidHours := os.Getenv(JwtExpiryHours)
 	if envJwtValidHours == "" {
-		return fmt.Errorf("environment variable %s is not set", JWT_EXPIRY_HOURS)
+		return fmt.Errorf("environment variable %s is not set", JwtExpiryHours)
 	}
 
 	return nil

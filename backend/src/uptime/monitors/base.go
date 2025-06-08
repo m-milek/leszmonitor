@@ -27,7 +27,7 @@ type BaseMonitor struct {
 	Name        string            `json:"name" bson:"name"`               // Name of the monitor
 	Description string            `json:"description" bson:"description"` // Description of the monitor
 	Interval    int               `json:"interval" bson:"interval"`       // How often to run the monitor in seconds
-	OwnerId     string            `json:"owner_id" bson:"owner_id"`       // ID of the owner of the monitor
+	OwnerId     string            `json:"ownerId" bson:"ownerId"`         // ID of the owner of the monitor
 	Type        MonitorConfigType `json:"type" bson:"type"`               // Type of the monitor (http, ping, etc.)
 }
 
@@ -65,6 +65,9 @@ func (m *BaseMonitor) validateBase() error {
 	}
 	if m.GetId() == "" {
 		return fmt.Errorf("monitor ID cannot be empty")
+	}
+	if m.OwnerId == "" {
+		return fmt.Errorf("monitor owner ID cannot be empty")
 	}
 	return nil
 }

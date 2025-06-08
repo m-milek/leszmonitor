@@ -11,7 +11,7 @@ import (
 func TestHttpMonitorRunSuccess(t *testing.T) {
 	mockHttpClient := &MockHTTPClient{}
 
-	monitor := setupTestHttpMonitor()
+	monitor := setupTestHttpMonitorConfig()
 
 	// Test successful response
 	successResponse := createMockResponse(200, "success", map[string]string{
@@ -36,7 +36,7 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 func TestHttpMonitorRunFailure(t *testing.T) {
 	mockClient := new(MockHTTPClient)
 
-	monitor := setupTestHttpMonitor()
+	monitor := setupTestHttpMonitorConfig()
 
 	// Test failed response - wrong status code
 	failedResponse := createMockResponse(404, "success", map[string]string{
@@ -62,7 +62,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 func TestHttpMonitorRunError(t *testing.T) {
 	mockClient := new(MockHTTPClient)
 
-	monitor := setupTestHttpMonitor()
+	monitor := setupTestHttpMonitorConfig()
 
 	// Test error response - HTTP client error
 	mockClient.On("Do", mock.Anything).Return(nil, errors.New("connection refused")).Once()
@@ -83,7 +83,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	mockClient := new(MockHTTPClient)
 
-	monitor := setupTestHttpMonitor()
+	monitor := setupTestHttpMonitorConfig()
 
 	// Test response with multiple failures
 	failedResponse := createMockResponse(404, "error", map[string]string{
