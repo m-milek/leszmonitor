@@ -131,7 +131,7 @@ func InitLogging(cfg Config) error {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	consoleWriter.FormatLevel = formatLogLevel
 
-	if os.Getenv(env.LOG_FILE_PATH) == "" {
+	if os.Getenv(env.LogFilePath) == "" {
 		Init.Warn().Msg("No log file path specified, defaulting to stdout")
 	}
 
@@ -168,7 +168,7 @@ func InitLogging(cfg Config) error {
 }
 
 func GetLoggerConfig() Config {
-	envLevel := os.Getenv(env.LOG_LEVEL)
+	envLevel := os.Getenv(env.LogLevel)
 	var logLevel zerolog.Level
 
 	switch envLevel {
@@ -187,7 +187,7 @@ func GetLoggerConfig() Config {
 		Init.Warn().Msg("Invalid log level, defaulting to 'INFO'")
 	}
 
-	envFilePath := os.Getenv(env.LOG_FILE_PATH)
+	envFilePath := os.Getenv(env.LogFilePath)
 	var filePath string
 
 	if envFilePath != "" {

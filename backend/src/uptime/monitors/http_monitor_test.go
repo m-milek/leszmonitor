@@ -1,13 +1,15 @@
 package monitors
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io"
 	"net/http"
 	"strings"
+	"testing"
 )
 
-// MockHTTPClient is a mock implementation of the HTTP mockHttpClient
+// MockHTTPClient is a mock implementation of the HTTP mockHttpClient.
 type MockHTTPClient struct {
 	mock.Mock
 }
@@ -20,8 +22,8 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
-// Setup test helper functions
-func setupTestHttpMonitor() *HttpConfig {
+// Setup test helper functions.
+func setupTestHttpMonitorConfig() *HttpConfig {
 	responseTime := 1000
 
 	return &HttpConfig{
@@ -47,4 +49,19 @@ func createMockResponse(statusCode int, body string, headers map[string]string) 
 		Body:       io.NopCloser(strings.NewReader(body)),
 		Header:     header,
 	}
+}
+
+func TestHttpConfig_ImplementsIMonitorConfig(t *testing.T) {
+	monitor := setupTestHttpMonitorConfig()
+	var iMonitor IMonitorConfig = monitor
+	assert.NotNil(t, iMonitor)
+}
+
+func TestHttpMonitor_ImplementsIMonitor(t *testing.T) {
+	monitor := &HttpMonitor{
+		BaseMonitor: BaseMonitor{Id: "test-id"},
+		Config:      *setupTestHttpMonitorConfig(),
+	}
+	var iMonitor IMonitor = monitor
+	assert.NotNil(t, iMonitor)
 }

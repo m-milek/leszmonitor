@@ -13,14 +13,14 @@ import (
 )
 
 type HttpConfig struct {
-	HttpMethod           string            `json:"http_method" bson:"http_method"`
+	HttpMethod           string            `json:"httpMethod" bson:"httpMethod"`
 	Url                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
 	Body                 string            `json:"body" bson:"body"`
-	ExpectedStatusCodes  []int             `json:"expected_status_codes" bson:"expected_status_codes"`
-	ExpectedBodyRegex    string            `json:"expected_body_regex" bson:"expected_body_regex"`
-	ExpectedHeaders      map[string]string `json:"expected_headers" bson:"expected_headers"`
-	ExpectedResponseTime *int              `json:"expected_response_time" bson:"expected_response_time"` // in milliseconds
+	ExpectedStatusCodes  []int             `json:"expectedStatusCodes" bson:"expectedStatusCodes"`
+	ExpectedBodyRegex    string            `json:"expectedBodyRegex" bson:"expectedBodyRegex"`
+	ExpectedHeaders      map[string]string `json:"expectedHeaders" bson:"expectedHeaders"`
+	ExpectedResponseTime *int              `json:"expectedResponseTime" bson:"expectedResponseTime"` // in milliseconds
 }
 
 type HttpMonitor struct {
@@ -30,6 +30,16 @@ type HttpMonitor struct {
 
 func (m *HttpMonitor) Run() IMonitorResponse {
 	return m.Config.run()
+}
+
+func (m *HttpMonitor) Validate() error {
+	if err := m.validateBase(); err != nil {
+		return fmt.Errorf("monitor validation failed: %w", err)
+	}
+	if err := m.Config.validate(); err != nil {
+		return fmt.Errorf("HTTP monitor config validation failed: %w", err)
+	}
+	return nil
 }
 
 // httpClient is needed for mocking HTTP requests in tests
@@ -62,7 +72,7 @@ func newHttpClient() httpClient {
 	}
 }
 
-var httpClientOrMock httpClient = newHttpClient()
+var httpClientOrMock = newHttpClient()
 
 func (m *HttpConfig) run() IMonitorResponse {
 	monitorResponse := newHttpMonitorResponse()
@@ -87,7 +97,7 @@ func (m *HttpConfig) run() IMonitorResponse {
 	return monitorResponse
 }
 
-// Encapsulates request creation and execution
+// Encapsulates request creation and execution.
 func (m *HttpConfig) executeRequest(httpClient *httpClient) (*http.Response, time.Duration, error) {
 	request, err := m.createRequest()
 	if err != nil {
@@ -221,11 +231,11 @@ func (m *HttpConfig) validate() error {
 		return fmt.Errorf("invalid HTTP method: %s", m.HttpMethod)
 	}
 
-	if m.ExpectedStatusCodes != nil && len(m.ExpectedStatusCodes) == 0 {
+	if len(m.ExpectedStatusCodes) == 0 {
 		return fmt.Errorf("expected status codes cannot be empty")
 	}
 
-	if m.ExpectedStatusCodes != nil && len(m.ExpectedStatusCodes) > 0 {
+	if len(m.ExpectedStatusCodes) > 0 {
 		minValue, maxValue := util.SliceMinMax(m.ExpectedStatusCodes)
 		if minValue < 100 || maxValue > 599 {
 			return fmt.Errorf("expected status codes must be between 100 and 599")

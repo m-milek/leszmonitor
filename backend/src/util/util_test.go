@@ -21,10 +21,10 @@ func TestSliceContains(t *testing.T) {
 func TestSliceMinMax(t *testing.T) {
 	t.Run("Test SliceMinMax with integers", func(t *testing.T) {
 		slice := []int{3, 1, 4, 1, 5, 9, 2, 6, 5}
-		min, max := SliceMinMax(slice)
+		minValue, maxValue := SliceMinMax(slice)
 
-		assert.Equal(t, 1, min)
-		assert.Equal(t, 9, max)
+		assert.Equal(t, 1, minValue)
+		assert.Equal(t, 9, maxValue)
 	})
 
 	t.Run("Test SliceMinMax with empty slice", func(t *testing.T) {
@@ -36,10 +36,10 @@ func TestSliceMinMax(t *testing.T) {
 
 	t.Run("Test SliceMinMax with strings", func(t *testing.T) {
 		slice := []string{"apple", "banana", "cherry"}
-		min, max := SliceMinMax(slice)
+		minValue, maxValue := SliceMinMax(slice)
 
-		assert.Equal(t, "apple", min)
-		assert.Equal(t, "cherry", max)
+		assert.Equal(t, "apple", minValue)
+		assert.Equal(t, "cherry", maxValue)
 	})
 }
 

@@ -44,6 +44,8 @@ func StartUptimeWorker(ctx context.Context) {
 func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 	logger.Uptime.Trace().Dur("every", monitor.GetInterval()).Msgf("Running monitor: %s", monitor.GetName())
 
+	monitorMsgChannel := monitors.MessageBroadcaster.Subscribe()
+
 	for {
 		select {
 
@@ -64,7 +66,7 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 			//	if err != nil {
 			//		logger.Uptime.Error().Err(err).Msgf("Failed to save result for monitor %s", monitor.GetName())
 			//	}
-		case msg := <-monitors.MessageBroadcaster:
+		case msg := <-monitorMsgChannel:
 			if msg.Id != monitor.GetId() {
 				break
 			}

@@ -23,6 +23,8 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logger.Api.Debug().RawJSON("raw_data", rawData).Msg("Received monitor configuration")
+
 	var monitorTypeExtractor monitors.MonitorTypeExtractor
 	if err := json.Unmarshal(rawData, &monitorTypeExtractor); err != nil {
 		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor type")

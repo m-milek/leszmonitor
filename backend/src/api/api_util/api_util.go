@@ -3,7 +3,6 @@ package util
 import (
 	"encoding/json"
 	"github.com/m-milek/leszmonitor/logger"
-	"io"
 	"net/http"
 )
 
@@ -29,8 +28,4 @@ func RespondMessage(w http.ResponseWriter, statusCode int, message string) {
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		logger.Api.Error().Err(err).Msg("Failed to encode JSON response")
 	}
-}
-
-func DecodeRequestBody(reader io.Reader, target any) error {
-	return json.NewDecoder(reader).Decode(target)
 }

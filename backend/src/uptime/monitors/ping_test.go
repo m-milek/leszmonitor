@@ -9,63 +9,63 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Mock for net.Dial to avoid actual network calls in tests
-type MockDialer struct {
+// MockDialer is a mock implementation of the dialer interface used for testing.
+type mockDialer struct {
 	mock.Mock
 }
 
-func (m *MockDialer) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
+func (m *mockDialer) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
 	args := m.Called(network, address, timeout)
 	return args.Get(0).(net.Conn), args.Error(1)
 }
 
-// Mock connection
-type MockConn struct {
+// Mock connection to simulate network behavior.
+type mockConn struct {
 	mock.Mock
 }
 
-func (m *MockConn) Read(b []byte) (n int, err error) {
+func (m *mockConn) Read(b []byte) (n int, err error) {
 	args := m.Called(b)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockConn) Write(b []byte) (n int, err error) {
+func (m *mockConn) Write(b []byte) (n int, err error) {
 	args := m.Called(b)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockConn) Close() error {
+func (m *mockConn) Close() error {
 	args := m.Called()
 	return args.Error(0)
 }
 
-func (m *MockConn) LocalAddr() net.Addr {
-	args := m.Called()
-	return args.Get(0).(net.Addr)
-}
-
-func (m *MockConn) RemoteAddr() net.Addr {
+func (m *mockConn) LocalAddr() net.Addr {
 	args := m.Called()
 	return args.Get(0).(net.Addr)
 }
 
-func (m *MockConn) SetDeadline(t time.Time) error {
+func (m *mockConn) RemoteAddr() net.Addr {
+	args := m.Called()
+	return args.Get(0).(net.Addr)
+}
+
+func (m *mockConn) SetDeadline(t time.Time) error {
 	args := m.Called(t)
 	return args.Error(0)
 }
 
-func (m *MockConn) SetReadDeadline(t time.Time) error {
+func (m *mockConn) SetReadDeadline(t time.Time) error {
 	args := m.Called(t)
 	return args.Error(0)
 }
 
-func (m *MockConn) SetWriteDeadline(t time.Time) error {
+func (m *mockConn) SetWriteDeadline(t time.Time) error {
 	args := m.Called(t)
 	return args.Error(0)
 }
 
 // Setup function for tests
-func setupPingMonitor() *PingConfig {
+func setupPingMonitorConfig() *PingConfig {
 	monitor, err := NewPingConfig("example.com", "80", "tcp", 5, 3)
 	monitor.pingAddressFunc = pingAddressFunc // Use the global function for testing
 
@@ -75,15 +75,30 @@ func setupPingMonitor() *PingConfig {
 	return monitor
 }
 
+func TestPingConfig_ImplementsIMonitorConfig(t *testing.T) {
+	monitor := setupPingMonitorConfig()
+	var iMonitor IMonitorConfig = monitor
+	assert.NotNil(t, iMonitor)
+}
+
+func TestPingMonitor_ImplementsIMonitor(t *testing.T) {
+	monitor := &PingMonitor{
+		BaseMonitor: BaseMonitor{Id: "test-id"},
+		Config:      *setupPingMonitorConfig(),
+	}
+	var iMonitor IMonitor = monitor
+	assert.NotNil(t, iMonitor)
+}
+
 func TestPingMonitor_Validate(t *testing.T) {
 	t.Run("Valid Configuration", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 		err := monitor.validate()
 		assert.NoError(t, err)
 	})
 
 	t.Run("Empty Host", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 		monitor.Host = ""
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -91,7 +106,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	})
 
 	t.Run("Empty Port", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 		monitor.Port = ""
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -99,7 +114,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	})
 
 	t.Run("Invalid RetryCount", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 		monitor.RetryCount = 0
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -107,7 +122,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 	})
 
 	t.Run("Invalid Protocol", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 		monitor.Protocol = "invalid"
 		err := monitor.validate()
 		assert.Error(t, err)
@@ -116,7 +131,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 
 	t.Run("Valid Protocols", func(t *testing.T) {
 		for _, protocol := range validProtocols {
-			monitor := setupPingMonitor()
+			monitor := setupPingMonitorConfig()
 			monitor.Protocol = protocol
 			err := monitor.validate()
 			assert.NoError(t, err, "Protocol %s should be valid", protocol)
@@ -160,7 +175,7 @@ func TestPingMonitor_Run(t *testing.T) {
 	defer func() { pingAddressFunc = originalPingAddress }()
 
 	t.Run("Successful Ping", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 
 		// Mock the pingAddress function
 		pingAddressFunc = func(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
@@ -177,7 +192,7 @@ func TestPingMonitor_Run(t *testing.T) {
 	})
 
 	t.Run("Failed Ping with Retries", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 		callCount := 0
 
 		// Mock the pingAddress function to fail for all retries
@@ -193,7 +208,7 @@ func TestPingMonitor_Run(t *testing.T) {
 	})
 
 	t.Run("Successful Ping After Retry", func(t *testing.T) {
-		monitor := setupPingMonitor()
+		monitor := setupPingMonitorConfig()
 		callCount := 0
 
 		// Mock the pingAddress function to succeed on the second try

@@ -86,7 +86,7 @@ func TestNewHttpMonitor(t *testing.T) {
 }
 
 func TestHttpMonitorValidate(t *testing.T) {
-	monitor := setupTestHttpMonitor()
+	monitor := setupTestHttpMonitorConfig()
 	err := monitor.validate()
 	assert.NoError(t, err)
 
@@ -97,7 +97,7 @@ func TestHttpMonitorValidate(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid URL format")
 
 	// Reset and test invalid response time
-	monitor = setupTestHttpMonitor()
+	monitor = setupTestHttpMonitorConfig()
 	negativeTime := -100
 	monitor.ExpectedResponseTime = &negativeTime
 	err = monitor.validate()
@@ -106,7 +106,7 @@ func TestHttpMonitorValidate(t *testing.T) {
 }
 
 func TestCreateRequest(t *testing.T) {
-	monitor := setupTestHttpMonitor()
+	monitor := setupTestHttpMonitorConfig()
 
 	// Test basic request creation
 	req, err := monitor.createRequest()

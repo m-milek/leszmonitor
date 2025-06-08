@@ -3,20 +3,20 @@ package middleware
 import (
 	"context"
 	"fmt"
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/env"
 	"net/http"
 	"os"
 	"strings"
 )
 
-// UserClaims extends standard JWT claims with custom fields
+// UserClaims extends standard JWT claims with custom fields.
 type UserClaims struct {
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
-// JwtAuth middleware validates JWT tokens from the Authorization header
+// JwtAuth middleware validates JWT tokens from the Authorization header.
 func JwtAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rw := newResponseWriter(w)
@@ -35,7 +35,7 @@ func JwtAuth(next http.Handler) http.Handler {
 		}
 
 		// Get JWT secret from environment
-		jwtSecret := os.Getenv(env.JWT_SECRET)
+		jwtSecret := os.Getenv(env.JwtSecret)
 		if jwtSecret == "" {
 			http.Error(rw, "Server configuration error", http.StatusInternalServerError)
 			return
@@ -82,17 +82,17 @@ func JwtAuth(next http.Handler) http.Handler {
 	})
 }
 
-// Define a context key type to avoid collisions
+// Define a context key type to avoid collisions.
 type contextKey string
 
 const userClaimsKey contextKey = "userClaims"
 
-// SetUserContext stores user claims in the request context
+// SetUserContext stores user claims in the request context.
 func SetUserContext(ctx context.Context, claims *UserClaims) context.Context {
 	return context.WithValue(ctx, userClaimsKey, claims)
 }
 
-// GetUserFromContext retrieves user claims from the request context
+// GetUserFromContext retrieves user claims from the request context.
 func GetUserFromContext(ctx context.Context) (*UserClaims, bool) {
 	claims, ok := ctx.Value(userClaimsKey).(*UserClaims)
 	return claims, ok
