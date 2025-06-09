@@ -22,6 +22,8 @@ type Client struct {
 	baseCtx  context.Context
 }
 
+var ErrNotFound = errors.New("document not found")
+
 func (*Client) getDatabase() *mongo.Database {
 	return dbClient.client.Database(DatabaseName)
 }
@@ -336,7 +338,7 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 		}
 		defer cursor.Close(ctx)
 
-		var monitorsList []monitors.IMonitor
+		monitorsList := make([]monitors.IMonitor, 0)
 
 		// First decode into a map to determine the monitor type
 		for cursor.Next(ctx) {
@@ -421,6 +423,9 @@ func GetMonitorById(id string) (monitors.IMonitor, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (monitors.IMonitor, error) {
 		var rawDoc bson.M
 		err := dbClient.getMonitorsCollection().FindOne(ctx, bson.M{"id": id}).Decode(&rawDoc)
+		if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrNotFound
+		}
 		if err != nil {
 			return nil, err
 		}
