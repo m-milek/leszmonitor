@@ -65,6 +65,10 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 			}
 			logger.Uptime.Trace().Msgf("Running monitor %s - %s", monitor.GetName(), monitor.GetId())
 
+			response := monitor.Run()
+
+			logger.Uptime.Debug().Any("monitor_response", response).Msgf("Monitor %s - %s response", monitor.GetName(), monitor.GetId())
+
 			// Log the result of the check
 			// logger.Uptime.Info().Msgf("Monitor %s result: %v", monitor.GetName(), result)
 
