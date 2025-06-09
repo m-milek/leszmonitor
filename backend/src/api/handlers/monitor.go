@@ -10,7 +10,7 @@ import (
 )
 
 type AddMonitorResponse struct {
-	MonitorId string `json:"monitor_id"`
+	MonitorId string `json:"monitorId"`
 }
 
 // AddMonitorHandler handles the addition of a new monitor.
@@ -70,7 +70,8 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	id := r.PathValue("id")
+
 	if id == "" {
 		logger.Api.Trace().Msg("BaseMonitor ID is required for deletion")
 		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor ID is required")
@@ -93,7 +94,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondMessage(w, http.StatusOK, "BaseMonitor deleted successfully")
+	util.RespondMessage(w, http.StatusOK, "Monitor deleted successfully")
 }
 
 func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {

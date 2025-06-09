@@ -1,6 +1,9 @@
 package common
 
-import "sync"
+import (
+	"github.com/m-milek/leszmonitor/logger"
+	"sync"
+)
 
 type Broadcaster[T any] struct {
 	mu          sync.Mutex
@@ -38,6 +41,8 @@ func (b *Broadcaster[T]) Unsubscribe(ch <-chan T) {
 func (b *Broadcaster[T]) Broadcast(message T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	logger.Main.Trace().Msgf("Broadcasting message: %v", message)
 
 	for _, subscriber := range b.subscribers {
 		select {
