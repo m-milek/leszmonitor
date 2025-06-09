@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logger"
@@ -121,6 +122,12 @@ func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
 
 	monitor, err := db.GetMonitorById(id)
 	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			msg := "Monitor not found"
+			logger.Api.Warn().Str("monitor_id", id).Msg(msg)
+			util.RespondMessage(writer, http.StatusNotFound, msg)
+			return
+		}
 		logger.Api.Error().Err(err).Str("monitor_id", id).Msg("Failed to retrieve monitor from database")
 		util.RespondMessage(writer, http.StatusInternalServerError, "Failed to retrieve monitor")
 		return
