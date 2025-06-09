@@ -75,11 +75,11 @@ func newHttpClient() httpClient {
 var httpClientOrMock = newHttpClient()
 
 func (m *HttpConfig) run() IMonitorResponse {
-	monitorResponse := newHttpMonitorResponse()
+	monitorResponse := NewHttpMonitorResponse()
 
 	httpResponse, elapsed, err := m.executeRequest(&httpClientOrMock)
 
-	monitorResponse.Base.Duration = elapsed.Milliseconds()
+	monitorResponse.Duration = elapsed.Milliseconds()
 	if err != nil {
 		// If the request failed altogether, there's no point in checking the httpResponse
 		monitorResponse.setStatus(Error)
@@ -88,7 +88,8 @@ func (m *HttpConfig) run() IMonitorResponse {
 		return monitorResponse
 	}
 
-	monitorResponse.RawHttpResponse = httpResponse
+	monitorResponse.setRawHttpResponse(httpResponse)
+
 	m.checkStatusCode(httpResponse, monitorResponse)
 	m.checkResponseTime(elapsed, monitorResponse)
 	m.checkResponseHeaders(httpResponse, monitorResponse)
@@ -205,17 +206,6 @@ func (m *HttpConfig) createRequest() (*http.Request, error) {
 	return &req, nil
 }
 
-// Helper function to create a new response object with default values
-func newHttpMonitorResponse() *HttpMonitorResponse {
-	return &HttpMonitorResponse{
-		Base: baseMonitorResponse{
-			Status: Success,
-			Errors: []string{},
-		},
-		FailedAspects: []httpCheckAspect{},
-	}
-}
-
 // Validate checks if the HTTP monitor configuration is valid
 // It ensures that required fields are set and that the URL is properly formatted.
 func (m *HttpConfig) validate() error {
@@ -278,15 +268,7 @@ func readResponseBody(response *http.Response) (string, error) {
 }
 
 func (b *HttpMonitorResponse) setStatus(status MonitorResponseStatus) {
-	b.Base.Status = status
-}
-
-func (b *HttpMonitorResponse) addErrorMsg(err string) {
-	b.Base.addErrorMsg(err)
-}
-
-func (b *HttpMonitorResponse) addFailureMsg(err string) {
-	b.Base.addFailureMsg(err)
+	b.Status = status
 }
 
 func (b *HttpMonitorResponse) addFailedAspect(aspect httpCheckAspect) {
@@ -294,8 +276,8 @@ func (b *HttpMonitorResponse) addFailedAspect(aspect httpCheckAspect) {
 		b.FailedAspects = make([]httpCheckAspect, 0)
 	}
 	b.FailedAspects = append(b.FailedAspects, aspect)
-	if b.Base.Status != Error {
-		b.Base.Status = Failure
+	if b.Status != Error {
+		b.Status = Failure
 	}
 }
 

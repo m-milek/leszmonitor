@@ -12,8 +12,8 @@ type MonitorResponseStatus string
 
 const (
 	Success MonitorResponseStatus = "success"
-	Failure                       = "failure"
-	Error                         = "error"
+	Failure MonitorResponseStatus = "failure"
+	Error   MonitorResponseStatus = "error"
 )
 
 // baseMonitorResponse is the base of any monitor response.
