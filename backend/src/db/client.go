@@ -190,6 +190,24 @@ func initMonitorsCollection(database *mongo.Database) error {
 		}
 		return err
 	}
+
+	// unique index on the "id" field
+	monitorsCollection := database.Collection(MonitorsCollectionName)
+	indexName, err := monitorsCollection.Indexes().CreateOne(
+		dbClient.baseCtx,
+		mongo.IndexModel{
+			Keys: bson.D{
+				{"id", 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		logger.Db.Fatal().Err(err).Msg("Failed to create index on monitors collection")
+	} else {
+		logger.Db.Info().Msgf("Index created: %s", indexName)
+	}
+
 	return nil
 }
 
@@ -299,6 +317,14 @@ func AddMonitor(monitor monitors.IMonitor) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// Broadcast that a monitor has been added
+	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+		Id:      monitor.GetId(),
+		Status:  monitors.Created,
+		Monitor: &monitor,
+	})
+
 	return dbRes.Result, nil
 }
 
@@ -381,6 +407,13 @@ func DeleteMonitor(id string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+		Id:      id,
+		Status:  monitors.Deleted,
+		Monitor: nil,
+	})
+
 	return dbRes.Result, nil
 }
 

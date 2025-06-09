@@ -11,7 +11,7 @@ func SetupRouters(
 ) {
 	protectedRouter.HandleFunc("GET /health", handlers.GetHealthCheckHandler)
 	protectedRouter.HandleFunc("POST /monitor", handlers.AddMonitorHandler)
-	protectedRouter.HandleFunc("DELETE /monitor", handlers.DeleteMonitorHandler)
+	protectedRouter.HandleFunc("DELETE /monitor/{id}", handlers.DeleteMonitorHandler)
 	protectedRouter.HandleFunc("GET /monitor", handlers.GetAllMonitorsHandler)
 	protectedRouter.HandleFunc("GET /monitor/{id}", handlers.GetMonitorHandler)
 
