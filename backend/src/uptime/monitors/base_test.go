@@ -7,7 +7,7 @@ import (
 
 func createTestBaseMonitor() BaseMonitor {
 	return BaseMonitor{
-		Id:          generateMonitorId(),
+		Id:          generateId(),
 		Name:        "Test BaseMonitor",
 		Description: "Test Description",
 		Interval:    60,
@@ -68,42 +68,24 @@ func TestBaseMonitorGenerateId(t *testing.T) {
 		monitor.GenerateId()
 		assert.Equal(t, originalId, monitor.Id, "ID should remain unchanged if already set")
 	})
-
-	t.Run("Id is invalid", func(t *testing.T) {
-		monitor := createTestBaseMonitor()
-		monitor.Id = "invalid-id"
-		monitor.GenerateId()
-		assert.NotEqual(t, "invalid-id", monitor.Id, "Generated ID should not match the invalid ID")
-		assert.NotEmpty(t, monitor.Id, "Generated ID should not be empty")
-	})
-
-	t.Run("Id generated repeatedly is different", func(t *testing.T) {
-		monitor := createTestBaseMonitor()
-		monitor.Id = ""
-		for i := 0; i < 10; i++ {
-			originalId := monitor.Id
-			monitor.GenerateId()
-			assert.NotEqual(t, originalId, monitor.Id, "Generated ID should be different each time")
-		}
-	})
 }
 
 func TestGenerateMonitorId(t *testing.T) {
 	t.Run("Valid ID Generation", func(t *testing.T) {
-		id := generateMonitorId()
+		id := generateId()
 		assert.NotEmpty(t, id, "Generated ID should not be empty")
 	})
 
 	t.Run("ID Uniqueness", func(t *testing.T) {
-		id1 := generateMonitorId()
-		id2 := generateMonitorId()
+		id1 := generateId()
+		id2 := generateId()
 		assert.NotEqual(t, id1, id2, "Generated IDs should be unique")
 	})
 
 	t.Run("Id generated multiple times is different", func(t *testing.T) {
 		ids := make(map[string]bool)
 		for i := 0; i < 100; i++ {
-			id := generateMonitorId()
+			id := generateId()
 			assert.NotEmpty(t, id, "Generated ID should not be empty")
 			_, exists := ids[id]
 			assert.False(t, exists, "Generated ID should be unique")

@@ -38,19 +38,15 @@ const (
 	Ping MonitorConfigType = "ping"
 )
 
+type MonitorTypeExtractor struct {
+	Type MonitorConfigType `json:"type"`
+}
+
 func (m *BaseMonitor) Validate() error {
 	if err := m.validateBase(); err != nil {
 		return fmt.Errorf("monitor validation failed: %w", err)
 	}
 	return nil
-}
-
-func generateMonitorId() string {
-	id, err := shortid.Generate()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to generate monitor ID: %v", err))
-	}
-	return id
 }
 
 func (m *BaseMonitor) validateBase() error {
@@ -74,8 +70,16 @@ func (m *BaseMonitor) validateBase() error {
 
 func (m *BaseMonitor) GenerateId() {
 	if m.Id == "" {
-		m.Id = generateMonitorId()
+		m.Id = generateId()
 	}
+}
+
+func generateId() string {
+	id, err := shortid.Generate()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate monitor ID: %v", err))
+	}
+	return id
 }
 
 func (m *BaseMonitor) GetId() string {
@@ -96,8 +100,4 @@ func (m *BaseMonitor) GetInterval() time.Duration {
 
 func (m *BaseMonitor) GetType() MonitorConfigType {
 	return m.Type
-}
-
-type MonitorTypeExtractor struct {
-	Type MonitorConfigType `json:"type"`
 }
