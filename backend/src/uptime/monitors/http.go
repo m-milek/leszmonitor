@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/util"
@@ -165,14 +166,17 @@ func (m *HttpConfig) checkResponseBody(response *http.Response, monitorResponse 
 		return
 	}
 
-	matched, err := regexp.MatchString(m.ExpectedBodyRegex, responseBody)
+	// Add (?s) flag to make dot match newlines
+	patternWithFlag := "(?s)" + m.ExpectedBodyRegex
+
+	regex, err := regexp.Compile(patternWithFlag)
 	if err != nil {
-		errMsg := fmt.Sprintf("Error matching response body regex: %s", err.Error())
-		monitorResponse.addErrorMsg(errMsg)
+		monitorResponse.addErrorMsg(fmt.Sprintf("Invalid regex for expected body: %s", patternWithFlag))
 		return
 	}
 
-	if !matched {
+	matches := regex.Match([]byte(responseBody))
+	if !matches {
 		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
 		monitorResponse.addFailureMsg(failureMsg)
 		monitorResponse.addFailedAspect(bodyAspect)
@@ -248,21 +252,20 @@ func (m *HttpConfig) validate() error {
 	return nil
 }
 
+// Helper function to read response body while preserving it
 func readResponseBody(response *http.Response) (string, error) {
 	if response.Body == nil {
 		return "", nil
 	}
 
+	// Read the body
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		logger.Uptime.Error().Err(err).Msg("Error reading response body")
 		return "", err
 	}
 
-	if err := response.Body.Close(); err != nil {
-		logger.Uptime.Error().Err(err).Msg("Error closing response body")
-		return "", err
-	}
+	// Restore the body so it can be read again
+	response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	return string(bodyBytes), nil
 }
@@ -278,11 +281,5 @@ func (b *HttpMonitorResponse) addFailedAspect(aspect httpCheckAspect) {
 	b.FailedAspects = append(b.FailedAspects, aspect)
 	if b.Status != Error {
 		b.Status = Failure
-	}
-}
-
-func (m *HttpMonitor) GenerateId() {
-	if m.Id == "" {
-		m.Id = generateMonitorId()
 	}
 }

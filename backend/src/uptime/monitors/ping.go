@@ -47,12 +47,30 @@ func (m *PingMonitor) Validate() error {
 	return nil
 }
 
+func NewPingConfig(host, port, protocol string, timeout, retryCount int) (*PingConfig, error) {
+	monitor := &PingConfig{
+		Host:            host,
+		Port:            port,
+		Protocol:        protocol,
+		PingTimeout:     timeout,
+		RetryCount:      retryCount,
+		pingAddressFunc: pingAddress,
+	}
+
+	if err := monitor.validate(); err != nil {
+		return nil, fmt.Errorf("failed to create PingConfig: %w", err)
+	}
+
+	return monitor, nil
+}
+
 func (m *PingConfig) run() IMonitorResponse {
 	monitorResponse := NewPingMonitorResponse()
 
 	// Handles IPv6 as well
 	address := net.JoinHostPort(m.Host, m.Port)
 
+	monitorResponse.Tries++
 	for i := 0; i < m.RetryCount; i++ {
 		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.PingTimeout)*time.Second)
 		if success {
@@ -60,12 +78,13 @@ func (m *PingConfig) run() IMonitorResponse {
 			return monitorResponse
 		}
 		if i < m.RetryCount-1 {
+			monitorResponse.Tries++
 			time.Sleep(retryTimeout)
 		}
 	}
 
 	// If we reach here, all retries failed
-	monitorResponse.addFailureMsg(fmt.Sprintf("Failed to ping %s after %d retries", address, m.RetryCount))
+	monitorResponse.addFailureMsg(fmt.Sprintf("Failed to ping %s after %d tries", address, m.RetryCount))
 
 	return monitorResponse
 }
@@ -113,55 +132,4 @@ func pingAddress(protocol string, address string, timeout time.Duration) (bool, 
 
 	defer conn.Close()
 	return true, duration
-}
-
-func NewPingConfig(host, port, protocol string, timeout, retryCount int) (*PingConfig, error) {
-	monitor := &PingConfig{
-		Host:            host,
-		Port:            port,
-		Protocol:        protocol,
-		PingTimeout:     timeout,
-		RetryCount:      retryCount,
-		pingAddressFunc: pingAddress,
-	}
-
-	if err := monitor.validate(); err != nil {
-		return nil, fmt.Errorf("failed to create PingConfig: %w", err)
-	}
-
-	return monitor, nil
-}
-
-type PingMonitorResponse struct {
-	baseMonitorResponse `bson:",inline"`
-}
-
-func NewPingMonitorResponse() *PingMonitorResponse {
-	return &PingMonitorResponse{
-		baseMonitorResponse: baseMonitorResponse{
-			Status:    Success,
-			Timestamp: util.GetUnixTimestamp(),
-		},
-	}
-}
-
-func (m *PingMonitorResponse) GetStatus() MonitorResponseStatus {
-	return m.Status
-}
-func (m *PingMonitorResponse) GetDuration() int64 {
-	return m.Duration
-}
-func (m *PingMonitorResponse) GetTimestamp() int64 {
-	return m.Timestamp
-}
-func (m *PingMonitorResponse) GetErrors() []string {
-	return m.Errors
-}
-func (m *PingMonitorResponse) GetFailures() []string {
-	return m.Failures
-}
-func (m *PingMonitor) GenerateId() {
-	if m.Id == "" {
-		m.Id = generateMonitorId()
-	}
 }

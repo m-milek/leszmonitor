@@ -1,8 +1,8 @@
 package monitors
 
 import (
+	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/util"
-	"io"
 	"net/http"
 )
 
@@ -21,6 +21,16 @@ type HttpMonitorResponse struct {
 	FailedAspects       []httpCheckAspect `json:"failedAspects" bson:"failedAspects"` // Aspects that failed during the check
 }
 
+func NewHttpMonitorResponse() *HttpMonitorResponse {
+	return &HttpMonitorResponse{
+		baseMonitorResponse: baseMonitorResponse{
+			Status:    Success,
+			Timestamp: util.GetUnixTimestamp(),
+		},
+		FailedAspects: []httpCheckAspect{},
+	}
+}
+
 type RawHttpResponse struct {
 	StatusCode    int               `json:"statusCode" bson:"statusCode"`       // HTTP status code of the response
 	Headers       map[string]string `json:"headers" bson:"headers"`             // Headers of the response
@@ -31,10 +41,11 @@ type RawHttpResponse struct {
 }
 
 func NewRawHttpResponse(resp *http.Response) *RawHttpResponse {
-	// read body
-	bodyBytes, err := io.ReadAll(resp.Body)
+	body, err := readResponseBody(resp)
+
 	if err != nil {
-		bodyBytes = []byte("Error reading body: " + err.Error())
+		logger.Uptime.Warn().Err(err).Msg("Failed to read HTTP response body")
+		body = ""
 	}
 
 	headers := make(map[string]string)
@@ -48,38 +59,13 @@ func NewRawHttpResponse(resp *http.Response) *RawHttpResponse {
 	return &RawHttpResponse{
 		StatusCode:    resp.StatusCode,
 		Headers:       headers,
-		Body:          string(bodyBytes),
+		Body:          body,
 		ContentLength: resp.ContentLength,
 		Proto:         resp.Proto,
 		Cookies:       resp.Cookies(),
 	}
 }
 
-func NewHttpMonitorResponse() *HttpMonitorResponse {
-	return &HttpMonitorResponse{
-		baseMonitorResponse: baseMonitorResponse{
-			Status:    Success,
-			Timestamp: util.GetUnixTimestamp(),
-		},
-		FailedAspects: []httpCheckAspect{},
-	}
-}
-
-func (b *HttpMonitorResponse) GetStatus() MonitorResponseStatus {
-	return b.Status
-}
-func (b *HttpMonitorResponse) GetDuration() int64 {
-	return b.Duration
-}
-func (b *HttpMonitorResponse) GetTimestamp() int64 {
-	return b.Timestamp
-}
-func (b *HttpMonitorResponse) GetErrors() []string {
-	return b.Errors
-}
-func (b *HttpMonitorResponse) GetFailures() []string {
-	return b.Failures
-}
 func (b *HttpMonitorResponse) setRawHttpResponse(resp *http.Response) {
 	b.RawHttpResponse = *NewRawHttpResponse(resp)
 }

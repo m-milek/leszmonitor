@@ -126,7 +126,7 @@ func TestValidateStatusCode(t *testing.T) {
 	setupTest := func() (*HttpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, "", nil)
-		monitorResponse := newHttpMonitorResponse()
+		monitorResponse := NewHttpMonitorResponse()
 		return monitor, response, monitorResponse
 	}
 
@@ -135,7 +135,7 @@ func TestValidateStatusCode(t *testing.T) {
 
 		monitor.checkStatusCode(response, monitorResponse)
 
-		assert.Equal(t, Success, monitorResponse.Base.Status)
+		assert.Equal(t, Success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -145,16 +145,16 @@ func TestValidateStatusCode(t *testing.T) {
 
 		monitor.checkStatusCode(response, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.EqualValues(t, Failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, statusCodeAspect)
-		assert.Contains(t, monitorResponse.Base.Failures[0], "Unexpected status code")
+		assert.Contains(t, monitorResponse.Failures[0], "Unexpected status code")
 	})
 }
 
 func TestValidateResponseTime(t *testing.T) {
 	setupTest := func() (*HttpConfig, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
-		monitorResponse := newHttpMonitorResponse()
+		monitorResponse := NewHttpMonitorResponse()
 		return monitor, monitorResponse
 	}
 
@@ -164,7 +164,7 @@ func TestValidateResponseTime(t *testing.T) {
 
 		monitor.checkResponseTime(elapsed, monitorResponse)
 
-		assert.EqualValues(t, Success, monitorResponse.Base.Status)
+		assert.EqualValues(t, Success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -174,9 +174,9 @@ func TestValidateResponseTime(t *testing.T) {
 
 		monitor.checkResponseTime(elapsed, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.EqualValues(t, Failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, responseTimeAspect)
-		assert.Contains(t, monitorResponse.Base.Failures[0], "Response time exceeded")
+		assert.Contains(t, monitorResponse.Failures[0], "Response time exceeded")
 	})
 }
 
@@ -184,7 +184,7 @@ func TestValidateResponseHeaders(t *testing.T) {
 	setupTest := func(headers map[string]string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, "", headers)
-		monitorResponse := newHttpMonitorResponse()
+		monitorResponse := NewHttpMonitorResponse()
 		return monitor, response, monitorResponse
 	}
 
@@ -194,7 +194,7 @@ func TestValidateResponseHeaders(t *testing.T) {
 
 		monitor.checkResponseHeaders(response, monitorResponse)
 
-		assert.EqualValues(t, Success, monitorResponse.Base.Status)
+		assert.EqualValues(t, Success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -204,9 +204,9 @@ func TestValidateResponseHeaders(t *testing.T) {
 
 		monitor.checkResponseHeaders(response, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.EqualValues(t, Failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, headersAspect)
-		assert.Contains(t, monitorResponse.Base.Failures[0], "Header mismatch")
+		assert.Contains(t, monitorResponse.Failures[0], "Header mismatch")
 	})
 }
 
@@ -214,7 +214,7 @@ func TestValidateResponseBody(t *testing.T) {
 	setupTest := func(body string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, body, nil)
-		monitorResponse := newHttpMonitorResponse()
+		monitorResponse := NewHttpMonitorResponse()
 		return monitor, response, monitorResponse
 	}
 
@@ -223,7 +223,7 @@ func TestValidateResponseBody(t *testing.T) {
 
 		monitor.checkResponseBody(response, monitorResponse)
 
-		assert.EqualValues(t, Success, monitorResponse.Base.Status)
+		assert.EqualValues(t, Success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -232,8 +232,8 @@ func TestValidateResponseBody(t *testing.T) {
 
 		monitor.checkResponseBody(response, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Base.Status)
+		assert.EqualValues(t, Failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, bodyAspect)
-		assert.Contains(t, monitorResponse.Base.Failures[0], "Response body does not match regex")
+		assert.Contains(t, monitorResponse.Failures[0], "Response body does not match regex")
 	})
 }

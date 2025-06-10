@@ -24,7 +24,7 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 	response := monitor.run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
-		assert.EqualValues(t, Success, response.Base.Status)
+		assert.EqualValues(t, Success, response.Status)
 		assert.Empty(t, response.FailedAspects)
 	} else {
 		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
@@ -49,7 +49,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 	response := monitor.run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
-		assert.EqualValues(t, Failure, response.Base.Status)
+		assert.EqualValues(t, Failure, response.Status)
 		assert.Contains(t, response.FailedAspects, statusCodeAspect)
 		assert.Len(t, response.FailedAspects, 1)
 	} else {
@@ -71,8 +71,8 @@ func TestHttpMonitorRunError(t *testing.T) {
 	response := monitor.run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
-		assert.EqualValues(t, Error, response.Base.Status)
-		assert.Contains(t, response.Base.Errors[0], "connection refused")
+		assert.EqualValues(t, Error, response.Status)
+		assert.Contains(t, response.Errors[0], "connection refused")
 	} else {
 		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
 	}
@@ -96,7 +96,7 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	response := monitor.run()
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
-		assert.EqualValues(t, Failure, response.Base.Status)
+		assert.EqualValues(t, Failure, response.Status)
 		assert.Contains(t, response.FailedAspects, statusCodeAspect)
 		assert.Contains(t, response.FailedAspects, bodyAspect)
 		assert.Contains(t, response.FailedAspects, headersAspect)
