@@ -48,7 +48,7 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewHttpMonitor(httpMethod, url string, headers map[string]string, body string, expectedStatusCodes []int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpConfig, error) {
+func NewHttpConfig(httpMethod, url string, headers map[string]string, body string, expectedStatusCodes []int, expectedBodyRegex string, expectedHeaders map[string]string, expectedResponseTime int) (*HttpConfig, error) {
 	monitor := &HttpConfig{
 		HttpMethod:           httpMethod,
 		Url:                  url,
