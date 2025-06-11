@@ -59,7 +59,7 @@ func TestNewHttpMonitor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			monitor, err := NewHttpMonitor(
+			monitor, err := NewHttpConfig(
 				tt.httpMethod,
 				tt.url,
 				map[string]string{},

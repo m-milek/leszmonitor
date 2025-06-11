@@ -137,6 +137,30 @@ func TestPingMonitor_Validate(t *testing.T) {
 			assert.NoError(t, err, "Protocol %s should be valid", protocol)
 		}
 	})
+
+	t.Run("Negative Timeout", func(t *testing.T) {
+		monitor := setupPingMonitorConfig()
+		monitor.PingTimeout = -1
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "timeout must be greater than zero")
+	})
+
+	t.Run("Timeout Exceeds Limit", func(t *testing.T) {
+		monitor := setupPingMonitorConfig()
+		monitor.PingTimeout = 61 // Exceeds the limit of 60 seconds
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "timeout must not exceed 60 seconds")
+	})
+
+	t.Run("Zero Timeout", func(t *testing.T) {
+		monitor := setupPingMonitorConfig()
+		monitor.PingTimeout = 0
+		err := monitor.validate()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "timeout must be greater than zero")
+	})
 }
 
 // Test the pingAddress function

@@ -10,7 +10,18 @@ import (
 
 func TestHttpMonitor_Validate(t *testing.T) {
 	// Test valid monitor
-	t.Run("Valid HTTP BaseMonitor", func(t *testing.T) {
+	t.Run("Valid HTTP Monitor", func(t *testing.T) {
+		baseMonitor := createTestBaseMonitor()
+		config, _ := NewHttpConfig("GET", "https://example.com", nil, "", []int{200}, "", nil, 1000)
+		monitor := HttpMonitor{
+			BaseMonitor: baseMonitor,
+			Config:      *config,
+		}
+		err := monitor.Validate()
+		assert.NoError(t, err)
+	})
+
+	t.Run("Valid HTTP Monitor Config", func(t *testing.T) {
 		monitor := setupTestHttpMonitorConfig()
 		err := monitor.validate()
 		assert.NoError(t, err)

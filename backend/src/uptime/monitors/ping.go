@@ -117,10 +117,10 @@ func (m *PingConfig) validate() error {
 	return nil
 }
 
-// pingAddressFunc is a function variable that can be replaced for testing purposes
+// pingAddressFunc is a function variable that can be replaced for testing purposes.
 var pingAddressFunc = pingAddress
 
-// // pingAddress attempts to connect to the specified address using the given protocol
+// // pingAddress attempts to connect to the specified address using the given protocol.
 func pingAddress(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
 	start := time.Now()
 	conn, err := net.DialTimeout(protocol, address, timeout)
