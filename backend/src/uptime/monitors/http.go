@@ -18,6 +18,8 @@ type HttpConfig struct {
 	Url                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
 	Body                 string            `json:"body" bson:"body"`
+	SaveResponseBody     bool              `json:"saveResponseBody" bson:"saveResponseBody"`       // Whether to save the response body in the monitor response
+	SaveResponseHeaders  bool              `json:"saveResponseHeaders" bson:"saveResponseHeaders"` // Whether to save the response headers in the monitor response
 	ExpectedStatusCodes  []int             `json:"expectedStatusCodes" bson:"expectedStatusCodes"`
 	ExpectedBodyRegex    string            `json:"expectedBodyRegex" bson:"expectedBodyRegex"`
 	ExpectedHeaders      map[string]string `json:"expectedHeaders" bson:"expectedHeaders"`
@@ -89,7 +91,7 @@ func (m *HttpConfig) run() IMonitorResponse {
 		return monitorResponse
 	}
 
-	monitorResponse.setRawHttpResponse(httpResponse)
+	monitorResponse.setRawHttpResponse(httpResponse, m.SaveResponseBody, m.SaveResponseHeaders)
 
 	m.checkStatusCode(httpResponse, monitorResponse)
 	m.checkResponseTime(elapsed, monitorResponse)

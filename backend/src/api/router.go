@@ -10,9 +10,11 @@ func SetupRouters(
 	protectedRouter *http.ServeMux,
 ) {
 	protectedRouter.HandleFunc("GET /health", handlers.GetHealthCheckHandler)
+
+	protectedRouter.HandleFunc("GET /monitor", handlers.GetAllMonitorsHandler)
 	protectedRouter.HandleFunc("POST /monitor", handlers.AddMonitorHandler)
 	protectedRouter.HandleFunc("DELETE /monitor/{id}", handlers.DeleteMonitorHandler)
-	protectedRouter.HandleFunc("GET /monitor", handlers.GetAllMonitorsHandler)
+	protectedRouter.HandleFunc("PATCH /monitor/{id}", handlers.EditMonitorHandler)
 	protectedRouter.HandleFunc("GET /monitor/{id}", handlers.GetMonitorHandler)
 
 	publicRouter.HandleFunc("POST /auth/register", handlers.UserRegisterHandler)
