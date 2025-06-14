@@ -70,7 +70,7 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 			switch msg.Status {
 			case monitors.Edited:
 				monitor = *msg.Monitor
-				logger.Uptime.Debug().Msgf("Updating monitor: %s - %s", monitor.GetName(), monitor.GetId())
+				logger.Uptime.Debug().Str("name", monitor.GetName()).Str("id", monitor.GetId()).Msg("Updating monitor")
 			case monitors.Deleted, monitors.Disabled:
 				shutdownChannel <- struct{}{}
 				editMonitorMutex.Unlock()
@@ -87,14 +87,14 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 			// Run the monitor's check method
 			err := monitor.Validate()
 			if err != nil {
-				logger.Uptime.Error().Err(err).Msgf("Error validating monitor %s - %s", monitor.GetName(), monitor.GetId())
+				logger.Uptime.Error().Err(err).Str("id", monitor.GetId()).Str("name", monitor.GetName()).Msgf("Error validating monitor")
 				return
 			}
-			logger.Uptime.Trace().Msgf("Running monitor %s - %s", monitor.GetName(), monitor.GetId())
+			logger.Uptime.Trace().Str("id", monitor.GetId()).Str("name", monitor.GetName()).Msgf("Running monitor")
 
 			response := monitor.Run()
 
-			logger.Uptime.Debug().Any("monitor_response", response).Msgf("Monitor %s - %s response", monitor.GetName(), monitor.GetId())
+			logger.Uptime.Debug().Str("id", monitor.GetId()).Str("name", monitor.GetName()).Any("monitor_response", response).Msg("Monitor response")
 
 			// Log the result of the check
 			// logger.Uptime.Info().Msgf("Monitor %s result: %v", monitor.GetName(), result)
@@ -106,12 +106,12 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 			//	}
 		case shutdownMsg := <-shutdownChannel:
 			if shutdownMsg == struct{}{} {
-				logger.Uptime.Info().Msgf("Stopping monitor: %s - %s", monitor.GetName(), monitor.GetId())
+				logger.Uptime.Info().Str("id", monitor.GetId()).Str("name", monitor.GetName()).Msgf("Stopping monitor")
 				editMonitorMutex.Unlock()
 				return
 			}
 		case <-ctx.Done():
-			logger.Uptime.Info().Msgf("Stopping monitor: %s - %s", monitor.GetName(), monitor.GetId())
+			logger.Uptime.Info().Str("id", monitor.GetId()).Str("name", monitor.GetName()).Msgf("Stopping monitor")
 			return
 		}
 	}
