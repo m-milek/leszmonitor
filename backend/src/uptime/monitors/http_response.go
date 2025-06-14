@@ -40,22 +40,30 @@ type RawHttpResponse struct {
 	Cookies       []*http.Cookie    `json:"cookies" bson:"cookies"`             // Cookies set in the response
 }
 
-func NewRawHttpResponse(resp *http.Response) *RawHttpResponse {
-	body, err := readResponseBody(resp)
+func NewRawHttpResponse(resp *http.Response, saveBody bool, saveHeaders bool) *RawHttpResponse {
+	var body string
+	if saveBody {
+		readBody, err := readResponseBody(resp)
 
-	if err != nil {
-		logger.Uptime.Warn().Err(err).Msg("Failed to read HTTP response body")
-		body = ""
+		if err != nil {
+			logger.Uptime.Warn().Err(err).Msg("Failed to read HTTP response body")
+			body = ""
+		}
+		body = readBody
 	}
 
-	headers := make(map[string]string)
-	for key, value := range resp.Header {
-		// Join multiple header values with commas
-		headers[key] = value[0]
-		if len(value) > 1 {
-			headers[key] += ", " + value[1]
+	var headers map[string]string
+	if saveHeaders {
+		headers = make(map[string]string)
+		for key, value := range resp.Header {
+			// Join multiple header values with commas
+			headers[key] = value[0]
+			if len(value) > 1 {
+				headers[key] += ", " + value[1]
+			}
 		}
 	}
+
 	return &RawHttpResponse{
 		StatusCode:    resp.StatusCode,
 		Headers:       headers,
@@ -66,6 +74,6 @@ func NewRawHttpResponse(resp *http.Response) *RawHttpResponse {
 	}
 }
 
-func (b *HttpMonitorResponse) setRawHttpResponse(resp *http.Response) {
-	b.RawHttpResponse = *NewRawHttpResponse(resp)
+func (b *HttpMonitorResponse) setRawHttpResponse(resp *http.Response, saveBody bool, saveHeaders bool) {
+	b.RawHttpResponse = *NewRawHttpResponse(resp, saveBody, saveHeaders)
 }

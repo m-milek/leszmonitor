@@ -470,3 +470,32 @@ func GetMonitorById(id string) (monitors.IMonitor, error) {
 	}
 	return dbRes.Result, nil
 }
+
+func UpdateMonitor(newMonitor monitors.IMonitor) (bool, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
+		result, err := dbClient.getMonitorsCollection().UpdateOne(ctx, bson.M{"id": newMonitor.GetId()}, bson.M{"$set": newMonitor})
+		if err != nil {
+			return false, err
+		}
+		if result.MatchedCount == 0 {
+			return false, ErrNotFound
+		}
+		wasUpdated := result.ModifiedCount > 0
+		return wasUpdated, nil
+	})
+
+	logDbOperation("UpdateMonitor", dbRes, err)
+
+	if err != nil {
+		return false, err
+	}
+
+	// Broadcast that a monitor has been updated
+	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+		Id:      newMonitor.GetId(),
+		Status:  monitors.Edited,
+		Monitor: &newMonitor,
+	})
+
+	return dbRes.Result, nil
+}

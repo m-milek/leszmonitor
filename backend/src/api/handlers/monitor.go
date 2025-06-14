@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-type AddMonitorResponse struct {
+type monitorIdResponse struct {
 	MonitorId string `json:"monitorId"`
 }
 
@@ -65,7 +65,7 @@ func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondJSON(w, http.StatusCreated, AddMonitorResponse{
+	util.RespondJSON(w, http.StatusCreated, monitorIdResponse{
 		MonitorId: monitor.GetId(),
 	})
 }
@@ -115,8 +115,8 @@ func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
 	id := request.PathValue("id")
 
 	if id == "" {
-		logger.Api.Trace().Msg("BaseMonitor ID is required")
-		util.RespondMessage(writer, http.StatusBadRequest, "BaseMonitor ID is required")
+		logger.Api.Trace().Msg("Monitor ID is required")
+		util.RespondMessage(writer, http.StatusBadRequest, "Monitor ID is required")
 		return
 	}
 
@@ -134,10 +134,93 @@ func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if monitor == nil {
-		logger.Api.Warn().Str("monitor_id", id).Msg("BaseMonitor not found")
-		util.RespondMessage(writer, http.StatusNotFound, "BaseMonitor not found")
+		logger.Api.Warn().Str("monitor_id", id).Msg("Monitor not found")
+		util.RespondMessage(writer, http.StatusNotFound, "Monitor not found")
 		return
 	}
 
 	util.RespondJSON(writer, http.StatusOK, monitor)
+}
+
+type editMonitorResponse struct {
+	MonitorId  string `json:"monitorId"`
+	WasUpdated bool   `json:"updatedCount"`
+}
+
+// EditMonitorHandler handles the update of an existing monitor.
+// // It expects a JSON payload with the updated monitor config of appropriate type.
+func EditMonitorHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	if id == "" {
+		logger.Api.Trace().Msg("Monitor ID is required for update")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
+		return
+	}
+
+	var rawData json.RawMessage
+	if err := json.NewDecoder(r.Body).Decode(&rawData); err != nil {
+		logger.Api.Trace().Err(err).Msg("Failed to decode request body")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	logger.Api.Debug().RawJSON("raw_data", rawData).Msg("Received monitor configuration for update")
+
+	var monitorTypeExtractor monitors.MonitorTypeExtractor
+	if err := json.Unmarshal(rawData, &monitorTypeExtractor); err != nil {
+		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor type")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor type")
+		return
+	}
+
+	monitor := monitors.MapMonitorType(monitorTypeExtractor.Type)
+	if monitor == nil {
+		logger.Api.Trace().Msgf("Unknown monitor type: %s", monitorTypeExtractor.Type)
+		util.RespondMessage(w, http.StatusBadRequest, "Unknown monitor type: "+string(monitorTypeExtractor.Type))
+		return
+	}
+
+	if err := json.Unmarshal(rawData, &monitor); err != nil {
+		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor data")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor data")
+		return
+	}
+
+	if monitor.GetId() != id {
+		logger.Api.Trace().Msgf("Monitor ID mismatch: expected %s, got %s", id, monitor.GetId())
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID mismatch")
+		return
+	}
+
+	if err := monitor.Validate(); err != nil {
+		logger.Api.Trace().Err(err).Msg("Monitor validation failed")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor configuration for update: "+err.Error())
+		return
+	}
+
+	wasUpdated, err := db.UpdateMonitor(monitor)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			msg := "Monitor not found"
+			logger.Api.Trace().Str("monitor_id", id).Msg(msg)
+			util.RespondMessage(w, http.StatusNotFound, msg)
+			return
+		}
+		logger.Api.Error().Err(err).Str("monitor_id", id).Msg("Failed to update monitor in database")
+		util.RespondMessage(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	if !wasUpdated {
+		msg := "Monitor not found or no changes made"
+		logger.Api.Warn().Str("monitor_id", id).Msg(msg)
+		util.RespondMessage(w, http.StatusNotFound, msg)
+		return
+	}
+
+	util.RespondJSON(w, http.StatusOK, editMonitorResponse{
+		MonitorId:  id,
+		WasUpdated: wasUpdated,
+	})
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/uptime/monitors"
+	"sync"
 	"time"
 )
 
@@ -53,9 +54,35 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 	monitorMsgChannel := monitors.MessageBroadcaster.Subscribe()
 	defer monitors.MessageBroadcaster.Unsubscribe(monitorMsgChannel)
 
+	editMonitorMutex := sync.Mutex{}
+
+	shutdownChannel := make(chan struct{})
+
+	// Start a goroutine to listen for monitor updates and handle them asynchronously from the main monitor loop
+	go func() {
+		for msg := range monitorMsgChannel {
+			if msg.Id != monitor.GetId() {
+				continue
+			}
+
+			editMonitorMutex.Lock()
+
+			switch msg.Status {
+			case monitors.Edited:
+				monitor = *msg.Monitor
+				logger.Uptime.Debug().Msgf("Updating monitor: %s - %s", monitor.GetName(), monitor.GetId())
+			case monitors.Deleted, monitors.Disabled:
+				shutdownChannel <- struct{}{}
+				editMonitorMutex.Unlock()
+				return
+			}
+
+			editMonitorMutex.Unlock()
+		}
+	}()
+
 	for {
 		select {
-
 		case <-time.After(monitor.GetInterval()):
 			// Run the monitor's check method
 			err := monitor.Validate()
@@ -77,21 +104,10 @@ func runMonitor(ctx context.Context, monitor monitors.IMonitor) {
 			//	if err != nil {
 			//		logger.Uptime.Error().Err(err).Msgf("Failed to save result for monitor %s", monitor.GetName())
 			//	}
-		case msg := <-monitorMsgChannel:
-			if msg.Id != monitor.GetId() {
-				break
-			}
-			if msg.Status == monitors.Edited {
-				monitor = *msg.Monitor
-				logger.Uptime.Debug().Msgf("Updating monitor: %s - %s", monitor.GetName(), monitor.GetId())
-				break
-			}
-			if msg.Status == monitors.Deleted {
-				logger.Uptime.Debug().Msgf("Monitor deleted, stopping runner: %s - %s", monitor.GetName(), monitor.GetId())
-				return
-			}
-			if msg.Status == monitors.Disabled {
-				logger.Uptime.Debug().Msgf("Disabling monitor: %s - %s", monitor.GetName(), monitor.GetId())
+		case shutdownMsg := <-shutdownChannel:
+			if shutdownMsg == struct{}{} {
+				logger.Uptime.Info().Msgf("Stopping monitor: %s - %s", monitor.GetName(), monitor.GetId())
+				editMonitorMutex.Unlock()
 				return
 			}
 		case <-ctx.Done():

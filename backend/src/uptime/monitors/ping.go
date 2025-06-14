@@ -20,12 +20,12 @@ var (
 )
 
 type PingConfig struct {
-	Host            string                                                                             `json:"host" bson:"host"`             // Host to ping
-	Port            string                                                                             `json:"port" bson:"port"`             // Port to ping
-	Protocol        string                                                                             `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
-	PingTimeout     int                                                                                `json:"timeout" bson:"timeout"`       // PingTimeout in seconds for each ping
-	RetryCount      int                                                                                `json:"retryCount" bson:"retryCount"` // Number of retries on failure
-	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration) `json:"-" bson:"-"`
+	Host            string `json:"host" bson:"host"`             // Host to ping
+	Port            string `json:"port" bson:"port"`             // Port to ping
+	Protocol        string `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
+	PingTimeout     int    `json:"timeout" bson:"timeout"`       // PingTimeout in seconds for each ping
+	RetryCount      int    `json:"retryCount" bson:"retryCount"` // Number of retries on failure
+	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
 type PingMonitor struct {
