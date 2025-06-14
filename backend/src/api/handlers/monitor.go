@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/db"
@@ -17,48 +16,25 @@ type monitorIdResponse struct {
 // AddMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func AddMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	var rawData json.RawMessage
-	if err := json.NewDecoder(r.Body).Decode(&rawData); err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to decode request body")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
 
-	logger.Api.Debug().RawJSON("raw_data", rawData).Msg("Received monitor configuration")
-
-	var monitorTypeExtractor monitors.MonitorTypeExtractor
-	if err := json.Unmarshal(rawData, &monitorTypeExtractor); err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor type")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor type")
-		return
-	}
-
-	// Map the monitor type to the appropriate config type
-	monitor := monitors.MapMonitorType(monitorTypeExtractor.Type)
-	if monitor == nil {
-		logger.Api.Trace().Msgf("Unknown monitor type: %s", monitorTypeExtractor.Type)
-		util.RespondMessage(w, http.StatusBadRequest, "Unknown monitor type: "+string(monitorTypeExtractor.Type))
-		return
-	}
-
-	// unmarshal the raw data into a monitor instance
-	if err := json.Unmarshal(rawData, &monitor); err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor data")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor data")
+	monitor, err := monitors.FromReader(r.Body)
+	if err != nil {
+		logger.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
 	}
 
 	monitor.GenerateId()
 
 	if err := monitor.Validate(); err != nil {
-		logger.Api.Trace().Err(err).Msg("BaseMonitor validation failed")
+		logger.Api.Trace().Err(err).Msg("Monitor validation failed")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor configuration: "+err.Error())
 		return
 	}
 
 	logger.Api.Debug().Any("monitor", monitor).Msg("Parsed monitor configuration")
 
-	_, err := db.AddMonitor(monitor)
+	_, err = db.AddMonitor(monitor)
 	if err != nil {
 		logger.Api.Error().Err(err).Msg("Failed to add monitor to database")
 		util.RespondMessage(w, http.StatusInternalServerError, "Internal server error")
@@ -74,7 +50,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	if id == "" {
-		logger.Api.Trace().Msg("BaseMonitor ID is required for deletion")
+		logger.Api.Trace().Msg("Monitor ID is required for deletion")
 		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor ID is required")
 		return
 	}
@@ -89,7 +65,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !wasDeleted {
-		msg := "BaseMonitor not found or already deleted"
+		msg := "Monitor not found or already deleted"
 		logger.Api.Warn().Str("monitor_id", id).Msg(msg)
 		util.RespondMessage(w, http.StatusNotFound, msg)
 		return
@@ -144,7 +120,7 @@ func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
 
 type editMonitorResponse struct {
 	MonitorId  string `json:"monitorId"`
-	WasUpdated bool   `json:"updatedCount"`
+	WasUpdated bool   `json:"wasUpdated"`
 }
 
 // EditMonitorHandler handles the update of an existing monitor.
@@ -158,32 +134,10 @@ func EditMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rawData json.RawMessage
-	if err := json.NewDecoder(r.Body).Decode(&rawData); err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to decode request body")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	logger.Api.Debug().RawJSON("raw_data", rawData).Msg("Received monitor configuration for update")
-
-	var monitorTypeExtractor monitors.MonitorTypeExtractor
-	if err := json.Unmarshal(rawData, &monitorTypeExtractor); err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor type")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor type")
-		return
-	}
-
-	monitor := monitors.MapMonitorType(monitorTypeExtractor.Type)
-	if monitor == nil {
-		logger.Api.Trace().Msgf("Unknown monitor type: %s", monitorTypeExtractor.Type)
-		util.RespondMessage(w, http.StatusBadRequest, "Unknown monitor type: "+string(monitorTypeExtractor.Type))
-		return
-	}
-
-	if err := json.Unmarshal(rawData, &monitor); err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to unmarshal monitor data")
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor data")
+	monitor, err := monitors.FromReader(r.Body)
+	if err != nil {
+		logger.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
 	}
 

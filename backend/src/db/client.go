@@ -25,15 +25,15 @@ type Client struct {
 var ErrNotFound = errors.New("document not found")
 
 func (*Client) getDatabase() *mongo.Database {
-	return dbClient.client.Database(DatabaseName)
+	return dbClient.client.Database(databaseName)
 }
 
 func (*Client) getUsersCollection() *mongo.Collection {
-	return dbClient.getDatabase().Collection(UsersCollectionName)
+	return dbClient.getDatabase().Collection(usersCollectionName)
 }
 
 func (*Client) getMonitorsCollection() *mongo.Collection {
-	return dbClient.getDatabase().Collection(MonitorsCollectionName)
+	return dbClient.getDatabase().Collection(monitorsCollectionName)
 }
 
 type dbResult[T any] struct {
@@ -41,9 +41,9 @@ type dbResult[T any] struct {
 	Result   T
 }
 
-type CollectionAlreadyExistsError string
+type collectionAlreadyExistsError string
 
-func (err CollectionAlreadyExistsError) Error() string {
+func (err collectionAlreadyExistsError) Error() string {
 	return "collection already exists: " + string(err)
 }
 
@@ -52,9 +52,9 @@ var dbClient Client
 const timeoutDuration = 5 * time.Second
 
 const (
-	DatabaseName           = "leszmonitor"
-	UsersCollectionName    = "users"
-	MonitorsCollectionName = "monitors"
+	databaseName           = "leszmonitor"
+	usersCollectionName    = "users"
+	monitorsCollectionName = "monitors"
 )
 
 func InitDbClient(baseCtx context.Context) error {
@@ -77,12 +77,12 @@ func InitDbClient(baseCtx context.Context) error {
 		baseCtx:  baseCtx,
 	}
 
-	_, err = Ping()
+	_, err = ping()
 	if err != nil {
 		logger.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
 	}
 
-	database := client.Database(DatabaseName)
+	database := client.Database(databaseName)
 	dbClient.database = database
 
 	err = initSchema()
@@ -141,7 +141,7 @@ func createCollection(ctx context.Context, database *mongo.Database, collectionN
 		return err
 	}
 	if exists {
-		return CollectionAlreadyExistsError(collectionName)
+		return collectionAlreadyExistsError(collectionName)
 	}
 
 	// Create the collection
@@ -156,16 +156,16 @@ func createCollection(ctx context.Context, database *mongo.Database, collectionN
 }
 
 func initUsersCollection(database *mongo.Database) error {
-	err := createCollection(dbClient.baseCtx, database, UsersCollectionName)
+	err := createCollection(dbClient.baseCtx, database, usersCollectionName)
 	if err != nil {
-		if errors.Is(err, CollectionAlreadyExistsError(UsersCollectionName)) {
+		if errors.Is(err, collectionAlreadyExistsError(usersCollectionName)) {
 			logger.Db.Debug().Msg("Users collection already exists.")
 			return nil
 		}
 		return err
 	}
 
-	usersCollection := database.Collection(UsersCollectionName)
+	usersCollection := database.Collection(usersCollectionName)
 	indexName, err := usersCollection.Indexes().CreateOne(
 		dbClient.baseCtx,
 		mongo.IndexModel{
@@ -184,9 +184,9 @@ func initUsersCollection(database *mongo.Database) error {
 }
 
 func initMonitorsCollection(database *mongo.Database) error {
-	err := createCollection(dbClient.baseCtx, database, MonitorsCollectionName)
+	err := createCollection(dbClient.baseCtx, database, monitorsCollectionName)
 	if err != nil {
-		if errors.Is(err, CollectionAlreadyExistsError(MonitorsCollectionName)) {
+		if errors.Is(err, collectionAlreadyExistsError(monitorsCollectionName)) {
 			logger.Db.Debug().Msg("Monitors collection already exists.")
 			return nil
 		}
@@ -194,7 +194,7 @@ func initMonitorsCollection(database *mongo.Database) error {
 	}
 
 	// unique index on the "id" field
-	monitorsCollection := database.Collection(MonitorsCollectionName)
+	monitorsCollection := database.Collection(monitorsCollectionName)
 	indexName, err := monitorsCollection.Indexes().CreateOne(
 		dbClient.baseCtx,
 		mongo.IndexModel{
@@ -250,7 +250,7 @@ func logDbOperation[T any](operationName string, result dbResult[T], err error) 
 	logger.Db.Debug().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
 }
 
-func Ping() (int64, error) {
+func ping() (int64, error) {
 	result, err := withTimeout(func(ctx context.Context) (int64, error) {
 		start := time.Now()
 		err := dbClient.client.Ping(ctx, nil)
@@ -348,33 +348,9 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 				return nil, err
 			}
 
-			logger.Db.Trace().Any("rawDoc", rawDoc).Msg("Found monitor document")
-
-			// Extract the monitor type
-			monitorType, ok := rawDoc["type"].(string)
-			if !ok {
-				return nil, fmt.Errorf("monitor document missing 'type' field or not a string")
-			}
-
-			// Create the appropriate monitor instance
-			var monitor monitors.IMonitor
-			switch monitorType {
-			case "http":
-				monitor = &monitors.HttpMonitor{}
-			case "ping":
-				monitor = &monitors.PingMonitor{}
-			default:
-				return nil, fmt.Errorf("unknown monitor type: %s", monitorType)
-			}
-
-			// Convert the document to BSON and unmarshal it into the monitor
-			data, err := bson.Marshal(rawDoc)
+			monitor, err := monitors.FromRawBsonDoc(rawDoc)
 			if err != nil {
-				return nil, fmt.Errorf("failed to marshal document: %w", err)
-			}
-
-			if err := bson.Unmarshal(data, monitor); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal document into monitor: %w", err)
+				return nil, fmt.Errorf("failed to map monitor from BSON: %w", err)
 			}
 
 			monitorsList = append(monitorsList, monitor)
@@ -429,32 +405,8 @@ func GetMonitorById(id string) (monitors.IMonitor, error) {
 		if err != nil {
 			return nil, err
 		}
-		logger.Db.Trace().Any("rawDoc", rawDoc).Msg("Found monitor by ID")
 
-		// Extract the monitor type
-		monitorType, ok := rawDoc["type"].(string)
-		if !ok {
-			return nil, fmt.Errorf("monitor document missing 'type' field or not a string")
-		}
-		// Create the appropriate monitor instance
-		var monitor monitors.IMonitor
-		switch monitorType {
-		case "http":
-			monitor = &monitors.HttpMonitor{}
-		case "ping":
-			monitor = &monitors.PingMonitor{}
-		}
-		// Convert the document to BSON and unmarshal it into the monitor
-		data, err := bson.Marshal(rawDoc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal document: %w", err)
-		}
-		if err := bson.Unmarshal(data, monitor); err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
-				return nil, fmt.Errorf("monitor with ID %s not found", id)
-			}
-			return nil, fmt.Errorf("failed to unmarshal document into monitor: %w", err)
-		}
+		monitor, err := monitors.FromRawBsonDoc(rawDoc)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to map monitor from BSON: %w", err)
