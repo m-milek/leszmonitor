@@ -39,6 +39,9 @@ func FromReader(reader io.Reader) (IMonitor, error) {
 
 	// Map the monitor type to the appropriate config type
 	monitor := MapMonitorType(monitorTypeExtractor.Type)
+	if monitorTypeExtractor.Type == "" {
+		return nil, fmt.Errorf("monitor type cannot be empty")
+	}
 	if monitor == nil {
 		return nil, fmt.Errorf("unknown monitor type: %s", monitorTypeExtractor.Type)
 	}
