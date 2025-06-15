@@ -5,7 +5,7 @@ import (
 	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logger"
-	"github.com/m-milek/leszmonitor/uptime/monitors"
+	"github.com/m-milek/leszmonitor/uptime/monitor"
 	"net/http"
 )
 

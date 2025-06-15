@@ -7,7 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/common"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logger"
-	"github.com/m-milek/leszmonitor/uptime/monitors"
+	"github.com/m-milek/leszmonitor/uptime/monitor"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"

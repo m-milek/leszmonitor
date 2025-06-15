@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logger"
-	"github.com/m-milek/leszmonitor/uptime/monitors"
+	"github.com/m-milek/leszmonitor/uptime/monitor"
 	"sync"
 	"time"
 )
