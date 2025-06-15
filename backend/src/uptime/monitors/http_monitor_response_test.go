@@ -9,7 +9,7 @@ func TestNewHttpMonitorResponse(t *testing.T) {
 	response := NewHttpMonitorResponse()
 
 	assert.Equal(t, Success, response.Status)
-	assert.Empty(t, response.Errors)
+	assert.Empty(t, response.ErrorsStr)
 	assert.Empty(t, response.Failures)
 	assert.Empty(t, response.FailedAspects)
 }
@@ -31,13 +31,13 @@ func TestHttpMonitorResponseAddErrorMsg(t *testing.T) {
 
 	// Add an error message
 	response.addErrorMsg("Test error")
-	assert.Contains(t, response.Errors, "Test error")
-	assert.Len(t, response.Errors, 1)
+	assert.Contains(t, response.ErrorsStr, "Test error")
+	assert.Len(t, response.ErrorsStr, 1)
 
 	// Add another error message
 	response.addErrorMsg("Another error")
-	assert.Contains(t, response.Errors, "Another error")
-	assert.Len(t, response.Errors, 2)
+	assert.Contains(t, response.ErrorsStr, "Another error")
+	assert.Len(t, response.ErrorsStr, 2)
 }
 
 func TestHttpMonitorResponseAddFailureMsg(t *testing.T) {

@@ -13,7 +13,8 @@ func NewPingMonitorResponse() *PingMonitorResponse {
 			Status:    Success,
 			Timestamp: util.GetUnixTimestamp(),
 			Failures:  []string{},
-			Errors:    []string{},
+			ErrorsStr: []string{},
+			Errors:    []error{},
 		},
 		Tries: 0,
 	}

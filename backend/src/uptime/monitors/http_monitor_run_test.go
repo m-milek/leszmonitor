@@ -72,7 +72,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 
 	if response, ok := response.(*HttpMonitorResponse); ok {
 		assert.EqualValues(t, Error, response.Status)
-		assert.Contains(t, response.Errors[0], "connection refused")
+		assert.Contains(t, response.ErrorsStr[0], "connection refused")
 	} else {
 		t.Fatalf("Expected HttpMonitorResponse, got %T", response)
 	}
