@@ -257,7 +257,7 @@ func TestPingMonitorResponse(t *testing.T) {
 		response := NewPingMonitorResponse()
 		assert.EqualValues(t, Success, response.GetStatus())
 		assert.NotZero(t, response.GetTimestamp())
-		assert.Empty(t, response.GetErrors())
+		assert.Empty(t, response.GetErrorsStr())
 		assert.Empty(t, response.GetFailures())
 	})
 
@@ -265,12 +265,12 @@ func TestPingMonitorResponse(t *testing.T) {
 		response := NewPingMonitorResponse()
 		response.Status = Failure
 		response.Duration = 200
-		response.Errors = []string{"Test error"}
+		response.ErrorsStr = []string{"Test error"}
 		response.Failures = []string{"Test failure"}
 
 		assert.EqualValues(t, Failure, response.GetStatus())
 		assert.Equal(t, int64(200), response.GetDuration())
-		assert.Equal(t, []string{"Test error"}, response.GetErrors())
+		assert.Equal(t, []string{"Test error"}, response.GetErrorsStr())
 		assert.Equal(t, []string{"Test failure"}, response.GetFailures())
 	})
 }

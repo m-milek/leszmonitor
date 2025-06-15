@@ -111,7 +111,7 @@ func createComponentLogger(component string, consoleWriter zerolog.ConsoleWriter
 	}
 
 	// Create and return the logger
-	return zerolog.New(writer).Level(level).With().Timestamp().Logger()
+	return zerolog.New(writer).Level(level).With().Timestamp().Caller().Logger()
 }
 
 // setupLoggers initializes all component loggers
