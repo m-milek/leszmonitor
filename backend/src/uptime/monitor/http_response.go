@@ -26,6 +26,9 @@ func NewHttpMonitorResponse() *HttpMonitorResponse {
 		baseMonitorResponse: baseMonitorResponse{
 			Status:    Success,
 			Timestamp: util.GetUnixTimestamp(),
+			Failures:  []string{},
+			ErrorsStr: []string{},
+			Errors:    []error{},
 		},
 		FailedAspects: []httpCheckAspect{},
 	}
