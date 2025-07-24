@@ -5,6 +5,7 @@ export const Route = createFileRoute('/')({
 })
 
 function App() {
+  // From the root route, I redirect to the dashboard route.
   return (
     <Navigate to="/dashboard" replace={true} />
   )

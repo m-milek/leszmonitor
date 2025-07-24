@@ -10,7 +10,7 @@ export default function Header({toggle, opened}: Readonly<HeaderProps>) {
     <header>
       <nav>
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm"/>
-        Header
+        Leszmonitor
       </nav>
     </header>
   )
