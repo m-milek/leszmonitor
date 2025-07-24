@@ -1,16 +1,16 @@
-import { Link } from '@tanstack/react-router'
+import {Burger} from "@mantine/core";
 
-export default function Header() {
+interface HeaderProps {
+  toggle?: () => void
+  opened?: boolean;
+}
+
+export default function Header({toggle, opened}: Readonly<HeaderProps>) {
   return (
-    <header className="p-2 flex gap-2 bg-white text-black justify-between">
-      <nav className="flex flex-row">
-        <div className="px-2 font-bold">
-          <Link to="/">Home</Link>
-        </div>
-
-        <div className="px-2 font-bold">
-          <Link to="/demo/tanstack-query">TanStack Query</Link>
-        </div>
+    <header>
+      <nav>
+        <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm"/>
+        Header
       </nav>
     </header>
   )
