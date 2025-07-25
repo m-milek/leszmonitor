@@ -18,8 +18,8 @@ WORKDIR /app
 # Install the 'serve' package globally in this stage
 # This is a lightweight way to serve static files
 RUN npm install --ignore-scripts -g serve \
-    addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 appuser
+    && addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 appuser
 
 # Copy ONLY the built 'dist' folder
 # We don't need node_modules or package.json here if we're just serving static files
