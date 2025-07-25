@@ -1,58 +1,39 @@
-# Stage 1: Dependencies
+# Stage 1: Install dependencies (for your build process)
 FROM node:18-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund --ignore-scripts
 
-# Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production --no-audit --no-fund
-
-# Stage 2: Builder
+# Stage 2: Build the application
 FROM node:18-alpine AS builder
 WORKDIR /app
-
-# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Ensure public directory exists in builder
-RUN mkdir -p ./public
-
-# Build the application
-ENV NEXT_TELEMETRY_DISABLED 1
-RUN npm install --no-audit --no-fund
 RUN npm run build
-RUN npm prune --production
 
-# Stage 3: Runner
+# Stage 3: Production image - Now using 'serve'
 FROM node:18-alpine AS runner
 WORKDIR /app
 
-# Set to production environment
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV HOSTNAME 0.0.0.0
+# Install the 'serve' package globally in this stage
+# This is a lightweight way to serve static files
+RUN npm install --ignore-scripts -g serve \
+    && addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 appuser
 
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-adduser --system --uid 1001 nextjs
+# Copy ONLY the built 'dist' folder
+# We don't need node_modules or package.json here if we're just serving static files
+COPY --from=builder /app/dist ./dist
 
-# Copy only necessary files
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Set permissions
+RUN chown -R appuser:nodejs /app
 
-# Handle public directory properly
-RUN mkdir -p ./public
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+# Switch to non-root user
+USER appuser
 
-# Create log directory and set permissions
-RUN mkdir -p /var/log/leszmonitor && \
-   chown -R nextjs:nodejs /var/log/leszmonitor
-
-# Set the correct permissions
-USER nextjs
-
-# Expose the port
+# Expose the application port
 EXPOSE 3000
 
-# Start the application
-CMD ["node", "server.js"]
+# Start the application using the 'serve' command
+# 'serve -s dist' means serve the 'dist' directory and treat it as a Single Page Application
+CMD ["serve", "-s", "dist", "-l", "3000"]
