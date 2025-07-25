@@ -1,11 +1,11 @@
 name: SonarQube
 
 on:
-workflow_run: # Triggered when another workflow completes
-  workflows: ["Back-end", "Front-end"] # Names of your build/test workflows
-  types:
-    - completed
-workflow_dispatch: # Allow manual trigger
+  workflow_run: # Triggered when another workflow completes
+    workflows: ["Back-end", "Front-end"] # Names of your build/test workflows
+    types:
+      - completed
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   scan:
