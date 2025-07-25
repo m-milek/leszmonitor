@@ -1,11 +1,11 @@
-name: Build Docker images
+name: Docker
 
 on:
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  docker_backend:
+  backend:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,7 +21,7 @@ jobs:
         run: |
           docker build -t leszmonitor/backend .
 
-  docker_frontend:
+  frontend:
     runs-on: ubuntu-latest
     defaults:
       run:
