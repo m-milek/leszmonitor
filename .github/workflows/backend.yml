@@ -10,6 +10,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -26,4 +28,11 @@ jobs:
         run: task backend:build
 
       - name: Test Backend
-        run: task backend:test
+        run: task backend:coverage
+
+      - name: Upload Go Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage-report
+          path: backend/src/coverage.out
+          retention-days: 1

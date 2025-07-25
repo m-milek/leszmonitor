@@ -32,3 +32,4 @@ tmp
 .env*
 .dev-logs
 backend.log
+src/coverage.out

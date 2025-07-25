@@ -58,6 +58,14 @@ tasks:
     generates:
       - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
 
+  backend:coverage:
+    desc: Run the back-end tests with coverage
+    dir: '{{.BACKEND_SRC_DIR}}'
+    cmds:
+      - go test -coverprofile=coverage.out -v ./...
+    generates:
+      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
+
   frontend:install:
     desc: Install front-end dependencies
     dir: '{{.FRONTEND_DIR}}'
