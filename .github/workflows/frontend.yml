@@ -1,8 +1,6 @@
 name: Front-end
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
