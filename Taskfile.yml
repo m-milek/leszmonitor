@@ -64,7 +64,7 @@ tasks:
     cmds:
       - go test -coverprofile=coverage.out -v ./...
     generates:
-      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
+      - '{{.BACKEND_SRC_DIR}}/coverage.out'
 
   frontend:install:
     desc: Install front-end dependencies
