@@ -33,3 +33,5 @@ tmp
 .dev-logs
 backend.log
 src/coverage.out
+
+.DS_Store
