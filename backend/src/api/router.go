@@ -17,6 +17,17 @@ func SetupRouters(
 	protectedRouter.HandleFunc("PATCH /monitor/{id}", handlers.EditMonitorHandler)
 	protectedRouter.HandleFunc("GET /monitor/{id}", handlers.GetMonitorHandler)
 
+	protectedRouter.HandleFunc("GET /user", handlers.GetAllUsersHandler)
+	protectedRouter.HandleFunc("GET /user/{username}", handlers.GetUserHandler)
+
+	protectedRouter.HandleFunc("GET /team", handlers.GetAllTeamsHandler)
+	protectedRouter.HandleFunc("POST /team", handlers.TeamCreateHandler)
+	protectedRouter.HandleFunc("DELETE /team/{id}", handlers.TeamDeleteHandler)
+	protectedRouter.HandleFunc("PATCH /team/{id}", handlers.TeamUpdateHandler)
+	protectedRouter.HandleFunc("GET /team/{id}", handlers.GetTeamHandler)
+	protectedRouter.HandleFunc("POST /team/{id}/add-user", handlers.TeamAddUserHandler)
+
 	publicRouter.HandleFunc("POST /auth/register", handlers.UserRegisterHandler)
 	publicRouter.HandleFunc("POST /auth/login", handlers.LoginHandler)
+
 }

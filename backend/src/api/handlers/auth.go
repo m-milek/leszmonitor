@@ -6,7 +6,6 @@ import (
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/common"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logger"
@@ -17,59 +16,10 @@ import (
 	"time"
 )
 
-type UserRegisterPayload struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-}
-
-func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	var payload UserRegisterPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	logger.Api.Debug().
-		Str("username", payload.Username).
-		Str("email", payload.Email).
-		Msg("User registration")
-
-	hashedPassword, err := hashPassword(payload.Password)
-	if err != nil {
-		msg := "Failed to hash password"
-		logger.Api.Error().Err(err).Str("username", payload.Username).Msg(msg)
-		util.RespondMessage(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	user := common.NewUser(payload.Username, hashedPassword, payload.Email)
-
-	_, err = db.AddUser(user)
-
-	if err != nil {
-		msg := "Failed to register user"
-		logger.Api.Error().Err(err).Str("username", payload.Username).Msg(msg)
-		util.RespondMessage(w, http.StatusInternalServerError, msg)
-		return
-	}
-
-	msg := "User registered successfully"
-	logger.Api.Info().
-		Str("username", payload.Username).
-		Msg(msg)
-
-	util.RespondMessage(w, http.StatusOK, msg)
-}
-
 type LoginPayload struct {
+	jwt2.MapClaims
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-type JwtClaims struct {
-	Username string `json:"username"`
-	Exp      int64  `json:"exp"`
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +35,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Str("username", payload.Username).
 		Msg("User login attempt")
 
-	user, err := db.GetUser(payload.Username)
+	user, err := db.GetRawUser(payload.Username)
 
 	if err != nil {
 		msg := "User not found"

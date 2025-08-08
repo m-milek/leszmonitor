@@ -36,6 +36,10 @@ func (*Client) getMonitorsCollection() *mongo.Collection {
 	return dbClient.getDatabase().Collection(monitorsCollectionName)
 }
 
+func (*Client) getTeamsCollection() *mongo.Collection {
+	return dbClient.getDatabase().Collection(teamsCollectionName)
+}
+
 type dbResult[T any] struct {
 	Duration time.Duration
 	Result   T
@@ -55,6 +59,7 @@ const (
 	databaseName           = "leszmonitor"
 	usersCollectionName    = "users"
 	monitorsCollectionName = "monitors"
+	teamsCollectionName    = "teams"
 )
 
 func InitDbClient(baseCtx context.Context) error {
@@ -108,6 +113,11 @@ func initSchema() error {
 	if err != nil {
 		logger.Db.Error().Err(err).Msg("Failed to initialize monitors collection")
 		return err
+	}
+
+	err = initTeamsCollection(database)
+	if err != nil {
+		logger.Db.Error().Err(err).Msg("Failed to initialize teams collection")
 	}
 
 	return err
@@ -213,6 +223,36 @@ func initMonitorsCollection(database *mongo.Database) error {
 	return nil
 }
 
+func initTeamsCollection(database *mongo.Database) error {
+	err := createCollection(dbClient.baseCtx, database, teamsCollectionName)
+	if err != nil {
+		if errors.Is(err, collectionAlreadyExistsError(teamsCollectionName)) {
+			logger.Db.Debug().Msg("Teams collection already exists.")
+			return nil
+		}
+		return err
+	}
+
+	// unique index on the "name" field
+	teamsCollection := database.Collection(teamsCollectionName)
+	indexName, err := teamsCollection.Indexes().CreateOne(
+		dbClient.baseCtx,
+		mongo.IndexModel{
+			Keys: bson.D{
+				{"id", 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		logger.Db.Fatal().Err(err).Msg("Failed to create index on teams collection")
+	} else {
+		logger.Db.Info().Msgf("Index created: %s", indexName)
+	}
+
+	return nil
+}
+
 // withTimeout creates a child context with timeout and handles cancellation.
 func withTimeout[T any](operation func(ctx context.Context) (T, error)) (dbResult[T], error) {
 	ctx, cancel := context.WithTimeout(dbClient.baseCtx, timeoutDuration)
@@ -269,7 +309,7 @@ func ping() (int64, error) {
 	return result.Result, nil
 }
 
-func AddUser(user *common.User) (*mongo.InsertOneResult, error) {
+func AddUser(user *common.RawUser) (*mongo.InsertOneResult, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
 		res, err := dbClient.getUsersCollection().InsertOne(ctx, user)
 		if err != nil {
@@ -286,9 +326,27 @@ func AddUser(user *common.User) (*mongo.InsertOneResult, error) {
 	return dbRes.Result, nil
 }
 
-func GetUser(username string) (*common.User, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*common.User, error) {
-		var user common.User
+func GetUser(username string) (*common.UserResponse, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*common.UserResponse, error) {
+		var user common.RawUser
+		err := dbClient.getUsersCollection().FindOne(ctx, bson.M{"username": username}).Decode(&user)
+		if err != nil {
+			return nil, err
+		}
+		return user.IntoUser(), nil
+	})
+
+	logDbOperation("GetUser", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func GetRawUser(username string) (*common.RawUser, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*common.RawUser, error) {
+		var user common.RawUser
 		err := dbClient.getUsersCollection().FindOne(ctx, bson.M{"username": username}).Decode(&user)
 		if err != nil {
 			return nil, err
@@ -297,6 +355,39 @@ func GetUser(username string) (*common.User, error) {
 	})
 
 	logDbOperation("GetUser", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func GetAllUsers() ([]*common.UserResponse, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) ([]*common.UserResponse, error) {
+		cursor, err := dbClient.getUsersCollection().Find(ctx, bson.D{})
+		if err != nil {
+			return nil, err
+		}
+		defer cursor.Close(ctx)
+
+		usersList := make([]*common.UserResponse, 0)
+
+		for cursor.Next(ctx) {
+			var user common.RawUser
+			if err := cursor.Decode(&user); err != nil {
+				return nil, err
+			}
+			usersList = append(usersList, user.IntoUser())
+		}
+
+		if err := cursor.Err(); err != nil {
+			return nil, err
+		}
+
+		return usersList, nil
+	})
+
+	logDbOperation("GetAllUsers", dbRes, err)
 
 	if err != nil {
 		return nil, err
@@ -450,4 +541,115 @@ func UpdateMonitor(newMonitor monitors.IMonitor) (bool, error) {
 	})
 
 	return dbRes.Result, nil
+}
+
+func AddTeam(team *common.Team) (*mongo.InsertOneResult, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
+		res, err := dbClient.getTeamsCollection().InsertOne(ctx, team)
+		if err != nil {
+			return nil, err
+		}
+		return res, nil
+	})
+
+	logDbOperation("InsertTeam", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func GetTeamById(id string) (*common.Team, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*common.Team, error) {
+		var team common.Team
+		err := dbClient.getTeamsCollection().FindOne(ctx, bson.M{"id": id}).Decode(&team)
+		if err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, nil
+			}
+			return nil, err
+		}
+		return &team, nil
+	})
+
+	logDbOperation("GetTeamById", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func GetAllTeams() ([]*common.Team, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) ([]*common.Team, error) {
+		cursor, err := dbClient.getTeamsCollection().Find(ctx, bson.D{})
+		if err != nil {
+			return nil, err
+		}
+		defer cursor.Close(ctx)
+
+		teamsList := make([]*common.Team, 0)
+
+		for cursor.Next(ctx) {
+			var team common.Team
+			if err := cursor.Decode(&team); err != nil {
+				return nil, err
+			}
+			teamsList = append(teamsList, &team)
+		}
+
+		if err := cursor.Err(); err != nil {
+			return nil, err
+		}
+
+		return teamsList, nil
+	})
+
+	logDbOperation("GetAllTeams", dbRes, err)
+
+	if err != nil {
+		return nil, err
+	}
+	return dbRes.Result, nil
+}
+
+func UpdateTeam(team *common.Team) (bool, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
+		result, err := dbClient.getTeamsCollection().UpdateOne(ctx, bson.M{"id": team.Id}, bson.M{"$set": team})
+		if err != nil {
+			return false, err
+		}
+		if result.MatchedCount == 0 {
+			return false, ErrNotFound
+		}
+		return result.ModifiedCount > 0, nil
+	})
+
+	logDbOperation("UpdateTeam", dbRes, err)
+
+	if err != nil {
+		return false, err
+	}
+	return dbRes.Result, nil
+}
+
+func DeleteTeam(id string) (bool, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
+		result, err := dbClient.getTeamsCollection().DeleteOne(ctx, bson.M{"id": id})
+		if err != nil {
+			return false, err
+		}
+		if result.DeletedCount == 0 {
+			return false, ErrNotFound
+		}
+		return true, nil
+	})
+
+	logDbOperation("DeleteTeam", dbRes, err)
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
