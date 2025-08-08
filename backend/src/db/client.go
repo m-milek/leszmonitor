@@ -233,7 +233,7 @@ func initTeamsCollection(database *mongo.Database) error {
 		return err
 	}
 
-	// unique index on the "name" field
+	// unique index on the "id" field
 	teamsCollection := database.Collection(teamsCollectionName)
 	indexName, err := teamsCollection.Indexes().CreateOne(
 		dbClient.baseCtx,
@@ -649,7 +649,7 @@ func DeleteTeam(id string) (bool, error) {
 	logDbOperation("DeleteTeam", dbRes, err)
 
 	if err != nil {
-		return false, err
+		return dbRes.Result, err
 	}
-	return true, nil
+	return dbRes.Result, nil
 }
