@@ -76,7 +76,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := db.GetUser(username)
 	if err != nil {
 		if err == db.ErrNotFound {
-			msg := "RawUser not found"
+			msg := "User not found"
 			logger.Api.Warn().Str("username", username).Msg(msg)
 			util.RespondMessage(w, http.StatusNotFound, msg)
 			return
