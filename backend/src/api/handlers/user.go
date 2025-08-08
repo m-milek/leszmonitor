@@ -46,7 +46,7 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := "RawUser registered successfully"
+	msg := "User registered successfully"
 	logger.Api.Info().
 		Str("username", payload.Username).
 		Msg(msg)
