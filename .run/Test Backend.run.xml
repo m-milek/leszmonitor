@@ -15,6 +15,7 @@
       </ENTRIES>
     </EXTENSION>
     <kind value="DIRECTORY" />
+    <package value="github.com/m-milek/leszmonitor" />
     <directory value="$PROJECT_DIR$/backend/src" />
     <filePath value="$PROJECT_DIR$" />
     <framework value="gotest" />

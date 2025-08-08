@@ -11,6 +11,7 @@ func Logger(next http.Handler) http.Handler {
 		logger.Api.Trace().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
+			Str("user_agent", r.UserAgent()).
 			Str("remote_addr", r.RemoteAddr).
 			Msg("Received request")
 
