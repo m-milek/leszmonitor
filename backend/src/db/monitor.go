@@ -41,8 +41,8 @@ func initMonitorsCollection(database *mongo.Database) error {
 	return nil
 }
 
-// AddMonitor adds a new monitor to the database and returns its ID (short ID).
-func AddMonitor(monitor monitors.IMonitor) (string, error) {
+// CreateMonitor adds a new monitor to the database and returns its ID (short ID).
+func CreateMonitor(monitor monitors.IMonitor) (string, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (string, error) {
 		_, err := dbClient.getMonitorsCollection().InsertOne(ctx, monitor)
 		if err != nil {

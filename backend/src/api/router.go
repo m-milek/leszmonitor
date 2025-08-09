@@ -12,9 +12,9 @@ func SetupRouters(
 	protectedRouter.HandleFunc("GET /health", handlers.GetHealthCheckHandler)
 
 	protectedRouter.HandleFunc("GET /monitor", handlers.GetAllMonitorsHandler)
-	protectedRouter.HandleFunc("POST /monitor", handlers.AddMonitorHandler)
+	protectedRouter.HandleFunc("POST /monitor", handlers.CreateMonitorHandler)
 	protectedRouter.HandleFunc("DELETE /monitor/{id}", handlers.DeleteMonitorHandler)
-	protectedRouter.HandleFunc("PATCH /monitor/{id}", handlers.EditMonitorHandler)
+	protectedRouter.HandleFunc("PATCH /monitor/{id}", handlers.UpdateMonitorHandler)
 	protectedRouter.HandleFunc("GET /monitor/{id}", handlers.GetMonitorHandler)
 
 	protectedRouter.HandleFunc("GET /user", handlers.GetAllUsersHandler)
