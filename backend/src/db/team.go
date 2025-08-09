@@ -40,7 +40,7 @@ func initTeamsCollection(database *mongo.Database) error {
 	return nil
 }
 
-func AddTeam(team *common.Team) (*mongo.InsertOneResult, error) {
+func CreateTeam(team *common.Team) (*mongo.InsertOneResult, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
 		res, err := dbClient.getTeamsCollection().InsertOne(ctx, team)
 		if err != nil {
@@ -63,7 +63,7 @@ func GetTeamById(id string) (*common.Team, error) {
 		err := dbClient.getTeamsCollection().FindOne(ctx, bson.M{"id": id}).Decode(&team)
 		if err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
-				return nil, nil
+				return nil, ErrNotFound
 			}
 			return nil, err
 		}
@@ -78,22 +78,22 @@ func GetTeamById(id string) (*common.Team, error) {
 	return dbRes.Result, nil
 }
 
-func GetAllTeams() ([]*common.Team, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) ([]*common.Team, error) {
+func GetAllTeams() ([]common.Team, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) ([]common.Team, error) {
 		cursor, err := dbClient.getTeamsCollection().Find(ctx, bson.D{})
 		if err != nil {
 			return nil, err
 		}
 		defer cursor.Close(ctx)
 
-		teamsList := make([]*common.Team, 0)
+		teamsList := make([]common.Team, 0)
 
 		for cursor.Next(ctx) {
 			var team common.Team
 			if err := cursor.Decode(&team); err != nil {
 				return nil, err
 			}
-			teamsList = append(teamsList, &team)
+			teamsList = append(teamsList, team)
 		}
 
 		if err := cursor.Err(); err != nil {
