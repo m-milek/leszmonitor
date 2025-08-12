@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 	"errors"
-	"github.com/m-milek/leszmonitor/common"
 	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -40,7 +40,7 @@ func initTeamsCollection(database *mongo.Database) error {
 	return nil
 }
 
-func CreateTeam(team *common.Team) (*mongo.InsertOneResult, error) {
+func CreateTeam(team *models.Team) (*mongo.InsertOneResult, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
 		res, err := dbClient.getTeamsCollection().InsertOne(ctx, team)
 		if err != nil {
@@ -57,9 +57,9 @@ func CreateTeam(team *common.Team) (*mongo.InsertOneResult, error) {
 	return dbRes.Result, nil
 }
 
-func GetTeamById(id string) (*common.Team, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*common.Team, error) {
-		var team common.Team
+func GetTeamById(id string) (*models.Team, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) (*models.Team, error) {
+		var team models.Team
 		err := dbClient.getTeamsCollection().FindOne(ctx, bson.M{"id": id}).Decode(&team)
 		if err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
@@ -78,18 +78,18 @@ func GetTeamById(id string) (*common.Team, error) {
 	return dbRes.Result, nil
 }
 
-func GetAllTeams() ([]common.Team, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) ([]common.Team, error) {
+func GetAllTeams() ([]models.Team, error) {
+	dbRes, err := withTimeout(func(ctx context.Context) ([]models.Team, error) {
 		cursor, err := dbClient.getTeamsCollection().Find(ctx, bson.D{})
 		if err != nil {
 			return nil, err
 		}
 		defer cursor.Close(ctx)
 
-		teamsList := make([]common.Team, 0)
+		teamsList := make([]models.Team, 0)
 
 		for cursor.Next(ctx) {
-			var team common.Team
+			var team models.Team
 			if err := cursor.Decode(&team); err != nil {
 				return nil, err
 			}
@@ -111,7 +111,7 @@ func GetAllTeams() ([]common.Team, error) {
 	return dbRes.Result, nil
 }
 
-func UpdateTeam(team *common.Team) (bool, error) {
+func UpdateTeam(team *models.Team) (bool, error) {
 	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
 		result, err := dbClient.getTeamsCollection().UpdateOne(ctx, bson.M{"id": team.Id}, bson.M{"$set": team})
 		if err != nil {

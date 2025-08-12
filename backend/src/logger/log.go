@@ -96,7 +96,10 @@ func getInitLogger() zerolog.Logger {
 	return zerolog.New(output).With().Timestamp().Logger()
 }
 
-func createComponentLogger(component string, consoleWriter zerolog.ConsoleWriter, fileWriter io.Writer, level zerolog.Level) zerolog.Logger {
+var consoleWriter zerolog.ConsoleWriter
+var fileWriter io.Writer
+
+func CreateLogger(component string, level zerolog.Level) zerolog.Logger {
 	// Configure console writer with component-specific timestamp
 	consoleWriter.FormatTimestamp = func(i interface{}) string {
 		return fmt.Sprintf("%s [%s]", i, component)
@@ -105,8 +108,10 @@ func createComponentLogger(component string, consoleWriter zerolog.ConsoleWriter
 	// Use MultiLevelWriter if both console and file writers are provided
 	var writer io.Writer
 	if fileWriter != nil {
+		Init.Debug().Msg("Logging to file: " + fileWriter.(*os.File).Name())
 		writer = zerolog.MultiLevelWriter(fileWriter, consoleWriter)
 	} else {
+		Init.Debug().Msg("Logging to console only")
 		writer = consoleWriter
 	}
 
@@ -115,12 +120,12 @@ func createComponentLogger(component string, consoleWriter zerolog.ConsoleWriter
 }
 
 // setupLoggers initializes all component loggers
-func setupLoggers(consoleWriter zerolog.ConsoleWriter, fileWriter io.Writer, level zerolog.Level) {
-	Main = createComponentLogger("main", consoleWriter, fileWriter, level)
-	Api = createComponentLogger("http", consoleWriter, fileWriter, level)
-	Logs = createComponentLogger("logc", consoleWriter, fileWriter, level)
-	Uptime = createComponentLogger("uptm", consoleWriter, fileWriter, level)
-	Db = createComponentLogger("mgdb", consoleWriter, fileWriter, level)
+func setupLoggers(level zerolog.Level) {
+	Main = CreateLogger("main", level)
+	Api = CreateLogger("http", level)
+	Logs = CreateLogger("logc", level)
+	Uptime = CreateLogger("uptm", level)
+	Db = CreateLogger("mgdb", level)
 }
 
 // InitLogging sets up logging with the given configuration
@@ -128,7 +133,7 @@ func InitLogging(cfg Config) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	consoleWriter = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	consoleWriter.FormatLevel = formatLogLevel
 
 	if os.Getenv(env.LogFilePath) == "" {
@@ -141,7 +146,7 @@ func InitLogging(cfg Config) error {
 		Init.Debug().Msg("Log file path: " + cfg.LogFilePath)
 	} else {
 		Init.Debug().Msg("Logging to stdout only")
-		setupLoggers(consoleWriter, nil, cfg.Level)
+		setupLoggers(cfg.Level)
 		return nil
 	}
 
@@ -162,7 +167,8 @@ func InitLogging(cfg Config) error {
 	}
 
 	Init.Debug().Msg("Initialized logging to file: " + file.Name())
-	setupLoggers(consoleWriter, file, cfg.Level)
+	fileWriter = io.Writer(file)
+	setupLoggers(cfg.Level)
 
 	return nil
 }

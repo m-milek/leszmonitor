@@ -3,8 +3,8 @@ package services
 import (
 	"errors"
 	"fmt"
-	"github.com/m-milek/leszmonitor/common"
 	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/models"
 	"net/http"
 )
 
@@ -33,7 +33,7 @@ type TeamUpdatePayload struct {
 
 type TeamAddMemberPayload struct {
 	Username string          `json:"username"` // The username of the user to add to the team
-	Role     common.TeamRole `json:"role"`     // The role to assign to the user in the team
+	Role     models.TeamRole `json:"role"`     // The role to assign to the user in the team
 }
 
 type TeamRemoveMemberPayload struct {
@@ -42,10 +42,10 @@ type TeamRemoveMemberPayload struct {
 
 type TeamChangeMemberRolePayload struct {
 	Username string          `json:"username"` // The username of the user whose role is to be changed
-	Role     common.TeamRole `json:"role"`     // The new role to assign to the user in the team
+	Role     models.TeamRole `json:"role"`     // The new role to assign to the user in the team
 }
 
-func (s *TeamServiceT) GetAllTeams() ([]common.Team, *ServiceError) {
+func (s *TeamServiceT) GetAllTeams() ([]models.Team, *ServiceError) {
 	teams, err := db.GetAllTeams()
 
 	if err != nil {
@@ -58,7 +58,7 @@ func (s *TeamServiceT) GetAllTeams() ([]common.Team, *ServiceError) {
 	return teams, nil
 }
 
-func (s *TeamServiceT) GetTeamById(teamId string) (*common.Team, *ServiceError) {
+func (s *TeamServiceT) GetTeamById(teamId string) (*models.Team, *ServiceError) {
 	team, err := db.GetTeamById(teamId)
 
 	if err != nil {
@@ -78,7 +78,7 @@ func (s *TeamServiceT) GetTeamById(teamId string) (*common.Team, *ServiceError) 
 }
 
 func (s *TeamServiceT) CreateTeam(payload *TeamCreatePayload, ownerUsername string) (*TeamCreateResponse, *ServiceError) {
-	team := common.NewTeam(payload.Name, payload.Description, ownerUsername)
+	team := models.NewTeam(payload.Name, payload.Description, ownerUsername)
 
 	_, err := db.CreateTeam(team)
 
@@ -128,7 +128,7 @@ func (s *TeamServiceT) DeleteTeam(teamId string, requestorUsername string) *Serv
 	return nil
 }
 
-func (s *TeamServiceT) UpdateTeam(teamId string, payload *TeamUpdatePayload, requestorUsername string) (*common.Team, *ServiceError) {
+func (s *TeamServiceT) UpdateTeam(teamId string, payload *TeamUpdatePayload, requestorUsername string) (*models.Team, *ServiceError) {
 	team, err := db.GetTeamById(teamId)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
