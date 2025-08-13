@@ -14,7 +14,7 @@ type TeamServiceT struct {
 	BaseService
 }
 
-// NewUserService creates a new instance of UserServiceT.
+// newTeamService creates a new instance of TeamServiceT.
 func newTeamService() *TeamServiceT {
 	return &TeamServiceT{
 		BaseService{
