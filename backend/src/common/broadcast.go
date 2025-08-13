@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"sync"
 )
 
@@ -42,7 +42,7 @@ func (b *Broadcaster[T]) Broadcast(message T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	logger.Main.Trace().Msgf("Broadcasting message: %v", message)
+	logging.Main.Trace().Msgf("Broadcasting message: %v", message)
 
 	for _, subscriber := range b.subscribers {
 		select {

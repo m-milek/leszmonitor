@@ -1,7 +1,7 @@
 package monitors
 
 import (
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/util"
 	"net/http"
 )
@@ -49,7 +49,7 @@ func NewRawHttpResponse(resp *http.Response, saveBody bool, saveHeaders bool) *R
 		readBody, err := readResponseBody(resp)
 
 		if err != nil {
-			logger.Uptime.Warn().Err(err).Msg("Failed to read HTTP response body")
+			logging.Uptime.Warn().Err(err).Msg("Failed to read HTTP response body")
 			body = ""
 		}
 		body = readBody
