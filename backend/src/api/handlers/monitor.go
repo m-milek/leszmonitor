@@ -106,5 +106,5 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, "monitor updated successfully")
+	util.RespondMessage(w, http.StatusOK, "monitor updated successfully")
 }
