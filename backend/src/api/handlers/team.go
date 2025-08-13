@@ -4,15 +4,9 @@ import (
 	"encoding/json"
 	util "github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/common"
-	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/api/services"
 	"net/http"
 )
-
-type TeamCreatePayload struct {
-	Name        string `json:"name"`        // The name of the team
-	Description string `json:"description"` // A brief description of the team
-}
 
 func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {
 	user, ok := middleware.GetUserFromContext(r.Context())
@@ -21,24 +15,20 @@ func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload TeamCreatePayload
+	var payload services.TeamCreatePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	team := common.NewTeam(payload.Name, payload.Description, user.Username)
-
-	_, err := db.AddTeam(team)
+	teamCreateResponse, err := services.TeamService.CreateTeam(r.Context(), &payload, user.Username)
 
 	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to create team: "+err.Error())
+		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusCreated, map[string]string{
-		"teamId": team.Id,
-	})
+	util.RespondJSON(w, http.StatusCreated, teamCreateResponse)
 }
 
 func TeamDeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,36 +39,19 @@ func TeamDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := db.GetTeamById(teamId)
-
-	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to retrieve team: "+err.Error())
-		return
-	}
-
-	if team == nil {
-		util.RespondMessage(w, http.StatusNotFound, "Team not found")
-		return
-	}
-
 	requestingUser, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
 		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	if !team.IsAdmin(requestingUser.Username) {
-		util.RespondMessage(w, http.StatusForbidden, "You are not authorized to delete this team")
-		return
-	}
-
-	_, err = db.DeleteTeam(teamId)
+	err := services.TeamService.DeleteTeam(r.Context(), teamId, requestingUser.Username)
 	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to delete team: "+err.Error())
+		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondMessage(w, http.StatusOK, "Team deleted successfully")
+	util.RespondMessage(w, http.StatusOK, "")
 }
 
 func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
@@ -89,21 +62,9 @@ func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload common.Team
+	var payload services.TeamUpdatePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
-		return
-	}
-
-	team, err := db.GetTeamById(teamId)
-
-	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to retrieve team: "+err.Error())
-		return
-	}
-
-	if team == nil {
-		util.RespondMessage(w, http.StatusNotFound, "Team not found")
 		return
 	}
 
@@ -113,17 +74,9 @@ func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !team.IsAdmin(requestingUser.Username) {
-		util.RespondMessage(w, http.StatusForbidden, "You are not authorized to update this team")
-		return
-	}
-
-	team.Name = payload.Name
-	team.Description = payload.Description
-
-	_, err = db.UpdateTeam(team)
+	team, err := services.TeamService.UpdateTeam(r.Context(), teamId, &payload, requestingUser.Username)
 	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to update team: "+err.Error())
+		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
@@ -138,15 +91,10 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := db.GetTeamById(teamId)
+	team, err := services.TeamService.GetTeamById(r.Context(), teamId)
 
 	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to retrieve team: "+err.Error())
-		return
-	}
-
-	if team == nil {
-		util.RespondMessage(w, http.StatusNotFound, "Team not found")
+		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
@@ -154,28 +102,22 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
-	teams, err := db.GetAllTeams()
+	teams, err := services.TeamService.GetAllTeams(r.Context())
+
 	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to retrieve teams: "+err.Error())
+		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
 	util.RespondJSON(w, http.StatusOK, teams)
 }
 
-func TeamAddUserHandler(w http.ResponseWriter, r *http.Request) {
+func TeamAddMemberHandler(w http.ResponseWriter, r *http.Request) {
 	teamId := r.PathValue("id")
-	username := r.URL.Query().Get("username")
-	roleStr := r.URL.Query().Get("role")
 
-	if teamId == "" || username == "" || roleStr == "" {
-		util.RespondMessage(w, http.StatusBadRequest, "Team ID, Username and Role are required")
-		return
-	}
-
-	team, err := db.GetTeamById(teamId)
-	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to retrieve team: "+err.Error())
+	var payload services.TeamAddMemberPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
 	}
 
@@ -185,35 +127,59 @@ func TeamAddUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !team.IsAdmin(requestingUser.Username) {
-		util.RespondMessage(w, http.StatusForbidden, "You are not authorized to add users to this team")
-		return
-	}
-
-	// Convert to TeamRole and validate
-	role := common.TeamRole(roleStr)
-	if err := role.Validate(); err != nil {
-		util.RespondMessage(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	_, err = db.GetUser(username)
+	err := services.TeamService.AddUserToTeam(r.Context(), teamId, &payload, requestingUser.Username)
 	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to retrieve user: "+err.Error())
-		return
-	}
-
-	err = team.AddMember(username, role)
-	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to add user to team: "+err.Error())
-		return
-	}
-
-	_, err = db.UpdateTeam(team)
-	if err != nil {
-		util.RespondMessage(w, http.StatusInternalServerError, "Failed to add user to team: "+err.Error())
+		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
 	util.RespondMessage(w, http.StatusOK, "User added to team successfully")
+}
+
+func TeamRemoveMemberHandler(w http.ResponseWriter, r *http.Request) {
+	teamId := r.PathValue("id")
+
+	var payload services.TeamRemoveMemberPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	requestingUser, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	err := services.TeamService.RemoveUserFromTeam(r.Context(), teamId, &payload, requestingUser.Username)
+	if err != nil {
+		util.RespondError(w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondMessage(w, http.StatusOK, "User removed from team successfully")
+}
+
+func TeamChangeMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
+	teamId := r.PathValue("id")
+
+	var payload services.TeamChangeMemberRolePayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	requestingUser, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	err := services.TeamService.ChangeMemberRole(r.Context(), teamId, payload, requestingUser.Username)
+	if err != nil {
+		util.RespondError(w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondMessage(w, http.StatusOK, "User role updated successfully")
 }

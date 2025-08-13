@@ -3,7 +3,7 @@ package monitors
 import (
 	"bytes"
 	"fmt"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/util"
 	"io"
 	"net/http"
@@ -87,7 +87,7 @@ func (m *HttpConfig) run() IMonitorResponse {
 		// If the request failed altogether, there's no point in checking the httpResponse
 		monitorResponse.setStatus(Error)
 		monitorResponse.addErrorMsg(fmt.Sprintf("HTTP request failed: %s", err.Error()))
-		logger.Uptime.Error().Err(err).Msg("HTTP monitor validation failed")
+		logging.Uptime.Error().Err(err).Msg("HTTP monitor validation failed")
 		return monitorResponse
 	}
 
@@ -189,7 +189,7 @@ func (m *HttpConfig) checkResponseBody(response *http.Response, monitorResponse 
 func (m *HttpConfig) createRequest() (*http.Request, error) {
 	parsedUrl, err := url.Parse(m.Url)
 	if err != nil {
-		logger.Uptime.Error().Err(err).Msg("Invalid URL in HTTP monitor")
+		logging.Uptime.Error().Err(err).Msg("Invalid URL in HTTP monitor")
 		return nil, fmt.Errorf("invalid URL: %s", m.Url)
 	}
 

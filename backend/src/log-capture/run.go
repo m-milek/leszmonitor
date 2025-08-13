@@ -2,12 +2,12 @@ package log_capture
 
 import (
 	"context"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"time"
 )
 
 func StartLogWorker(ctx context.Context) {
-	logger.Logs.Info().Msg("Starting log worker...")
+	logging.Logs.Info().Msg("Starting log worker...")
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 

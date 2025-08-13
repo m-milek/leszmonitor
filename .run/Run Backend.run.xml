@@ -17,6 +17,8 @@
     <package value="github.com/m-milek/leszmonitor" />
     <directory value="$PROJECT_DIR$/backend/src" />
     <filePath value="$PROJECT_DIR$/backend/src/" />
-    <method v="2" />
+    <method v="2">
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Build Backend" run_configuration_type="TaskRunConfiguration" />
+    </method>
   </configuration>
 </component>
