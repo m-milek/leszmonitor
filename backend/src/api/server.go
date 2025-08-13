@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"net"
 	"net/http"
 	"time"
@@ -59,7 +59,7 @@ func StartServer(config ServerConfig) (*http.Server, chan struct{}, error) {
 	server, err := createServer(config)
 
 	if err != nil {
-		logger.Api.Error().Err(err).Msg("Error creating API server")
+		logging.Api.Error().Err(err).Msg("Error creating API server")
 		return nil, nil, err
 	}
 
@@ -68,9 +68,9 @@ func StartServer(config ServerConfig) (*http.Server, chan struct{}, error) {
 
 	// Start server in a goroutine
 	go func() {
-		logger.Api.Info().Msgf("API server listening on %s", server.Addr)
+		logging.Api.Info().Msgf("API server listening on %s", server.Addr)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Api.Fatal().Err(err).Msgf("Error starting API server: %v", err)
+			logging.Api.Fatal().Err(err).Msgf("Error starting API server: %v", err)
 		}
 	}()
 

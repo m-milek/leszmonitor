@@ -4,7 +4,7 @@ import (
 	"fmt"
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"net/http"
 	"os"
 )
@@ -36,12 +36,12 @@ func DecodeJwtClaims(jwtString string) (JwtClaims, error) {
 	})
 
 	if err != nil {
-		logger.Api.Error().Err(err).Msg("Failed to parse JWT token")
+		logging.Api.Error().Err(err).Msg("Failed to parse JWT token")
 		return JwtClaims{}, err
 	}
 
 	if !token.Valid {
-		logger.Api.Warn().Msg("Invalid JWT token")
+		logging.Api.Warn().Msg("Invalid JWT token")
 		return JwtClaims{}, fmt.Errorf("invalid JWT token")
 	}
 

@@ -1,4 +1,4 @@
-package common
+package models
 
 import (
 	"fmt"
@@ -60,6 +60,20 @@ func (t *Team) RemoveMember(username string) {
 	}
 	delete(t.Members, username)
 	t.UpdatedAt = time.Now().Format(time.RFC3339)
+}
+
+func (t *Team) ChangeMemberRole(username string, role TeamRole) error {
+	if !t.IsMember(username) {
+		return fmt.Errorf("user %s is not a member of the team", username)
+	}
+
+	if role.Validate() != nil {
+		return fmt.Errorf("invalid role: %s", role)
+	}
+
+	t.Members[username] = role
+	t.UpdatedAt = time.Now().Format(time.RFC3339)
+	return nil
 }
 
 type TeamRole string
