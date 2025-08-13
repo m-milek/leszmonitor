@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"net/http"
 	"os"
 	"strings"
@@ -90,13 +90,13 @@ const userClaimsKey contextKey = "userClaims"
 
 // SetUserContext stores user claims in the request context.
 func SetUserContext(ctx context.Context, claims *UserClaims) context.Context {
-	logger.Api.Debug().Msg("Setting user claims in context: " + claims.Username)
+	logging.Api.Debug().Msg("Setting user claims in context: " + claims.Username)
 	return context.WithValue(ctx, userClaimsKey, claims)
 }
 
 // GetUserFromContext retrieves user claims from the request context.
 func GetUserFromContext(ctx context.Context) (*UserClaims, bool) {
 	claims, ok := ctx.Value(userClaimsKey).(*UserClaims)
-	logger.Api.Debug().Msgf("Retrieving user claims from context: %v, ok: %v", claims, ok)
+	logging.Api.Debug().Msgf("Retrieving user claims from context: %v, ok: %v", claims, ok)
 	return claims, ok
 }

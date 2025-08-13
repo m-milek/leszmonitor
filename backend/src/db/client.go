@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -63,7 +63,7 @@ func InitDbClient(ctx context.Context) error {
 	_, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	logger.Db.Info().Msg("Connecting to MongoDB...")
+	logging.Db.Info().Msg("Connecting to MongoDB...")
 
 	uri := os.Getenv(env.MongoDbUri)
 
@@ -80,7 +80,7 @@ func InitDbClient(ctx context.Context) error {
 
 	_, err = ping(ctx)
 	if err != nil {
-		logger.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
+		logging.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
 	}
 
 	database := client.Database(databaseName)
@@ -88,10 +88,10 @@ func InitDbClient(ctx context.Context) error {
 
 	err = initSchema(ctx)
 	if err != nil {
-		logger.Db.Fatal().Err(err).Msg("Failed to initialize database schema")
+		logging.Db.Fatal().Err(err).Msg("Failed to initialize database schema")
 	}
 
-	logger.Db.Info().Msg("MongoDB connection established.")
+	logging.Db.Info().Msg("MongoDB connection established.")
 
 	return nil
 }
@@ -101,19 +101,19 @@ func initSchema(ctx context.Context) error {
 
 	err := initUsersCollection(ctx, database)
 	if err != nil {
-		logger.Db.Error().Err(err).Msg("Failed to initialize users collection")
+		logging.Db.Error().Err(err).Msg("Failed to initialize users collection")
 		return err
 	}
 
 	err = initMonitorsCollection(ctx, database)
 	if err != nil {
-		logger.Db.Error().Err(err).Msg("Failed to initialize monitors collection")
+		logging.Db.Error().Err(err).Msg("Failed to initialize monitors collection")
 		return err
 	}
 
 	err = initTeamsCollection(ctx, database)
 	if err != nil {
-		logger.Db.Error().Err(err).Msg("Failed to initialize teams collection")
+		logging.Db.Error().Err(err).Msg("Failed to initialize teams collection")
 	}
 
 	return err
@@ -192,10 +192,10 @@ func withTimeout[T any](timeoutCtx context.Context, operation func(context.Conte
 
 func logDbOperation[T any](operationName string, result dbResult[T], err error) {
 	if err != nil {
-		logger.Db.Error().Err(err).Msgf("DB operation %s failed", operationName)
+		logging.Db.Error().Err(err).Msgf("DB operation %s failed", operationName)
 		return
 	}
-	logger.Db.Debug().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
+	logging.Db.Trace().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
 }
 
 func ping(ctx context.Context) (int64, error) {

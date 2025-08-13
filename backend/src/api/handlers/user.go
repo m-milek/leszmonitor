@@ -5,7 +5,7 @@ import (
 	"fmt"
 	util "github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/services"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"net/http"
 )
 
@@ -56,7 +56,7 @@ func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("username")
 	if username == "" {
-		logger.Api.Trace().Msg("Username is required")
+		logging.Api.Trace().Msg("Username is required")
 		util.RespondError(w, http.StatusBadRequest, fmt.Errorf("username is required"))
 		return
 	}

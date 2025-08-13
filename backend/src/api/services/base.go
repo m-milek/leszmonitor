@@ -1,16 +1,24 @@
 package services
 
 import (
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/rs/zerolog"
 )
 
 type BaseService struct {
-	logger zerolog.Logger
+	serviceLogger zerolog.Logger
+	methodLoggers map[string]zerolog.Logger
+}
+
+func (s *BaseService) getMethodLogger(methodName string) zerolog.Logger {
+	if logger, exists := s.methodLoggers[methodName]; exists {
+		return logger
+	}
+	return s.serviceLogger.With().Str("method", methodName).Logger()
 }
 
 func InitializeServices() {
-	TeamService.logger = logger.NewServiceLogger("TeamService")
-	UserService.logger = logger.NewServiceLogger("UserService")
-	MonitorService.logger = logger.NewServiceLogger("MonitorService")
+	TeamService.serviceLogger = logging.NewServiceLogger("TeamService")
+	UserService.serviceLogger = logging.NewServiceLogger("UserService")
+	MonitorService.serviceLogger = logging.NewServiceLogger("MonitorService")
 }

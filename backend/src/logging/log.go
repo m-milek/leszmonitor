@@ -1,4 +1,4 @@
-// Package logger provides a customized logging setup using zerolog.
+// Package logging provides a customized logging setup using zerolog.
 //
 // This package initializes several pre-configured loggers for different
 // components of the application. Each logger uses a customized console output
@@ -13,7 +13,7 @@
 //	// Create custom service logger
 //	myLogger := logger.NewServiceLogger("myservice")
 //	myLogger.Info().Msg("Custom service started")
-package logger
+package logging
 
 import (
 	"fmt"
@@ -124,7 +124,7 @@ func createLogger(component string, level zerolog.Level) zerolog.Logger {
 		writer = consoleWriter
 	}
 
-	logger := zerolog.New(writer).Level(level).With().Timestamp().Caller()
+	logger := zerolog.New(writer).Level(level).With().Timestamp()
 
 	// Create and return the logger with service field
 	return logger.Str("service", component).Logger()
@@ -140,7 +140,7 @@ func setupLoggers(level zerolog.Level) {
 		writer = consoleWriter
 	}
 
-	rootLogger = zerolog.New(writer).Level(level).With().Timestamp().Caller().Logger()
+	rootLogger = zerolog.New(writer).Level(level).With().Timestamp().Logger()
 	currentLevel = level
 
 	// Create pre-configured loggers using the new method
@@ -162,9 +162,7 @@ func InitLogging(cfg Config) error {
 
 	shouldLogToFile := cfg.LogFilePath != ""
 
-	if shouldLogToFile {
-		Init.Debug().Msg("Log file path: " + cfg.LogFilePath)
-	} else {
+	if !shouldLogToFile {
 		Init.Debug().Msg("Logging to stdout only")
 		setupLoggers(cfg.Level)
 		return nil
@@ -217,7 +215,6 @@ func GetLoggerConfig() Config {
 	var filePath string
 
 	if envFilePath != "" {
-		Init.Debug().Msg("Log file path from environment variable: " + envFilePath)
 		filePath = envFilePath
 	} else {
 		Init.Warn().Msg("No log file path specified, using default")

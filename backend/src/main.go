@@ -7,7 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/log-capture"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/uptime"
 	"os"
 	"os/signal"
@@ -38,55 +38,55 @@ func main() {
 
 	err := env.Validate()
 	if err != nil {
-		logger.Init.Fatal().Err(err).Msg("Environment variable validation failed")
+		logging.Init.Fatal().Err(err).Msg("Environment variable validation failed")
 	}
-	logger.Init.Info().Msg("Environment variable validation passed")
+	logging.Init.Info().Msg("Environment variable validation OK")
 
 	// Initialize logger
-	var logConfig = logger.GetLoggerConfig()
+	var logConfig = logging.GetLoggerConfig()
 
-	err = logger.InitLogging(logConfig)
+	err = logging.InitLogging(logConfig)
 	if err != nil {
-		logger.Main.Fatal().Err(err).Msg("Failed to initialize logger")
+		logging.Main.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
-	logger.Main.Info().Msg("Logger initialized successfully")
+	logging.Main.Info().Msg("Logger initialized successfully")
 
 	services.InitializeServices()
 
 	err = db.InitDbClient(ctx)
 	if err != nil {
-		logger.Init.Fatal().Err(err).Msg("Failed to initialize MongoDB connection")
+		logging.Init.Fatal().Err(err).Msg("Failed to initialize MongoDB connection")
 	}
 
 	// Start the server
 	var serverConfig = api.DefaultServerConfig()
-	logger.Main.Info().Msg("Starting API server...")
+	logging.Main.Info().Msg("Starting API server...")
 	server, done, err := api.StartServer(serverConfig)
 	if err != nil {
-		logger.Main.Error().Err(err).Msg("Failed to start API server")
+		logging.Main.Error().Err(err).Msg("Failed to start API server")
 		os.Exit(1)
 	}
-	logger.Main.Info().Msg("API server started successfully")
+	logging.Main.Info().Msg("API server started successfully")
 
 	runComponents(ctx, &wg)
 
 	<-ctx.Done()
-	logger.Main.Info().Msg("Shutdown signal received")
+	logging.Main.Info().Msg("Shutdown signal received")
 
 	// Create a timeout context for graceful shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
 
 	// Shutdown API server
-	logger.Main.Info().Msg("Shutting down API server...")
+	logging.Main.Info().Msg("Shutting down API server...")
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Main.Error().Err(err).Msg("API server shutdown error")
+		logging.Main.Error().Err(err).Msg("API server shutdown error")
 	} else {
-		logger.Main.Info().Msg("API server stopped gracefully")
+		logging.Main.Info().Msg("API server stopped gracefully")
 	}
 	close(done)
 
 	// Wait for all goroutines to finish
 	wg.Wait()
-	logger.Main.Info().Msg("All processes terminated successfully")
+	logging.Main.Info().Msg("All processes terminated successfully")
 }

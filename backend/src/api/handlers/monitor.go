@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/services"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/uptime/monitor"
 	"net/http"
 )
@@ -14,7 +14,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 
 	monitor, err := monitors.FromReader(r.Body)
 	if err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
+		logging.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
 	}
@@ -33,7 +33,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	if id == "" {
-		logger.Api.Trace().Msg("Monitor ID is required for deletion")
+		logging.Api.Trace().Msg("Monitor ID is required for deletion")
 		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor ID is required")
 		return
 	}
@@ -62,7 +62,7 @@ func GetMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	if id == "" {
-		logger.Api.Trace().Msg("Monitor ID is required")
+		logging.Api.Trace().Msg("Monitor ID is required")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
 		return
 	}
@@ -82,20 +82,20 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	if id == "" {
-		logger.Api.Trace().Msg("Monitor ID is required for update")
+		logging.Api.Trace().Msg("Monitor ID is required for update")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
 		return
 	}
 
 	monitor, err := monitors.FromReader(r.Body)
 	if err != nil {
-		logger.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
+		logging.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
 	}
 
 	if monitor.GetId() != id {
-		logger.Api.Trace().Msgf("Monitor ID mismatch: expected %s, got %s", id, monitor.GetId())
+		logging.Api.Trace().Msgf("Monitor ID mismatch: expected %s, got %s", id, monitor.GetId())
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID mismatch")
 		return
 	}

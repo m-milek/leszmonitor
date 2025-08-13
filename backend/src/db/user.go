@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"errors"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -14,7 +14,7 @@ func initUsersCollection(ctx context.Context, database *mongo.Database) error {
 	err := createCollection(ctx, database, usersCollectionName)
 	if err != nil {
 		if errors.Is(err, collectionAlreadyExistsError(usersCollectionName)) {
-			logger.Db.Debug().Msg("Users collection already exists.")
+			logging.Db.Debug().Msg("Users collection already exists.")
 			return nil
 		}
 		return err
@@ -31,10 +31,10 @@ func initUsersCollection(ctx context.Context, database *mongo.Database) error {
 		},
 	)
 	if err != nil {
-		logger.Db.Error().Err(err).Msg("Failed to create index on users collection")
+		logging.Db.Error().Err(err).Msg("Failed to create index on users collection")
 		return err
 	} else {
-		logger.Db.Info().Msgf("Index created: %s", indexName)
+		logging.Db.Info().Msgf("Index created: %s", indexName)
 	}
 	return nil
 }
@@ -61,6 +61,9 @@ func GetUserByUsername(ctx context.Context, username string) (*models.UserRespon
 		var user models.RawUser
 		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{"username": username}).Decode(&user)
 		if err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, ErrNotFound
+			}
 			return nil, err
 		}
 		return user.IntoUser(), nil
@@ -79,6 +82,9 @@ func GetRawUserByUsername(ctx context.Context, username string) (*models.RawUser
 		var user models.RawUser
 		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{"username": username}).Decode(&user)
 		if err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, ErrNotFound
+			}
 			return nil, err
 		}
 		return &user, nil

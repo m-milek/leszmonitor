@@ -7,7 +7,7 @@ import (
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -24,7 +24,7 @@ type UserServiceT struct {
 func newUserService() *UserServiceT {
 	return &UserServiceT{
 		BaseService{
-			logger: logger.NewServiceLogger("UserService"),
+			serviceLogger: logging.NewServiceLogger("UserService"),
 		},
 	}
 }
@@ -48,11 +48,13 @@ type LoginResponse struct {
 }
 
 func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.UserResponse, error *ServiceError) {
-	s.logger.Trace().Msg("Retrieving all users")
+	logger := s.getMethodLogger("GetAllUsers")
+	logger.Trace().Msg("Retrieving all users")
 
 	users, err := db.GetAllUsers(ctx)
 
 	if err != nil {
+		logger.Error().Err(err).Msg("Error retrieving users")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("error retrieving users: %w", err),
@@ -63,17 +65,20 @@ func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.UserRes
 }
 
 func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (*models.UserResponse, *ServiceError) {
-	s.logger.Trace().Str("username", username).Msg("Retrieving user by username")
+	logger := s.getMethodLogger("GetUserByUsername")
+	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
 	user, err := db.GetUserByUsername(ctx, username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
+			logger.Warn().Str("username", username).Msg("User not found")
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
 				Err:  fmt.Errorf("user %s not found", username),
 			}
 		}
+		logger.Error().Err(err).Str("username", username).Msg("Error retrieving user")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("error retrieving user %s: %w", username, err),
@@ -84,10 +89,12 @@ func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (
 }
 
 func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
-	s.logger.Trace().Str("username", payload.Username).Msg("Registering new user")
+	logger := s.getMethodLogger("RegisterUser")
+	logger.Trace().Str("username", payload.Username).Msg("Registering new user")
 
 	hashedPassword, err := hashPassword(payload.Password)
 	if err != nil {
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to hash password")
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("failed to hash password: %w", err),
@@ -99,6 +106,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 	_, err = db.CreateUser(ctx, user)
 
 	if err != nil {
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("failed to register user %s: %w", payload.Username, err),
@@ -109,17 +117,20 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 }
 
 func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
-	s.logger.Trace().Str("username", payload.Username).Msg("User login attempt")
+	logger := s.getMethodLogger("Login")
+	logger.Trace().Str("username", payload.Username).Msg("User login attempt")
 
 	user, err := db.GetRawUserByUsername(ctx, payload.Username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
+			logger.Warn().Str("username", payload.Username).Msg("User not found during login")
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
 				Err:  fmt.Errorf("user %s not found", payload.Username),
 			}
 		}
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Error retrieving user during login")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("error retrieving user %s: %w", payload.Username, err),
@@ -128,6 +139,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 
 	matches := checkPasswordHash(payload.Password, user.PasswordHash)
 	if !matches {
+		logger.Warn().Str("username", payload.Username).Msg("Invalid password during login")
 		return nil, &ServiceError{
 			Code: http.StatusUnauthorized,
 			Err:  fmt.Errorf("invalid password for user %s", payload.Username),
@@ -136,6 +148,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 
 	expiryHours, err := strconv.Atoi(os.Getenv(env.JwtExpiryHours))
 	if err != nil {
+		logger.Error().Err(err).Msg("Invalid JwtExpiryHours environment variable")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("invalid JwtExpiryHours value: %w", err),
@@ -155,6 +168,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 	token, err := jwt.SignedString([]byte(os.Getenv(env.JwtSecret)))
 
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to create JWT token")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("failed to create JWT token: %w", err),

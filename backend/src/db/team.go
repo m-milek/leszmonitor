@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"errors"
-	"github.com/m-milek/leszmonitor/logger"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -14,7 +14,7 @@ func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
 	err := createCollection(ctx, database, teamsCollectionName)
 	if err != nil {
 		if errors.Is(err, collectionAlreadyExistsError(teamsCollectionName)) {
-			logger.Db.Debug().Msg("Teams collection already exists.")
+			logging.Db.Debug().Msg("Teams collection already exists.")
 			return nil
 		}
 		return err
@@ -32,10 +32,10 @@ func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
 		},
 	)
 	if err != nil {
-		logger.Db.Error().Err(err).Msg("Failed to create index on teams collection")
+		logging.Db.Error().Err(err).Msg("Failed to create index on teams collection")
 		return err
 	} else {
-		logger.Db.Info().Msgf("Index created: %s", indexName)
+		logging.Db.Info().Msgf("Index created: %s", indexName)
 	}
 
 	return nil
