@@ -1,18 +1,26 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/logger"
 	monitors "github.com/m-milek/leszmonitor/uptime/monitor"
 	"net/http"
 )
 
-type MonitorServiceT struct{}
+type MonitorServiceT struct {
+	BaseService
+}
 
 // NewMonitorService creates a new instance of MonitorServiceT.
 func newMonitorService() *MonitorServiceT {
-	return &MonitorServiceT{}
+	return &MonitorServiceT{
+		BaseService{
+			logger: logger.NewServiceLogger("MonitorService"),
+		},
+	}
 }
 
 var MonitorService = newMonitorService()
@@ -21,7 +29,9 @@ type MonitorCreateResponse struct {
 	MonitorId string `json:"monitorId"`
 }
 
-func (s *MonitorServiceT) CreateMonitor(monitor monitors.IMonitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, monitor monitors.IMonitor) (*MonitorCreateResponse, *ServiceError) {
+	s.logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
+
 	monitor.GenerateId()
 
 	if err := monitor.Validate(); err != nil {
@@ -31,7 +41,7 @@ func (s *MonitorServiceT) CreateMonitor(monitor monitors.IMonitor) (*MonitorCrea
 		}
 	}
 
-	_, err := db.CreateMonitor(monitor)
+	_, err := db.CreateMonitor(ctx, monitor)
 	if err != nil {
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
@@ -44,8 +54,10 @@ func (s *MonitorServiceT) CreateMonitor(monitor monitors.IMonitor) (*MonitorCrea
 	}, nil
 }
 
-func (s *MonitorServiceT) DeleteMonitor(id string) *ServiceError {
-	wasDeleted, err := db.DeleteMonitor(id)
+func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, id string) *ServiceError {
+	s.logger.Trace().Str("id", id).Msg("Deleting monitor")
+
+	wasDeleted, err := db.DeleteMonitor(ctx, id)
 	if err != nil {
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
@@ -63,8 +75,10 @@ func (s *MonitorServiceT) DeleteMonitor(id string) *ServiceError {
 	return nil
 }
 
-func (s *MonitorServiceT) GetAllMonitors() ([]monitors.IMonitor, *ServiceError) {
-	monitorsList, err := db.GetAllMonitors()
+func (s *MonitorServiceT) GetAllMonitors(ctx context.Context) ([]monitors.IMonitor, *ServiceError) {
+	s.logger.Trace().Msg("Retrieving all monitors")
+
+	monitorsList, err := db.GetAllMonitors(ctx)
 	if err != nil {
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
@@ -75,8 +89,10 @@ func (s *MonitorServiceT) GetAllMonitors() ([]monitors.IMonitor, *ServiceError) 
 	return monitorsList, nil
 }
 
-func (s *MonitorServiceT) GetMonitorById(id string) (monitors.IMonitor, *ServiceError) {
-	monitor, err := db.GetMonitorById(id)
+func (s *MonitorServiceT) GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, *ServiceError) {
+	s.logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
+
+	monitor, err := db.GetMonitorById(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{
@@ -93,7 +109,9 @@ func (s *MonitorServiceT) GetMonitorById(id string) (monitors.IMonitor, *Service
 	return monitor, nil
 }
 
-func (s *MonitorServiceT) UpdateMonitor(monitor monitors.IMonitor) *ServiceError {
+func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, monitor monitors.IMonitor) *ServiceError {
+	s.logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
+
 	if err := monitor.Validate(); err != nil {
 		return &ServiceError{
 			Code: http.StatusBadRequest,
@@ -101,7 +119,7 @@ func (s *MonitorServiceT) UpdateMonitor(monitor monitors.IMonitor) *ServiceError
 		}
 	}
 
-	wasUpdated, err := db.UpdateMonitor(monitor)
+	wasUpdated, err := db.UpdateMonitor(ctx, monitor)
 	if err != nil {
 		return &ServiceError{
 			Code: http.StatusInternalServerError,

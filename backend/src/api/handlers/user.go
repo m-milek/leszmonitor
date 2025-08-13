@@ -16,7 +16,7 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.UserService.RegisterUser(&payload)
+	err := services.UserService.RegisterUser(r.Context(), &payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -33,7 +33,7 @@ func UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loginResponse, err := services.UserService.Login(payload)
+	loginResponse, err := services.UserService.Login(r.Context(), payload)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -44,7 +44,7 @@ func UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	users, err := services.UserService.GetAllUsers()
+	users, err := services.UserService.GetAllUsers(r.Context())
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -61,7 +61,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := services.UserService.GetUserByUsername(username)
+	user, err := services.UserService.GetUserByUsername(r.Context(), username)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)

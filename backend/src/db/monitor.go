@@ -11,8 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func initMonitorsCollection(database *mongo.Database) error {
-	err := createCollection(dbClient.baseCtx, database, monitorsCollectionName)
+func initMonitorsCollection(ctx context.Context, database *mongo.Database) error {
+	err := createCollection(ctx, database, monitorsCollectionName)
 	if err != nil {
 		if errors.Is(err, collectionAlreadyExistsError(monitorsCollectionName)) {
 			logger.Db.Debug().Msg("Monitors collection already exists.")
@@ -24,7 +24,7 @@ func initMonitorsCollection(database *mongo.Database) error {
 	// unique index on the "id" field
 	monitorsCollection := database.Collection(monitorsCollectionName)
 	indexName, err := monitorsCollection.Indexes().CreateOne(
-		dbClient.baseCtx,
+		ctx,
 		mongo.IndexModel{
 			Keys: bson.D{
 				{"id", 1},
@@ -33,7 +33,8 @@ func initMonitorsCollection(database *mongo.Database) error {
 		},
 	)
 	if err != nil {
-		logger.Db.Fatal().Err(err).Msg("Failed to create index on monitors collection")
+		logger.Db.Error().Err(err).Msg("Failed to create index on monitors collection")
+		return err
 	} else {
 		logger.Db.Info().Msgf("Index created: %s", indexName)
 	}
@@ -42,9 +43,9 @@ func initMonitorsCollection(database *mongo.Database) error {
 }
 
 // CreateMonitor adds a new monitor to the database and returns its ID (short ID).
-func CreateMonitor(monitor monitors.IMonitor) (string, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (string, error) {
-		_, err := dbClient.getMonitorsCollection().InsertOne(ctx, monitor)
+func CreateMonitor(ctx context.Context, monitor monitors.IMonitor) (string, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (string, error) {
+		_, err := dbClient.getMonitorsCollection().InsertOne(timeoutCtx, monitor)
 		if err != nil {
 			return "", err
 		}
@@ -67,18 +68,18 @@ func CreateMonitor(monitor monitors.IMonitor) (string, error) {
 	return dbRes.Result, nil
 }
 
-func GetAllMonitors() ([]monitors.IMonitor, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) ([]monitors.IMonitor, error) {
-		cursor, err := dbClient.getMonitorsCollection().Find(ctx, bson.D{})
+func GetAllMonitors(ctx context.Context) ([]monitors.IMonitor, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) ([]monitors.IMonitor, error) {
+		cursor, err := dbClient.getMonitorsCollection().Find(timeoutCtx, bson.D{})
 		if err != nil {
 			return nil, err
 		}
-		defer cursor.Close(ctx)
+		defer cursor.Close(timeoutCtx)
 
 		monitorsList := make([]monitors.IMonitor, 0)
 
 		// First decode into a map to determine the monitor type
-		for cursor.Next(ctx) {
+		for cursor.Next(timeoutCtx) {
 			// Decode into a raw document first
 			var rawDoc bson.M
 			if err := cursor.Decode(&rawDoc); err != nil {
@@ -108,9 +109,9 @@ func GetAllMonitors() ([]monitors.IMonitor, error) {
 	return dbRes.Result, nil
 }
 
-func DeleteMonitor(id string) (bool, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
-		result, err := dbClient.getMonitorsCollection().DeleteOne(ctx, bson.M{"id": id})
+func DeleteMonitor(ctx context.Context, id string) (bool, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
+		result, err := dbClient.getMonitorsCollection().DeleteOne(timeoutCtx, bson.M{"id": id})
 		if err != nil {
 			return false, err
 		}
@@ -132,10 +133,10 @@ func DeleteMonitor(id string) (bool, error) {
 	return dbRes.Result, nil
 }
 
-func GetMonitorById(id string) (monitors.IMonitor, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (monitors.IMonitor, error) {
+func GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (monitors.IMonitor, error) {
 		var rawDoc bson.M
-		err := dbClient.getMonitorsCollection().FindOne(ctx, bson.M{"id": id}).Decode(&rawDoc)
+		err := dbClient.getMonitorsCollection().FindOne(timeoutCtx, bson.M{"id": id}).Decode(&rawDoc)
 		if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, ErrNotFound
 		}
@@ -160,9 +161,9 @@ func GetMonitorById(id string) (monitors.IMonitor, error) {
 	return dbRes.Result, nil
 }
 
-func UpdateMonitor(newMonitor monitors.IMonitor) (bool, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
-		result, err := dbClient.getMonitorsCollection().UpdateOne(ctx, bson.M{"id": newMonitor.GetId()}, bson.M{"$set": newMonitor})
+func UpdateMonitor(ctx context.Context, newMonitor monitors.IMonitor) (bool, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
+		result, err := dbClient.getMonitorsCollection().UpdateOne(timeoutCtx, bson.M{"id": newMonitor.GetId()}, bson.M{"$set": newMonitor})
 		if err != nil {
 			return false, err
 		}

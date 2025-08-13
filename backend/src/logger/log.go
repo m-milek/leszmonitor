@@ -9,6 +9,10 @@
 //	logger.Main.Info().Msg("Application started")
 //	logger.Api.Error().Err(err).Msg("Failed to process request")
 //	logger.Uptime.Debug().Int("status", status).Msg("Health check completed")
+//
+//	// Create custom service logger
+//	myLogger := logger.NewServiceLogger("myservice")
+//	myLogger.Info().Msg("Custom service started")
 package logger
 
 import (
@@ -19,7 +23,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -36,9 +39,10 @@ var (
 		LogFilePath: "", // Empty means stdout only
 	}
 
-	// Mutex for thread-safe operations
-	mu sync.Mutex
+	// Internal root logger
+	rootLogger zerolog.Logger
 
+	// Pre-configured loggers
 	Init   = getInitLogger()
 	Main   zerolog.Logger
 	Api    zerolog.Logger
@@ -82,15 +86,12 @@ func formatLogLevel(i interface{}) string {
 		boldCode,
 		colorCode,
 		level,
-		resetCode)
+		resetCode,
+	)
 }
 
 func getInitLogger() zerolog.Logger {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
-	output.FormatTimestamp = func(i interface{}) string {
-		timestamp := fmt.Sprintf("%s", i)
-		return fmt.Sprintf("%s [%s]", timestamp, "init")
-	}
 	output.FormatLevel = formatLogLevel
 
 	return zerolog.New(output).With().Timestamp().Logger()
@@ -98,13 +99,21 @@ func getInitLogger() zerolog.Logger {
 
 var consoleWriter zerolog.ConsoleWriter
 var fileWriter io.Writer
+var currentLevel zerolog.Level
 
-func CreateLogger(component string, level zerolog.Level) zerolog.Logger {
-	// Configure console writer with component-specific timestamp
-	consoleWriter.FormatTimestamp = func(i interface{}) string {
-		return fmt.Sprintf("%s [%s]", i, component)
+// NewServiceLogger creates a new logger with a custom service name.
+// The service name will be added as a persistent field to all log entries.
+func NewServiceLogger(serviceName string) zerolog.Logger {
+	if rootLogger.GetLevel() == zerolog.Disabled {
+		// If root logger isn't initialized yet, create a basic logger
+		return createLogger(serviceName, currentLevel)
 	}
 
+	// Create a child logger from the root logger with the service field
+	return rootLogger.With().Str("service", serviceName).Logger()
+}
+
+func createLogger(component string, level zerolog.Level) zerolog.Logger {
 	// Use MultiLevelWriter if both console and file writers are provided
 	var writer io.Writer
 	if fileWriter != nil {
@@ -115,24 +124,35 @@ func CreateLogger(component string, level zerolog.Level) zerolog.Logger {
 		writer = consoleWriter
 	}
 
-	// Create and return the logger
-	return zerolog.New(writer).Level(level).With().Timestamp().Caller().Logger()
+	logger := zerolog.New(writer).Level(level).With().Timestamp().Caller()
+
+	// Create and return the logger with service field
+	return logger.Str("service", component).Logger()
 }
 
-// setupLoggers initializes all component loggers
+// setupLoggers initializes all component loggers and the root logger.
 func setupLoggers(level zerolog.Level) {
-	Main = CreateLogger("main", level)
-	Api = CreateLogger("http", level)
-	Logs = CreateLogger("logc", level)
-	Uptime = CreateLogger("uptm", level)
-	Db = CreateLogger("mgdb", level)
+	// Initialize the root logger
+	var writer io.Writer
+	if fileWriter != nil {
+		writer = zerolog.MultiLevelWriter(fileWriter, consoleWriter)
+	} else {
+		writer = consoleWriter
+	}
+
+	rootLogger = zerolog.New(writer).Level(level).With().Timestamp().Caller().Logger()
+	currentLevel = level
+
+	// Create pre-configured loggers using the new method
+	Main = NewServiceLogger("Main")
+	Api = NewServiceLogger("API")
+	Logs = NewServiceLogger("LogCollector")
+	Uptime = NewServiceLogger("UptimeMonitor")
+	Db = NewServiceLogger("MongoDB")
 }
 
-// InitLogging sets up logging with the given configuration
+// InitLogging sets up logging with the given configuration.
 func InitLogging(cfg Config) error {
-	mu.Lock()
-	defer mu.Unlock()
-
 	consoleWriter = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	consoleWriter.FormatLevel = formatLogLevel
 

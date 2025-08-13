@@ -1,11 +1,13 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
+	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -14,11 +16,17 @@ import (
 	"time"
 )
 
-type UserServiceT struct{}
+type UserServiceT struct {
+	BaseService
+}
 
 // NewUserService creates a new instance of UserServiceT.
 func newUserService() *UserServiceT {
-	return &UserServiceT{}
+	return &UserServiceT{
+		BaseService{
+			logger: logger.NewServiceLogger("UserService"),
+		},
+	}
 }
 
 var UserService = newUserService()
@@ -39,8 +47,10 @@ type LoginResponse struct {
 	Jwt string `json:"jwt"`
 }
 
-func (s *UserServiceT) GetAllUsers() ([]models.UserResponse, *ServiceError) {
-	users, err := db.GetAllUsers()
+func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.UserResponse, error *ServiceError) {
+	s.logger.Trace().Msg("Retrieving all users")
+
+	users, err := db.GetAllUsers(ctx)
 
 	if err != nil {
 		return nil, &ServiceError{
@@ -52,8 +62,10 @@ func (s *UserServiceT) GetAllUsers() ([]models.UserResponse, *ServiceError) {
 	return users, nil
 }
 
-func (s *UserServiceT) GetUserByUsername(username string) (*models.UserResponse, *ServiceError) {
-	user, err := db.GetUserByUsername(username)
+func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (*models.UserResponse, *ServiceError) {
+	s.logger.Trace().Str("username", username).Msg("Retrieving user by username")
+
+	user, err := db.GetUserByUsername(ctx, username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -71,7 +83,9 @@ func (s *UserServiceT) GetUserByUsername(username string) (*models.UserResponse,
 	return user, nil
 }
 
-func (s *UserServiceT) RegisterUser(payload *UserRegisterPayload) *ServiceError {
+func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
+	s.logger.Trace().Str("username", payload.Username).Msg("Registering new user")
+
 	hashedPassword, err := hashPassword(payload.Password)
 	if err != nil {
 		return &ServiceError{
@@ -82,7 +96,7 @@ func (s *UserServiceT) RegisterUser(payload *UserRegisterPayload) *ServiceError 
 
 	user := models.NewUser(payload.Username, hashedPassword, payload.Email)
 
-	_, err = db.AddUser(user)
+	_, err = db.CreateUser(ctx, user)
 
 	if err != nil {
 		return &ServiceError{
@@ -94,8 +108,10 @@ func (s *UserServiceT) RegisterUser(payload *UserRegisterPayload) *ServiceError 
 	return nil
 }
 
-func (s *UserServiceT) Login(payload LoginPayload) (*LoginResponse, *ServiceError) {
-	user, err := db.GetRawUserByUsername(payload.Username)
+func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
+	s.logger.Trace().Str("username", payload.Username).Msg("User login attempt")
+
+	user, err := db.GetRawUserByUsername(ctx, payload.Username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {

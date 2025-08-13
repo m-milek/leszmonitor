@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func initUsersCollection(database *mongo.Database) error {
-	err := createCollection(dbClient.baseCtx, database, usersCollectionName)
+func initUsersCollection(ctx context.Context, database *mongo.Database) error {
+	err := createCollection(ctx, database, usersCollectionName)
 	if err != nil {
 		if errors.Is(err, collectionAlreadyExistsError(usersCollectionName)) {
 			logger.Db.Debug().Msg("Users collection already exists.")
@@ -22,7 +22,7 @@ func initUsersCollection(database *mongo.Database) error {
 
 	usersCollection := database.Collection(usersCollectionName)
 	indexName, err := usersCollection.Indexes().CreateOne(
-		dbClient.baseCtx,
+		ctx,
 		mongo.IndexModel{
 			Keys: bson.D{
 				{"username", 1},
@@ -31,23 +31,24 @@ func initUsersCollection(database *mongo.Database) error {
 		},
 	)
 	if err != nil {
-		logger.Db.Fatal().Err(err).Msg("Failed to create index on users collection")
+		logger.Db.Error().Err(err).Msg("Failed to create index on users collection")
+		return err
 	} else {
 		logger.Db.Info().Msgf("Index created: %s", indexName)
 	}
 	return nil
 }
 
-func AddUser(user *models.RawUser) (*mongo.InsertOneResult, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
-		res, err := dbClient.getUsersCollection().InsertOne(ctx, user)
+func CreateUser(ctx context.Context, user *models.RawUser) (*mongo.InsertOneResult, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*mongo.InsertOneResult, error) {
+		res, err := dbClient.getUsersCollection().InsertOne(timeoutCtx, user)
 		if err != nil {
 			return nil, err
 		}
 		return res, nil
 	})
 
-	logDbOperation("InsertUser", dbRes, err)
+	logDbOperation("CreateUser", dbRes, err)
 
 	if err != nil {
 		return nil, err
@@ -55,10 +56,10 @@ func AddUser(user *models.RawUser) (*mongo.InsertOneResult, error) {
 	return dbRes.Result, nil
 }
 
-func GetUserByUsername(username string) (*models.UserResponse, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*models.UserResponse, error) {
+func GetUserByUsername(ctx context.Context, username string) (*models.UserResponse, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.UserResponse, error) {
 		var user models.RawUser
-		err := dbClient.getUsersCollection().FindOne(ctx, bson.M{"username": username}).Decode(&user)
+		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{"username": username}).Decode(&user)
 		if err != nil {
 			return nil, err
 		}
@@ -73,17 +74,17 @@ func GetUserByUsername(username string) (*models.UserResponse, error) {
 	return dbRes.Result, nil
 }
 
-func GetRawUserByUsername(username string) (*models.RawUser, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*models.RawUser, error) {
+func GetRawUserByUsername(ctx context.Context, username string) (*models.RawUser, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.RawUser, error) {
 		var user models.RawUser
-		err := dbClient.getUsersCollection().FindOne(ctx, bson.M{"username": username}).Decode(&user)
+		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{"username": username}).Decode(&user)
 		if err != nil {
 			return nil, err
 		}
 		return &user, nil
 	})
 
-	logDbOperation("GetUserByUsername", dbRes, err)
+	logDbOperation("GetRawUserByUsername", dbRes, err)
 
 	if err != nil {
 		return nil, err
@@ -91,17 +92,17 @@ func GetRawUserByUsername(username string) (*models.RawUser, error) {
 	return dbRes.Result, nil
 }
 
-func GetAllUsers() ([]models.UserResponse, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) ([]models.UserResponse, error) {
-		cursor, err := dbClient.getUsersCollection().Find(ctx, bson.D{})
+func GetAllUsers(ctx context.Context) ([]models.UserResponse, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) ([]models.UserResponse, error) {
+		cursor, err := dbClient.getUsersCollection().Find(timeoutCtx, bson.D{})
 		if err != nil {
 			return nil, err
 		}
-		defer cursor.Close(ctx)
+		defer cursor.Close(timeoutCtx)
 
 		usersList := make([]models.UserResponse, 0)
 
-		for cursor.Next(ctx) {
+		for cursor.Next(timeoutCtx) {
 			var user models.RawUser
 			if err := cursor.Decode(&user); err != nil {
 				return nil, err

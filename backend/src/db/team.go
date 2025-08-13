@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func initTeamsCollection(database *mongo.Database) error {
-	err := createCollection(dbClient.baseCtx, database, teamsCollectionName)
+func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
+	err := createCollection(ctx, database, teamsCollectionName)
 	if err != nil {
 		if errors.Is(err, collectionAlreadyExistsError(teamsCollectionName)) {
 			logger.Db.Debug().Msg("Teams collection already exists.")
@@ -23,7 +23,7 @@ func initTeamsCollection(database *mongo.Database) error {
 	// unique index on the "id" field
 	teamsCollection := database.Collection(teamsCollectionName)
 	indexName, err := teamsCollection.Indexes().CreateOne(
-		dbClient.baseCtx,
+		ctx,
 		mongo.IndexModel{
 			Keys: bson.D{
 				{"id", 1},
@@ -32,7 +32,8 @@ func initTeamsCollection(database *mongo.Database) error {
 		},
 	)
 	if err != nil {
-		logger.Db.Fatal().Err(err).Msg("Failed to create index on teams collection")
+		logger.Db.Error().Err(err).Msg("Failed to create index on teams collection")
+		return err
 	} else {
 		logger.Db.Info().Msgf("Index created: %s", indexName)
 	}
@@ -40,9 +41,9 @@ func initTeamsCollection(database *mongo.Database) error {
 	return nil
 }
 
-func CreateTeam(team *models.Team) (*mongo.InsertOneResult, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*mongo.InsertOneResult, error) {
-		res, err := dbClient.getTeamsCollection().InsertOne(ctx, team)
+func CreateTeam(ctx context.Context, team *models.Team) (*mongo.InsertOneResult, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*mongo.InsertOneResult, error) {
+		res, err := dbClient.getTeamsCollection().InsertOne(timeoutCtx, team)
 		if err != nil {
 			return nil, err
 		}
@@ -57,10 +58,10 @@ func CreateTeam(team *models.Team) (*mongo.InsertOneResult, error) {
 	return dbRes.Result, nil
 }
 
-func GetTeamById(id string) (*models.Team, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (*models.Team, error) {
+func GetTeamById(ctx context.Context, id string) (*models.Team, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.Team, error) {
 		var team models.Team
-		err := dbClient.getTeamsCollection().FindOne(ctx, bson.M{"id": id}).Decode(&team)
+		err := dbClient.getTeamsCollection().FindOne(timeoutCtx, bson.M{"id": id}).Decode(&team)
 		if err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
 				return nil, ErrNotFound
@@ -78,17 +79,17 @@ func GetTeamById(id string) (*models.Team, error) {
 	return dbRes.Result, nil
 }
 
-func GetAllTeams() ([]models.Team, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) ([]models.Team, error) {
-		cursor, err := dbClient.getTeamsCollection().Find(ctx, bson.D{})
+func GetAllTeams(ctx context.Context) ([]models.Team, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) ([]models.Team, error) {
+		cursor, err := dbClient.getTeamsCollection().Find(timeoutCtx, bson.D{})
 		if err != nil {
 			return nil, err
 		}
-		defer cursor.Close(ctx)
+		defer cursor.Close(timeoutCtx)
 
 		teamsList := make([]models.Team, 0)
 
-		for cursor.Next(ctx) {
+		for cursor.Next(timeoutCtx) {
 			var team models.Team
 			if err := cursor.Decode(&team); err != nil {
 				return nil, err
@@ -111,9 +112,9 @@ func GetAllTeams() ([]models.Team, error) {
 	return dbRes.Result, nil
 }
 
-func UpdateTeam(team *models.Team) (bool, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
-		result, err := dbClient.getTeamsCollection().UpdateOne(ctx, bson.M{"id": team.Id}, bson.M{"$set": team})
+func UpdateTeam(ctx context.Context, team *models.Team) (bool, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
+		result, err := dbClient.getTeamsCollection().UpdateOne(timeoutCtx, bson.M{"id": team.Id}, bson.M{"$set": team})
 		if err != nil {
 			return false, err
 		}
@@ -131,9 +132,9 @@ func UpdateTeam(team *models.Team) (bool, error) {
 	return dbRes.Result, nil
 }
 
-func DeleteTeam(id string) (bool, error) {
-	dbRes, err := withTimeout(func(ctx context.Context) (bool, error) {
-		result, err := dbClient.getTeamsCollection().DeleteOne(ctx, bson.M{"id": id})
+func DeleteTeam(ctx context.Context, id string) (bool, error) {
+	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
+		result, err := dbClient.getTeamsCollection().DeleteOne(timeoutCtx, bson.M{"id": id})
 		if err != nil {
 			return false, err
 		}

@@ -17,7 +17,6 @@ type Client struct {
 	uri      string
 	client   *mongo.Client
 	database *mongo.Database
-	baseCtx  context.Context
 }
 
 var ErrNotFound = errors.New("document not found")
@@ -60,8 +59,8 @@ const (
 	teamsCollectionName    = "teams"
 )
 
-func InitDbClient(baseCtx context.Context) error {
-	_, cancel := context.WithTimeout(baseCtx, 10*time.Second)
+func InitDbClient(ctx context.Context) error {
+	_, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	logger.Db.Info().Msg("Connecting to MongoDB...")
@@ -77,10 +76,9 @@ func InitDbClient(baseCtx context.Context) error {
 		uri:      uri,
 		client:   client,
 		database: nil,
-		baseCtx:  baseCtx,
 	}
 
-	_, err = ping()
+	_, err = ping(ctx)
 	if err != nil {
 		logger.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
 	}
@@ -88,7 +86,7 @@ func InitDbClient(baseCtx context.Context) error {
 	database := client.Database(databaseName)
 	dbClient.database = database
 
-	err = initSchema()
+	err = initSchema(ctx)
 	if err != nil {
 		logger.Db.Fatal().Err(err).Msg("Failed to initialize database schema")
 	}
@@ -98,22 +96,22 @@ func InitDbClient(baseCtx context.Context) error {
 	return nil
 }
 
-func initSchema() error {
+func initSchema(ctx context.Context) error {
 	database := dbClient.getDatabase()
 
-	err := initUsersCollection(database)
+	err := initUsersCollection(ctx, database)
 	if err != nil {
 		logger.Db.Error().Err(err).Msg("Failed to initialize users collection")
 		return err
 	}
 
-	err = initMonitorsCollection(database)
+	err = initMonitorsCollection(ctx, database)
 	if err != nil {
 		logger.Db.Error().Err(err).Msg("Failed to initialize monitors collection")
 		return err
 	}
 
-	err = initTeamsCollection(database)
+	err = initTeamsCollection(ctx, database)
 	if err != nil {
 		logger.Db.Error().Err(err).Msg("Failed to initialize teams collection")
 	}
@@ -164,18 +162,18 @@ func createCollection(ctx context.Context, database *mongo.Database, collectionN
 }
 
 // withTimeout creates a child context with timeout and handles cancellation.
-func withTimeout[T any](operation func(ctx context.Context) (T, error)) (dbResult[T], error) {
-	ctx, cancel := context.WithTimeout(dbClient.baseCtx, timeoutDuration)
+func withTimeout[T any](timeoutCtx context.Context, operation func(context.Context) (T, error)) (dbResult[T], error) {
+	timeoutCtx, cancel := context.WithTimeout(timeoutCtx, timeoutDuration)
 	defer cancel()
 
 	start := time.Now()
-	result, err := operation(ctx)
+	result, err := operation(timeoutCtx)
 	elapsed := time.Since(start)
 
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			err = fmt.Errorf("operation timed out after %v", elapsed)
-		} else if ctxErr := ctx.Err(); errors.Is(ctxErr, context.Canceled) {
+		} else if ctxErr := timeoutCtx.Err(); errors.Is(ctxErr, context.Canceled) {
 			err = fmt.Errorf("operation canceled: %w", err)
 		} else {
 			err = fmt.Errorf("operation failed: %w", err)
@@ -200,8 +198,8 @@ func logDbOperation[T any](operationName string, result dbResult[T], err error) 
 	logger.Db.Debug().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
 }
 
-func ping() (int64, error) {
-	result, err := withTimeout(func(ctx context.Context) (int64, error) {
+func ping(ctx context.Context) (int64, error) {
+	result, err := withTimeout(ctx, func(context.Context) (int64, error) {
 		start := time.Now()
 		err := dbClient.client.Ping(ctx, nil)
 		if err != nil {

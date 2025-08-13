@@ -19,7 +19,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(monitor)
+	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(r.Context(), monitor)
 
 	if serviceErr != nil {
 		util.RespondError(w, serviceErr.Code, serviceErr.Err)
@@ -38,7 +38,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.MonitorService.DeleteMonitor(id)
+	err := services.MonitorService.DeleteMonitor(r.Context(), id)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -49,7 +49,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
-	monitorsList, err := services.MonitorService.GetAllMonitors()
+	monitorsList, err := services.MonitorService.GetAllMonitors(r.Context())
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -58,22 +58,22 @@ func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(w, http.StatusOK, monitorsList)
 }
 
-func GetMonitorHandler(writer http.ResponseWriter, request *http.Request) {
-	id := request.PathValue("id")
+func GetMonitorHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
 
 	if id == "" {
 		logger.Api.Trace().Msg("Monitor ID is required")
-		util.RespondMessage(writer, http.StatusBadRequest, "Monitor ID is required")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
 		return
 	}
 
-	monitor, err := services.MonitorService.GetMonitorById(id)
+	monitor, err := services.MonitorService.GetMonitorById(r.Context(), id)
 	if err != nil {
-		util.RespondError(writer, err.Code, err.Err)
+		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(writer, http.StatusOK, monitor)
+	util.RespondJSON(w, http.StatusOK, monitor)
 }
 
 // UpdateMonitorHandler handles the update of an existing monitor.
@@ -100,7 +100,7 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceErr := services.MonitorService.UpdateMonitor(monitor)
+	serviceErr := services.MonitorService.UpdateMonitor(r.Context(), monitor)
 	if serviceErr != nil {
 		util.RespondError(w, serviceErr.Code, serviceErr.Err)
 		return

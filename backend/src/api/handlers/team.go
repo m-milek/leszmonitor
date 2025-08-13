@@ -21,7 +21,7 @@ func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamCreateResponse, err := services.TeamService.CreateTeam(&payload, user.Username)
+	teamCreateResponse, err := services.TeamService.CreateTeam(r.Context(), &payload, user.Username)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -45,7 +45,7 @@ func TeamDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.TeamService.DeleteTeam(teamId, requestingUser.Username)
+	err := services.TeamService.DeleteTeam(r.Context(), teamId, requestingUser.Username)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -74,7 +74,7 @@ func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := services.TeamService.UpdateTeam(teamId, &payload, requestingUser.Username)
+	team, err := services.TeamService.UpdateTeam(r.Context(), teamId, &payload, requestingUser.Username)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -91,7 +91,7 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := services.TeamService.GetTeamById(teamId)
+	team, err := services.TeamService.GetTeamById(r.Context(), teamId)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -102,7 +102,7 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
-	teams, err := services.TeamService.GetAllTeams()
+	teams, err := services.TeamService.GetAllTeams(r.Context())
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -127,7 +127,7 @@ func TeamAddMemberHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.TeamService.AddUserToTeam(teamId, &payload, requestingUser.Username)
+	err := services.TeamService.AddUserToTeam(r.Context(), teamId, &payload, requestingUser.Username)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -151,7 +151,7 @@ func TeamRemoveMemberHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.TeamService.RemoveUserFromTeam(teamId, &payload, requestingUser.Username)
+	err := services.TeamService.RemoveUserFromTeam(r.Context(), teamId, &payload, requestingUser.Username)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -175,7 +175,7 @@ func TeamChangeMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.TeamService.ChangeMemberRole(teamId, payload, requestingUser.Username)
+	err := services.TeamService.ChangeMemberRole(r.Context(), teamId, payload, requestingUser.Username)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return

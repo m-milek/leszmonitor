@@ -1,18 +1,26 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/logger"
 	"github.com/m-milek/leszmonitor/models"
 	"net/http"
 )
 
-type TeamServiceT struct{}
+type TeamServiceT struct {
+	BaseService
+}
 
 // NewUserService creates a new instance of UserServiceT.
 func newTeamService() *TeamServiceT {
-	return &TeamServiceT{}
+	return &TeamServiceT{
+		BaseService{
+			logger: logger.NewServiceLogger("TeamService"),
+		},
+	}
 }
 
 var TeamService = newTeamService()
@@ -45,8 +53,10 @@ type TeamChangeMemberRolePayload struct {
 	Role     models.TeamRole `json:"role"`     // The new role to assign to the user in the team
 }
 
-func (s *TeamServiceT) GetAllTeams() ([]models.Team, *ServiceError) {
-	teams, err := db.GetAllTeams()
+func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *ServiceError) {
+	s.logger.Trace().Msg("Retrieving all teams")
+
+	teams, err := db.GetAllTeams(ctx)
 
 	if err != nil {
 		return nil, &ServiceError{
@@ -58,8 +68,10 @@ func (s *TeamServiceT) GetAllTeams() ([]models.Team, *ServiceError) {
 	return teams, nil
 }
 
-func (s *TeamServiceT) GetTeamById(teamId string) (*models.Team, *ServiceError) {
-	team, err := db.GetTeamById(teamId)
+func (s *TeamServiceT) GetTeamById(ctx context.Context, teamId string) (*models.Team, *ServiceError) {
+	s.logger.Trace().Str("teamId", teamId).Msg("Retrieving team by ID")
+
+	team, err := db.GetTeamById(ctx, teamId)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -77,10 +89,12 @@ func (s *TeamServiceT) GetTeamById(teamId string) (*models.Team, *ServiceError) 
 	return team, nil
 }
 
-func (s *TeamServiceT) CreateTeam(payload *TeamCreatePayload, ownerUsername string) (*TeamCreateResponse, *ServiceError) {
+func (s *TeamServiceT) CreateTeam(ctx context.Context, payload *TeamCreatePayload, ownerUsername string) (*TeamCreateResponse, *ServiceError) {
+	s.logger.Trace().Any("payload", payload).Str("ownerUsername", ownerUsername).Msg("Creating new team")
+
 	team := models.NewTeam(payload.Name, payload.Description, ownerUsername)
 
-	_, err := db.CreateTeam(team)
+	_, err := db.CreateTeam(ctx, team)
 
 	if err != nil {
 		return nil, &ServiceError{
@@ -94,8 +108,10 @@ func (s *TeamServiceT) CreateTeam(payload *TeamCreatePayload, ownerUsername stri
 	}, nil
 }
 
-func (s *TeamServiceT) DeleteTeam(teamId string, requestorUsername string) *ServiceError {
-	team, err := db.GetTeamById(teamId)
+func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamId string, requestorUsername string) *ServiceError {
+	s.logger.Trace().Str("teamId", teamId).Str("requestorUsername", requestorUsername).Msg("Deleting team")
+
+	team, err := db.GetTeamById(ctx, teamId)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -117,7 +133,7 @@ func (s *TeamServiceT) DeleteTeam(teamId string, requestorUsername string) *Serv
 		}
 	}
 
-	_, err = db.DeleteTeam(teamId)
+	_, err = db.DeleteTeam(ctx, teamId)
 	if err != nil {
 		return &ServiceError{
 			Code: 500,
@@ -128,8 +144,11 @@ func (s *TeamServiceT) DeleteTeam(teamId string, requestorUsername string) *Serv
 	return nil
 }
 
-func (s *TeamServiceT) UpdateTeam(teamId string, payload *TeamUpdatePayload, requestorUsername string) (*models.Team, *ServiceError) {
-	team, err := db.GetTeamById(teamId)
+func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamId string, payload *TeamUpdatePayload, requestorUsername string) (*models.Team, *ServiceError) {
+	s.logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Updating team")
+
+	team, err := db.GetTeamById(ctx, teamId)
+
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{
@@ -152,7 +171,7 @@ func (s *TeamServiceT) UpdateTeam(teamId string, payload *TeamUpdatePayload, req
 
 	team.Name = payload.Name
 	team.Description = payload.Description
-	_, err = db.UpdateTeam(team)
+	_, err = db.UpdateTeam(ctx, team)
 
 	if err != nil {
 		return nil, &ServiceError{
@@ -164,7 +183,9 @@ func (s *TeamServiceT) UpdateTeam(teamId string, payload *TeamUpdatePayload, req
 	return team, nil
 }
 
-func (s *TeamServiceT) AddUserToTeam(teamId string, payload *TeamAddMemberPayload, requestorUsername string) *ServiceError {
+func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamId string, payload *TeamAddMemberPayload, requestorUsername string) *ServiceError {
+	s.logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Adding user to team")
+
 	if teamId == "" || payload.Username == "" || payload.Role == "" {
 		return &ServiceError{
 			Code: http.StatusBadRequest,
@@ -172,7 +193,7 @@ func (s *TeamServiceT) AddUserToTeam(teamId string, payload *TeamAddMemberPayloa
 		}
 	}
 
-	team, err := db.GetTeamById(teamId)
+	team, err := db.GetTeamById(ctx, teamId)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return &ServiceError{
@@ -193,7 +214,7 @@ func (s *TeamServiceT) AddUserToTeam(teamId string, payload *TeamAddMemberPayloa
 		}
 	}
 
-	user, err := db.GetUserByUsername(payload.Username)
+	user, err := db.GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return &ServiceError{
@@ -229,7 +250,7 @@ func (s *TeamServiceT) AddUserToTeam(teamId string, payload *TeamAddMemberPayloa
 		}
 	}
 
-	_, err = db.UpdateTeam(team)
+	_, err = db.UpdateTeam(ctx, team)
 	if err != nil {
 		return &ServiceError{
 			Code: 500,
@@ -240,8 +261,10 @@ func (s *TeamServiceT) AddUserToTeam(teamId string, payload *TeamAddMemberPayloa
 	return nil
 }
 
-func (s *TeamServiceT) RemoveUserFromTeam(teamId string, payload *TeamRemoveMemberPayload, requestorUsername string) *ServiceError {
-	team, err := db.GetTeamById(teamId)
+func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamId string, payload *TeamRemoveMemberPayload, requestorUsername string) *ServiceError {
+	s.logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Removing user from team")
+
+	team, err := db.GetTeamById(ctx, teamId)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return &ServiceError{
@@ -271,7 +294,7 @@ func (s *TeamServiceT) RemoveUserFromTeam(teamId string, payload *TeamRemoveMemb
 
 	team.RemoveMember(payload.Username)
 
-	_, err = db.UpdateTeam(team)
+	_, err = db.UpdateTeam(ctx, team)
 	if err != nil {
 		return &ServiceError{
 			Code: 500,
@@ -282,8 +305,10 @@ func (s *TeamServiceT) RemoveUserFromTeam(teamId string, payload *TeamRemoveMemb
 	return nil
 }
 
-func (s *TeamServiceT) ChangeMemberRole(teamId string, payload TeamChangeMemberRolePayload, requestorUsername string) *ServiceError {
-	team, err := db.GetTeamById(teamId)
+func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamId string, payload TeamChangeMemberRolePayload, requestorUsername string) *ServiceError {
+	s.logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Changing member role in team")
+
+	team, err := db.GetTeamById(ctx, teamId)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return &ServiceError{
@@ -326,7 +351,7 @@ func (s *TeamServiceT) ChangeMemberRole(teamId string, payload TeamChangeMemberR
 		}
 	}
 
-	_, err = db.UpdateTeam(team)
+	_, err = db.UpdateTeam(ctx, team)
 	if err != nil {
 		return &ServiceError{
 			Code: 500,
