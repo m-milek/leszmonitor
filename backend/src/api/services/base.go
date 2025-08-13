@@ -14,7 +14,15 @@ func (s *BaseService) getMethodLogger(methodName string) zerolog.Logger {
 	if logger, exists := s.methodLoggers[methodName]; exists {
 		return logger
 	}
-	return s.serviceLogger.With().Str("method", methodName).Logger()
+	if s.methodLoggers == nil {
+		s.methodLoggers = make(map[string]zerolog.Logger)
+	}
+	if logger, exists := s.methodLoggers[methodName]; exists {
+		return logger
+	}
+	logger := s.serviceLogger.With().Str("method", methodName).Logger()
+	s.methodLoggers[methodName] = logger
+	return logger
 }
 
 func InitializeServices() {
