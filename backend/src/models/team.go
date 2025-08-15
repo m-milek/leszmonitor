@@ -17,7 +17,7 @@ type Team struct {
 
 func NewTeam(name string, description string, ownerId string) *Team {
 	initialMembers := map[string]TeamRole{
-		ownerId: TeamRoleOwner, // The owner is automatically added as an admin
+		ownerId: TeamRoleOwner, // The owner is automatically added
 	}
 
 	return &Team{
@@ -37,7 +37,7 @@ func (t *Team) IsMember(username string) bool {
 
 func (t *Team) IsAdmin(username string) bool {
 	role, exists := t.Members[username]
-	return exists && (role == TeamRoleAdmin || role == TeamRoleOwner)
+	return exists && (role == TeamRoleOwner || role == TeamRoleAdmin)
 }
 
 func (t *Team) AddMember(username string, role TeamRole) error {
@@ -74,21 +74,4 @@ func (t *Team) ChangeMemberRole(username string, role TeamRole) error {
 	t.Members[username] = role
 	t.UpdatedAt = time.Now().Format(time.RFC3339)
 	return nil
-}
-
-type TeamRole string
-
-const (
-	TeamRoleOwner  TeamRole = "owner"  // Admin, creator of the team. Team cannot be deleted if members other than owner exist
-	TeamRoleAdmin  TeamRole = "admin"  // Admin role with full permissions
-	TeamRoleMember TeamRole = "member" // Member role with limited permissions
-)
-
-func (r TeamRole) Validate() error {
-	switch r {
-	case TeamRoleOwner, TeamRoleAdmin, TeamRoleMember:
-		return nil
-	default:
-		return fmt.Errorf("invalid team role: %s", r)
-	}
 }

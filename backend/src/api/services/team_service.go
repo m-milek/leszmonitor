@@ -7,7 +7,6 @@ import (
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
-	"net/http"
 )
 
 type TeamServiceT struct {
@@ -18,6 +17,7 @@ type TeamServiceT struct {
 func newTeamService() *TeamServiceT {
 	return &TeamServiceT{
 		BaseService{
+			authService:   newAuthorizationService(),
 			serviceLogger: logging.NewServiceLogger("TeamService"),
 		},
 	}
@@ -71,36 +71,24 @@ func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *Service
 	return teams, nil
 }
 
-func (s *TeamServiceT) GetTeamById(ctx context.Context, teamId string) (*models.Team, *ServiceError) {
+func (s *TeamServiceT) GetTeamById(ctx context.Context, teamId string, requestorUsername string) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("GetTeamById")
 	logger.Trace().Str("teamId", teamId).Msg("Retrieving team by ID")
 
-	team, err := db.GetTeamById(ctx, teamId)
-
-	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("teamId", teamId).Msg("Team not found")
-			return nil, &ServiceError{
-				Code: 404,
-				Err:  fmt.Errorf("team with ID %s not found", teamId),
-			}
-		}
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to retrieve team")
-		return nil, &ServiceError{
-			Code: 500,
-			Err:  fmt.Errorf("failed to retrieve team: %w", err),
-		}
+	team, authErr := s.authService.AuthorizeTeamAction(ctx, teamId, requestorUsername, models.PermissionTeamReader)
+	if authErr != nil {
+		return nil, authErr
 	}
 
 	logger.Trace().Str("teamId", teamId).Msg("Retrieved team successfully")
 	return team, nil
 }
 
-func (s *TeamServiceT) CreateTeam(ctx context.Context, payload *TeamCreatePayload, ownerUsername string) (*TeamCreateResponse, *ServiceError) {
+func (s *TeamServiceT) CreateTeam(ctx context.Context, payload *TeamCreatePayload, requestorUsername string) (*TeamCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateTeam")
-	logger.Trace().Any("payload", payload).Str("ownerUsername", ownerUsername).Msg("Creating new team")
+	logger.Trace().Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Creating new team")
 
-	team := models.NewTeam(payload.Name, payload.Description, ownerUsername)
+	team := models.NewTeam(payload.Name, payload.Description, requestorUsername)
 
 	_, err := db.CreateTeam(ctx, team)
 
@@ -122,32 +110,12 @@ func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamId string, requestorU
 	logger := s.getMethodLogger("DeleteTeam")
 	logger.Trace().Str("teamId", teamId).Str("requestorUsername", requestorUsername).Msg("Deleting team")
 
-	team, err := db.GetTeamById(ctx, teamId)
-
-	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("teamId", teamId).Msg("Team not found")
-			return &ServiceError{
-				Code: 404,
-				Err:  fmt.Errorf("team with ID %s not found", teamId),
-			}
-		}
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to retrieve team")
-		return &ServiceError{
-			Code: 500,
-			Err:  fmt.Errorf("failed to retrieve team: %w", err),
-		}
+	_, authErr := s.authService.AuthorizeTeamAction(ctx, teamId, requestorUsername, models.PermissionTeamAdmin)
+	if authErr != nil {
+		return authErr
 	}
 
-	if !team.IsAdmin(requestorUsername) {
-		logger.Warn().Str("teamId", teamId).Str("requestorUsername", requestorUsername).Msg("Unauthorized delete attempt")
-		return &ServiceError{
-			Code: 403,
-			Err:  fmt.Errorf("user %s is not authorized to delete team %s", requestorUsername, teamId),
-		}
-	}
-
-	_, err = db.DeleteTeam(ctx, teamId)
+	_, err := db.DeleteTeam(ctx, teamId)
 	if err != nil {
 		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to delete team")
 		return &ServiceError{
@@ -163,6 +131,11 @@ func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamId string, requestorU
 func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamId string, payload *TeamUpdatePayload, requestorUsername string) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("UpdateTeam")
 	logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Updating team")
+
+	team, authErr := s.authService.AuthorizeTeamAction(ctx, teamId, requestorUsername, models.PermissionTeamEditor)
+	if authErr != nil {
+		return nil, authErr
+	}
 
 	team, err := db.GetTeamById(ctx, teamId)
 
@@ -209,37 +182,9 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamId string, payload
 	logger := s.getMethodLogger("AddUserToTeam")
 	logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Adding user to team")
 
-	if teamId == "" || payload.Username == "" || payload.Role == "" {
-		logger.Warn().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Invalid parameters for adding user to team")
-		return &ServiceError{
-			Code: http.StatusBadRequest,
-			Err:  fmt.Errorf("teamId, username, and role are required"),
-		}
-	}
-
-	team, err := db.GetTeamById(ctx, teamId)
-	if err != nil {
-		logger.Warn().Str("teamId", teamId).Err(err).Msg("Failed to retrieve team for adding user")
-		if errors.Is(err, db.ErrNotFound) {
-			return &ServiceError{
-				Code: 404,
-				Err:  fmt.Errorf("failed to retrieve team with ID %s", teamId),
-			}
-		}
-
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to retrieve team")
-		return &ServiceError{
-			Code: 500,
-			Err:  fmt.Errorf("failed to retrieve team: %w", err),
-		}
-	}
-
-	if !team.IsAdmin(requestorUsername) {
-		logger.Warn().Str("teamId", teamId).Str("requestorUsername", requestorUsername).Msg("Unauthorized add user attempt")
-		return &ServiceError{
-			Code: 403,
-			Err:  fmt.Errorf("user %s is not authorized to add users to team %s", requestorUsername, teamId),
-		}
+	team, authErr := s.authService.AuthorizeTeamAction(ctx, teamId, requestorUsername, models.PermissionTeamEditor)
+	if authErr != nil {
+		return authErr
 	}
 
 	user, err := db.GetUserByUsername(ctx, payload.Username)
@@ -286,32 +231,13 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamId string, payload
 	return nil
 }
 
-func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamId string, payload *TeamRemoveMemberPayload, requestorUsername string) (error *ServiceError) {
+func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamId string, payload *TeamRemoveMemberPayload, requestorUsername string) *ServiceError {
 	logger := s.getMethodLogger("RemoveUserFromTeam")
 	logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Removing user from team")
 
-	team, err := db.GetTeamById(ctx, teamId)
-	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("teamId", teamId).Msg("Team not found")
-			return &ServiceError{
-				Code: 404,
-				Err:  fmt.Errorf("team with ID %s not found", teamId),
-			}
-		}
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to retrieve team")
-		return &ServiceError{
-			Code: 500,
-			Err:  fmt.Errorf("failed to retrieve team: %w", err),
-		}
-	}
-
-	if !team.IsAdmin(requestorUsername) {
-		logger.Warn().Str("teamId", teamId).Str("requestorUsername", requestorUsername).Msg("Unauthorized remove user attempt")
-		return &ServiceError{
-			Code: 403,
-			Err:  fmt.Errorf("user %s is not authorized to remove users from team %s", requestorUsername, teamId),
-		}
+	team, authErr := s.authService.AuthorizeTeamAction(ctx, teamId, requestorUsername, models.PermissionTeamEditor)
+	if authErr != nil {
+		return authErr
 	}
 
 	if !team.IsMember(payload.Username) {
@@ -324,7 +250,7 @@ func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamId string, pa
 
 	team.RemoveMember(payload.Username)
 
-	_, err = db.UpdateTeam(ctx, team)
+	_, err := db.UpdateTeam(ctx, team)
 	if err != nil {
 		logger.Error().Err(err).Str("teamId", teamId).Str("username", payload.Username).Msg("Failed to update team after removing user")
 		return &ServiceError{
@@ -340,28 +266,9 @@ func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamId string, payl
 	logger := s.getMethodLogger("ChangeMemberRole")
 	logger.Trace().Str("teamId", teamId).Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Changing member role in team")
 
-	team, err := db.GetTeamById(ctx, teamId)
-	if err != nil {
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to retrieve team for changing member role")
-		if errors.Is(err, db.ErrNotFound) {
-			return &ServiceError{
-				Code: 404,
-				Err:  fmt.Errorf("team with ID %s not found", teamId),
-			}
-		}
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Error retrieving team")
-		return &ServiceError{
-			Code: 500,
-			Err:  fmt.Errorf("error retrieving team: %w", err),
-		}
-	}
-
-	if !team.IsAdmin(requestorUsername) {
-		logger.Warn().Str("teamId", teamId).Str("requestorUsername", requestorUsername).Msg("Unauthorized role change attempt")
-		return &ServiceError{
-			Code: 403,
-			Err:  fmt.Errorf("user %s is not authorized to change member roles in team %s", requestorUsername, teamId),
-		}
+	team, authErr := s.authService.AuthorizeTeamAction(ctx, teamId, requestorUsername, models.PermissionTeamAdmin)
+	if authErr != nil {
+		return authErr
 	}
 
 	if !team.IsMember(payload.Username) {
@@ -380,7 +287,7 @@ func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamId string, payl
 		}
 	}
 
-	err = team.ChangeMemberRole(payload.Username, payload.Role)
+	err := team.ChangeMemberRole(payload.Username, payload.Role)
 	if err != nil {
 		logger.Error().Err(err).Str("teamId", teamId).Str("username", payload.Username).Msg("Error changing role for user in team")
 		return &ServiceError{
