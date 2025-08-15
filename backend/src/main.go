@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"github.com/m-milek/leszmonitor/api"
-	"github.com/m-milek/leszmonitor/api/services"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/log-capture"
@@ -50,8 +49,6 @@ func main() {
 		logging.Main.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
 	logging.Main.Info().Msg("Logger initialized successfully")
-
-	services.InitializeServices()
 
 	err = db.InitDbClient(ctx)
 	if err != nil {
