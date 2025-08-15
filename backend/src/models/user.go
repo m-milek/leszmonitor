@@ -5,7 +5,7 @@ import (
 )
 
 type RawUser struct {
-	Username     string `json:"username" bson:"username"`
+	Username     string `json:"username" bson:"_id"`
 	PasswordHash string `json:"passwordHash" bson:"passwordHash"`
 	Email        string `json:"email" bson:"email"`
 	CreatedAt    string `json:"created" bson:"created"`

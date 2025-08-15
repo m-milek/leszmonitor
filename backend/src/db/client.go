@@ -20,6 +20,9 @@ type Client struct {
 }
 
 var ErrNotFound = errors.New("document not found")
+var ErrAlreadyExists = errors.New("resource already exists")
+
+const ID_FIELD = "_id"
 
 func (*Client) getDatabase() *mongo.Database {
 	return dbClient.client.Database(databaseName)
@@ -37,6 +40,10 @@ func (*Client) getTeamsCollection() *mongo.Collection {
 	return dbClient.getDatabase().Collection(teamsCollectionName)
 }
 
+func (*Client) getGroupsCollection() *mongo.Collection {
+	return dbClient.getDatabase().Collection(groupsCollectionName)
+}
+
 type dbResult[T any] struct {
 	Duration time.Duration
 	Result   T
@@ -50,13 +57,14 @@ func (err collectionAlreadyExistsError) Error() string {
 
 var dbClient Client
 
-const timeoutDuration = 5 * time.Second
+const timeoutDuration = 1000 * time.Second
 
 const (
 	databaseName           = "leszmonitor"
 	usersCollectionName    = "users"
 	monitorsCollectionName = "monitors"
 	teamsCollectionName    = "teams"
+	groupsCollectionName   = "groups"
 )
 
 func InitDbClient(ctx context.Context) error {
@@ -114,6 +122,11 @@ func initSchema(ctx context.Context) error {
 	err = initTeamsCollection(ctx, database)
 	if err != nil {
 		logging.Db.Error().Err(err).Msg("Failed to initialize teams collection")
+	}
+
+	err = initGroupsCollection(ctx, database)
+	if err != nil {
+		logging.Db.Error().Err(err).Msg("Failed to initialize groups collection")
 	}
 
 	return err
