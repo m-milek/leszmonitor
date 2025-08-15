@@ -2,7 +2,7 @@ package monitors
 
 import (
 	"fmt"
-	"github.com/teris-io/shortid"
+	"github.com/m-milek/leszmonitor/util"
 	"time"
 )
 
@@ -23,11 +23,11 @@ type IMonitorConfig interface {
 }
 
 type BaseMonitor struct {
-	Id          string            `json:"id" bson:"id"`                   // Unique identifier for the monitor
+	Id          string            `json:"id" bson:"_id"`                  // Unique identifier for the monitor
 	Name        string            `json:"name" bson:"name"`               // Name of the monitor
 	Description string            `json:"description" bson:"description"` // Description of the monitor
 	Interval    int               `json:"interval" bson:"interval"`       // How often to run the monitor in seconds
-	OwnerId     string            `json:"ownerId" bson:"ownerId"`         // ID of the owner of the monitor
+	GroupId     string            `json:"groupId" bson:"groupId"`         // ID of the owner group of the monitor
 	Type        MonitorConfigType `json:"type" bson:"type"`               // Type of the monitor (http, ping, etc.)
 }
 
@@ -62,24 +62,16 @@ func (m *BaseMonitor) validateBase() error {
 	if m.GetId() == "" {
 		return fmt.Errorf("monitor ID cannot be empty")
 	}
-	if m.OwnerId == "" {
-		return fmt.Errorf("monitor owner ID cannot be empty")
+	if m.GroupId == "" {
+		return fmt.Errorf("monitor group ID cannot be empty")
 	}
 	return nil
 }
 
 func (m *BaseMonitor) GenerateId() {
 	if m.Id == "" {
-		m.Id = generateId()
+		m.Id = util.IdFromString(m.GetName())
 	}
-}
-
-func generateId() string {
-	id, err := shortid.Generate()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to generate monitor ID: %v", err))
-	}
-	return id
 }
 
 func (m *BaseMonitor) GetId() string {
