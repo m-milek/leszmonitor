@@ -58,7 +58,6 @@ func (s *AuthorizationServiceT) AuthorizeTeamAction(ctx context.Context, teamId 
 	}
 
 	if !memberRole.HasPermissions(permissions...) {
-
 		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for team")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,
