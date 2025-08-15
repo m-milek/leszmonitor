@@ -16,7 +16,7 @@ func NewPermission(id, name, description string) Permission {
 
 var PermissionMonitorAdmin = NewPermission("admin:monitor", "Delete Monitors", "Allows deleting monitors.")
 var PermissionMonitorEditor = NewPermission("edit:monitor", "Manage Monitors", "Allows editing and creating monitors.")
-var PermissionMontiorReader = NewPermission("read:monitor", "Read Monitors", "Allows reading monitor details and statuses.")
+var PermissionMonitorReader = NewPermission("read:monitor", "Read Monitors", "Allows reading monitor details and statuses.")
 
 var PermissionTeamAdmin = NewPermission("admin:team", "Administrate Team", "Allows deleting teams.")
 var PermissionTeamEditor = NewPermission("edit:team", "Manage Team", "Allows adding and removing members from the team.")
@@ -27,8 +27,8 @@ var PermissionImplications = map[Permission][]Permission{
 	PermissionTeamEditor:    {PermissionTeamReader},
 	PermissionTeamReader:    {}, // No implications
 	PermissionMonitorAdmin:  {PermissionMonitorEditor},
-	PermissionMonitorEditor: {PermissionMontiorReader},
-	PermissionMontiorReader: {}, // No implications
+	PermissionMonitorEditor: {PermissionMonitorReader},
+	PermissionMonitorReader: {}, // No implications
 }
 
 var RolePermissions = map[TeamRole][]Permission{
@@ -46,7 +46,7 @@ var RolePermissions = map[TeamRole][]Permission{
 	},
 	TeamRoleViewer: {
 		PermissionTeamReader,
-		PermissionMontiorReader,
+		PermissionMonitorReader,
 	},
 }
 
