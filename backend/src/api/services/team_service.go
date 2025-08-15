@@ -137,34 +137,9 @@ func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamId string, payload *T
 		return nil, authErr
 	}
 
-	team, err := db.GetTeamById(ctx, teamId)
-
-	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("teamId", teamId).Msg("Team not found")
-			return nil, &ServiceError{
-				Code: 404,
-				Err:  fmt.Errorf("team with ID %s not found", teamId),
-			}
-		}
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to retrieve team")
-		return nil, &ServiceError{
-			Code: 500,
-			Err:  fmt.Errorf("failed to retrieve team: %w", err),
-		}
-	}
-
-	if !team.IsAdmin(requestorUsername) {
-		logger.Warn().Str("teamId", teamId).Str("requestorUsername", requestorUsername).Msg("Unauthorized update attempt")
-		return nil, &ServiceError{
-			Code: 403,
-			Err:  fmt.Errorf("user %s is not authorized to update team %s", requestorUsername, teamId),
-		}
-	}
-
 	team.Name = payload.Name
 	team.Description = payload.Description
-	_, err = db.UpdateTeam(ctx, team)
+	_, err := db.UpdateTeam(ctx, team)
 
 	if err != nil {
 		logger.Error().Err(err).Str("teamId", teamId).Msg("Failed to update team")
