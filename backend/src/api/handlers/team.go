@@ -91,7 +91,13 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := services.TeamService.GetTeamById(r.Context(), teamId)
+	requestingUser, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	team, err := services.TeamService.GetTeamById(r.Context(), teamId, requestingUser.Username)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)

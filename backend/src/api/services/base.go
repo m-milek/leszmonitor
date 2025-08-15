@@ -1,11 +1,11 @@
 package services
 
 import (
-	"github.com/m-milek/leszmonitor/logging"
 	"github.com/rs/zerolog"
 )
 
 type BaseService struct {
+	authService   *AuthorizationServiceT
 	serviceLogger zerolog.Logger
 	methodLoggers map[string]zerolog.Logger
 }
@@ -23,10 +23,4 @@ func (s *BaseService) getMethodLogger(methodName string) zerolog.Logger {
 	logger := s.serviceLogger.With().Str("method", methodName).Logger()
 	s.methodLoggers[methodName] = logger
 	return logger
-}
-
-func InitializeServices() {
-	TeamService.serviceLogger = logging.NewServiceLogger("TeamService")
-	UserService.serviceLogger = logging.NewServiceLogger("UserService")
-	MonitorService.serviceLogger = logging.NewServiceLogger("MonitorService")
 }
