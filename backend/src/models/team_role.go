@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"github.com/m-milek/leszmonitor/util"
 )
 
 type TeamRole string
@@ -21,23 +20,6 @@ func (r *TeamRole) Validate() error {
 	default:
 		return fmt.Errorf("invalid team role: %s", *r)
 	}
-}
-
-func (r *TeamRole) hasPermission(permission *Permission) bool {
-	if r == nil || permission == nil {
-		return false
-	}
-
-	permissions, exists := RolePermissions[*r]
-	if !exists {
-		return false
-	}
-
-	if util.SliceContains(permissions, *permission) {
-		return true
-	}
-
-	return false
 }
 
 func (r *TeamRole) HasPermissions(permissions ...Permission) bool {

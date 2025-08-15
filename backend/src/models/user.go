@@ -12,6 +12,13 @@ type RawUser struct {
 	UpdatedAt    string `json:"updated" bson:"updated"`
 }
 
+type UserResponse struct {
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"created"`
+	UpdatedAt string `json:"updated"`
+}
+
 // NewUser creates a new RawUser instance with the provided username, password, and email.
 func NewUser(username, hashedPassword, email string) *RawUser {
 	return &RawUser{
@@ -28,11 +35,6 @@ func (u *RawUser) IntoUser() *UserResponse {
 		Username:  u.Username,
 		Email:     u.Email,
 		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
 	}
-}
-
-type UserResponse struct {
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	CreatedAt string `json:"created"`
 }
