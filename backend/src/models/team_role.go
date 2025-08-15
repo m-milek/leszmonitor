@@ -19,7 +19,7 @@ func (r *TeamRole) Validate() error {
 	case TeamRoleOwner, TeamRoleAdmin, TeamRoleMember, TeamRoleViewer:
 		return nil
 	default:
-		return fmt.Errorf("invalid team role: %s", r)
+		return fmt.Errorf("invalid team role: %s", *r)
 	}
 }
 
