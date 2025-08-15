@@ -7,7 +7,6 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func initUsersCollection(ctx context.Context, database *mongo.Database) error {
@@ -20,22 +19,22 @@ func initUsersCollection(ctx context.Context, database *mongo.Database) error {
 		return err
 	}
 
-	usersCollection := database.Collection(usersCollectionName)
-	indexName, err := usersCollection.Indexes().CreateOne(
-		ctx,
-		mongo.IndexModel{
-			Keys: bson.D{
-				{"username", 1},
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
-	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to create index on users collection")
-		return err
-	} else {
-		logging.Db.Info().Msgf("Index created: %s", indexName)
-	}
+	//usersCollection := database.Collection(usersCollectionName)
+	//indexName, err := usersCollection.Indexes().CreateOne(
+	//	ctx,
+	//	mongo.IndexModel{
+	//		Keys: bson.D{
+	//			{ID_FIELD, 1},
+	//		},
+	//		Options: options.Index().SetUnique(true),
+	//	},
+	//)
+	//if err != nil {
+	//	logging.Db.Error().Err(err).Msg("Failed to create index on users collection")
+	//	return err
+	//} else {
+	//	logging.Db.Info().Msgf("Index created: %s", indexName)
+	//}
 	return nil
 }
 
@@ -59,7 +58,7 @@ func CreateUser(ctx context.Context, user *models.RawUser) (*mongo.InsertOneResu
 func GetUserByUsername(ctx context.Context, username string) (*models.UserResponse, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.UserResponse, error) {
 		var user models.RawUser
-		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{"username": username}).Decode(&user)
+		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: username}).Decode(&user)
 		if err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
 				return nil, ErrNotFound
@@ -80,7 +79,7 @@ func GetUserByUsername(ctx context.Context, username string) (*models.UserRespon
 func GetRawUserByUsername(ctx context.Context, username string) (*models.RawUser, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.RawUser, error) {
 		var user models.RawUser
-		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{"username": username}).Decode(&user)
+		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: username}).Decode(&user)
 		if err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
 				return nil, ErrNotFound

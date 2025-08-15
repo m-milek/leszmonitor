@@ -12,7 +12,7 @@ type TestMonitor struct {
 	Name        string
 	Description string
 	Interval    int
-	OwnerID     string
+	GroupId     string
 	Type        MonitorConfigType
 
 	// Config fields
@@ -28,7 +28,7 @@ func NewTestMonitor() *TestMonitor {
 		Name:        "Test Monitor",
 		Description: "Test monitor description",
 		Interval:    60,
-		OwnerID:     "test_owner",
+		GroupId:     "test_owner",
 		Type:        Http,
 		HttpConfig: &HttpConfig{
 			HttpMethod:          "GET",
@@ -75,7 +75,7 @@ func (t *TestMonitor) Build() IMonitor {
 		Name:        t.Name,
 		Description: t.Description,
 		Interval:    t.Interval,
-		OwnerId:     t.OwnerID,
+		GroupId:     t.GroupId,
 		Type:        t.Type,
 	}
 
@@ -102,7 +102,7 @@ func (t *TestMonitor) ToBSON() bson.M {
 		"name":        t.Name,
 		"description": t.Description,
 		"interval":    t.Interval,
-		"ownerId":     t.OwnerID,
+		"groupId":     t.GroupId,
 		"type":        string(t.Type),
 	}
 

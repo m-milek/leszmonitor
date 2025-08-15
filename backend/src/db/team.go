@@ -7,7 +7,6 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
@@ -21,22 +20,22 @@ func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
 	}
 
 	// unique index on the "id" field
-	teamsCollection := database.Collection(teamsCollectionName)
-	indexName, err := teamsCollection.Indexes().CreateOne(
-		ctx,
-		mongo.IndexModel{
-			Keys: bson.D{
-				{"id", 1},
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
-	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to create index on teams collection")
-		return err
-	} else {
-		logging.Db.Info().Msgf("Index created: %s", indexName)
-	}
+	//teamsCollection := database.Collection(teamsCollectionName)
+	//indexName, err := teamsCollection.Indexes().CreateOne(
+	//	ctx,
+	//	mongo.IndexModel{
+	//		Keys: bson.D{
+	//			{ID_FIELD, 1},
+	//		},
+	//		Options: options.Index().SetUnique(true),
+	//	},
+	//)
+	//if err != nil {
+	//	logging.Db.Error().Err(err).Msg("Failed to create index on teams collection")
+	//	return err
+	//} else {
+	//	logging.Db.Info().Msgf("Index created: %s", indexName)
+	//}
 
 	return nil
 }
@@ -45,12 +44,15 @@ func CreateTeam(ctx context.Context, team *models.Team) (*mongo.InsertOneResult,
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*mongo.InsertOneResult, error) {
 		res, err := dbClient.getTeamsCollection().InsertOne(timeoutCtx, team)
 		if err != nil {
+			if mongo.IsDuplicateKeyError(err) {
+				return nil, ErrAlreadyExists
+			}
 			return nil, err
 		}
 		return res, nil
 	})
 
-	logDbOperation("InsertTeam", dbRes, err)
+	logDbOperation("CreateTeam", dbRes, err)
 
 	if err != nil {
 		return nil, err
@@ -61,7 +63,7 @@ func CreateTeam(ctx context.Context, team *models.Team) (*mongo.InsertOneResult,
 func GetTeamById(ctx context.Context, id string) (*models.Team, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.Team, error) {
 		var team models.Team
-		err := dbClient.getTeamsCollection().FindOne(timeoutCtx, bson.M{"id": id}).Decode(&team)
+		err := dbClient.getTeamsCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: id}).Decode(&team)
 		if err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
 				return nil, ErrNotFound
@@ -114,7 +116,7 @@ func GetAllTeams(ctx context.Context) ([]models.Team, error) {
 
 func UpdateTeam(ctx context.Context, team *models.Team) (bool, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getTeamsCollection().UpdateOne(timeoutCtx, bson.M{"id": team.Id}, bson.M{"$set": team})
+		result, err := dbClient.getTeamsCollection().UpdateOne(timeoutCtx, bson.M{ID_FIELD: team.Id}, bson.M{"$set": team})
 		if err != nil {
 			return false, err
 		}
@@ -134,7 +136,7 @@ func UpdateTeam(ctx context.Context, team *models.Team) (bool, error) {
 
 func DeleteTeam(ctx context.Context, id string) (bool, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getTeamsCollection().DeleteOne(timeoutCtx, bson.M{"id": id})
+		result, err := dbClient.getTeamsCollection().DeleteOne(timeoutCtx, bson.M{ID_FIELD: id})
 		if err != nil {
 			return false, err
 		}

@@ -2,12 +2,12 @@ package models
 
 import (
 	"fmt"
-	"github.com/teris-io/shortid"
+	"github.com/m-milek/leszmonitor/util"
 	"time"
 )
 
 type Team struct {
-	Id          string              `json:"id" bson:"id"`                   // Unique identifier for the team
+	Id          string              `json:"id" bson:"_id"`                  // Unique identifier for the team
 	Name        string              `json:"name" bson:"name"`               // Name of the team
 	Description string              `json:"description" bson:"description"` // Description of the team
 	Members     map[string]TeamRole `json:"members" bson:"members"`         // Map of team members with their roles
@@ -21,7 +21,7 @@ func NewTeam(name string, description string, ownerId string) *Team {
 	}
 
 	return &Team{
-		Id:          shortid.MustGenerate(),
+		Id:          util.IdFromString(name),
 		Name:        name,
 		Description: description,
 		Members:     initialMembers,

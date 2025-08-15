@@ -7,6 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
+	"net/http"
 )
 
 type TeamServiceT struct {
@@ -88,11 +89,34 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, payload *TeamCreatePayloa
 	logger := s.getMethodLogger("CreateTeam")
 	logger.Trace().Any("payload", payload).Str("requestorUsername", requestorUsername).Msg("Creating new team")
 
-	team := models.NewTeam(payload.Name, payload.Description, requestorUsername)
+	user, err := db.GetUserByUsername(ctx, requestorUsername)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			logger.Warn().Str("username", requestorUsername).Msg("Requesting user not found")
+			return nil, &ServiceError{
+				Code: http.StatusNotFound,
+				Err:  fmt.Errorf("user %s not found", requestorUsername),
+			}
+		}
+		logger.Error().Err(err).Msg("Failed to retrieve requesting user")
+		return nil, &ServiceError{
+			Code: 500,
+			Err:  fmt.Errorf("failed to retrieve user %s: %w", requestorUsername, err),
+		}
+	}
 
-	_, err := db.CreateTeam(ctx, team)
+	team := models.NewTeam(payload.Name, payload.Description, user.Username)
+
+	_, err = db.CreateTeam(ctx, team)
 
 	if err != nil {
+		if errors.Is(err, db.ErrAlreadyExists) {
+			logger.Warn().Str("ID", team.Id).Msg("Team already exists")
+			return nil, &ServiceError{
+				Code: http.StatusConflict,
+				Err:  fmt.Errorf("team with ID '%s' already exists", team.Id),
+			}
+		}
 		logger.Error().Err(err).Msg("Failed to create team")
 		return nil, &ServiceError{
 			Code: 500,

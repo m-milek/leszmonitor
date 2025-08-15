@@ -29,6 +29,12 @@ func SetupRouters(
 	protectedRouter.HandleFunc("POST /team/{id}/remove-member", handlers.TeamRemoveMemberHandler)
 	protectedRouter.HandleFunc("POST /team/{id}/change-member-role", handlers.TeamChangeMemberRoleHandler)
 
+	protectedRouter.HandleFunc("POST /team/{teamId}/create-group", handlers.CreateMonitorGroupHandler)
+	protectedRouter.HandleFunc("GET /team/{teamId}/groups", handlers.GetTeamMonitorGroups)
+	protectedRouter.HandleFunc("GET /team/{teamId}/{groupId}", handlers.GetTeamMonitorGroupById)
+	protectedRouter.HandleFunc("PATCH /team/{teamId}/{groupId}", handlers.UpdateMonitorGroupHandler)
+	protectedRouter.HandleFunc("DELETE /team/{teamId}/{groupId}", handlers.DeleteMonitorGroupHandler)
+
 	publicRouter.HandleFunc("POST /auth/register", handlers.UserRegisterHandler)
 	publicRouter.HandleFunc("POST /auth/login", handlers.UserLoginHandler)
 
