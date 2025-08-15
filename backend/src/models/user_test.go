@@ -34,6 +34,6 @@ func TestNewUser(t *testing.T) {
 		assert.Equal(t, "testuser", userResponse.Username)
 		assert.Equal(t, "mail@example.com", userResponse.Email)
 		assert.NotEmpty(t, userResponse.CreatedAt)
-		assert.NotEmpty(t, userResponse.CreatedAt)
+		assert.NotEmpty(t, userResponse.UpdatedAt)
 	})
 }

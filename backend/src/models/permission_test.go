@@ -55,7 +55,7 @@ func TestGetEffectivePermissions(t *testing.T) {
 		assert.Len(t, perms, 3)
 		assert.Contains(t, perms, PermissionMonitorAdmin)
 		assert.Contains(t, perms, PermissionMonitorEditor)
-		assert.Contains(t, perms, PermissionMontiorReader)
+		assert.Contains(t, perms, PermissionMonitorReader)
 	})
 
 	t.Run("Permission not in implications map", func(t *testing.T) {
@@ -79,11 +79,11 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 		assert.True(t, owner.HasPermissions(PermissionTeamEditor))
 		assert.True(t, owner.HasPermissions(PermissionTeamReader))
 		assert.True(t, owner.HasPermissions(PermissionMonitorEditor))
-		assert.True(t, owner.HasPermissions(PermissionMontiorReader))
+		assert.True(t, owner.HasPermissions(PermissionMonitorReader))
 
 		// Multiple permissions
 		assert.True(t, owner.HasPermissions(PermissionTeamAdmin, PermissionMonitorAdmin))
-		assert.True(t, owner.HasPermissions(PermissionTeamReader, PermissionMontiorReader))
+		assert.True(t, owner.HasPermissions(PermissionTeamReader, PermissionMonitorReader))
 	})
 
 	t.Run("Admin has correct permissions", func(t *testing.T) {
@@ -96,7 +96,7 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 		// Implied permissions
 		assert.True(t, admin.HasPermissions(PermissionTeamReader))
 		assert.True(t, admin.HasPermissions(PermissionMonitorEditor))
-		assert.True(t, admin.HasPermissions(PermissionMontiorReader))
+		assert.True(t, admin.HasPermissions(PermissionMonitorReader))
 
 		// Should not have
 		assert.False(t, admin.HasPermissions(PermissionTeamAdmin))
@@ -110,7 +110,7 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 		assert.True(t, member.HasPermissions(PermissionMonitorEditor))
 
 		// Implied permissions
-		assert.True(t, member.HasPermissions(PermissionMontiorReader))
+		assert.True(t, member.HasPermissions(PermissionMonitorReader))
 
 		// Should not have
 		assert.False(t, member.HasPermissions(PermissionTeamEditor))
@@ -123,7 +123,7 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 
 		// Direct permissions
 		assert.True(t, viewer.HasPermissions(PermissionTeamReader))
-		assert.True(t, viewer.HasPermissions(PermissionMontiorReader))
+		assert.True(t, viewer.HasPermissions(PermissionMonitorReader))
 
 		// Should not have any write permissions
 		assert.False(t, viewer.HasPermissions(PermissionTeamEditor))
@@ -151,11 +151,11 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 		member := TeamRoleMember
 
 		// Should have both
-		assert.True(t, member.HasPermissions(PermissionTeamReader, PermissionMontiorReader))
+		assert.True(t, member.HasPermissions(PermissionTeamReader, PermissionMonitorReader))
 
 		// Should not have one of them
 		assert.False(t, member.HasPermissions(PermissionTeamReader, PermissionTeamAdmin))
-		assert.False(t, member.HasPermissions(PermissionMonitorAdmin, PermissionMontiorReader))
+		assert.False(t, member.HasPermissions(PermissionMonitorAdmin, PermissionMonitorReader))
 	})
 
 	t.Run("Permission not in system", func(t *testing.T) {
@@ -174,7 +174,7 @@ func TestPermissionImplicationsConsistency(t *testing.T) {
 			PermissionTeamReader,
 			PermissionMonitorAdmin,
 			PermissionMonitorEditor,
-			PermissionMontiorReader,
+			PermissionMonitorReader,
 		}
 
 		for perm, implications := range PermissionImplications {
