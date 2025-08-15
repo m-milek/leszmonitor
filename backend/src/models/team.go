@@ -49,7 +49,7 @@ func (t *Team) AddMember(username string, role TeamRole) error {
 		t.Members = make(map[string]TeamRole)
 	}
 	t.Members[username] = role
-	t.UpdatedAt = time.Now().Format(time.RFC3339)
+	t.updateTimestamps()
 
 	return nil
 }
@@ -59,7 +59,7 @@ func (t *Team) RemoveMember(username string) {
 		return
 	}
 	delete(t.Members, username)
-	t.UpdatedAt = time.Now().Format(time.RFC3339)
+	t.updateTimestamps()
 }
 
 func (t *Team) ChangeMemberRole(username string, role TeamRole) error {
@@ -72,6 +72,14 @@ func (t *Team) ChangeMemberRole(username string, role TeamRole) error {
 	}
 
 	t.Members[username] = role
-	t.UpdatedAt = time.Now().Format(time.RFC3339)
+	t.updateTimestamps()
 	return nil
+}
+
+func (t *Team) updateTimestamps() {
+	now := time.Now().Format(time.RFC3339)
+	t.UpdatedAt = now
+	if t.CreatedAt == "" {
+		t.CreatedAt = now
+	}
 }
