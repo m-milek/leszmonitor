@@ -12,7 +12,7 @@ func createTestBaseMonitor() BaseMonitor {
 		Description: "Test Description",
 		Interval:    60,
 		Type:        Http,
-		OwnerId:     "test-owner-id",
+		GroupId:     "test-group-id",
 	}
 }
 
