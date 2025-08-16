@@ -15,9 +15,19 @@ type Team struct {
 	UpdatedAt   string              `json:"updatedAt" bson:"updatedAt"`     // Last update timestamp of the team
 }
 
-func NewTeam(name string, description string, ownerId string) *Team {
+func NewTeam(name string, description string, ownerId string) (*Team, error) {
 	initialMembers := map[string]TeamRole{
 		ownerId: TeamRoleOwner, // The owner is automatically added
+	}
+
+	if name == "" {
+		return nil, fmt.Errorf("team name cannot be empty")
+	}
+	if description == "" {
+		description = "No description provided"
+	}
+	if ownerId == "" {
+		return nil, fmt.Errorf("owner ID cannot be empty")
 	}
 
 	return &Team{
@@ -27,7 +37,7 @@ func NewTeam(name string, description string, ownerId string) *Team {
 		Members:     initialMembers,
 		CreatedAt:   time.Now().Format(time.RFC3339),
 		UpdatedAt:   time.Now().Format(time.RFC3339),
-	}
+	}, nil
 }
 
 func (t *Team) IsMember(username string) bool {
