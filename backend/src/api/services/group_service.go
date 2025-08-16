@@ -143,7 +143,7 @@ func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamId strin
 	return nil
 }
 
-func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamId string, groupId string, payload UpdateMonitorGroupPayload) (*models.MonitorGroup, *ServiceError) {
+func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamId string, groupId string, payload *UpdateMonitorGroupPayload) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("UpdateMonitorGroup")
 
 	if groupId == "" {

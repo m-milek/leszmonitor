@@ -102,7 +102,7 @@ func UpdateMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload UpdateMonitorGroupPayload
+	var payload services.UpdateMonitorGroupPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		logging.Api.Trace().Err(err).Msg("Failed to decode monitor group update payload")
 		util.RespondError(w, http.StatusBadRequest, err)
