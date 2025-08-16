@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"github.com/m-milek/leszmonitor/util"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -8,7 +9,6 @@ import (
 type TestMonitor struct {
 	// Base fields
 	ID          string
-	ObjectID    bson.ObjectID
 	Name        string
 	Description string
 	Interval    int
@@ -22,10 +22,10 @@ type TestMonitor struct {
 
 // NewTestMonitor creates a new test monitor with default values
 func NewTestMonitor() *TestMonitor {
+	name := "Test Monitor"
 	return &TestMonitor{
-		ID:          generateId(),
-		ObjectID:    bson.NewObjectID(),
-		Name:        "Test Monitor",
+		ID:          util.IdFromString(name),
+		Name:        name,
 		Description: "Test monitor description",
 		Interval:    60,
 		GroupId:     "test_owner",
@@ -97,8 +97,7 @@ func (t *TestMonitor) Build() IMonitor {
 // ToBSON converts the monitor to a BSON document
 func (t *TestMonitor) ToBSON() bson.M {
 	doc := bson.M{
-		"_id":         t.ObjectID,
-		"id":          t.ID,
+		"_id":         t.ID,
 		"name":        t.Name,
 		"description": t.Description,
 		"interval":    t.Interval,

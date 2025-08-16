@@ -251,7 +251,7 @@ func TestBsonToMonitorRoundTrip(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Compare important fields
-		assert.Equal(t, testMonitor.ID, roundTripDoc["id"])
+		assert.Equal(t, testMonitor.ID, roundTripDoc["_id"])
 		assert.Equal(t, testMonitor.Name, roundTripDoc["name"])
 		assert.Equal(t, string(testMonitor.Type), roundTripDoc["type"])
 
@@ -297,7 +297,7 @@ func TestBsonToMonitorRoundTrip(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Compare important fields
-		assert.Equal(t, testMonitor.ID, roundTripDoc["id"])
+		assert.Equal(t, testMonitor.ID, roundTripDoc["_id"])
 		assert.Equal(t, testMonitor.Name, roundTripDoc["name"])
 		assert.Equal(t, string(testMonitor.Type), roundTripDoc["type"])
 
