@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/m-milek/leszmonitor/util"
 )
 
@@ -12,17 +13,26 @@ type MonitorGroup struct {
 	MonitorIds  []string `json:"monitorIds" bson:"monitorIds"`   // List of monitor IDs in the group
 }
 
-func NewMonitorGroup(name string, description string, teamId string) *MonitorGroup {
-	return &MonitorGroup{
+func NewMonitorGroup(name string, description string, teamId string) (*MonitorGroup, error) {
+	group := &MonitorGroup{
 		Id:          util.IdFromString(name),
 		Name:        name,
 		Description: description,
 		TeamId:      teamId,
 		MonitorIds:  make([]string, 0),
 	}
+	err := group.Validate()
+
+	if err != nil {
+		return nil, err
+	}
+	return group, nil
 }
 
 func (g *MonitorGroup) AddMonitor(monitorId string) {
+	if util.SliceContains(g.MonitorIds, monitorId) {
+		return
+	}
 	g.MonitorIds = append(g.MonitorIds, monitorId)
 }
 
@@ -33,4 +43,14 @@ func (g *MonitorGroup) RemoveMonitor(monitorId string) {
 			break
 		}
 	}
+}
+
+func (g *MonitorGroup) Validate() error {
+	if g.Name == "" {
+		return fmt.Errorf("monitor group name cannot be empty")
+	}
+	if g.TeamId == "" {
+		return fmt.Errorf("team ID cannot be empty")
+	}
+	return nil
 }
