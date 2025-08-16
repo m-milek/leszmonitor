@@ -34,9 +34,16 @@ type UpdateMonitorGroupPayload struct {
 func (s *GroupServiceT) CreateMonitorGroup(context context.Context, teamId string, name string, description string) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitorGroup")
 
-	monitorGroup := models.NewMonitorGroup(name, description, teamId)
+	monitorGroup, err := models.NewMonitorGroup(name, description, teamId)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to create new monitor group")
+		return nil, &ServiceError{
+			Code: http.StatusBadRequest,
+			Err:  fmt.Errorf("invalid monitor group data: %w", err),
+		}
+	}
 
-	_, err := db.CreateMonitorGroup(context, monitorGroup)
+	_, err = db.CreateMonitorGroup(context, monitorGroup)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
 			logger.Warn().Str("monitorGroupId", monitorGroup.Id).Msg("Monitor group already exists")
