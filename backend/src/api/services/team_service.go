@@ -105,7 +105,14 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, payload *TeamCreatePayloa
 		}
 	}
 
-	team := models.NewTeam(payload.Name, payload.Description, user.Username)
+	team, err := models.NewTeam(payload.Name, payload.Description, user.Username)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to create new team model")
+		return nil, &ServiceError{
+			Code: 400,
+			Err:  fmt.Errorf("invalid team data: %w", err),
+		}
+	}
 
 	_, err = db.CreateTeam(ctx, team)
 
