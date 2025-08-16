@@ -20,24 +20,20 @@ func NewTeam(name string, description string, ownerId string) (*Team, error) {
 		ownerId: TeamRoleOwner, // The owner is automatically added
 	}
 
-	if name == "" {
-		return nil, fmt.Errorf("team name cannot be empty")
-	}
-	if description == "" {
-		description = "No description provided"
-	}
-	if ownerId == "" {
-		return nil, fmt.Errorf("owner ID cannot be empty")
-	}
-
-	return &Team{
+	team := &Team{
 		Id:          util.IdFromString(name),
 		Name:        name,
 		Description: description,
 		Members:     initialMembers,
 		CreatedAt:   time.Now().Format(time.RFC3339),
 		UpdatedAt:   time.Now().Format(time.RFC3339),
-	}, nil
+	}
+
+	err := team.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return team, nil
 }
 
 func (t *Team) IsMember(username string) bool {
@@ -92,4 +88,22 @@ func (t *Team) updateTimestamps() {
 	if t.CreatedAt == "" {
 		t.CreatedAt = now
 	}
+}
+
+func (t *Team) Validate() error {
+	if t.Name == "" {
+		return fmt.Errorf("team name cannot be empty")
+	}
+	if t.Description == "" {
+		t.Description = "No description provided"
+	}
+	if len(t.Members) == 0 {
+		return fmt.Errorf("team must have at least one member")
+	}
+	for username, role := range t.Members {
+		if err := role.Validate(); err != nil {
+			return fmt.Errorf("invalid role for user %s: %w", username, err)
+		}
+	}
+	return nil
 }
