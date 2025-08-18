@@ -7,6 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func initUsersCollection(ctx context.Context, database *mongo.Database) error {
@@ -17,24 +18,26 @@ func initUsersCollection(ctx context.Context, database *mongo.Database) error {
 			return nil
 		}
 		return err
+	} else {
+		logging.Db.Info().Msg("Users collection created successfully.")
 	}
 
-	//usersCollection := database.Collection(usersCollectionName)
-	//indexName, err := usersCollection.Indexes().CreateOne(
-	//	ctx,
-	//	mongo.IndexModel{
-	//		Keys: bson.D{
-	//			{ID_FIELD, 1},
-	//		},
-	//		Options: options.Index().SetUnique(true),
-	//	},
-	//)
-	//if err != nil {
-	//	logging.Db.Error().Err(err).Msg("Failed to create index on users collection")
-	//	return err
-	//} else {
-	//	logging.Db.Info().Msgf("Index created: %s", indexName)
-	//}
+	usersCollection := database.Collection(usersCollectionName)
+	indexName, err := usersCollection.Indexes().CreateOne(
+		ctx,
+		mongo.IndexModel{
+			Keys: bson.D{
+				{ID_FIELD, 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		logging.Db.Error().Err(err).Msg("Failed to create index on users collection")
+		return err
+	} else {
+		logging.Db.Info().Msgf("Index created: %s", indexName)
+	}
 	return nil
 }
 

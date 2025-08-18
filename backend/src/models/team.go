@@ -3,11 +3,13 @@ package models
 import (
 	"fmt"
 	"github.com/m-milek/leszmonitor/util"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"time"
 )
 
 type Team struct {
-	Id          string              `json:"id" bson:"_id"`                  // Unique identifier for the team
+	ObjectId    bson.ObjectID       `json:"-" bson:"_id,omitempty"`         // MongoDB ObjectID for internal use
+	Id          string              `json:"id" bson:"id"`                   // Unique identifier for the team
 	Name        string              `json:"name" bson:"name"`               // Name of the team
 	Description string              `json:"description" bson:"description"` // Description of the team
 	Members     map[string]TeamRole `json:"members" bson:"members"`         // Map of team members with their roles
@@ -106,4 +108,8 @@ func (t *Team) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (t *Team) GenerateId() {
+	t.Id = util.IdFromString(t.Name)
 }

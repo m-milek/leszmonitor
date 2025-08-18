@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/logging"
 	"net/http"
 )
@@ -55,4 +56,33 @@ func RespondError(w http.ResponseWriter, statusCode int, err error) {
 	if encodeErr := json.NewEncoder(w).Encode(response); encodeErr != nil {
 		logging.Api.Error().Err(encodeErr).Msg("Failed to encode JSON error response")
 	}
+}
+
+func GetTeamAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.TeamAuth, bool) {
+	teamAuth, err := middleware.TeamAuthFromRequest(r)
+	if err != nil {
+		logging.Api.Warn().Err(err).Msg("Failed to authenticate")
+		RespondError(w, http.StatusUnauthorized, err)
+		return nil, false
+	}
+	return teamAuth, true
+}
+
+// ExtractUserOrRespond returns the user from context or writes a 401 response and returns nil, false.
+func ExtractUserOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.UserClaims, bool) {
+	user, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
+		return nil, false
+	}
+	return user, true
+}
+
+// DecodeJSONOrRespond decodes JSON from the request body into v, or writes a 400 response and returns false.
+func DecodeJSONOrRespond(w http.ResponseWriter, r *http.Request, v interface{}) bool {
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		RespondError(w, http.StatusBadRequest, err)
+		return false
+	}
+	return true
 }
