@@ -7,6 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
@@ -17,25 +18,27 @@ func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
 			return nil
 		}
 		return err
+	} else {
+		logging.Db.Info().Msg("Teams collection created successfully.")
 	}
 
 	// unique index on the "id" field
-	//teamsCollection := database.Collection(teamsCollectionName)
-	//indexName, err := teamsCollection.Indexes().CreateOne(
-	//	ctx,
-	//	mongo.IndexModel{
-	//		Keys: bson.D{
-	//			{ID_FIELD, 1},
-	//		},
-	//		Options: options.Index().SetUnique(true),
-	//	},
-	//)
-	//if err != nil {
-	//	logging.Db.Error().Err(err).Msg("Failed to create index on teams collection")
-	//	return err
-	//} else {
-	//	logging.Db.Info().Msgf("Index created: %s", indexName)
-	//}
+	teamsCollection := database.Collection(teamsCollectionName)
+	indexName, err := teamsCollection.Indexes().CreateOne(
+		ctx,
+		mongo.IndexModel{
+			Keys: bson.D{
+				{ID_FIELD, 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		logging.Db.Error().Err(err).Msg("Failed to create index on teams collection")
+		return err
+	} else {
+		logging.Db.Info().Msgf("Index created: %s", indexName)
+	}
 
 	return nil
 }
@@ -116,7 +119,7 @@ func GetAllTeams(ctx context.Context) ([]models.Team, error) {
 
 func UpdateTeam(ctx context.Context, team *models.Team) (bool, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getTeamsCollection().UpdateOne(timeoutCtx, bson.M{ID_FIELD: team.Id}, bson.M{"$set": team})
+		result, err := dbClient.getTeamsCollection().UpdateOne(timeoutCtx, bson.M{OBJECT_ID_FIELD: team.ObjectId}, bson.M{"$set": team})
 		if err != nil {
 			return false, err
 		}

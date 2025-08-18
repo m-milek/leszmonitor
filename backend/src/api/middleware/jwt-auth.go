@@ -100,3 +100,28 @@ func GetUserFromContext(ctx context.Context) (*UserClaims, bool) {
 	logging.Api.Debug().Msgf("Retrieving user claims from context: %v, ok: %v", claims, ok)
 	return claims, ok
 }
+
+type TeamAuth struct {
+	TeamId   string
+	Username string
+}
+
+func TeamAuthFromRequest(r *http.Request) (*TeamAuth, error) {
+	teamId := r.PathValue("teamId")
+	if teamId == "" {
+		return nil, fmt.Errorf("teamId is required")
+	}
+
+	userClaims, ok := GetUserFromContext(r.Context())
+	if !ok {
+		return nil, fmt.Errorf("user claims not found in context")
+	}
+	if userClaims.Username == "" {
+		return nil, fmt.Errorf("username is missing in user claims")
+	}
+
+	return &TeamAuth{
+		TeamId:   teamId,
+		Username: userClaims.Username,
+	}, nil
+}
