@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
@@ -25,8 +26,12 @@ func newAuthorizationService() *AuthorizationServiceT {
 	}
 }
 
-func (s *AuthorizationServiceT) AuthorizeTeamAction(ctx context.Context, teamId string, requestorUsername string, permissions ...models.Permission) (*models.Team, *ServiceError) {
+func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAuth *middleware.TeamAuth, permissions ...models.Permission) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("AuthorizeTeamAction")
+
+	teamId := teamAuth.TeamId
+	requestorUsername := teamAuth.Username
+
 	team, err := db.GetTeamById(ctx, teamId)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
