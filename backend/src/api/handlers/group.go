@@ -8,21 +8,19 @@ import (
 	"net/http"
 )
 
-type CreateMonitorGroupPayload struct {
-	Name        string `json:"name"`        // Name of the monitor group
-	Description string `json:"description"` // Description of the monitor group
-}
-
 func CreateMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("teamId")
-
-	var payload CreateMonitorGroupPayload
+	var payload services.CreateMonitorGroupPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		logging.Api.Trace().Err(err).Msg("Failed to decode monitor group creation payload")
 		util.RespondError(w, http.StatusBadRequest, err)
 	}
 
-	monitorGroup, err := services.GroupService.CreateMonitorGroup(r.Context(), teamId, payload.Name, payload.Description)
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
+
+	monitorGroup, err := services.GroupService.CreateMonitorGroup(r.Context(), teamAuth, payload)
 
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to create monitor group")
@@ -33,16 +31,13 @@ func CreateMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(w, http.StatusCreated, monitorGroup)
 }
 
-func GetTeamMonitorGroups(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("teamId")
-
-	if teamId == "" {
-		logging.Api.Trace().Msg("Team ID is required to get monitor groups")
-		util.RespondMessage(w, http.StatusBadRequest, "Team ID is required")
+func GetTeamMonitorGroupsHandler(w http.ResponseWriter, r *http.Request) {
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
 		return
 	}
 
-	monitorGroups, err := services.GroupService.GetTeamMonitorGroups(r.Context(), teamId)
+	monitorGroups, err := services.GroupService.GetTeamMonitorGroups(r.Context(), teamAuth)
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to get monitor groups for team")
 		util.RespondError(w, err.Code, err.Err)
@@ -53,7 +48,6 @@ func GetTeamMonitorGroups(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTeamMonitorGroupById(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("teamId")
 	groupId := r.PathValue("groupId")
 
 	if groupId == "" {
@@ -62,7 +56,12 @@ func GetTeamMonitorGroupById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitorGroup, err := services.GroupService.GetTeamMonitorGroupById(r.Context(), teamId, groupId)
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
+
+	monitorGroup, err := services.GroupService.GetTeamMonitorGroupById(r.Context(), teamAuth, groupId)
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to get monitor group by ID")
 		util.RespondError(w, err.Code, err.Err)
@@ -73,7 +72,11 @@ func GetTeamMonitorGroupById(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("teamId")
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
+
 	groupId := r.PathValue("groupId")
 
 	if groupId == "" {
@@ -82,7 +85,7 @@ func DeleteMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.GroupService.DeleteMonitorGroup(r.Context(), teamId, groupId)
+	err := services.GroupService.DeleteMonitorGroup(r.Context(), teamAuth, groupId)
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to delete monitor group")
 		util.RespondError(w, err.Code, err.Err)
@@ -93,7 +96,11 @@ func DeleteMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("teamId")
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
+
 	groupId := r.PathValue("groupId")
 
 	if groupId == "" {
@@ -109,7 +116,7 @@ func UpdateMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitorGroup, err := services.GroupService.UpdateMonitorGroup(r.Context(), teamId, groupId, &payload)
+	monitorGroup, err := services.GroupService.UpdateMonitorGroup(r.Context(), teamAuth, groupId, &payload)
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to update monitor group")
 		util.RespondError(w, err.Code, err.Err)

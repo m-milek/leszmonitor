@@ -104,9 +104,12 @@ func (m *HttpConfig) run() IMonitorResponse {
 // Encapsulates request creation and execution.
 func (m *HttpConfig) executeRequest(httpClient *httpClient) (*http.Response, time.Duration, error) {
 	request, err := m.createRequest()
+
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to create request: %w", err)
 	}
+
+	request.Header.Set("User-Agent", "LeszMonitor/DEV")
 
 	start := time.Now()
 	response, err := (*httpClient).Do(request)
