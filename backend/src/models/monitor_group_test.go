@@ -1,17 +1,19 @@
 package models
 
 import (
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewMonitorGroup(t *testing.T) {
+	someObjectID := bson.NewObjectID()
 	tests := []struct {
 		name        string
 		groupName   string
 		description string
-		teamId      string
+		teamId      bson.ObjectID
 		wantErr     bool
 		errMsg      string
 	}{
@@ -19,30 +21,24 @@ func TestNewMonitorGroup(t *testing.T) {
 			name:        "valid monitor group",
 			groupName:   "Production Monitors",
 			description: "All production environment monitors",
-			teamId:      "team-123",
+			teamId:      someObjectID,
 			wantErr:     false,
 		},
 		{
 			name:        "empty name",
 			groupName:   "",
 			description: "Description",
-			teamId:      "team-123",
+			teamId:      someObjectID,
 			wantErr:     true,
 			errMsg:      "monitor group name cannot be empty",
-		},
-		{
-			name:        "empty team ID",
-			groupName:   "Test Group",
-			description: "Description",
-			teamId:      "",
-			wantErr:     true,
-			errMsg:      "team ID cannot be empty",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			group, err := NewMonitorGroup(tt.groupName, tt.description, tt.teamId)
+			group, err := NewMonitorGroup(tt.groupName, tt.description, &Team{
+				ObjectId: tt.teamId,
+			})
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -65,7 +61,7 @@ func TestMonitorGroup_AddMonitor(t *testing.T) {
 	group := &MonitorGroup{
 		Id:         "test-id",
 		Name:       "Test Group",
-		TeamId:     "team-123",
+		TeamId:     bson.NewObjectID(),
 		MonitorIds: []string{},
 	}
 
@@ -147,7 +143,7 @@ func TestMonitorGroup_Validate(t *testing.T) {
 			name: "valid group",
 			group: &MonitorGroup{
 				Name:   "Valid Group",
-				TeamId: "team-123",
+				TeamId: bson.NewObjectID(),
 			},
 			wantErr: false,
 		},
@@ -155,19 +151,10 @@ func TestMonitorGroup_Validate(t *testing.T) {
 			name: "empty name",
 			group: &MonitorGroup{
 				Name:   "",
-				TeamId: "team-123",
+				TeamId: bson.NewObjectID(),
 			},
 			wantErr: true,
 			errMsg:  "monitor group name cannot be empty",
-		},
-		{
-			name: "empty team ID",
-			group: &MonitorGroup{
-				Name:   "Test Group",
-				TeamId: "",
-			},
-			wantErr: true,
-			errMsg:  "team ID cannot be empty",
 		},
 	}
 

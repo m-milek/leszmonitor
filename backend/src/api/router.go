@@ -11,31 +11,35 @@ func SetupRouters(
 ) {
 	protectedRouter.HandleFunc("GET /health", handlers.GetHealthCheckHandler)
 
-	protectedRouter.HandleFunc("GET /monitor", handlers.GetAllMonitorsHandler)
-	protectedRouter.HandleFunc("POST /monitor", handlers.CreateMonitorHandler)
-	protectedRouter.HandleFunc("DELETE /monitor/{id}", handlers.DeleteMonitorHandler)
-	protectedRouter.HandleFunc("PATCH /monitor/{id}", handlers.UpdateMonitorHandler)
-	protectedRouter.HandleFunc("GET /monitor/{id}", handlers.GetMonitorHandler)
-
-	protectedRouter.HandleFunc("GET /user", handlers.GetAllUsersHandler)
-	protectedRouter.HandleFunc("GET /user/{username}", handlers.GetUserHandler)
-
-	protectedRouter.HandleFunc("GET /team", handlers.GetAllTeamsHandler)
-	protectedRouter.HandleFunc("GET /team/{id}", handlers.GetTeamHandler)
-	protectedRouter.HandleFunc("POST /team", handlers.TeamCreateHandler)
-	protectedRouter.HandleFunc("DELETE /team/{id}", handlers.TeamDeleteHandler)
-	protectedRouter.HandleFunc("PATCH /team/{id}", handlers.TeamUpdateHandler)
-	protectedRouter.HandleFunc("POST /team/{id}/add-member", handlers.TeamAddMemberHandler)
-	protectedRouter.HandleFunc("POST /team/{id}/remove-member", handlers.TeamRemoveMemberHandler)
-	protectedRouter.HandleFunc("POST /team/{id}/change-member-role", handlers.TeamChangeMemberRoleHandler)
-
-	protectedRouter.HandleFunc("POST /team/{teamId}/create-group", handlers.CreateMonitorGroupHandler)
-	protectedRouter.HandleFunc("GET /team/{teamId}/groups", handlers.GetTeamMonitorGroups)
-	protectedRouter.HandleFunc("GET /team/{teamId}/{groupId}", handlers.GetTeamMonitorGroupById)
-	protectedRouter.HandleFunc("PATCH /team/{teamId}/{groupId}", handlers.UpdateMonitorGroupHandler)
-	protectedRouter.HandleFunc("DELETE /team/{teamId}/{groupId}", handlers.DeleteMonitorGroupHandler)
-
+	// Users
+	protectedRouter.HandleFunc("GET /users", handlers.GetAllUsersHandler)
+	protectedRouter.HandleFunc("GET /users/{username}", handlers.GetUserHandler)
 	publicRouter.HandleFunc("POST /auth/register", handlers.UserRegisterHandler)
 	publicRouter.HandleFunc("POST /auth/login", handlers.UserLoginHandler)
+
+	// Teams
+	protectedRouter.HandleFunc("GET /teams", handlers.GetAllTeamsHandler)
+	protectedRouter.HandleFunc("GET /teams/{teamId}", handlers.GetTeamHandler)
+	protectedRouter.HandleFunc("POST /teams", handlers.TeamCreateHandler)
+	protectedRouter.HandleFunc("DELETE /teams/{teamId}", handlers.TeamDeleteHandler)
+	protectedRouter.HandleFunc("PATCH /teams/{teamId}", handlers.TeamUpdateHandler)
+
+	// Team Members
+	protectedRouter.HandleFunc("POST /teams/{teamId}/members", handlers.TeamAddMemberHandler)
+	protectedRouter.HandleFunc("DELETE /teams/{teamId}/members", handlers.TeamRemoveMemberHandler)
+	protectedRouter.HandleFunc("PATCH /teams/{teamId}/{userId}", handlers.TeamChangeMemberRoleHandler)
+
+	// Monitor Groups
+	protectedRouter.HandleFunc("POST /teams/{teamId}/groups", handlers.CreateMonitorGroupHandler)
+	protectedRouter.HandleFunc("GET /teams/{teamId}/groups", handlers.GetTeamMonitorGroupsHandler)
+	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}", handlers.GetTeamMonitorGroupById)
+	protectedRouter.HandleFunc("PATCH /teams/{teamId}/groups/{groupId}", handlers.UpdateMonitorGroupHandler)
+	protectedRouter.HandleFunc("DELETE /teams/{teamId}/groups/{groupId}", handlers.DeleteMonitorGroupHandler)
+
+	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}/monitors", handlers.GetAllMonitorsHandler)
+	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}/monitors/{monitorId}", handlers.GetMonitorByIdHandler)
+	protectedRouter.HandleFunc("POST /teams/{teamId}/groups/{groupId}/monitors", handlers.CreateMonitorHandler)
+	protectedRouter.HandleFunc("DELETE /teams/{teamId}/groups/{groupId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
+	protectedRouter.HandleFunc("PATCH /teams/{teamId}/groups/{groupId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
 
 }

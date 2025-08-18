@@ -7,6 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func initGroupsCollection(ctx context.Context, database *mongo.Database) error {
@@ -17,25 +18,27 @@ func initGroupsCollection(ctx context.Context, database *mongo.Database) error {
 			return nil
 		}
 		return err
+	} else {
+		logging.Db.Info().Msg("Groups collection created successfully.")
 	}
 
 	// unique index on the "id" field
-	//groupsCollection := database.Collection(groupsCollectionName)
-	//indexName, err := groupsCollection.Indexes().CreateOne(
-	//	ctx,
-	//	mongo.IndexModel{
-	//		Keys: bson.D{
-	//			{ID_FIELD, 1},
-	//		},
-	//		Options: options.Index().SetUnique(true),
-	//	},
-	//)
-	//if err != nil {
-	//	logging.Db.Error().Err(err).Msg("Failed to create index on groups collection")
-	//	return err
-	//}
+	groupsCollection := database.Collection(groupsCollectionName)
+	indexName, err := groupsCollection.Indexes().CreateOne(
+		ctx,
+		mongo.IndexModel{
+			Keys: bson.D{
+				{ID_FIELD, 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		logging.Db.Error().Err(err).Msg("Failed to create index on groups collection")
+		return err
+	}
 
-	//logging.Db.Info().Msgf("Index created: %s", indexName)
+	logging.Db.Info().Msgf("Index created: %s", indexName)
 	return nil
 }
 
@@ -59,7 +62,7 @@ func CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*mongo
 	return dbRes.Result, nil
 }
 
-func GetMonitorGroupById(ctx context.Context, groupId string) (*models.MonitorGroup, error) {
+func GetMonitorGroupById(ctx context.Context, teamId string, groupId string) (*models.MonitorGroup, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.MonitorGroup, error) {
 		var group models.MonitorGroup
 		err := dbClient.getGroupsCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: groupId}).Decode(&group)
@@ -80,9 +83,9 @@ func GetMonitorGroupById(ctx context.Context, groupId string) (*models.MonitorGr
 	return dbRes.Result, nil
 }
 
-func GetMonitorGroupsForTeam(ctx context.Context, teamId string) ([]models.MonitorGroup, error) {
+func GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.MonitorGroup, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) ([]models.MonitorGroup, error) {
-		cursor, err := dbClient.getGroupsCollection().Find(timeoutCtx, bson.M{"teamId": teamId})
+		cursor, err := dbClient.getGroupsCollection().Find(timeoutCtx, bson.M{"teamId": team.ObjectId})
 		if err != nil {
 			return nil, err
 		}
@@ -112,11 +115,11 @@ func GetMonitorGroupsForTeam(ctx context.Context, teamId string) ([]models.Monit
 	return dbRes.Result, nil
 }
 
-func UpdateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*mongo.UpdateResult, error) {
+func UpdateMonitorGroup(ctx context.Context, teamId string, group *models.MonitorGroup) (*mongo.UpdateResult, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*mongo.UpdateResult, error) {
 		res, err := dbClient.getGroupsCollection().UpdateOne(
 			timeoutCtx,
-			bson.M{ID_FIELD: group.Id},
+			bson.M{OBJECT_ID_FIELD: group.ObjectId},
 			bson.M{"$set": group},
 		)
 		if err != nil {
@@ -133,7 +136,7 @@ func UpdateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*mongo
 	return dbRes.Result, nil
 }
 
-func DeleteMonitorGroup(ctx context.Context, groupId string) (bool, error) {
+func DeleteMonitorGroup(ctx context.Context, teamId string, groupId string) (bool, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
 		res, err := dbClient.getGroupsCollection().DeleteOne(timeoutCtx, bson.M{ID_FIELD: groupId})
 		if err != nil {

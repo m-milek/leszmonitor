@@ -8,6 +8,7 @@ import (
 	monitors "github.com/m-milek/leszmonitor/uptime/monitor"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func initMonitorsCollection(ctx context.Context, database *mongo.Database) error {
@@ -18,24 +19,26 @@ func initMonitorsCollection(ctx context.Context, database *mongo.Database) error
 			return nil
 		}
 		return err
+	} else {
+		logging.Db.Info().Msg("Monitors collection created successfully.")
 	}
 
 	// unique index on the "_id" field
-	//monitorsCollection := database.Collection(monitorsCollectionName)
-	//indexName, err := monitorsCollection.Indexes().CreateOne(
-	//	ctx,
-	//	mongo.IndexModel{
-	//		Keys: bson.D{
-	//			{ID_FIELD, 1},
-	//		},
-	//		Options: options.Index().SetUnique(true),
-	//	},
-	//)
-	//if err != nil {
-	//	logging.Db.Error().Err(err).Msg("Failed to create index on monitors collection")
-	//	return err
-	//}
-	//logging.Db.Info().Msgf("Index created: %s", indexName)
+	monitorsCollection := database.Collection(monitorsCollectionName)
+	indexName, err := monitorsCollection.Indexes().CreateOne(
+		ctx,
+		mongo.IndexModel{
+			Keys: bson.D{
+				{ID_FIELD, 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		logging.Db.Error().Err(err).Msg("Failed to create index on monitors collection")
+		return err
+	}
+	logging.Db.Info().Msgf("Index created: %s", indexName)
 
 	return nil
 }
@@ -161,7 +164,7 @@ func GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, error) {
 
 func UpdateMonitor(ctx context.Context, newMonitor monitors.IMonitor) (bool, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getMonitorsCollection().UpdateOne(timeoutCtx, bson.M{ID_FIELD: newMonitor.GetId()}, bson.M{"$set": newMonitor})
+		result, err := dbClient.getMonitorsCollection().UpdateOne(timeoutCtx, bson.M{OBJECT_ID_FIELD: newMonitor.GetObjectId()}, bson.M{"$set": newMonitor})
 		if err != nil {
 			return false, err
 		}

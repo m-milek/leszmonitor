@@ -3,6 +3,7 @@ package monitors
 import (
 	"fmt"
 	"github.com/m-milek/leszmonitor/util"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"time"
 )
 
@@ -10,11 +11,13 @@ type IMonitor interface {
 	Run() IMonitorResponse
 	Validate() error
 	GetId() string
+	GetObjectId() bson.ObjectID
 	GetName() string
 	GetDescription() string
 	GetInterval() time.Duration
 	GetType() MonitorConfigType
 	GenerateId()
+	SetGroupId(string)
 }
 
 type IMonitorConfig interface {
@@ -23,7 +26,8 @@ type IMonitorConfig interface {
 }
 
 type BaseMonitor struct {
-	Id          string            `json:"id" bson:"_id"`                  // Unique identifier for the monitor
+	ObjectId    bson.ObjectID     `json:"-" bson:"_id"`
+	Id          string            `json:"id" bson:"id"`                   // Unique identifier for the monitor
 	Name        string            `json:"name" bson:"name"`               // Name of the monitor
 	Description string            `json:"description" bson:"description"` // Description of the monitor
 	Interval    int               `json:"interval" bson:"interval"`       // How often to run the monitor in seconds
@@ -69,13 +73,15 @@ func (m *BaseMonitor) validateBase() error {
 }
 
 func (m *BaseMonitor) GenerateId() {
-	if m.Id == "" {
-		m.Id = util.IdFromString(m.GetName())
-	}
+	m.Id = util.IdFromString(m.GetName())
 }
 
 func (m *BaseMonitor) GetId() string {
 	return m.Id
+}
+
+func (m *BaseMonitor) GetObjectId() bson.ObjectID {
+	return m.ObjectId
 }
 
 func (m *BaseMonitor) GetName() string {
@@ -92,4 +98,8 @@ func (m *BaseMonitor) GetInterval() time.Duration {
 
 func (m *BaseMonitor) GetType() MonitorConfigType {
 	return m.Type
+}
+
+func (m *BaseMonitor) SetGroupId(groupId string) {
+	m.GroupId = groupId
 }

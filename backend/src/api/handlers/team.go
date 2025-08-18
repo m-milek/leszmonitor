@@ -3,25 +3,23 @@ package handlers
 import (
 	"encoding/json"
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/api/services"
 	"net/http"
 )
 
 func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.GetUserFromContext(r.Context())
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
 	var payload services.TeamCreatePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	teamCreateResponse, err := services.TeamService.CreateTeam(r.Context(), &payload, user.Username)
+	userClaims, ok := util.ExtractUserOrRespond(w, r)
+	if !ok {
+		return
+	}
+
+	teamCreateResponse, err := services.TeamService.CreateTeam(r.Context(), userClaims.Username, &payload)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -32,20 +30,12 @@ func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TeamDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("id")
-
-	if teamId == "" {
-		util.RespondMessage(w, http.StatusBadRequest, "Team ID is required")
-		return
-	}
-
-	requestingUser, ok := middleware.GetUserFromContext(r.Context())
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
 	if !ok {
-		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	err := services.TeamService.DeleteTeam(r.Context(), teamId, requestingUser.Username)
+	err := services.TeamService.DeleteTeam(r.Context(), teamAuth)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -55,10 +45,8 @@ func TeamDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("id")
-
-	if teamId == "" {
-		util.RespondMessage(w, http.StatusBadRequest, "Team ID is required")
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
 		return
 	}
 
@@ -68,13 +56,7 @@ func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestingUser, ok := middleware.GetUserFromContext(r.Context())
-	if !ok {
-		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-
-	team, err := services.TeamService.UpdateTeam(r.Context(), teamId, &payload, requestingUser.Username)
+	team, err := services.TeamService.UpdateTeam(r.Context(), teamAuth, &payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -84,20 +66,12 @@ func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("id")
-
-	if teamId == "" {
-		util.RespondMessage(w, http.StatusBadRequest, "Team ID is required")
-		return
-	}
-
-	requestingUser, ok := middleware.GetUserFromContext(r.Context())
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
 	if !ok {
-		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	team, err := services.TeamService.GetTeamById(r.Context(), teamId, requestingUser.Username)
+	team, err := services.TeamService.GetTeamById(r.Context(), teamAuth)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -119,7 +93,10 @@ func GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TeamAddMemberHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("id")
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
 
 	var payload services.TeamAddMemberPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -127,13 +104,7 @@ func TeamAddMemberHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestingUser, ok := middleware.GetUserFromContext(r.Context())
-	if !ok {
-		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-
-	err := services.TeamService.AddUserToTeam(r.Context(), teamId, &payload, requestingUser.Username)
+	err := services.TeamService.AddUserToTeam(r.Context(), teamAuth, &payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -143,7 +114,10 @@ func TeamAddMemberHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TeamRemoveMemberHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("id")
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
 
 	var payload services.TeamRemoveMemberPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -151,13 +125,7 @@ func TeamRemoveMemberHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestingUser, ok := middleware.GetUserFromContext(r.Context())
-	if !ok {
-		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-
-	err := services.TeamService.RemoveUserFromTeam(r.Context(), teamId, &payload, requestingUser.Username)
+	err := services.TeamService.RemoveUserFromTeam(r.Context(), teamAuth, &payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -167,7 +135,10 @@ func TeamRemoveMemberHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TeamChangeMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
-	teamId := r.PathValue("id")
+	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
 
 	var payload services.TeamChangeMemberRolePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -175,13 +146,7 @@ func TeamChangeMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestingUser, ok := middleware.GetUserFromContext(r.Context())
-	if !ok {
-		util.RespondMessage(w, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-
-	err := services.TeamService.ChangeMemberRole(r.Context(), teamId, payload, requestingUser.Username)
+	err := services.TeamService.ChangeMemberRole(r.Context(), teamAuth, payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return

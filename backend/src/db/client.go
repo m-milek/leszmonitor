@@ -22,7 +22,8 @@ type Client struct {
 var ErrNotFound = errors.New("document not found")
 var ErrAlreadyExists = errors.New("resource already exists")
 
-const ID_FIELD = "_id"
+const ID_FIELD = "id"
+const OBJECT_ID_FIELD = "_id"
 
 func (*Client) getDatabase() *mongo.Database {
 	return dbClient.client.Database(databaseName)

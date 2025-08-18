@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/models"
 	monitors "github.com/m-milek/leszmonitor/uptime/monitor"
 	"net/http"
 )
@@ -18,6 +20,7 @@ type MonitorServiceT struct {
 func newMonitorService() *MonitorServiceT {
 	return &MonitorServiceT{
 		BaseService{
+			authService:   newAuthorizationService(),
 			serviceLogger: logging.NewServiceLogger("MonitorService"),
 		},
 	}
@@ -29,11 +32,17 @@ type MonitorCreateResponse struct {
 	MonitorId string `json:"monitorId"`
 }
 
-func (s *MonitorServiceT) CreateMonitor(ctx context.Context, monitor monitors.IMonitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupId string, monitor monitors.IMonitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
+	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorEditor)
+	if authErr != nil {
+		return nil, authErr
+	}
+
 	monitor.GenerateId()
+	monitor.SetGroupId(groupId)
 
 	if err := monitor.Validate(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid monitor configuration")
@@ -58,9 +67,14 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, monitor monitors.IM
 	}, nil
 }
 
-func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, id string) *ServiceError {
+func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, id string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
+
+	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorAdmin)
+	if authErr != nil {
+		return authErr
+	}
 
 	wasDeleted, err := db.DeleteMonitor(ctx, id)
 	if err != nil {
@@ -83,9 +97,14 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, id string) *Service
 	return nil
 }
 
-func (s *MonitorServiceT) GetAllMonitors(ctx context.Context) ([]monitors.IMonitor, *ServiceError) {
+func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middleware.TeamAuth) ([]monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetAllMonitors")
 	logger.Trace().Msg("Retrieving all monitors")
+
+	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
+	if authErr != nil {
+		return nil, authErr
+	}
 
 	monitorsList, err := db.GetAllMonitors(ctx)
 	if err != nil {
@@ -99,9 +118,14 @@ func (s *MonitorServiceT) GetAllMonitors(ctx context.Context) ([]monitors.IMonit
 	return monitorsList, nil
 }
 
-func (s *MonitorServiceT) GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, *ServiceError) {
+func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middleware.TeamAuth, id string) (monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorById")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
+
+	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
+	if authErr != nil {
+		return nil, authErr
+	}
 
 	monitor, err := db.GetMonitorById(ctx, id)
 	if err != nil {
@@ -122,7 +146,7 @@ func (s *MonitorServiceT) GetMonitorById(ctx context.Context, id string) (monito
 	return monitor, nil
 }
 
-func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, monitor monitors.IMonitor) *ServiceError {
+func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, monitor monitors.IMonitor) *ServiceError {
 	logger := s.getMethodLogger("UpdateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
 
@@ -133,6 +157,13 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, monitor monitors.IM
 			Err:  fmt.Errorf("invalid monitor configuration for update: %w", err),
 		}
 	}
+
+	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorEditor)
+	if authErr != nil {
+		return authErr
+	}
+
+	monitor.GenerateId()
 
 	wasUpdated, err := db.UpdateMonitor(ctx, monitor)
 	if err != nil {
