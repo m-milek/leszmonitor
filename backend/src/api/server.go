@@ -25,6 +25,7 @@ func DefaultServerConfig() ServerConfig {
 	}
 }
 
+// createServer sets up the HTTP server with public and protected routes, applying necessary middleware.
 func createServer(config ServerConfig) (*http.Server, error) {
 	publicRouter := http.NewServeMux()
 	protectedRouter := http.NewServeMux()
@@ -55,6 +56,7 @@ func createServer(config ServerConfig) (*http.Server, error) {
 	return server, nil
 }
 
+// StartServer initializes and starts the HTTP server based on the provided configuration.
 func StartServer(config ServerConfig) (*http.Server, chan struct{}, error) {
 	server, err := createServer(config)
 

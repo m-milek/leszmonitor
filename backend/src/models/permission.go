@@ -22,7 +22,7 @@ var PermissionTeamAdmin = NewPermission("admin:team", "Administrate Team", "Allo
 var PermissionTeamEditor = NewPermission("edit:team", "Manage Team", "Allows adding and removing members from the team.")
 var PermissionTeamReader = NewPermission("read:team", "Read Teams", "Allows reading team details and members.")
 
-var PermissionImplications = map[Permission][]Permission{
+var permissionImplications = map[Permission][]Permission{
 	PermissionTeamAdmin:     {PermissionTeamEditor},
 	PermissionTeamEditor:    {PermissionTeamReader},
 	PermissionTeamReader:    {}, // No implications
@@ -31,30 +31,11 @@ var PermissionImplications = map[Permission][]Permission{
 	PermissionMonitorReader: {}, // No implications
 }
 
-var RolePermissions = map[TeamRole][]Permission{
-	TeamRoleOwner: {
-		PermissionTeamAdmin,
-		PermissionMonitorAdmin,
-	},
-	TeamRoleAdmin: {
-		PermissionTeamEditor,
-		PermissionMonitorAdmin,
-	},
-	TeamRoleMember: {
-		PermissionTeamReader,
-		PermissionMonitorEditor,
-	},
-	TeamRoleViewer: {
-		PermissionTeamReader,
-		PermissionMonitorReader,
-	},
-}
-
-// getEffectivePermissions expands a single permission to include all implied permissions
+// getEffectivePermissions expands a single permission to include all implied permissions.
 func getEffectivePermissions(perm Permission) []Permission {
 	result := []Permission{perm}
 
-	if implied, exists := PermissionImplications[perm]; exists {
+	if implied, exists := permissionImplications[perm]; exists {
 		for _, impliedPerm := range implied {
 			result = append(result, getEffectivePermissions(impliedPerm)...)
 		}
