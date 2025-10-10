@@ -37,6 +37,7 @@ type CreateMonitorGroupPayload struct {
 	Description string `json:"description"` // Description of the monitor group
 }
 
+// CreateMonitorGroup creates a new monitor group for the team in the provided TeamAuth.
 func (s *GroupServiceT) CreateMonitorGroup(context context.Context, teamAuth *middleware.TeamAuth, payload CreateMonitorGroupPayload) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitorGroup")
 
@@ -74,6 +75,7 @@ func (s *GroupServiceT) CreateMonitorGroup(context context.Context, teamAuth *mi
 	return monitorGroup, nil
 }
 
+// GetTeamMonitorGroups retrieves all monitor groups for the team in the provided TeamAuth.
 func (s *GroupServiceT) GetTeamMonitorGroups(context context.Context, teamAuth *middleware.TeamAuth) ([]models.MonitorGroup, *ServiceError) {
 	logger := GroupService.getMethodLogger("GetTeamMonitorGroups")
 
@@ -95,6 +97,7 @@ func (s *GroupServiceT) GetTeamMonitorGroups(context context.Context, teamAuth *
 	return groups, nil
 }
 
+// GetTeamMonitorGroupById retrieves a specific monitor group by its ID for the team in the provided TeamAuth.
 func (s *GroupServiceT) GetTeamMonitorGroupById(context context.Context, teamAuth *middleware.TeamAuth, groupId string) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("GetTeamMonitorGroupById")
 
@@ -131,6 +134,7 @@ func (s *GroupServiceT) GetTeamMonitorGroupById(context context.Context, teamAut
 	return group, nil
 }
 
+// DeleteMonitorGroup deletes a specific monitor group by its ID for the team in the provided TeamAuth.
 func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamAuth *middleware.TeamAuth, groupId string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitorGroup")
 
@@ -168,6 +172,7 @@ func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamAuth *mi
 	return nil
 }
 
+// UpdateMonitorGroup updates the details of a specific monitor group by its ID for the team in the provided TeamAuth.
 func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamAuth *middleware.TeamAuth, groupId string, payload *UpdateMonitorGroupPayload) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("UpdateMonitorGroup")
 

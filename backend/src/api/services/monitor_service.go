@@ -12,6 +12,7 @@ import (
 	"net/http"
 )
 
+// MonitorServiceT handles monitor-related CRUD operations.
 type MonitorServiceT struct {
 	BaseService
 }
@@ -32,6 +33,7 @@ type MonitorCreateResponse struct {
 	MonitorId string `json:"monitorId"`
 }
 
+// CreateMonitor creates a new monitor in the specified group.
 func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupId string, monitor monitors.IMonitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
@@ -42,6 +44,18 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 	}
 
 	monitor.GenerateId()
+
+	group, err := GroupService.GetTeamMonitorGroupById(ctx, teamAuth, groupId)
+	if err != nil {
+		return nil, err
+	}
+	if group == nil {
+		logger.Warn().Str("groupId", groupId).Msg("Monitor group not found")
+		return nil, &ServiceError{
+			Code: http.StatusNotFound,
+			Err:  fmt.Errorf("monitor group with ID %s not found", groupId),
+		}
+	}
 	monitor.SetGroupId(groupId)
 
 	if err := monitor.Validate(); err != nil {
@@ -52,12 +66,12 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	_, err := db.CreateMonitor(ctx, monitor)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to add monitor to database")
+	_, createErr := db.CreateMonitor(ctx, monitor)
+	if createErr != nil {
+		logger.Error().Err(createErr).Msg("Failed to add monitor to database")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to add monitor to database: %w", err),
+			Err:  fmt.Errorf("failed to add monitor to database: %w", createErr),
 		}
 	}
 
@@ -67,6 +81,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 	}, nil
 }
 
+// DeleteMonitor deletes a monitor by its ID.
 func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, id string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
@@ -97,6 +112,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 	return nil
 }
 
+// GetAllMonitors retrieves all monitors for the team in the provided TeamAuth.
 func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middleware.TeamAuth) ([]monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetAllMonitors")
 	logger.Trace().Msg("Retrieving all monitors")
@@ -118,6 +134,7 @@ func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middlewa
 	return monitorsList, nil
 }
 
+// GetMonitorById retrieves a specific monitor by its ID.
 func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middleware.TeamAuth, id string) (monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorById")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
@@ -146,6 +163,7 @@ func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middlewa
 	return monitor, nil
 }
 
+// UpdateMonitor updates an existing monitor's configuration.
 func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, monitor monitors.IMonitor) *ServiceError {
 	logger := s.getMethodLogger("UpdateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
