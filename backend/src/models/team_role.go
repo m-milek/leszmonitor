@@ -13,6 +13,25 @@ const (
 	TeamRoleViewer TeamRole = "viewer" // Viewer, can only view monitor statuses and team details
 )
 
+var rolePermissions = map[TeamRole][]Permission{
+	TeamRoleOwner: {
+		PermissionTeamAdmin,
+		PermissionMonitorAdmin,
+	},
+	TeamRoleAdmin: {
+		PermissionTeamEditor,
+		PermissionMonitorAdmin,
+	},
+	TeamRoleMember: {
+		PermissionTeamReader,
+		PermissionMonitorEditor,
+	},
+	TeamRoleViewer: {
+		PermissionTeamReader,
+		PermissionMonitorReader,
+	},
+}
+
 func (r *TeamRole) Validate() error {
 	switch *r {
 	case TeamRoleOwner, TeamRoleAdmin, TeamRoleMember, TeamRoleViewer:
@@ -27,7 +46,7 @@ func (r *TeamRole) HasPermissions(permissions ...Permission) bool {
 		return false
 	}
 
-	rolePerms, exists := RolePermissions[*r]
+	rolePerms, exists := rolePermissions[*r]
 	if !exists {
 		return false
 	}

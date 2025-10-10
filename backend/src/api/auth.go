@@ -9,12 +9,15 @@ import (
 	"os"
 )
 
+// JwtClaims represents the claims stored in a Leszmonitor JWT token.
+// It includes standard claims and a custom Username field.
 type JwtClaims struct {
 	jwt2.MapClaims
 	Username string `json:"username"`
 	Exp      int64  `json:"exp"`
 }
 
+// JwtFromRequest extracts the JWT token from the Authorization header of the HTTP request.
 func JwtFromRequest(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {

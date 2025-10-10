@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+// UserServiceT handles user-related operations such as registration, login, and retrieval.
 type UserServiceT struct {
 	BaseService
 }
@@ -47,6 +48,8 @@ type LoginResponse struct {
 	Jwt string `json:"jwt"`
 }
 
+// GetAllUsers retrieves all users from the database.
+// Requires no permissions.
 func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.UserResponse, error *ServiceError) {
 	logger := s.getMethodLogger("GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
@@ -64,6 +67,8 @@ func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.UserRes
 	return users, nil
 }
 
+// GetUserByUsername retrieves a user by their username.
+// Requires no permissions.
 func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (*models.UserResponse, *ServiceError) {
 	logger := s.getMethodLogger("GetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
@@ -88,6 +93,7 @@ func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (
 	return user, nil
 }
 
+// RegisterUser registers a new user with the provided payload.
 func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
 	logger := s.getMethodLogger("RegisterUser")
 	logger.Trace().Str("username", payload.Username).Msg("Registering new user")
@@ -116,6 +122,8 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 	return nil
 }
 
+// Login authenticates a user and returns a JWT token if successful.
+// On success, returns a LoginResponse containing the JWT token.
 func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
 	logger := s.getMethodLogger("Login")
 	logger.Trace().Str("username", payload.Username).Msg("User login attempt")
@@ -178,6 +186,8 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 	return &LoginResponse{Jwt: token}, nil
 }
 
+// hashPassword hashes a plaintext password using bcrypt.
+// Returns the hashed password or an error if hashing fails.
 func hashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -186,6 +196,8 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
+// checkPasswordHash compares a plaintext password with a hashed password.
+// Returns true if they match, false otherwise.
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
