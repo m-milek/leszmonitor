@@ -11,6 +11,7 @@ import (
 	"net/http"
 )
 
+// TeamServiceT handles team-related CRUD operations.
 type TeamServiceT struct {
 	BaseService
 }
@@ -55,6 +56,7 @@ type TeamChangeMemberRolePayload struct {
 	Role     models.TeamRole `json:"role"`     // The new role to assign to the user in the team
 }
 
+// GetAllTeams retrieves all teams from the database. No authentication is required at the moment.
 func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *ServiceError) {
 	logger := s.getMethodLogger("GetAllTeams")
 	logger.Trace().Msg("Retrieving all teams")
@@ -73,6 +75,7 @@ func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *Service
 	return teams, nil
 }
 
+// GetTeamById retrieves a team by its ID, ensuring the requesting user has at least reader permissions.
 func (s *TeamServiceT) GetTeamById(ctx context.Context, teamAuth *middleware.TeamAuth) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("GetTeamById")
 	logger.Trace().Str("teamId", teamAuth.TeamId).Msg("Retrieving team by ID")
@@ -86,6 +89,7 @@ func (s *TeamServiceT) GetTeamById(ctx context.Context, teamAuth *middleware.Tea
 	return team, nil
 }
 
+// CreateTeam creates a new team with the given payload and assigns the owner by username.
 func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, payload *TeamCreatePayload) (*TeamCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateTeam")
 	logger.Trace().Any("payload", payload).Str("username", ownerUsername).Msg("Creating new team")
@@ -138,6 +142,8 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 	}, nil
 }
 
+// DeleteTeam deletes a team by its ID.
+// Requires admin permissions.
 func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamAuth *middleware.TeamAuth) *ServiceError {
 	logger := s.getMethodLogger("DeleteTeam")
 	logger.Trace().Str("teamId", teamAuth.TeamId).Str("requestorUsername", teamAuth.Username).Msg("Deleting team")
@@ -160,6 +166,8 @@ func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamAuth *middleware.Team
 	return nil
 }
 
+// UpdateTeam updates the details of a team.
+// Requires editor permissions or higher.
 func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamAuth *middleware.TeamAuth, payload *TeamUpdatePayload) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("UpdateTeam")
 	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Updating team")
@@ -187,6 +195,8 @@ func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamAuth *middleware.Team
 	return team, nil
 }
 
+// AddUserToTeam adds a user to a team with a specified role.
+// Requires editor permissions or higher.
 func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.TeamAuth, payload *TeamAddMemberPayload) *ServiceError {
 	logger := s.getMethodLogger("AddUserToTeam")
 	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Adding user to team")
@@ -240,6 +250,8 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.T
 	return nil
 }
 
+// RemoveUserFromTeam removes a user from a team.
+// Requires editor permissions or higher.
 func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middleware.TeamAuth, payload *TeamRemoveMemberPayload) *ServiceError {
 	logger := s.getMethodLogger("RemoveUserFromTeam")
 	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Removing user from team")
@@ -271,6 +283,8 @@ func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middlew
 	return nil
 }
 
+// ChangeMemberRole changes the role of a team member.
+// Requires admin permissions.
 func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamAuth *middleware.TeamAuth, payload TeamChangeMemberRolePayload) *ServiceError {
 	logger := s.getMethodLogger("ChangeMemberRole")
 	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Changing member role in team")

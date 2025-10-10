@@ -36,6 +36,7 @@ func SetupRouters(
 	protectedRouter.HandleFunc("PATCH /teams/{teamId}/groups/{groupId}", handlers.UpdateMonitorGroupHandler)
 	protectedRouter.HandleFunc("DELETE /teams/{teamId}/groups/{groupId}", handlers.DeleteMonitorGroupHandler)
 
+	// Monitors
 	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}/monitors", handlers.GetAllMonitorsHandler)
 	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}/monitors/{monitorId}", handlers.GetMonitorByIdHandler)
 	protectedRouter.HandleFunc("POST /teams/{teamId}/groups/{groupId}/monitors", handlers.CreateMonitorHandler)

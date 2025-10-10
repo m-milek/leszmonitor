@@ -12,6 +12,8 @@ import (
 	"net/http"
 )
 
+// AuthorizationServiceT handles authorization-related operations.
+// It provides methods to authorize actions based on team membership and permissions.
 type AuthorizationServiceT struct {
 	BaseService
 }
@@ -26,12 +28,14 @@ func newAuthorizationService() *AuthorizationServiceT {
 	}
 }
 
+// Checks if a given user has given permissions in the context of a specific team.
 func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAuth *middleware.TeamAuth, permissions ...models.Permission) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("AuthorizeTeamAction")
 
 	teamId := teamAuth.TeamId
 	requestorUsername := teamAuth.Username
 
+	// Does that team exist?
 	team, err := db.GetTeamById(ctx, teamId)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -48,6 +52,7 @@ func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAut
 		}
 	}
 
+	// Is the requestor a member of that team?
 	memberRole, exists := team.Members[requestorUsername]
 	if !exists {
 		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Msg("User is not a member of the team")
@@ -57,11 +62,13 @@ func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAut
 		}
 	}
 
+	// What permissions does the requestor have in that team?
 	permissionIDs := make([]string, 0, len(permissions))
 	for _, perm := range permissions {
 		permissionIDs = append(permissionIDs, perm.ID)
 	}
 
+	// Does the requestor have the required permissions?
 	if !memberRole.HasPermissions(permissions...) {
 		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for team")
 		return nil, &ServiceError{
