@@ -114,20 +114,9 @@ func (s *GroupServiceT) GetTeamMonitorGroupById(context context.Context, teamAut
 		return nil, authErr
 	}
 
-	group, err := db.GetMonitorGroupById(context, team.Id, groupId)
+	group, err := s.internalGetMonitorGroupById(context, team.Id, groupId)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("groupId", groupId).Msg("Monitor group not found")
-			return nil, &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor group with ID %s not found", groupId),
-			}
-		}
-		logger.Error().Err(err).Msg("Failed to get monitor group by ID")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to get monitor group by ID %s: %w", groupId, err),
-		}
+		return nil, err
 	}
 
 	logger.Info().Str("groupId", group.Id).Msg("Retrieved monitor group by ID")
@@ -189,35 +178,47 @@ func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamAuth *middle
 		}
 	}
 
-	group, err := db.GetMonitorGroupById(ctx, team.Id, groupId)
+	group, err := s.internalGetMonitorGroupById(ctx, team.Id, groupId)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("groupId", groupId).Msg("Monitor group not found for update")
-			return nil, &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor group with ID %s not found", groupId),
-			}
-		}
-		logger.Error().Err(err).Msg("Failed to get monitor group for update")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to get monitor group for update: %w", err),
-		}
+		return nil, err
 	}
 
 	group.Name = payload.Name
 	group.Description = payload.Description
 	group.GenerateId()
 
-	_, err = db.UpdateMonitorGroup(ctx, team.Id, group)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to update monitor group")
+	_, updateErr := db.UpdateMonitorGroup(ctx, team.Id, group)
+	if updateErr != nil {
+		logger.Error().Err(updateErr).Msg("Failed to update monitor group")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to update monitor group with ID %s: %w", groupId, err),
+			Err:  fmt.Errorf("failed to update monitor group with ID %s: %w", groupId, updateErr),
 		}
 	}
 
 	logger.Info().Str("groupId", group.Id).Msg("Monitor group updated successfully")
+	return group, nil
+}
+
+func (s *GroupServiceT) internalGetMonitorGroupById(ctx context.Context, teamId string, groupId string) (*models.MonitorGroup, *ServiceError) {
+	logger := s.getMethodLogger("internalGetMonitorGroupById")
+
+	group, err := db.GetMonitorGroupById(ctx, groupId)
+
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			logger.Warn().Str("groupId", groupId).Msg("Monitor group not found")
+			return nil, &ServiceError{
+				Code: http.StatusNotFound,
+				Err:  fmt.Errorf("monitor group with ID %s not found", groupId),
+			}
+		}
+		logger.Error().Err(err).Msg("Failed to get monitor group")
+		return nil, &ServiceError{
+			Code: http.StatusInternalServerError,
+			Err:  fmt.Errorf("failed to get monitor group: %w", err),
+		}
+	}
+
 	return group, nil
 }
