@@ -10,7 +10,7 @@ type BaseService struct {
 	methodLoggers map[string]zerolog.Logger
 }
 
-// Return a logger for a specific serivce method, creating it if it doesn't exist yet.
+// Return a logger for a specific service method, creating it if it doesn't exist yet.
 func (s *BaseService) getMethodLogger(methodName string) zerolog.Logger {
 	if logger, exists := s.methodLoggers[methodName]; exists {
 		return logger
