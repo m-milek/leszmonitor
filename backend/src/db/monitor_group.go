@@ -62,7 +62,7 @@ func CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*mongo
 	return dbRes.Result, nil
 }
 
-func GetMonitorGroupById(ctx context.Context, teamId string, groupId string) (*models.MonitorGroup, error) {
+func GetMonitorGroupById(ctx context.Context, groupId string) (*models.MonitorGroup, error) {
 	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.MonitorGroup, error) {
 		var group models.MonitorGroup
 		err := dbClient.getGroupsCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: groupId}).Decode(&group)
