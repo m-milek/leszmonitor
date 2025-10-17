@@ -14,7 +14,6 @@ func createTestBaseMonitor() BaseMonitor {
 		Description: "Test Description",
 		Interval:    60,
 		Type:        Http,
-		GroupId:     "test-group-id",
 	}
 }
 

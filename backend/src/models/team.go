@@ -88,7 +88,7 @@ func (t *Team) Validate() error {
 	}
 	for username, role := range t.Members {
 		if err := role.Validate(); err != nil {
-			return fmt.Errorf("invalid role for user %s: %w", username, err)
+			return fmt.Errorf("invalid role for user %d: %w", username, err)
 		}
 	}
 	return nil
