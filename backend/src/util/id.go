@@ -20,6 +20,6 @@ func IdFromString(s string) string {
 	id = multipleHyphensRegex.ReplaceAllString(id, "-") // Collapse multiple hyphens
 	id = strings.Trim(id, "-")
 
-	logging.Init.Trace().Str("id", id).Str("source", s).Msg("Generated ID from string")
+	logging.Init.Trace().Str("id", id).Str("source", s).Msg("Generated DisplayId from string")
 	return id
 }

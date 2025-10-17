@@ -4,69 +4,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logging"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"os"
 	"time"
 )
 
 type Client struct {
-	uri      string
-	client   *mongo.Client
-	database *mongo.Database
+	conn *pgxpool.Pool
 }
 
 var ErrNotFound = errors.New("document not found")
 var ErrAlreadyExists = errors.New("resource already exists")
 
-const ID_FIELD = "id"
-const OBJECT_ID_FIELD = "_id"
-
-func (*Client) getDatabase() *mongo.Database {
-	return dbClient.client.Database(databaseName)
-}
-
-func (*Client) getUsersCollection() *mongo.Collection {
-	return dbClient.getDatabase().Collection(usersCollectionName)
-}
-
-func (*Client) getMonitorsCollection() *mongo.Collection {
-	return dbClient.getDatabase().Collection(monitorsCollectionName)
-}
-
-func (*Client) getTeamsCollection() *mongo.Collection {
-	return dbClient.getDatabase().Collection(teamsCollectionName)
-}
-
-func (*Client) getGroupsCollection() *mongo.Collection {
-	return dbClient.getDatabase().Collection(groupsCollectionName)
-}
+const DB_SCHEMA_FILE = "db/schema.sql"
 
 type dbResult[T any] struct {
 	Duration time.Duration
 	Result   T
 }
 
-type collectionAlreadyExistsError string
-
-func (err collectionAlreadyExistsError) Error() string {
-	return "collection already exists: " + string(err)
-}
-
 var dbClient Client
 
 const timeoutDuration = 1000 * time.Second
-
-const (
-	databaseName           = "leszmonitor"
-	usersCollectionName    = "users"
-	monitorsCollectionName = "monitors"
-	teamsCollectionName    = "teams"
-	groupsCollectionName   = "groups"
-)
 
 func InitDbClient(ctx context.Context) error {
 	_, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -74,28 +35,23 @@ func InitDbClient(ctx context.Context) error {
 
 	logging.Db.Info().Msg("Connecting to MongoDB...")
 
-	uri := os.Getenv(env.MongoDbUri)
+	uri := os.Getenv(env.PostgresURI)
 
-	client, err := mongo.Connect(options.Client().ApplyURI(uri))
+	client, err := pgxpool.New(ctx, uri)
 	if err != nil {
 		return err
 	}
 
 	dbClient = Client{
-		uri:      uri,
-		client:   client,
-		database: nil,
+		conn: client,
 	}
 
 	_, err = ping(ctx)
 	if err != nil {
-		logging.Db.Fatal().Err(err).Msg("Failed to ping MongoDB")
+		logging.Db.Fatal().Err(err).Msg("Failed to ping PostgreSQL")
 	}
 
-	database := client.Database(databaseName)
-	dbClient.database = database
-
-	err = initSchema(ctx)
+	err = dbClient.initSchema(ctx)
 	if err != nil {
 		logging.Db.Fatal().Err(err).Msg("Failed to initialize database schema")
 	}
@@ -105,83 +61,30 @@ func InitDbClient(ctx context.Context) error {
 	return nil
 }
 
-func initSchema(ctx context.Context) error {
-	database := dbClient.getDatabase()
-
-	err := initUsersCollection(ctx, database)
+// initSchema reads the database schema from a file and executes it to set up the database structure.
+func (c *Client) initSchema(ctx context.Context) error {
+	schemaBytes, err := os.ReadFile(DB_SCHEMA_FILE)
 	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to initialize users collection")
-		return err
+		return fmt.Errorf("failed to read DB schema file: %w", err)
 	}
+	schema := string(schemaBytes)
 
-	err = initMonitorsCollection(ctx, database)
-	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to initialize monitors collection")
-		return err
-	}
-
-	err = initTeamsCollection(ctx, database)
-	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to initialize teams collection")
-	}
-
-	err = initGroupsCollection(ctx, database)
-	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to initialize groups collection")
-	}
-
-	return err
-}
-
-func collectionExists(ctx context.Context, database *mongo.Database, collectionName string) (bool, error) {
-	collections, err := database.ListCollections(ctx, bson.D{{"name", collectionName}})
-	if err != nil {
-		return false, err
-	}
-	defer collections.Close(ctx)
-
-	for collections.Next(ctx) {
-		var result bson.M
-		err := collections.Decode(&result)
-		if err != nil {
-			return false, err
-		}
-		if result["name"] == collectionName {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func createCollection(ctx context.Context, database *mongo.Database, collectionName string) error {
-	// Check if the collection already exists
-	exists, err := collectionExists(ctx, database, collectionName)
+	status, err := c.conn.Exec(ctx, schema)
 	if err != nil {
 		return err
 	}
-	if exists {
-		return collectionAlreadyExistsError(collectionName)
-	}
 
-	// Create the collection
-	err = database.CreateCollection(ctx, collectionName)
-	if err != nil {
-		if !errors.Is(err, mongo.CommandError{}) {
-			return err
-		}
-	}
-
+	logging.Db.Info().Msgf("Database schema initialized: %s", status.String())
 	return nil
 }
 
 // withTimeout creates a child context with timeout and handles cancellation.
-func withTimeout[T any](timeoutCtx context.Context, operation func(context.Context) (T, error)) (dbResult[T], error) {
+func withTimeout[T any](timeoutCtx context.Context, operation func() (T, error)) (dbResult[T], error) {
 	timeoutCtx, cancel := context.WithTimeout(timeoutCtx, timeoutDuration)
 	defer cancel()
 
 	start := time.Now()
-	result, err := operation(timeoutCtx)
+	result, err := operation()
 	elapsed := time.Since(start)
 
 	if err != nil {
@@ -213,9 +116,9 @@ func logDbOperation[T any](operationName string, result dbResult[T], err error) 
 }
 
 func ping(ctx context.Context) (int64, error) {
-	result, err := withTimeout(ctx, func(context.Context) (int64, error) {
+	result, err := withTimeout(ctx, func() (int64, error) {
 		start := time.Now()
-		err := dbClient.client.Ping(ctx, nil)
+		err := dbClient.conn.Ping(ctx)
 		if err != nil {
 			return 0, err
 		}

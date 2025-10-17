@@ -24,13 +24,21 @@ type PingConfig struct {
 	Port            string `json:"port" bson:"port"`             // Port to ping
 	Protocol        string `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
 	PingTimeout     int    `json:"timeout" bson:"timeout"`       // PingTimeout in seconds for each ping
-	RetryCount      int    `json:"retryCount" bson:"retryCount"` // Number of retries on failure
+	RetryCount      int    `json:"retryCount" bson:"retryCount"` // RetryCount is the number of retries until
 	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
 type PingMonitor struct {
 	BaseMonitor `bson:",inline"` // Embed BaseMonitor for common fields
 	Config      PingConfig       `json:"config" bson:"config"`
+}
+
+func (m *PingMonitor) GetConfig() IMonitorConfig {
+	return &m.Config
+}
+
+func (m *PingMonitor) SetConfig(config IMonitorConfig) {
+	m.Config = *config.(*PingConfig)
 }
 
 func (m *PingMonitor) Run() IMonitorResponse {

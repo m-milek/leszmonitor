@@ -3,147 +3,175 @@ package db
 import (
 	"context"
 	"errors"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/models"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func initTeamsCollection(ctx context.Context, database *mongo.Database) error {
-	err := createCollection(ctx, database, teamsCollectionName)
-	if err != nil {
-		if errors.Is(err, collectionAlreadyExistsError(teamsCollectionName)) {
-			logging.Db.Debug().Msg("Teams collection already exists.")
-			return nil
-		}
-		return err
-	} else {
-		logging.Db.Info().Msg("Teams collection created successfully.")
-	}
+// teamMemberFromCollectableRow maps a pgx.CollectableRow to a models.TeamMember struct.
+func teamMemberFromCollectableRow(row pgx.CollectableRow) (models.TeamMember, error) {
+	member := models.TeamMember{}
+	var timestamps models.RawTimestamps
 
-	// unique index on the "id" field
-	teamsCollection := database.Collection(teamsCollectionName)
-	indexName, err := teamsCollection.Indexes().CreateOne(
-		ctx,
-		mongo.IndexModel{
-			Keys: bson.D{
-				{ID_FIELD, 1},
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
-	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to create index on teams collection")
-		return err
-	} else {
-		logging.Db.Info().Msgf("Index created: %s", indexName)
-	}
+	err := row.Scan(&member.Id, &member.Role, &timestamps.CreatedAt, &timestamps.UpdatedAt)
 
-	return nil
+	member.SetTimestamps(timestamps)
+
+	return member, err
 }
 
-func CreateTeam(ctx context.Context, team *models.Team) (*mongo.InsertOneResult, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*mongo.InsertOneResult, error) {
-		res, err := dbClient.getTeamsCollection().InsertOne(timeoutCtx, team)
+// teamFromCollectableRow maps a pgx.CollectableRow to a models.Team struct.
+func teamFromCollectableRow(row pgx.CollectableRow) (models.Team, error) {
+	var team models.Team
+	var timestamps models.RawTimestamps
+	err := row.Scan(&team.Id, &team.DisplayId, &team.Name, &team.Description, &timestamps.CreatedAt, &timestamps.UpdatedAt)
+
+	team.SetTimestamps(timestamps)
+	return team, err
+}
+
+func CreateTeam(ctx context.Context, team *models.Team) (*struct{}, error) {
+	dbRes, err := withTimeout(ctx, func() (*struct{}, error) {
+		tx, err := dbClient.conn.Begin(ctx)
+
 		if err != nil {
-			if mongo.IsDuplicateKeyError(err) {
-				return nil, ErrAlreadyExists
-			}
 			return nil, err
 		}
-		return res, nil
+
+		var teamId pgtype.UUID
+		row := tx.QueryRow(ctx,
+			`INSERT INTO teams (display_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
+			team.DisplayId, team.Name, team.Description)
+		if err != nil {
+			return nil, err
+		}
+		err = row.Scan(&teamId)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = tx.Exec(ctx,
+			`INSERT INTO user_teams (team_id, user_id, role) VALUES ($1, $2, $3)`,
+			teamId, team.Members[0].Id, team.Members[0].Role)
+		if err != nil {
+			return nil, err
+		}
+
+		err = tx.Commit(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	})
 
 	logDbOperation("CreateTeam", dbRes, err)
 
-	if err != nil {
-		return nil, err
-	}
-	return dbRes.Result, nil
+	return dbRes.Result, err
 }
 
-func GetTeamById(ctx context.Context, id string) (*models.Team, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.Team, error) {
+func GetTeamById(ctx context.Context, displayId string) (*models.Team, error) {
+	dbRes, err := withTimeout(ctx, func() (*models.Team, error) {
 		var team models.Team
-		err := dbClient.getTeamsCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: id}).Decode(&team)
+		row, err := dbClient.conn.Query(ctx,
+			`SELECT id, display_id, name, description, created_at, updated_at FROM teams WHERE display_id=$1`,
+			displayId)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
-				return nil, ErrNotFound
-			}
 			return nil, err
 		}
+
+		team, collectErr := pgx.CollectExactlyOneRow(row, teamFromCollectableRow)
+		if collectErr != nil {
+			if errors.Is(collectErr, pgx.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, collectErr
+		}
+
+		memberRows, membersErr := dbClient.conn.Query(ctx,
+			`SELECT user_id, role, created_at, updated_at FROM user_teams WHERE team_id=$1`,
+			team.Id)
+		if membersErr != nil {
+			return nil, membersErr
+		}
+
+		members, err := pgx.CollectRows(memberRows, teamMemberFromCollectableRow)
+		if err != nil {
+			return nil, err
+		}
+		team.Members = members
+
 		return &team, nil
 	})
 
 	logDbOperation("GetTeamById", dbRes, err)
 
-	if err != nil {
-		return nil, err
-	}
-	return dbRes.Result, nil
+	return dbRes.Result, err
 }
 
 func GetAllTeams(ctx context.Context) ([]models.Team, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) ([]models.Team, error) {
-		cursor, err := dbClient.getTeamsCollection().Find(timeoutCtx, bson.D{})
+	dbRes, err := withTimeout(ctx, func() ([]models.Team, error) {
+		rows, err := dbClient.conn.Query(ctx,
+			`SELECT id, display_id, name, description, created_at, updated_at FROM teams`)
 		if err != nil {
 			return nil, err
 		}
-		defer cursor.Close(timeoutCtx)
 
-		teamsList := make([]models.Team, 0)
-
-		for cursor.Next(timeoutCtx) {
-			var team models.Team
-			if err := cursor.Decode(&team); err != nil {
-				return nil, err
-			}
-			teamsList = append(teamsList, team)
-		}
-
-		if err := cursor.Err(); err != nil {
+		teams, err := pgx.CollectRows(rows, teamFromCollectableRow)
+		if err != nil {
 			return nil, err
 		}
 
-		return teamsList, nil
+		for i, team := range teams {
+			memberRows, membersErr := dbClient.conn.Query(ctx,
+				`SELECT user_id, role, created_at, updated_at FROM user_teams WHERE team_id=$1`,
+				team.Id)
+			if membersErr != nil {
+				return nil, membersErr
+			}
+
+			members, err := pgx.CollectRows(memberRows, teamMemberFromCollectableRow)
+			if err != nil {
+				return nil, err
+			}
+			teams[i].Members = members
+		}
+
+		return teams, nil
 	})
 
 	logDbOperation("GetAllTeams", dbRes, err)
 
-	if err != nil {
-		return nil, err
-	}
-	return dbRes.Result, nil
+	return dbRes.Result, err
 }
 
 func UpdateTeam(ctx context.Context, team *models.Team) (bool, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getTeamsCollection().UpdateOne(timeoutCtx, bson.M{OBJECT_ID_FIELD: team.ObjectId}, bson.M{"$set": team})
+	dbRes, err := withTimeout(ctx, func() (bool, error) {
+		result, err := dbClient.conn.Exec(ctx,
+			`UPDATE teams SET display_id=$1, name=$2, description=$3 WHERE id=$4`,
+			team.DisplayId, team.Name, team.Description, team.Id)
 		if err != nil {
 			return false, err
 		}
-		if result.MatchedCount == 0 {
+		if result.RowsAffected() == 0 {
 			return false, ErrNotFound
 		}
-		return result.ModifiedCount > 0, nil
+		return true, nil
 	})
 
 	logDbOperation("UpdateTeam", dbRes, err)
 
-	if err != nil {
-		return false, err
-	}
-	return dbRes.Result, nil
+	return dbRes.Result, err
 }
 
-func DeleteTeam(ctx context.Context, id string) (bool, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getTeamsCollection().DeleteOne(timeoutCtx, bson.M{ID_FIELD: id})
+func DeleteTeam(ctx context.Context, displayId string) (bool, error) {
+	dbRes, err := withTimeout(ctx, func() (bool, error) {
+		result, err := dbClient.conn.Exec(ctx,
+			`DELETE FROM teams WHERE display_id=$1`,
+			displayId)
 		if err != nil {
 			return false, err
 		}
-		if result.DeletedCount == 0 {
+		if result.RowsAffected() == 0 {
 			return false, ErrNotFound
 		}
 		return true, nil
@@ -151,8 +179,71 @@ func DeleteTeam(ctx context.Context, id string) (bool, error) {
 
 	logDbOperation("DeleteTeam", dbRes, err)
 
-	if err != nil {
-		return dbRes.Result, err
-	}
-	return dbRes.Result, nil
+	return dbRes.Result, err
+}
+
+func AddMemberToTeam(ctx context.Context, teamDisplayId string, member *models.TeamMember) (bool, error) {
+	dbRes, err := withTimeout(ctx, func() (bool, error) {
+		var teamId pgtype.UUID
+		row := dbClient.conn.QueryRow(ctx,
+			`SELECT id FROM teams WHERE display_id=$1`,
+			teamDisplayId)
+
+		err := row.Scan(&teamId)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return false, ErrNotFound
+			}
+			return false, err
+		}
+
+		result, err := dbClient.conn.Exec(ctx,
+			`INSERT INTO user_teams (team_id, user_id, role) VALUES ($1, $2, $3)`,
+			teamId, member.Id, member.Role)
+		if err != nil {
+			return false, err
+		}
+
+		if result.RowsAffected() == 0 {
+			return false, ErrAlreadyExists
+		}
+		return true, nil
+	})
+
+	logDbOperation("AddMemberToTeam", dbRes, err)
+
+	return dbRes.Result, err
+}
+
+func RemoveMemberFromTeam(ctx context.Context, teamDisplayId string, userId pgtype.UUID) (bool, error) {
+	dbRes, err := withTimeout(ctx, func() (bool, error) {
+		var teamId pgtype.UUID
+		row := dbClient.conn.QueryRow(ctx,
+			`SELECT id FROM teams WHERE display_id=$1`,
+			teamDisplayId)
+
+		err := row.Scan(&teamId)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return false, ErrNotFound
+			}
+			return false, err
+		}
+
+		result, err := dbClient.conn.Exec(ctx,
+			`DELETE FROM user_teams WHERE team_id=$1 AND user_id=$2`,
+			teamId, userId)
+		if err != nil {
+			return false, err
+		}
+
+		if result.RowsAffected() == 0 {
+			return false, ErrNotFound
+		}
+		return true, nil
+	})
+
+	logDbOperation("RemoveMemberFromTeam", dbRes, err)
+
+	return dbRes.Result, err
 }

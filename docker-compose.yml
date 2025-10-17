@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -34,19 +32,6 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017
       - LOG_FILE_PATH=/var/log/leszmonitor/backend.log
-    depends_on:
-      - mongodb
-    restart: unless-stopped
-    networks:
-      - app-network
-
-  mongodb:
-    build:
-      context: ./mongodb
-      dockerfile: Dockerfile
-    volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
     restart: unless-stopped
     networks:
       - app-network
@@ -62,5 +47,3 @@ volumes:
       type: none
       device: ${PWD}/.logs
       o: bind
-  mongodb_data:
-  mongodb_config:

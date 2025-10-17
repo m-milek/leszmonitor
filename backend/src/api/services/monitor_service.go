@@ -34,29 +34,23 @@ type MonitorCreateResponse struct {
 }
 
 // CreateMonitor creates a new monitor in the specified group.
-func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupId string, monitor monitors.IMonitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupId string, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
-	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorEditor)
+	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorEditor)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	monitor.GenerateId()
-
-	group, err := GroupService.GetTeamMonitorGroupById(ctx, teamAuth, groupId)
+	group, err := GroupService.internalGetMonitorGroupById(ctx, team.DisplayId, groupId)
 	if err != nil {
 		return nil, err
 	}
-	if group == nil {
-		logger.Warn().Str("groupId", groupId).Msg("Monitor group not found")
-		return nil, &ServiceError{
-			Code: http.StatusNotFound,
-			Err:  fmt.Errorf("monitor group with ID %s not found", groupId),
-		}
-	}
-	monitor.SetGroupId(groupId)
+
+	monitor.SetGroupId(group.Id)
+	monitor.SetTeamId(team.Id)
+	monitor.GenerateDisplayId()
 
 	if err := monitor.Validate(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid monitor configuration")
@@ -75,13 +69,13 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	logger.Info().Str("id", monitor.GetId()).Msg("Monitor created")
+	logger.Info().Str("id", monitor.GetId().String()).Msg("Monitor created")
 	return &MonitorCreateResponse{
-		MonitorId: monitor.GetId(),
+		MonitorId: monitor.GetId().String(),
 	}, nil
 }
 
-// DeleteMonitor deletes a monitor by its ID.
+// DeleteMonitor deletes a monitor by its DisplayId.
 func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, id string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
@@ -113,7 +107,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 }
 
 // GetAllMonitors retrieves all monitors for the team in the provided TeamAuth.
-func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middleware.TeamAuth) ([]monitors.IMonitor, *ServiceError) {
+func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middleware.TeamAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetAllMonitors")
 	logger.Trace().Msg("Retrieving all monitors")
 
@@ -134,10 +128,10 @@ func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middlewa
 	return monitorsList, nil
 }
 
-// GetMonitorById retrieves a specific monitor by its ID.
+// GetMonitorById retrieves a specific monitor by its DisplayId.
 func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middleware.TeamAuth, id string) (monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorById")
-	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
+	logger.Trace().Str("id", id).Msg("Retrieving monitor by DisplayId")
 
 	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
 	if authErr != nil {
@@ -150,7 +144,7 @@ func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middlewa
 			logger.Warn().Str("id", id).Msg("Monitor not found")
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor with ID %s not found", id),
+				Err:  fmt.Errorf("monitor with DisplayId %s not found", id),
 			}
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor from database")
@@ -164,7 +158,7 @@ func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middlewa
 }
 
 // UpdateMonitor updates an existing monitor's configuration.
-func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, monitor monitors.IMonitor) *ServiceError {
+func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, monitor monitors.IConcreteMonitor) *ServiceError {
 	logger := s.getMethodLogger("UpdateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
 
@@ -181,15 +175,13 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 		return authErr
 	}
 
-	monitor.GenerateId()
-
 	wasUpdated, err := db.UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Interface("monitor", monitor).Msg("Monitor not found for update")
 			return &ServiceError{
 				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor with ID %s not found", monitor.GetId()),
+				Err:  fmt.Errorf("monitor with DisplayId %s not found", monitor.GetId()),
 			}
 		}
 		logger.Error().Err(err).Interface("monitor", monitor).Msg("Failed to update monitor in database")
@@ -203,10 +195,10 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 		logger.Warn().Interface("monitor", monitor).Msg("Monitor was not updated, possibly not found")
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("monitor with ID %s was not updated", monitor.GetId()),
+			Err:  fmt.Errorf("monitor with DisplayId %s was not updated", monitor.GetId()),
 		}
 	}
 
-	logger.Info().Str("id", monitor.GetId()).Msg("Monitor updated")
+	logger.Info().Str("id", monitor.GetId().String()).Msg("Monitor updated")
 	return nil
 }

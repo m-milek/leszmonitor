@@ -1,40 +1,20 @@
 package models
 
-import (
-	"time"
-)
+import "github.com/jackc/pgx/v5/pgtype"
 
-type RawUser struct {
-	Username     string `json:"username" bson:"id"`
-	PasswordHash string `json:"passwordHash" bson:"passwordHash"`
-	Email        string `json:"email" bson:"email"`
-	CreatedAt    string `json:"created" bson:"created"`
-	UpdatedAt    string `json:"updated" bson:"updated"`
+type User struct {
+	Id           pgtype.UUID `json:"id"`
+	Username     string      `json:"username"`
+	PasswordHash string      `json:"-"`
+	Email        string      `json:"email"`
+	Timestamps
 }
 
-type UserResponse struct {
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	CreatedAt string `json:"created"`
-	UpdatedAt string `json:"updated"`
-}
-
-// NewUser creates a new RawUser instance with the provided username, password, and email.
-func NewUser(username, hashedPassword, email string) *RawUser {
-	return &RawUser{
+// NewUser creates a new User instance with the provided username, password, and email.
+func NewUser(username, hashedPassword, email string) *User {
+	return &User{
 		Username:     username,
 		PasswordHash: hashedPassword,
 		Email:        email,
-		CreatedAt:    time.Now().Format(time.RFC3339),
-		UpdatedAt:    time.Now().Format(time.RFC3339),
-	}
-}
-
-func (u *RawUser) IntoUser() *UserResponse {
-	return &UserResponse{
-		Username:  u.Username,
-		Email:     u.Email,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
 	}
 }

@@ -26,7 +26,7 @@ func TestNewUser(t *testing.T) {
 		assert.NotEmpty(t, user.UpdatedAt)
 	})
 
-	t.Run("IntoUser converts RawUser to UserResponse", func(t *testing.T) {
+	t.Run("IntoUser converts User to UserResponse", func(t *testing.T) {
 		rawUser := NewUser("testuser", "hashedpassword", "mail@example.com")
 
 		userResponse := rawUser.IntoUser()

@@ -2,10 +2,8 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/rs/zerolog"
@@ -32,29 +30,21 @@ func newAuthorizationService() *AuthorizationServiceT {
 func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAuth *middleware.TeamAuth, permissions ...models.Permission) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("AuthorizeTeamAction")
 
-	teamId := teamAuth.TeamId
 	requestorUsername := teamAuth.Username
 
 	// Does that team exist?
-	team, err := db.GetTeamById(ctx, teamId)
+	team, err := TeamService.internalGetTeamById(ctx, teamAuth.TeamId)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("teamId", teamId).Msg("Team not found")
-			return nil, &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("team with ID %s not found", teamId),
-			}
-		}
-		logger.Error().Err(err).Str("teamId", teamId).Msg("Error retrieving team")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("error retrieving team with ID %s: %w", teamId, err),
-		}
+		return nil, err
+	}
+
+	user, err := UserService.GetUserByUsername(ctx, requestorUsername)
+	if err != nil {
+		return nil, err
 	}
 
 	// Is the requestor a member of that team?
-	memberRole, exists := team.Members[requestorUsername]
-	if !exists {
+	if !team.IsMember(user.Id) {
 		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Msg("User is not a member of the team")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,
@@ -69,7 +59,7 @@ func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAut
 	}
 
 	// Does the requestor have the required permissions?
-	if !memberRole.HasPermissions(permissions...) {
+	if !team.GetMember(user.Id).Role.HasPermissions(permissions...) {
 		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for team")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,

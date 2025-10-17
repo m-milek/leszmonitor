@@ -2,6 +2,9 @@
   <configuration default="false" name="Run Backend" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="leszmonitor" />
     <working_directory value="$PROJECT_DIR$/backend/src" />
+    <envs>
+      <env name="POSTGRES_URI" value="postgres://leszmonitor-dev:dev-password@localhost/leszmonitor" />
+    </envs>
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
       <option name="IS_SUBST" value="false" />
