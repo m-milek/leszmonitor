@@ -1,14 +1,15 @@
 package monitors
 
 import (
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/util"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // TestMonitor provides a simple way to create monitors for testing
 type TestMonitor struct {
 	// Base fields
-	ID          string
+	ID          pgtype.UUID
+	DisplayId   string
 	Name        string
 	Description string
 	Interval    int
@@ -24,7 +25,8 @@ type TestMonitor struct {
 func NewTestMonitor() *TestMonitor {
 	name := "Test Monitor"
 	return &TestMonitor{
-		ID:          util.IdFromString(name),
+		ID:          pgtype.UUID{Valid: false},
+		DisplayId:   util.IdFromString(name),
 		Name:        name,
 		Description: "Test monitor description",
 		Interval:    60,
@@ -71,11 +73,11 @@ func (t *TestMonitor) AsPing() *TestMonitor {
 // Build creates the monitor instance
 func (t *TestMonitor) Build() IMonitor {
 	base := BaseMonitor{
-		DisplayId:   t.ID,
+		Id:          t.ID,
+		DisplayId:   t.DisplayId,
 		Name:        t.Name,
 		Description: t.Description,
 		Interval:    t.Interval,
-		GroupId:     t.GroupId,
 		Type:        t.Type,
 	}
 
@@ -92,25 +94,4 @@ func (t *TestMonitor) Build() IMonitor {
 		}
 	}
 	return nil
-}
-
-// ToBSON converts the monitor to a BSON document
-func (t *TestMonitor) ToBSON() bson.M {
-	doc := bson.M{
-		"_id":         t.ID,
-		"name":        t.Name,
-		"description": t.Description,
-		"interval":    t.Interval,
-		"groupId":     t.GroupId,
-		"type":        string(t.Type),
-	}
-
-	switch t.Type {
-	case Http:
-		doc["config"] = t.HttpConfig
-	case Ping:
-		doc["config"] = t.PingConfig
-	}
-
-	return doc
 }
