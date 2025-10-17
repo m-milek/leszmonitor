@@ -13,8 +13,8 @@ import (
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	groupId := r.PathValue("groupId")
 	if groupId == "" {
-		logging.Api.Trace().Msg("Group ID is required for creating a monitor")
-		util.RespondMessage(w, http.StatusBadRequest, "Group ID is required")
+		logging.Api.Trace().Msg("Group DisplayId is required for creating a monitor")
+		util.RespondMessage(w, http.StatusBadRequest, "Group DisplayId is required")
 		return
 	}
 
@@ -44,8 +44,8 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorId := r.PathValue("monitorId")
 
 	if monitorId == "" {
-		logging.Api.Trace().Msg("Monitor ID is required for deletion")
-		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor ID is required")
+		logging.Api.Trace().Msg("Monitor DisplayId is required for deletion")
+		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor DisplayId is required")
 		return
 	}
 
@@ -83,8 +83,8 @@ func GetMonitorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	monitorId := r.PathValue("monitorId")
 
 	if monitorId == "" {
-		logging.Api.Trace().Msg("Monitor ID is required")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
+		logging.Api.Trace().Msg("Monitor DisplayId is required")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayId is required")
 		return
 	}
 
@@ -109,8 +109,8 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorId := r.PathValue("monitorId")
 
 	if monitorId == "" {
-		logging.Api.Trace().Msg("Monitor ID is required for update")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID is required")
+		logging.Api.Trace().Msg("Monitor DisplayId is required for update")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayId is required")
 		return
 	}
 
@@ -118,12 +118,6 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logging.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
-		return
-	}
-
-	if monitor.GetId() != monitorId {
-		logging.Api.Trace().Msgf("Monitor ID mismatch: expected %s, got %s", monitorId, monitor.GetId())
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor ID mismatch")
 		return
 	}
 

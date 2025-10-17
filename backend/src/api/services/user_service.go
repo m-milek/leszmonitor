@@ -50,7 +50,7 @@ type LoginResponse struct {
 
 // GetAllUsers retrieves all users from the database.
 // Requires no permissions.
-func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.UserResponse, error *ServiceError) {
+func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.User, error *ServiceError) {
 	logger := s.getMethodLogger("GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
@@ -69,7 +69,7 @@ func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.UserRes
 
 // GetUserByUsername retrieves a user by their username.
 // Requires no permissions.
-func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (*models.UserResponse, *ServiceError) {
+func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
 	logger := s.getMethodLogger("GetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
@@ -109,7 +109,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 
 	user := models.NewUser(payload.Username, hashedPassword, payload.Email)
 
-	_, err = db.CreateUser(ctx, user)
+	err = db.CreateUser(ctx, user)
 
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")

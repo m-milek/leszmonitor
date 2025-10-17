@@ -16,7 +16,7 @@ func TestNewTeam(t *testing.T) {
 
 		team, _ := NewTeam(name, description, ownerId)
 
-		assert.NotEmpty(t, team.Id)
+		assert.NotEmpty(t, team.DisplayId)
 		assert.Equal(t, name, team.Name)
 		assert.Equal(t, description, team.Description)
 		assert.NotNil(t, team.Members)
@@ -39,11 +39,11 @@ func TestNewTeam(t *testing.T) {
 		assert.Nil(t, team)
 	})
 
-	t.Run("Each team gets unique ID", func(t *testing.T) {
+	t.Run("Each team gets unique DisplayId", func(t *testing.T) {
 		team1, _ := NewTeam("Team 1", "Desc 1", "owner1")
 		team2, _ := NewTeam("Team 2", "Desc 2", "owner2")
 
-		assert.NotEqual(t, team1.Id, team2.Id)
+		assert.NotEqual(t, team1.DisplayId, team2.DisplayId)
 	})
 }
 
@@ -72,9 +72,9 @@ func TestTeam_IsMember(t *testing.T) {
 
 	t.Run("Works with nil Members map", func(t *testing.T) {
 		team := &Team{
-			Id:      "test",
-			Name:    "Test",
-			Members: nil,
+			DisplayId: "test",
+			Name:      "Test",
+			Members:   nil,
 		}
 
 		assert.False(t, team.IsMember("anyone"))
@@ -162,9 +162,9 @@ func TestTeam_AddMember(t *testing.T) {
 
 	t.Run("Add member to team with nil Members map", func(t *testing.T) {
 		team := &Team{
-			Id:      "test",
-			Name:    "Test",
-			Members: nil,
+			DisplayId: "test",
+			Name:      "Test",
+			Members:   nil,
 		}
 
 		err := team.AddMember("member1", TeamRoleMember)
@@ -217,9 +217,9 @@ func TestTeam_RemoveMember(t *testing.T) {
 
 	t.Run("Remove from nil Members map", func(t *testing.T) {
 		team := &Team{
-			Id:      "test",
-			Name:    "Test",
-			Members: nil,
+			DisplayId: "test",
+			Name:      "Test",
+			Members:   nil,
 		}
 
 		// Should not panic

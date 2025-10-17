@@ -56,7 +56,7 @@ func main() {
 	}
 
 	// Start the server
-	var serverConfig = api.DefaultServerConfig()
+	serverConfig := api.DefaultServerConfig()
 	logging.Main.Info().Msg("Starting API server...")
 	server, done, err := api.StartServer(serverConfig)
 	if err != nil {

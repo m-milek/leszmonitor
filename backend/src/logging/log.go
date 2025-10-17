@@ -110,7 +110,7 @@ func NewServiceLogger(serviceName string) zerolog.Logger {
 	}
 
 	// Create a child logger from the root logger with the service field
-	return rootLogger.With().Str("service", serviceName).Logger()
+	return rootLogger.With().Str("service", serviceName).Caller().Logger()
 }
 
 func createLogger(component string, level zerolog.Level) zerolog.Logger {
