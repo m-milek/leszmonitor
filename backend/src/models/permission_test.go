@@ -177,7 +177,7 @@ func TestPermissionImplicationsConsistency(t *testing.T) {
 			PermissionMonitorReader,
 		}
 
-		for perm, implications := range PermissionImplications {
+		for perm, implications := range permissionImplications {
 			// Check that the key permission exists
 			assert.Contains(t, allPerms, perm, "Permission %s in implications map doesn't exist", perm.ID)
 

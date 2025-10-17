@@ -42,7 +42,7 @@ func main() {
 	logging.Init.Info().Msg("Environment variable validation OK")
 
 	// Initialize logger
-	var logConfig = logging.GetLoggerConfig()
+	logConfig := logging.GetLoggerConfig()
 
 	err = logging.InitLogging(logConfig)
 	if err != nil {

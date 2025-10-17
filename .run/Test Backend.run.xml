@@ -2,7 +2,7 @@
   <configuration default="false" name="Test Backend" type="GoTestRunConfiguration" factoryName="Go Test">
     <module name="leszmonitor" />
     <working_directory value="$PROJECT_DIR$/backend/src" />
-    <go_parameters value="-i" />
+    <go_parameters value="-i -v" />
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
       <option name="IS_SUBST" value="false" />
