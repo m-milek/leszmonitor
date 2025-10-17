@@ -9,7 +9,7 @@ const (
 	ApiPort        = "API_PORT"
 	LogLevel       = "LOG_LEVEL" // TRACE, DEBUG, INFO, WARN, ERROR
 	LogFilePath    = "LOG_FILE_PATH"
-	MongoDbUri     = "MONGODB_URI"
+	PostgresURI    = "POSTGRES_URI"
 	JwtSecret      = "JWT_SECRET"
 	JwtExpiryHours = "JWT_EXPIRY_HOURS"
 )
@@ -20,9 +20,9 @@ func Validate() error {
 		return fmt.Errorf("environment variable %s is not set", ApiPort)
 	}
 
-	envMongoDBURI := os.Getenv(MongoDbUri)
-	if envMongoDBURI == "" {
-		return fmt.Errorf("environment variable %s is not set", MongoDbUri)
+	envPostgresURI := os.Getenv(PostgresURI)
+	if envPostgresURI == "" {
+		return fmt.Errorf("environment variable %s is not set", PostgresURI)
 	}
 
 	envJwtSecret := os.Getenv(JwtSecret)

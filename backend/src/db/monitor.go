@@ -4,102 +4,98 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/logging"
 	monitors "github.com/m-milek/leszmonitor/uptime/monitor"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func initMonitorsCollection(ctx context.Context, database *mongo.Database) error {
-	err := createCollection(ctx, database, monitorsCollectionName)
+// monitorFromCollectableRow maps a pgx.CollectableRow to a monitors.IConcreteMonitor.
+func monitorFromCollectableRow(row pgx.CollectableRow) (monitors.IConcreteMonitor, error) {
+	var config []byte
+	var b monitors.BaseMonitor
+
+	err := row.Scan(&b.Id, &b.DisplayId, &b.TeamId, &b.GroupId, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
 	if err != nil {
-		if errors.Is(err, collectionAlreadyExistsError(monitorsCollectionName)) {
-			logging.Db.Debug().Msg("Monitors collection already exists.")
-			return nil
-		}
-		return err
-	} else {
-		logging.Db.Info().Msg("Monitors collection created successfully.")
+		return nil, err
 	}
 
-	// unique index on the "_id" field
-	monitorsCollection := database.Collection(monitorsCollectionName)
-	indexName, err := monitorsCollection.Indexes().CreateOne(
-		ctx,
-		mongo.IndexModel{
-			Keys: bson.D{
-				{ID_FIELD, 1},
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
+	parsedConfig, err := monitors.UnmarshalConfigFromBytes(b.Type, config)
 	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to create index on monitors collection")
-		return err
+		return nil, fmt.Errorf("failed to create monitor from config: %w", err)
 	}
-	logging.Db.Info().Msgf("Index created: %s", indexName)
 
-	return nil
+	monitor, err := monitors.NewConcreteMonitor(b, parsedConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create monitor: %w", err)
+	}
+
+	return monitor, nil
 }
 
-// CreateMonitor adds a new monitor to the database and returns its ID (short ID).
-func CreateMonitor(ctx context.Context, monitor monitors.IMonitor) (string, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (string, error) {
-		_, err := dbClient.getMonitorsCollection().InsertOne(timeoutCtx, monitor)
+// CreateMonitor adds a new monitor to the database and returns its DisplayId (short DisplayId).
+func CreateMonitor(ctx context.Context, monitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error) {
+	dbRes, err := withTimeout(ctx, func() (monitors.IConcreteMonitor, error) {
+		rows, err := dbClient.conn.Query(ctx,
+			`INSERT INTO monitors (display_id, team_id, group_id, name, description, interval, kind, config)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+			monitor.GetDisplayId(),
+			monitor.GetTeamId(),
+			monitor.GetGroupId(),
+			monitor.GetName(),
+			monitor.GetDescription(),
+			int(monitor.GetInterval().Seconds()),
+			string(monitor.GetType()),
+			monitor.GetConfig(),
+		)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return monitor.GetId(), nil
+
+		monitor, err := pgx.CollectOneRow(rows, monitorFromCollectableRow)
+		if err != nil {
+			return nil, err
+		}
+
+		return monitor, nil
 	})
 
 	logDbOperation("InsertMonitor", dbRes, err)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Broadcast that a monitor has been added
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
-		Id:      monitor.GetId(),
+		Id:      dbRes.Result.GetId(),
 		Status:  monitors.Created,
-		Monitor: &monitor,
+		Monitor: &dbRes.Result,
 	})
 
 	return dbRes.Result, nil
 }
 
-func GetAllMonitors(ctx context.Context) ([]monitors.IMonitor, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) ([]monitors.IMonitor, error) {
-		cursor, err := dbClient.getMonitorsCollection().Find(timeoutCtx, bson.D{})
+func GetAllMonitors(ctx context.Context) ([]monitors.IConcreteMonitor, error) {
+	dbRes, err := withTimeout(ctx, func() ([]monitors.IConcreteMonitor, error) {
+		rows, err := dbClient.conn.Query(ctx,
+			`SELECT id, display_id, team_id, group_id, name, description, interval, kind, config FROM monitors`)
+
 		if err != nil {
 			return nil, err
 		}
-		defer cursor.Close(timeoutCtx)
+		var allMonitors []monitors.IConcreteMonitor
+		allMonitors, err = pgx.CollectRows(rows, monitorFromCollectableRow)
 
-		monitorsList := make([]monitors.IMonitor, 0)
-
-		// First decode into a map to determine the monitor type
-		for cursor.Next(timeoutCtx) {
-			// Decode into a raw document first
-			var rawDoc bson.M
-			if err := cursor.Decode(&rawDoc); err != nil {
-				return nil, err
-			}
-
-			monitor, err := monitors.FromRawBsonDoc(rawDoc)
-			if err != nil {
-				return nil, fmt.Errorf("failed to map monitor from BSON: %w", err)
-			}
-
-			monitorsList = append(monitorsList, monitor)
+		if err != nil {
+			return nil, err
 		}
-
-		if err := cursor.Err(); err != nil {
+		if err := rows.Err(); err != nil {
+			logging.Db.Error().Err(err).Msg("Error occurred while iterating over monitor rows")
 			return nil, err
 		}
 
-		return monitorsList, nil
+		return allMonitors, nil
 	})
 
 	logDbOperation("GetAllMonitors", dbRes, err)
@@ -110,13 +106,20 @@ func GetAllMonitors(ctx context.Context) ([]monitors.IMonitor, error) {
 	return dbRes.Result, nil
 }
 
-func DeleteMonitor(ctx context.Context, id string) (bool, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getMonitorsCollection().DeleteOne(timeoutCtx, bson.M{ID_FIELD: id})
+func DeleteMonitor(ctx context.Context, displayId string) (bool, error) {
+	dbRes, err := withTimeout(ctx, func() (*pgtype.UUID, error) {
+		result := dbClient.conn.QueryRow(ctx, `DELETE FROM monitors WHERE display_id=$1 RETURNING id`, displayId)
+
+		var id pgtype.UUID
+		err := result.Scan(&id)
 		if err != nil {
-			return false, err
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
 		}
-		return result.DeletedCount > 0, nil
+
+		return &id, nil
 	})
 
 	logDbOperation("DeleteMonitor", dbRes, err)
@@ -126,29 +129,33 @@ func DeleteMonitor(ctx context.Context, id string) (bool, error) {
 	}
 
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
-		Id:      id,
+		Id:      *dbRes.Result,
 		Status:  monitors.Deleted,
 		Monitor: nil,
 	})
 
-	return dbRes.Result, nil
+	if dbRes.Result == nil {
+		return false, nil
+	}
+	return true, nil
 }
 
 func GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (monitors.IMonitor, error) {
-		var rawDoc bson.M
-		err := dbClient.getMonitorsCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: id}).Decode(&rawDoc)
-		if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, ErrNotFound
-		}
+	dbRes, err := withTimeout(ctx, func() (monitors.IMonitor, error) {
+		row, err := dbClient.conn.Query(ctx,
+			`SELECT id, display_id, team_id, group_id, name, description, interval, kind, config FROM monitors WHERE id=$1`,
+			id)
+
 		if err != nil {
 			return nil, err
 		}
 
-		monitor, err := monitors.FromRawBsonDoc(rawDoc)
-
+		monitor, err := pgx.CollectOneRow(row, monitorFromCollectableRow)
 		if err != nil {
-			return nil, fmt.Errorf("failed to map monitor from BSON: %w", err)
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
 		}
 
 		return monitor, nil
@@ -156,23 +163,30 @@ func GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, error) {
 
 	logDbOperation("GetMonitorById", dbRes, err)
 
-	if err != nil {
-		return nil, err
-	}
-	return dbRes.Result, nil
+	return dbRes.Result, err
 }
 
-func UpdateMonitor(ctx context.Context, newMonitor monitors.IMonitor) (bool, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (bool, error) {
-		result, err := dbClient.getMonitorsCollection().UpdateOne(timeoutCtx, bson.M{OBJECT_ID_FIELD: newMonitor.GetObjectId()}, bson.M{"$set": newMonitor})
+func UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (bool, error) {
+	dbRes, err := withTimeout(ctx, func() (bool, error) {
+		result, err := dbClient.conn.Exec(ctx,
+			`UPDATE monitors SET display_id=$1, team_id=$2, group_id=$3, name=$4, description=$5, interval=$6, kind=$7, config=$8 WHERE id=$9`,
+			newMonitor.GetDisplayId(),
+			newMonitor.GetTeamId(),
+			newMonitor.GetGroupId(),
+			newMonitor.GetName(),
+			newMonitor.GetDescription(),
+			int(newMonitor.GetInterval().Seconds()),
+			string(newMonitor.GetType()),
+			newMonitor.GetConfig(),
+			newMonitor.GetId(),
+		)
 		if err != nil {
 			return false, err
 		}
-		if result.MatchedCount == 0 {
+		if result.RowsAffected() == 0 {
 			return false, ErrNotFound
 		}
-		wasUpdated := result.ModifiedCount > 0
-		return wasUpdated, nil
+		return result.RowsAffected() > 0, nil
 	})
 
 	logDbOperation("UpdateMonitor", dbRes, err)

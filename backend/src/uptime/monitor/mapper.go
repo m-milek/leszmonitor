@@ -7,16 +7,16 @@ import (
 	"io"
 )
 
-var monitorTypeMap = map[MonitorConfigType]func() IMonitor{
-	Http: func() IMonitor {
+var monitorTypeMap = map[MonitorConfigType]func() IConcreteMonitor{
+	Http: func() IConcreteMonitor {
 		return &HttpMonitor{}
 	},
-	Ping: func() IMonitor {
+	Ping: func() IConcreteMonitor {
 		return &PingMonitor{}
 	},
 }
 
-func MapMonitorType(typeTag MonitorConfigType) IMonitor {
+func MapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
 	if typeTag == "" {
 		return nil
 	}
@@ -26,7 +26,18 @@ func MapMonitorType(typeTag MonitorConfigType) IMonitor {
 	return nil
 }
 
-func FromReader(reader io.Reader) (IMonitor, error) {
+func MapMonitorConfigType(kind MonitorConfigType) IMonitorConfig {
+	switch kind {
+	case Http:
+		return &HttpConfig{}
+	case Ping:
+		return &PingConfig{}
+	default:
+		return nil
+	}
+}
+
+func FromReader(reader io.Reader) (IConcreteMonitor, error) {
 	var rawData json.RawMessage
 	if err := json.NewDecoder(reader).Decode(&rawData); err != nil {
 		return nil, fmt.Errorf("failed to decode request body: %w", err)
@@ -73,4 +84,15 @@ func FromRawBsonDoc(rawDoc bson.M) (IMonitor, error) {
 	}
 
 	return monitor, nil
+}
+
+func UnmarshalConfigFromBytes(kind MonitorConfigType, data []byte) (IMonitorConfig, error) {
+	config := MapMonitorConfigType(kind)
+	if config == nil {
+		return nil, fmt.Errorf("unknown monitor config type: %s", kind)
+	}
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal monitor config: %w", err)
+	}
+	return config, nil
 }

@@ -71,7 +71,7 @@ func (t *TestMonitor) AsPing() *TestMonitor {
 // Build creates the monitor instance
 func (t *TestMonitor) Build() IMonitor {
 	base := BaseMonitor{
-		Id:          t.ID,
+		DisplayId:   t.ID,
 		Name:        t.Name,
 		Description: t.Description,
 		Interval:    t.Interval,

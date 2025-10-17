@@ -1,0 +1,22 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.22.1-pg17
+    container_name: timescaledb
+    environment:
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: leszmonitor
+      POSTGRES_USER: leszmonitor-dev
+      POSTGRES_PASSWORD: dev-password
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  timescale_data:
+
+networks:
+  app-network:
+    driver: bridge

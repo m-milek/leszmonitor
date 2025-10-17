@@ -58,10 +58,10 @@ func (s *GroupServiceT) CreateMonitorGroup(context context.Context, teamAuth *mi
 	_, err = db.CreateMonitorGroup(context, monitorGroup)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			logger.Warn().Str("monitorGroupId", monitorGroup.Id).Msg("Monitor group already exists")
+			logger.Warn().Str("monitorGroupId", monitorGroup.DisplayId).Msg("Monitor group already exists")
 			return nil, &ServiceError{
 				Code: http.StatusConflict,
-				Err:  fmt.Errorf("monitor group with ID %s already exists", monitorGroup.Id),
+				Err:  fmt.Errorf("monitor group with DisplayId %s already exists", monitorGroup.DisplayId),
 			}
 		}
 		logger.Error().Err(err).Msg("Failed to create monitor group")
@@ -71,7 +71,7 @@ func (s *GroupServiceT) CreateMonitorGroup(context context.Context, teamAuth *mi
 		}
 	}
 
-	logger.Info().Str("monitorGroupId", monitorGroup.Id).Msg("Monitor group created successfully")
+	logger.Info().Str("monitorGroupId", monitorGroup.DisplayId).Msg("Monitor group created successfully")
 	return monitorGroup, nil
 }
 
@@ -89,7 +89,7 @@ func (s *GroupServiceT) GetTeamMonitorGroups(context context.Context, teamAuth *
 		logger.Error().Err(err).Msg("Failed to get monitor groups for team")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to get monitor groups for team %s: %w", team.Id, err),
+			Err:  fmt.Errorf("failed to get monitor groups for team %s: %w", team.DisplayId, err),
 		}
 	}
 
@@ -97,15 +97,15 @@ func (s *GroupServiceT) GetTeamMonitorGroups(context context.Context, teamAuth *
 	return groups, nil
 }
 
-// GetTeamMonitorGroupById retrieves a specific monitor group by its ID for the team in the provided TeamAuth.
+// GetTeamMonitorGroupById retrieves a specific monitor group by its DisplayId for the team in the provided TeamAuth.
 func (s *GroupServiceT) GetTeamMonitorGroupById(context context.Context, teamAuth *middleware.TeamAuth, groupId string) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("GetTeamMonitorGroupById")
 
 	if groupId == "" {
-		logger.Warn().Msg("Monitor group ID is required to get monitor group")
+		logger.Warn().Msg("Monitor group DisplayId is required to get monitor group")
 		return nil, &ServiceError{
 			Code: http.StatusBadRequest,
-			Err:  errors.New("monitor group ID is required"),
+			Err:  errors.New("monitor group DisplayId is required"),
 		}
 	}
 
@@ -114,16 +114,16 @@ func (s *GroupServiceT) GetTeamMonitorGroupById(context context.Context, teamAut
 		return nil, authErr
 	}
 
-	group, err := s.internalGetMonitorGroupById(context, team.Id, groupId)
+	group, err := s.internalGetMonitorGroupById(context, team.DisplayId, groupId)
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Info().Str("groupId", group.Id).Msg("Retrieved monitor group by ID")
+	logger.Info().Str("groupId", group.DisplayId).Msg("Retrieved monitor group by DisplayId")
 	return group, nil
 }
 
-// DeleteMonitorGroup deletes a specific monitor group by its ID for the team in the provided TeamAuth.
+// DeleteMonitorGroup deletes a specific monitor group by its DisplayId for the team in the provided TeamAuth.
 func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamAuth *middleware.TeamAuth, groupId string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitorGroup")
 
@@ -133,19 +133,19 @@ func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamAuth *mi
 	}
 
 	if groupId == "" {
-		logger.Warn().Msg("Monitor group ID is required for deletion")
+		logger.Warn().Msg("Monitor group DisplayId is required for deletion")
 		return &ServiceError{
 			Code: http.StatusBadRequest,
-			Err:  errors.New("monitor group ID is required"),
+			Err:  errors.New("monitor group DisplayId is required"),
 		}
 	}
 
-	deleted, err := db.DeleteMonitorGroup(context, team.Id, groupId)
+	deleted, err := db.DeleteMonitorGroup(context, team, groupId)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to delete monitor group")
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to delete monitor group with ID %s: %w", groupId, err),
+			Err:  fmt.Errorf("failed to delete monitor group with DisplayId %s: %w", groupId, err),
 		}
 	}
 
@@ -153,7 +153,7 @@ func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamAuth *mi
 		logger.Warn().Str("groupId", groupId).Msg("Monitor group not found for deletion")
 		return &ServiceError{
 			Code: http.StatusNotFound,
-			Err:  fmt.Errorf("monitor group with ID %s not found", groupId),
+			Err:  fmt.Errorf("monitor group with DisplayId %s not found", groupId),
 		}
 	}
 
@@ -161,7 +161,7 @@ func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamAuth *mi
 	return nil
 }
 
-// UpdateMonitorGroup updates the details of a specific monitor group by its ID for the team in the provided TeamAuth.
+// UpdateMonitorGroup updates the details of a specific monitor group by its DisplayId for the team in the provided TeamAuth.
 func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamAuth *middleware.TeamAuth, groupId string, payload *UpdateMonitorGroupPayload) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("UpdateMonitorGroup")
 
@@ -171,33 +171,34 @@ func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamAuth *middle
 	}
 
 	if groupId == "" {
-		logger.Warn().Msg("Monitor group ID is required for update")
+		logger.Warn().Msg("Monitor group DisplayId is required for update")
 		return nil, &ServiceError{
 			Code: http.StatusBadRequest,
-			Err:  errors.New("monitor group ID is required"),
+			Err:  errors.New("monitor group DisplayId is required"),
 		}
 	}
 
-	group, err := s.internalGetMonitorGroupById(ctx, team.Id, groupId)
+	oldGroup, err := s.internalGetMonitorGroupById(ctx, team.DisplayId, groupId)
 	if err != nil {
 		return nil, err
 	}
 
-	group.Name = payload.Name
-	group.Description = payload.Description
-	group.GenerateId()
+	newGroup := *oldGroup
+	newGroup.Name = payload.Name
+	newGroup.Description = payload.Description
+	newGroup.GenerateId()
 
-	_, updateErr := db.UpdateMonitorGroup(ctx, team.Id, group)
+	_, updateErr := db.UpdateMonitorGroup(ctx, team, oldGroup, &newGroup)
 	if updateErr != nil {
 		logger.Error().Err(updateErr).Msg("Failed to update monitor group")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to update monitor group with ID %s: %w", groupId, updateErr),
+			Err:  fmt.Errorf("failed to update monitor group with DisplayId %s: %w", groupId, updateErr),
 		}
 	}
 
-	logger.Info().Str("groupId", group.Id).Msg("Monitor group updated successfully")
-	return group, nil
+	logger.Info().Str("groupId", oldGroup.DisplayId).Msg("Monitor group updated successfully")
+	return &newGroup, nil
 }
 
 func (s *GroupServiceT) internalGetMonitorGroupById(ctx context.Context, teamId string, groupId string) (*models.MonitorGroup, *ServiceError) {
@@ -210,7 +211,7 @@ func (s *GroupServiceT) internalGetMonitorGroupById(ctx context.Context, teamId 
 			logger.Warn().Str("groupId", groupId).Msg("Monitor group not found")
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor group with ID %s not found", groupId),
+				Err:  fmt.Errorf("monitor group with DisplayId %s not found", groupId),
 			}
 		}
 		logger.Error().Err(err).Msg("Failed to get monitor group")
