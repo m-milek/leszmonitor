@@ -37,7 +37,7 @@ func TestNewMonitorGroup(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			group, err := NewMonitorGroup(tt.groupName, tt.description, &Team{
-				ObjectId: tt.teamId,
+				Id: tt.teamId,
 			})
 
 			if tt.wantErr {
@@ -47,7 +47,7 @@ func TestNewMonitorGroup(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, group)
-				assert.NotEmpty(t, group.Id)
+				assert.NotEmpty(t, group.DisplayId)
 				assert.Equal(t, tt.groupName, group.Name)
 				assert.Equal(t, tt.description, group.Description)
 				assert.Equal(t, tt.teamId, group.TeamId)
@@ -59,7 +59,7 @@ func TestNewMonitorGroup(t *testing.T) {
 
 func TestMonitorGroup_AddMonitor(t *testing.T) {
 	group := &MonitorGroup{
-		Id:         "test-id",
+		DisplayId:  "test-id",
 		Name:       "Test Group",
 		TeamId:     bson.NewObjectID(),
 		MonitorIds: []string{},

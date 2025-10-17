@@ -288,3 +288,11 @@ func (b *HttpMonitorResponse) addFailedAspect(aspect httpCheckAspect) {
 		b.Status = Failure
 	}
 }
+
+func (m *HttpMonitor) GetConfig() IMonitorConfig {
+	return &m.Config
+}
+
+func (m *HttpMonitor) SetConfig(config IMonitorConfig) {
+	m.Config = *config.(*HttpConfig)
+}

@@ -3,72 +3,49 @@ package db
 import (
 	"context"
 	"errors"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/jackc/pgx/v5"
 	"github.com/m-milek/leszmonitor/models"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func initUsersCollection(ctx context.Context, database *mongo.Database) error {
-	err := createCollection(ctx, database, usersCollectionName)
-	if err != nil {
-		if errors.Is(err, collectionAlreadyExistsError(usersCollectionName)) {
-			logging.Db.Debug().Msg("Users collection already exists.")
-			return nil
-		}
-		return err
-	} else {
-		logging.Db.Info().Msg("Users collection created successfully.")
-	}
+func CreateUser(ctx context.Context, user *models.User) error {
+	dbRes, err := withTimeout(ctx, func() (*struct{}, error) {
+		status, err := dbClient.conn.Exec(ctx,
+			`INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING *`,
+			user.Username, user.Email, user.PasswordHash)
 
-	usersCollection := database.Collection(usersCollectionName)
-	indexName, err := usersCollection.Indexes().CreateOne(
-		ctx,
-		mongo.IndexModel{
-			Keys: bson.D{
-				{ID_FIELD, 1},
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
-	if err != nil {
-		logging.Db.Error().Err(err).Msg("Failed to create index on users collection")
-		return err
-	} else {
-		logging.Db.Info().Msgf("Index created: %s", indexName)
-	}
-	return nil
-}
-
-func CreateUser(ctx context.Context, user *models.RawUser) (*mongo.InsertOneResult, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*mongo.InsertOneResult, error) {
-		res, err := dbClient.getUsersCollection().InsertOne(timeoutCtx, user)
 		if err != nil {
 			return nil, err
 		}
-		return res, nil
+		if status.RowsAffected() == 0 {
+			return nil, ErrAlreadyExists
+		}
+		return nil, err
 	})
 
 	logDbOperation("CreateUser", dbRes, err)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return dbRes.Result, nil
+	return nil
 }
 
-func GetUserByUsername(ctx context.Context, username string) (*models.UserResponse, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.UserResponse, error) {
-		var user models.RawUser
-		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: username}).Decode(&user)
+func GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	dbRes, err := withTimeout(ctx, func() (*models.User, error) {
+		var user models.User
+		var timestamps models.RawTimestamps
+		row := dbClient.conn.QueryRow(ctx,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username=$1`,
+			username)
+		err := row.Scan(&user.Id, &user.Username, &user.Email, &user.PasswordHash, &timestamps.CreatedAt, &timestamps.UpdatedAt)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
-		return user.IntoUser(), nil
+		user.SetTimestamps(timestamps)
+		return &user, nil
 	})
 
 	logDbOperation("GetUserByUsername", dbRes, err)
@@ -79,16 +56,21 @@ func GetUserByUsername(ctx context.Context, username string) (*models.UserRespon
 	return dbRes.Result, nil
 }
 
-func GetRawUserByUsername(ctx context.Context, username string) (*models.RawUser, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) (*models.RawUser, error) {
-		var user models.RawUser
-		err := dbClient.getUsersCollection().FindOne(timeoutCtx, bson.M{ID_FIELD: username}).Decode(&user)
+func GetRawUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	dbRes, err := withTimeout(ctx, func() (*models.User, error) {
+		var user models.User
+		var timestamps models.RawTimestamps
+		row := dbClient.conn.QueryRow(ctx,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username=$1`,
+			username)
+		err := row.Scan(&user.Id, &user.Username, &user.Email, &user.PasswordHash, &timestamps.CreatedAt, &timestamps.UpdatedAt)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
+		user.SetTimestamps(timestamps)
 		return &user, nil
 	})
 
@@ -100,25 +82,28 @@ func GetRawUserByUsername(ctx context.Context, username string) (*models.RawUser
 	return dbRes.Result, nil
 }
 
-func GetAllUsers(ctx context.Context) ([]models.UserResponse, error) {
-	dbRes, err := withTimeout(ctx, func(timeoutCtx context.Context) ([]models.UserResponse, error) {
-		cursor, err := dbClient.getUsersCollection().Find(timeoutCtx, bson.D{})
+func GetAllUsers(ctx context.Context) ([]models.User, error) {
+	dbRes, err := withTimeout(ctx, func() ([]models.User, error) {
+		rows, err := dbClient.conn.Query(ctx,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users`)
 		if err != nil {
 			return nil, err
 		}
-		defer cursor.Close(timeoutCtx)
+		defer rows.Close()
 
-		usersList := make([]models.UserResponse, 0)
+		usersList := make([]models.User, 0)
 
-		for cursor.Next(timeoutCtx) {
-			var user models.RawUser
-			if err := cursor.Decode(&user); err != nil {
+		for rows.Next() {
+			var user models.User
+			var timestamps models.RawTimestamps
+			if err := rows.Scan(&user.Id, &user.Username, &user.Email, &user.PasswordHash, &timestamps.CreatedAt, &timestamps.UpdatedAt); err != nil {
 				return nil, err
 			}
-			usersList = append(usersList, *user.IntoUser())
+			user.SetTimestamps(timestamps)
+			usersList = append(usersList, user)
 		}
 
-		if err := cursor.Err(); err != nil {
+		if err := rows.Err(); err != nil {
 			return nil, err
 		}
 

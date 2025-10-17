@@ -6,7 +6,7 @@ vars:
   BACKEND_SRC_DIR: '{{.BACKEND_DIR}}/src'
   BACKEND_BIN_DIR: '{{.BACKEND_DIR}}/bin'
   FRONTEND_DIR: '{{.TASKFILE_DIR}}/frontend'
-  DB_DIR: '{{.TASKFILE_DIR}}/mongodb'
+  DB_DIR: '{{.TASKFILE_DIR}}/db'
 
 env:
   "LOG_FILE_PATH": '{{.BACKEND_DIR}}/.dev-logs/backend.log'
@@ -150,25 +150,20 @@ tasks:
       - docker stop {{.APP_NAME}}-frontend || true
       - docker rm {{.APP_NAME}}-frontend || true
 
-  db:build:
-    desc: Build the MongoDB Docker image
+  db:run:
+    desc: Run the TimescaleDB Docker container
     dir: '{{.DB_DIR}}'
     cmds:
-      - docker build -t {{.APP_NAME}}-mongodb:latest .
-
-  db:run:
-    desc: Run the MongoDB Docker container
-    cmds:
-      - docker ps -a | grep {{.APP_NAME}}-mongodb || task db:build
       - task: db:stop
-      - docker run -d --name leszmonitor-mongodb --restart unless-stopped -v {{.APP_NAME}}_mongodb_data:/data/db -v {{.APP_NAME}}_mongodb_config:/data/configdb -p 27017:27017 leszmonitor-mongodb:latest
-      - echo "MongoDB container started on port 27017"
+      - cd {{.DB_DIR}} && docker compose up -d
+      - echo "TimescaleDB container started on port 5432"
 
   db:stop:
-    desc: Stop the MongoDB Docker container
+    desc: Stop the TimescaleDB Docker container
+    dir: '{{.DB_DIR}}'
     cmds:
-      - docker stop {{.APP_NAME}}-mongodb || true
-      - docker rm {{.APP_NAME}}-mongodb || true
+      - docker compose down || true
+      - echo "TimescaleDB container stopped"
 
   # Combined tasks
   dev:
