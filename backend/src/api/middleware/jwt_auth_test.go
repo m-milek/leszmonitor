@@ -272,7 +272,7 @@ func TestTeamAuthFromRequest(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "valid request with team DisplayId and user claims",
+			name: "valid request with team DisplayID and user claims",
 			setupRequest: func() *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/teams/team123", nil)
 				req.SetPathValue("teamId", "team123")
@@ -287,7 +287,7 @@ func TestTeamAuthFromRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "missing team DisplayId",
+			name: "missing team DisplayID",
 			setupRequest: func() *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/teams/", nil)
 				// No teamId path value set

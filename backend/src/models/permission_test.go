@@ -8,7 +8,7 @@ import (
 
 func TestNewPermission(t *testing.T) {
 	t.Run("Creates permission with correct fields", func(t *testing.T) {
-		perm := NewPermission("test:permission", "Test Permission", "Test description")
+		perm := newPermission("test:permission", "Test Permission", "Test description")
 
 		assert.Equal(t, "test:permission", perm.ID)
 		assert.Equal(t, "Test Permission", perm.Name)
@@ -16,7 +16,7 @@ func TestNewPermission(t *testing.T) {
 	})
 
 	t.Run("Creates permission with empty fields", func(t *testing.T) {
-		perm := NewPermission("", "", "")
+		perm := newPermission("", "", "")
 
 		assert.Equal(t, "", perm.ID)
 		assert.Equal(t, "", perm.Name)
@@ -59,7 +59,7 @@ func TestGetEffectivePermissions(t *testing.T) {
 	})
 
 	t.Run("Permission not in implications map", func(t *testing.T) {
-		customPerm := NewPermission("custom:perm", "Custom", "Custom permission")
+		customPerm := newPermission("custom:perm", "Custom", "Custom permission")
 		perms := getEffectivePermissions(customPerm)
 
 		assert.Len(t, perms, 1)
@@ -69,7 +69,7 @@ func TestGetEffectivePermissions(t *testing.T) {
 
 func TestTeamRoleHasPermissions(t *testing.T) {
 	t.Run("Owner has all permissions", func(t *testing.T) {
-		owner := TeamRoleOwner
+		owner := RoleOwner
 
 		// Direct permissions
 		assert.True(t, owner.HasPermissions(PermissionTeamAdmin))
@@ -87,7 +87,7 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 	})
 
 	t.Run("Admin has correct permissions", func(t *testing.T) {
-		admin := TeamRoleAdmin
+		admin := RoleAdmin
 
 		// Direct permissions
 		assert.True(t, admin.HasPermissions(PermissionTeamEditor))
@@ -103,7 +103,7 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 	})
 
 	t.Run("Member has limited permissions", func(t *testing.T) {
-		member := TeamRoleMember
+		member := RoleMember
 
 		// Direct permissions
 		assert.True(t, member.HasPermissions(PermissionTeamReader))
@@ -119,7 +119,7 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 	})
 
 	t.Run("Viewer has read-only permissions", func(t *testing.T) {
-		viewer := TeamRoleViewer
+		viewer := RoleViewer
 
 		// Direct permissions
 		assert.True(t, viewer.HasPermissions(PermissionTeamReader))
@@ -133,22 +133,22 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 	})
 
 	t.Run("Empty permissions check", func(t *testing.T) {
-		owner := TeamRoleOwner
+		owner := RoleOwner
 		assert.False(t, owner.HasPermissions())
 	})
 
 	t.Run("Nil role", func(t *testing.T) {
-		var nilRole *TeamRole
+		var nilRole *Role
 		assert.False(t, nilRole.HasPermissions(PermissionTeamReader))
 	})
 
 	t.Run("Invalid role", func(t *testing.T) {
-		invalidRole := TeamRole("invalid")
+		invalidRole := Role("invalid")
 		assert.False(t, invalidRole.HasPermissions(PermissionTeamReader))
 	})
 
 	t.Run("Multiple permissions check - all required", func(t *testing.T) {
-		member := TeamRoleMember
+		member := RoleMember
 
 		// Should have both
 		assert.True(t, member.HasPermissions(PermissionTeamReader, PermissionMonitorReader))
@@ -159,8 +159,8 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 	})
 
 	t.Run("Permission not in system", func(t *testing.T) {
-		owner := TeamRoleOwner
-		unknownPerm := NewPermission("unknown:perm", "Unknown", "Unknown permission")
+		owner := RoleOwner
+		unknownPerm := newPermission("unknown:perm", "Unknown", "Unknown permission")
 
 		assert.False(t, owner.HasPermissions(unknownPerm))
 	})

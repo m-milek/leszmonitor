@@ -33,18 +33,16 @@ func CreateUser(ctx context.Context, user *models.User) error {
 func GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	dbRes, err := withTimeout(ctx, func() (*models.User, error) {
 		var user models.User
-		var timestamps models.RawTimestamps
 		row := dbClient.conn.QueryRow(ctx,
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username=$1`,
 			username)
-		err := row.Scan(&user.Id, &user.Username, &user.Email, &user.PasswordHash, &timestamps.CreatedAt, &timestamps.UpdatedAt)
+		err := row.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
-		user.SetTimestamps(timestamps)
 		return &user, nil
 	})
 
@@ -59,18 +57,16 @@ func GetUserByUsername(ctx context.Context, username string) (*models.User, erro
 func GetRawUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	dbRes, err := withTimeout(ctx, func() (*models.User, error) {
 		var user models.User
-		var timestamps models.RawTimestamps
 		row := dbClient.conn.QueryRow(ctx,
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username=$1`,
 			username)
-		err := row.Scan(&user.Id, &user.Username, &user.Email, &user.PasswordHash, &timestamps.CreatedAt, &timestamps.UpdatedAt)
+		err := row.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
 		}
-		user.SetTimestamps(timestamps)
 		return &user, nil
 	})
 
@@ -95,11 +91,9 @@ func GetAllUsers(ctx context.Context) ([]models.User, error) {
 
 		for rows.Next() {
 			var user models.User
-			var timestamps models.RawTimestamps
-			if err := rows.Scan(&user.Id, &user.Username, &user.Email, &user.PasswordHash, &timestamps.CreatedAt, &timestamps.UpdatedAt); err != nil {
+			if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt); err != nil {
 				return nil, err
 			}
-			user.SetTimestamps(timestamps)
 			usersList = append(usersList, user)
 		}
 

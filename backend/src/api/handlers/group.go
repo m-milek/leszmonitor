@@ -51,8 +51,8 @@ func GetTeamMonitorGroupById(w http.ResponseWriter, r *http.Request) {
 	groupId := r.PathValue("groupId")
 
 	if groupId == "" {
-		logging.Api.Trace().Msg("Monitor group DisplayId is required to get monitor group")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor group DisplayId is required")
+		logging.Api.Trace().Msg("Monitor group DisplayID is required to get monitor group")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor group DisplayID is required")
 		return
 	}
 
@@ -63,7 +63,7 @@ func GetTeamMonitorGroupById(w http.ResponseWriter, r *http.Request) {
 
 	monitorGroup, err := services.GroupService.GetTeamMonitorGroupById(r.Context(), teamAuth, groupId)
 	if err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to get monitor group by DisplayId")
+		logging.Api.Error().Err(err).Msg("Failed to get monitor group by DisplayID")
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
@@ -80,8 +80,8 @@ func DeleteMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
 	groupId := r.PathValue("groupId")
 
 	if groupId == "" {
-		logging.Api.Trace().Msg("Monitor group DisplayId is required for deletion")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor group DisplayId is required")
+		logging.Api.Trace().Msg("Monitor group DisplayID is required for deletion")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor group DisplayID is required")
 		return
 	}
 
@@ -104,8 +104,8 @@ func UpdateMonitorGroupHandler(w http.ResponseWriter, r *http.Request) {
 	groupId := r.PathValue("groupId")
 
 	if groupId == "" {
-		logging.Api.Trace().Msg("Monitor group DisplayId is required for update")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor group DisplayId is required")
+		logging.Api.Trace().Msg("Monitor group DisplayID is required for update")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor group DisplayID is required")
 		return
 	}
 

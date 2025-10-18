@@ -1,20 +1,45 @@
 package models
 
-import "github.com/jackc/pgx/v5/pgtype"
+import (
+	"fmt"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/m-milek/leszmonitor/models/util"
+)
 
+// User represents a user in the system.
 type User struct {
-	Id           pgtype.UUID `json:"id"`
+	ID           pgtype.UUID `json:"id"`
 	Username     string      `json:"username"`
 	PasswordHash string      `json:"-"`
 	Email        string      `json:"email"`
-	Timestamps
+	util.Timestamps
 }
 
 // NewUser creates a new User instance with the provided username, password, and email.
-func NewUser(username, hashedPassword, email string) *User {
-	return &User{
+func NewUser(username, hashedPassword, email string) (*User, error) {
+	user := &User{
 		Username:     username,
 		PasswordHash: hashedPassword,
 		Email:        email,
 	}
+	err := user.Validate()
+
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// Validate checks if the User has valid fields.
+func (u *User) Validate() error {
+	if u.Username == "" {
+		return fmt.Errorf("username cannot be empty")
+	}
+	if u.PasswordHash == "" {
+		return fmt.Errorf("password hash cannot be empty")
+	}
+	if u.Email == "" {
+		return fmt.Errorf("email cannot be empty")
+	}
+	return nil
 }
