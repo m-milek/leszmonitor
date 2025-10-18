@@ -13,8 +13,8 @@ import (
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	groupId := r.PathValue("groupId")
 	if groupId == "" {
-		logging.Api.Trace().Msg("Group DisplayId is required for creating a monitor")
-		util.RespondMessage(w, http.StatusBadRequest, "Group DisplayId is required")
+		logging.Api.Trace().Msg("Group DisplayID is required for creating a monitor")
+		util.RespondMessage(w, http.StatusBadRequest, "Group DisplayID is required")
 		return
 	}
 
@@ -44,8 +44,8 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorId := r.PathValue("monitorId")
 
 	if monitorId == "" {
-		logging.Api.Trace().Msg("Monitor DisplayId is required for deletion")
-		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor DisplayId is required")
+		logging.Api.Trace().Msg("Monitor DisplayID is required for deletion")
+		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor DisplayID is required")
 		return
 	}
 
@@ -83,8 +83,8 @@ func GetMonitorByIdHandler(w http.ResponseWriter, r *http.Request) {
 	monitorId := r.PathValue("monitorId")
 
 	if monitorId == "" {
-		logging.Api.Trace().Msg("Monitor DisplayId is required")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayId is required")
+		logging.Api.Trace().Msg("Monitor DisplayID is required")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
 		return
 	}
 
@@ -109,8 +109,8 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorId := r.PathValue("monitorId")
 
 	if monitorId == "" {
-		logging.Api.Trace().Msg("Monitor DisplayId is required for update")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayId is required")
+		logging.Api.Trace().Msg("Monitor DisplayID is required for update")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
 		return
 	}
 

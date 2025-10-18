@@ -4,44 +4,49 @@ import (
 	"fmt"
 )
 
-type TeamRole string
+// Role represents the role of a team member within a team.
+type Role string
 
 const (
-	TeamRoleOwner  TeamRole = "owner"  // Owner, has full permissions to manage the team
-	TeamRoleAdmin  TeamRole = "admin"  // Admin, has full permissions to manage monitors and the team
-	TeamRoleMember TeamRole = "member" // Member, can manage monitors and view team details
-	TeamRoleViewer TeamRole = "viewer" // Viewer, can only view monitor statuses and team details
+	RoleOwner  Role = "owner"  // RoleOwner has full permissions to manage the team
+	RoleAdmin  Role = "admin"  // RoleAdmin has full permissions to manage monitors and the team
+	RoleMember Role = "member" // RoleMember can manage monitors and view team details
+	RoleViewer Role = "viewer" // RoleViewer can only view monitor statuses and team details
 )
 
-var rolePermissions = map[TeamRole][]Permission{
-	TeamRoleOwner: {
+var rolePermissions = map[Role][]Permission{
+	RoleOwner: {
 		PermissionTeamAdmin,
 		PermissionMonitorAdmin,
 	},
-	TeamRoleAdmin: {
+	RoleAdmin: {
 		PermissionTeamEditor,
 		PermissionMonitorAdmin,
 	},
-	TeamRoleMember: {
+	RoleMember: {
 		PermissionTeamReader,
 		PermissionMonitorEditor,
 	},
-	TeamRoleViewer: {
+	RoleViewer: {
 		PermissionTeamReader,
 		PermissionMonitorReader,
 	},
 }
 
-func (r *TeamRole) Validate() error {
+// Validate checks if the Role is one of the defined roles.
+func (r *Role) Validate() error {
 	switch *r {
-	case TeamRoleOwner, TeamRoleAdmin, TeamRoleMember, TeamRoleViewer:
+	case RoleOwner, RoleAdmin, RoleMember, RoleViewer:
 		return nil
 	default:
 		return fmt.Errorf("invalid team role: %s", *r)
 	}
 }
 
-func (r *TeamRole) HasPermissions(permissions ...Permission) bool {
+// HasPermissions checks if the Role includes all the specified permissions.
+// It considers permission implications, so higher-level permissions
+// automatically include lower-level permissions.
+func (r *Role) HasPermissions(permissions ...Permission) bool {
 	if r == nil || len(permissions) == 0 {
 		return false
 	}

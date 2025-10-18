@@ -34,7 +34,7 @@ type TeamCreatePayload struct {
 }
 
 type TeamCreateResponse struct {
-	TeamId string `json:"teamId"` // The DisplayId of the newly created team
+	TeamId string `json:"teamId"` // The DisplayID of the newly created team
 }
 
 type TeamUpdatePayload struct {
@@ -43,8 +43,8 @@ type TeamUpdatePayload struct {
 }
 
 type TeamAddMemberPayload struct {
-	Username string          `json:"username"` // The username of the user to add to the team
-	Role     models.TeamRole `json:"role"`     // The role to assign to the user in the team
+	Username string      `json:"username"` // The username of the user to add to the team
+	Role     models.Role `json:"role"`     // The role to assign to the user in the team
 }
 
 type TeamRemoveMemberPayload struct {
@@ -52,8 +52,8 @@ type TeamRemoveMemberPayload struct {
 }
 
 type TeamChangeMemberRolePayload struct {
-	Username string          `json:"username"` // The username of the user whose role is to be changed
-	Role     models.TeamRole `json:"role"`     // The new role to assign to the user in the team
+	Username string      `json:"username"` // The username of the user whose role is to be changed
+	Role     models.Role `json:"role"`     // The new role to assign to the user in the team
 }
 
 // GetAllTeams retrieves all teams from the database. No authentication is required at the moment.
@@ -75,17 +75,17 @@ func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *Service
 	return teams, nil
 }
 
-// GetTeamById retrieves a team by its DisplayId, ensuring the requesting user has at least reader permissions.
+// GetTeamById retrieves a team by its DisplayID, ensuring the requesting user has at least reader permissions.
 func (s *TeamServiceT) GetTeamById(ctx context.Context, teamAuth *middleware.TeamAuth) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("GetTeamById")
-	logger.Trace().Str("teamId", teamAuth.TeamId).Msg("Retrieving team by DisplayId")
+	logger.Trace().Str("teamId", teamAuth.TeamId).Msg("Retrieving team by DisplayID")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamReader)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	logger.Trace().Str("teamId", team.DisplayId).Msg("Retrieved team successfully")
+	logger.Trace().Str("teamId", team.DisplayID).Msg("Retrieved team successfully")
 	return team, nil
 }
 
@@ -110,7 +110,7 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 		}
 	}
 
-	team, err := models.NewTeam(payload.Name, payload.Description, user.Id)
+	team, err := models.NewTeam(payload.Name, payload.Description, user.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to create new team model")
 		return nil, &ServiceError{
@@ -119,15 +119,14 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 		}
 	}
 
-	team.GenerateId()
 	_, err = db.CreateTeam(ctx, team)
 
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			logger.Warn().Str("DisplayId", team.DisplayId).Msg("Team already exists")
+			logger.Warn().Str("DisplayID", team.DisplayID).Msg("Team already exists")
 			return nil, &ServiceError{
 				Code: http.StatusConflict,
-				Err:  fmt.Errorf("team with DisplayId '%s' already exists", team.DisplayId),
+				Err:  fmt.Errorf("team with DisplayID '%s' already exists", team.DisplayID),
 			}
 		}
 		logger.Error().Err(err).Msg("Failed to create team")
@@ -137,13 +136,13 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 		}
 	}
 
-	logger.Trace().Str("teamId", team.DisplayId).Msg("Team created successfully")
+	logger.Trace().Str("teamId", team.DisplayID).Msg("Team created successfully")
 	return &TeamCreateResponse{
-		TeamId: team.DisplayId,
+		TeamId: team.DisplayID,
 	}, nil
 }
 
-// DeleteTeam deletes a team by its DisplayId.
+// DeleteTeam deletes a team by its DisplayID.
 // Requires admin permissions.
 func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamAuth *middleware.TeamAuth) *ServiceError {
 	logger := s.getMethodLogger("DeleteTeam")
@@ -154,16 +153,16 @@ func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamAuth *middleware.Team
 		return authErr
 	}
 
-	_, err := db.DeleteTeam(ctx, team.DisplayId)
+	_, err := db.DeleteTeam(ctx, team.DisplayID)
 	if err != nil {
-		logger.Error().Err(err).Str("teamId", team.DisplayId).Msg("Failed to delete team")
+		logger.Error().Err(err).Str("teamId", team.DisplayID).Msg("Failed to delete team")
 		return &ServiceError{
 			Code: 500,
-			Err:  fmt.Errorf("failed to delete team %s: %w", team.DisplayId, err),
+			Err:  fmt.Errorf("failed to delete team %s: %w", team.DisplayID, err),
 		}
 	}
 
-	logger.Trace().Str("teamId", team.DisplayId).Msg("Team deleted successfully")
+	logger.Trace().Str("teamId", team.DisplayID).Msg("Team deleted successfully")
 	return nil
 }
 
@@ -180,19 +179,19 @@ func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamAuth *middleware.Team
 
 	team.Name = payload.Name
 	team.Description = payload.Description
-	team.GenerateId()
+	team.DisplayIDFromName.Init(team.Name)
 
 	_, err := db.UpdateTeam(ctx, team)
 
 	if err != nil {
-		logger.Error().Err(err).Str("teamId", team.DisplayId).Msg("Failed to update team")
+		logger.Error().Err(err).Str("teamId", team.DisplayID).Msg("Failed to update team")
 		return nil, &ServiceError{
 			Code: 500,
-			Err:  fmt.Errorf("failed to update team %s: %w", team.DisplayId, err),
+			Err:  fmt.Errorf("failed to update team %s: %w", team.DisplayID, err),
 		}
 	}
 
-	logger.Trace().Str("teamId", team.DisplayId).Msg("Team updated successfully")
+	logger.Trace().Str("teamId", team.DisplayID).Msg("Team updated successfully")
 	return team, nil
 }
 
@@ -231,24 +230,28 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.T
 		}
 	}
 
-	teamMember := &models.TeamMember{
-		Id:   user.Id,
-		Role: payload.Role,
-	}
-
-	_, err = db.AddMemberToTeam(ctx, team.DisplayId, teamMember)
+	teamMember, err := models.NewTeamMember(user.ID, payload.Role)
 	if err != nil {
-		if errors.Is(err, db.ErrAlreadyExists) {
-			logger.Warn().Str("teamId", team.DisplayId).Str("username", payload.Username).Msg("User already a member of team")
-			return &ServiceError{
-				Code: 409,
-				Err:  fmt.Errorf("user %s is already a member of team %s", payload.Username, team.DisplayId),
-			}
-		}
-		logger.Error().Err(err).Str("teamId", team.DisplayId).Str("username", payload.Username).Msg("Failed to add user to team")
+		logger.Error().Err(err).Str("username", payload.Username).Any("role", payload.Role).Msg("Failed to create team member model")
 		return &ServiceError{
 			Code: 500,
-			Err:  fmt.Errorf("failed to add user %s to team %s: %w", payload.Username, team.DisplayId, err),
+			Err:  fmt.Errorf("failed to create team member for user %s: %w", payload.Username, err),
+		}
+	}
+
+	_, err = db.AddMemberToTeam(ctx, team.DisplayID, teamMember)
+	if err != nil {
+		if errors.Is(err, db.ErrAlreadyExists) {
+			logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("User already a member of team")
+			return &ServiceError{
+				Code: 409,
+				Err:  fmt.Errorf("user %s is already a member of team %s", payload.Username, team.DisplayID),
+			}
+		}
+		logger.Error().Err(err).Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("Failed to add user to team")
+		return &ServiceError{
+			Code: 500,
+			Err:  fmt.Errorf("failed to add user %s to team %s: %w", payload.Username, team.DisplayID, err),
 		}
 	}
 
@@ -271,28 +274,28 @@ func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middlew
 		return err
 	}
 
-	if !team.IsMember(user.Id) {
-		logger.Warn().Str("teamId", team.DisplayId).Str("username", payload.Username).Msg("User not a member of team")
+	if !team.IsMember(user.ID) {
+		logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("User not a member of team")
 		return &ServiceError{
 			Code: 400,
-			Err:  fmt.Errorf("user %s is not a member of team %s", payload.Username, team.DisplayId),
+			Err:  fmt.Errorf("user %s is not a member of team %s", payload.Username, team.DisplayID),
 		}
 	}
 
-	removed, dbErr := db.RemoveMemberFromTeam(ctx, team.DisplayId, user.Id)
+	removed, dbErr := db.RemoveMemberFromTeam(ctx, team.DisplayID, user.ID)
 	if dbErr != nil {
-		logger.Error().Err(err).Str("teamId", team.DisplayId).Str("username", payload.Username).Msg("Failed to remove user from team")
+		logger.Error().Err(err).Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("Failed to remove user from team")
 		return &ServiceError{
 			Code: 500,
-			Err:  fmt.Errorf("failed to remove user %s from team %s: %w", payload.Username, team.DisplayId, err),
+			Err:  fmt.Errorf("failed to remove user %s from team %s: %w", payload.Username, team.DisplayID, err),
 		}
 	}
 
 	if !removed {
-		logger.Warn().Str("teamId", team.DisplayId).Str("username", payload.Username).Msg("User not a member of team")
+		logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("User not a member of team")
 		return &ServiceError{
 			Code: 400,
-			Err:  fmt.Errorf("user %s is not a member of team %s", payload.Username, team.DisplayId),
+			Err:  fmt.Errorf("user %s is not a member of team %s", payload.Username, team.DisplayID),
 		}
 	}
 
@@ -315,28 +318,28 @@ func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamAuth *middlewar
 		return err
 	}
 
-	if !team.IsMember(user.Id) {
-		logger.Warn().Str("teamId", team.DisplayId).Str("username", payload.Username).Msg("User not a member of team")
+	if !team.IsMember(user.ID) {
+		logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("User not a member of team")
 		return &ServiceError{
 			Code: 400,
-			Err:  fmt.Errorf("user %s is not a member of team %s", payload.Username, team.DisplayId),
+			Err:  fmt.Errorf("user %s is not a member of team %s", payload.Username, team.DisplayID),
 		}
 	}
 
 	if err := payload.Role.Validate(); err != nil {
-		logger.Warn().Str("teamId", team.DisplayId).Str("username", payload.Username).Any("role", payload.Role).Msg("Invalid role for user")
+		logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Any("role", payload.Role).Msg("Invalid role for user")
 		return &ServiceError{
 			Code: 400,
 			Err:  fmt.Errorf("invalid role: %w", err),
 		}
 	}
 
-	changeRoleErr := team.ChangeMemberRole(user.Id, payload.Role)
+	changeRoleErr := team.ChangeMemberRole(user.ID, payload.Role)
 	if changeRoleErr != nil {
-		logger.Error().Err(changeRoleErr).Str("teamId", team.DisplayId).Str("username", payload.Username).Msg("Error changing role for user in team")
+		logger.Error().Err(changeRoleErr).Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("Error changing role for user in team")
 		return &ServiceError{
 			Code: 500,
-			Err:  fmt.Errorf("error changing role for user %s in team %s: %w", payload.Username, team.DisplayId, changeRoleErr),
+			Err:  fmt.Errorf("error changing role for user %s in team %s: %w", payload.Username, team.DisplayID, changeRoleErr),
 		}
 	}
 
@@ -349,7 +352,7 @@ func (s *TeamServiceT) internalGetTeamById(ctx context.Context, id string) (*mod
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("team with DisplayId %s not found", id),
+				Err:  fmt.Errorf("team with DisplayID %s not found", id),
 			}
 		}
 		return nil, &ServiceError{

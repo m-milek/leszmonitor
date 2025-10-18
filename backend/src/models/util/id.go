@@ -6,11 +6,21 @@ import (
 	"strings"
 )
 
+type DisplayIDFromName struct {
+	DisplayID string `json:"displayId"`
+	Name      string `json:"name"`
+}
+
+func (d *DisplayIDFromName) Init(name string) {
+	d.Name = name
+	d.DisplayID = idFromString(d.Name)
+}
+
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9\-\s]+`)
 var whitespaceRegex = regexp.MustCompile(`\s+`)
 var multipleHyphensRegex = regexp.MustCompile(`-+`)
 
-func IDFromString(s string) string {
+func idFromString(s string) string {
 	var id string
 
 	id = strings.ToLower(s)
