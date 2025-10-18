@@ -3,24 +3,27 @@ package models
 import (
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/models/util"
 )
 
+// MonitorGroup represents a group of monitors assigned to a team.
+// Monitor groups help organize monitors within a team.
+// They are just for organizational purposes - access to monitors is controlled at the team level.
 type MonitorGroup struct {
-	Id          pgtype.UUID `json:"id"`          // MongoDB ObjectID for internal use
-	DisplayId   string      `json:"displayId"`   // Unique identifier for the monitor group
-	Name        string      `json:"name"`        // Name of the monitor group
+	ID pgtype.UUID `json:"id"` // ID is the UUID of the monitor group - database primary key
+	util.DisplayIDFromName
+	TeamID      pgtype.UUID `json:"-"`           // DisplayID of the team that owns the monitor group
 	Description string      `json:"description"` // Description of the monitor group
-	TeamId      pgtype.UUID `json:"-"`           // DisplayId of the team that owns the monitor group
+	util.Timestamps
 }
 
+// NewMonitorGroup creates a new MonitorGroup instance and validates it.
 func NewMonitorGroup(name string, description string, team *Team) (*MonitorGroup, error) {
 	group := &MonitorGroup{
-		DisplayId:   util.IdFromString(name),
-		Name:        name,
 		Description: description,
-		TeamId:      team.Id,
+		TeamID:      team.ID,
 	}
+	group.DisplayIDFromName.Init(name)
 	err := group.Validate()
 
 	if err != nil {
@@ -29,16 +32,13 @@ func NewMonitorGroup(name string, description string, team *Team) (*MonitorGroup
 	return group, nil
 }
 
+// Validate checks if the MonitorGroup has valid Name and DisplayID.
 func (g *MonitorGroup) Validate() error {
 	if g.Name == "" {
 		return fmt.Errorf("monitor group name cannot be empty")
 	}
-	if g.DisplayId == "" {
-		return fmt.Errorf("team DisplayId cannot be empty")
+	if g.DisplayID == "" {
+		return fmt.Errorf("team DisplayID cannot be empty")
 	}
 	return nil
-}
-
-func (g *MonitorGroup) GenerateId() {
-	g.DisplayId = util.IdFromString(g.Name)
 }

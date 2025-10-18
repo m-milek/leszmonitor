@@ -43,8 +43,18 @@ func TestIdFromString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := IDFromString(tt.input)
+			result := idFromString(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestDisplayIDFromName_Init(t *testing.T) {
+	name := "Sample Name"
+	var displayID DisplayIDFromName
+	displayID.Init(name)
+
+	expectedID := "sample-name"
+	assert.Equal(t, expectedID, displayID.DisplayID)
+	assert.Equal(t, name, displayID.Name)
 }

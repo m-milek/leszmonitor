@@ -33,7 +33,7 @@ func monitorFromCollectableRow(row pgx.CollectableRow) (monitors.IConcreteMonito
 	return monitor, nil
 }
 
-// CreateMonitor adds a new monitor to the database and returns its DisplayId (short DisplayId).
+// CreateMonitor adds a new monitor to the database and returns its DisplayID (short DisplayID).
 func CreateMonitor(ctx context.Context, monitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error) {
 	dbRes, err := withTimeout(ctx, func() (monitors.IConcreteMonitor, error) {
 		rows, err := dbClient.conn.Query(ctx,
