@@ -44,7 +44,7 @@ func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAut
 	}
 
 	// Is the requestor a member of that team?
-	if !team.IsMember(user.Id) {
+	if !team.IsMember(user.ID) {
 		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Msg("User is not a member of the team")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,
@@ -59,7 +59,7 @@ func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAut
 	}
 
 	// Does the requestor have the required permissions?
-	if !team.GetMember(user.Id).Role.HasPermissions(permissions...) {
+	if !team.GetMember(user.ID).Role.HasPermissions(permissions...) {
 		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for team")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,

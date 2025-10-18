@@ -107,7 +107,14 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
-	user := models.NewUser(payload.Username, hashedPassword, payload.Email)
+	user, err := models.NewUser(payload.Username, hashedPassword, payload.Email)
+	if err != nil {
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
+		return &ServiceError{
+			Code: http.StatusBadRequest,
+			Err:  fmt.Errorf("invalid user data for %s: %w", payload.Username, err),
+		}
+	}
 
 	err = db.CreateUser(ctx, user)
 

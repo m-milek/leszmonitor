@@ -12,9 +12,9 @@ func CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*model
 	dbRes, err := withTimeout(ctx, func() (*models.MonitorGroup, error) {
 		rows := dbClient.conn.QueryRow(ctx,
 			`INSERT INTO groups (display_id, team_id, name, description) VALUES ($1, $2, $3, $4) RETURNING id`,
-			group.DisplayId, group.TeamId, group.Name, group.Description)
+			group.DisplayID, group.TeamID, group.Name, group.Description)
 
-		err := rows.Scan(&group.Id)
+		err := rows.Scan(&group.ID)
 
 		return group, err
 	})
@@ -27,11 +27,11 @@ func CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*model
 func GetMonitorGroupById(ctx context.Context, displayId string) (*models.MonitorGroup, error) {
 	dbRes, err := withTimeout(ctx, func() (*models.MonitorGroup, error) {
 		rows := dbClient.conn.QueryRow(ctx,
-			`SELECT id, display_id, team_id, name, description FROM groups WHERE display_id=$1`,
+			`SELECT id, display_id, team_id, name, description, created_at, updated_at FROM groups WHERE display_id=$1`,
 			displayId)
 
 		group := &models.MonitorGroup{}
-		err := rows.Scan(&group.Id, &group.DisplayId, &group.TeamId, &group.Name, &group.Description)
+		err := rows.Scan(&group.ID, &group.DisplayID, &group.TeamID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt)
 
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
@@ -51,11 +51,11 @@ func GetMonitorGroupById(ctx context.Context, displayId string) (*models.Monitor
 func GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.MonitorGroup, error) {
 	dbRes, err := withTimeout(ctx, func() ([]models.MonitorGroup, error) {
 		rows, err := dbClient.conn.Query(ctx,
-			`SELECT id, display_id, team_id, name, description FROM groups WHERE team_id=$1`,
-			team.Id)
+			`SELECT id, display_id, team_id, name, description, created_at, updated_at FROM groups WHERE team_id=$1`,
+			team.ID)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				logging.Db.Info().Msgf("No monitor groups found for team %s", team.DisplayId)
+				logging.Db.Info().Msgf("No monitor groups found for team %s", team.DisplayID)
 				return []models.MonitorGroup{}, nil
 			}
 			return nil, err
@@ -64,7 +64,7 @@ func GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.M
 		var groups []models.MonitorGroup
 		groups, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.MonitorGroup, error) {
 			var group models.MonitorGroup
-			err := row.Scan(&group.Id, &group.DisplayId, &group.TeamId, &group.Name, &group.Description)
+			err := row.Scan(&group.ID, &group.DisplayID, &group.TeamID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt)
 			return group, err
 		})
 		if err != nil {
@@ -81,8 +81,8 @@ func GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.M
 func UpdateMonitorGroup(ctx context.Context, team *models.Team, oldGroup, newGroup *models.MonitorGroup) (bool, error) {
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
 		result, err := dbClient.conn.Exec(ctx,
-			`UPDATE groups SET name=$1, description=$2 WHERE id=$3 AND team_id=$4 RETURNING *`,
-			newGroup.Name, newGroup.Description, oldGroup.Id, team.Id)
+			`UPDATE groups SET display_id=$1, name=$2, description=$3 WHERE id=$4 AND team_id=$5 RETURNING *`,
+			newGroup.DisplayID, newGroup.Name, newGroup.Description, oldGroup.ID, team.ID)
 
 		if err != nil {
 			return false, err
@@ -103,7 +103,7 @@ func DeleteMonitorGroup(ctx context.Context, team *models.Team, groupId string) 
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
 		result, err := dbClient.conn.Exec(ctx,
 			`DELETE FROM groups WHERE display_id=$1 AND team_id=$2`,
-			groupId, team.Id)
+			groupId, team.ID)
 		if err != nil {
 			return false, err
 		}

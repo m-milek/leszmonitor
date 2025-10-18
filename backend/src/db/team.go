@@ -11,11 +11,7 @@ import (
 // teamMemberFromCollectableRow maps a pgx.CollectableRow to a models.TeamMember struct.
 func teamMemberFromCollectableRow(row pgx.CollectableRow) (models.TeamMember, error) {
 	member := models.TeamMember{}
-	var timestamps models.RawTimestamps
-
-	err := row.Scan(&member.Id, &member.Role, &timestamps.CreatedAt, &timestamps.UpdatedAt)
-
-	member.SetTimestamps(timestamps)
+	err := row.Scan(&member.ID, &member.Role, &member.CreatedAt, &member.UpdatedAt)
 
 	return member, err
 }
@@ -23,10 +19,9 @@ func teamMemberFromCollectableRow(row pgx.CollectableRow) (models.TeamMember, er
 // teamFromCollectableRow maps a pgx.CollectableRow to a models.Team struct.
 func teamFromCollectableRow(row pgx.CollectableRow) (models.Team, error) {
 	var team models.Team
-	var timestamps models.RawTimestamps
-	err := row.Scan(&team.Id, &team.DisplayId, &team.Name, &team.Description, &timestamps.CreatedAt, &timestamps.UpdatedAt)
+	//var timestamps models.Timestamps
+	err := row.Scan(&team.ID, &team.DisplayID, &team.Name, &team.Description, &team.CreatedAt, &team.UpdatedAt)
 
-	team.SetTimestamps(timestamps)
 	return team, err
 }
 
@@ -41,7 +36,7 @@ func CreateTeam(ctx context.Context, team *models.Team) (*struct{}, error) {
 		var teamId pgtype.UUID
 		row := tx.QueryRow(ctx,
 			`INSERT INTO teams (display_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
-			team.DisplayId, team.Name, team.Description)
+			team.DisplayID, team.Name, team.Description)
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +47,7 @@ func CreateTeam(ctx context.Context, team *models.Team) (*struct{}, error) {
 
 		_, err = tx.Exec(ctx,
 			`INSERT INTO user_teams (team_id, user_id, role) VALUES ($1, $2, $3)`,
-			teamId, team.Members[0].Id, team.Members[0].Role)
+			teamId, team.Members[0].ID, team.Members[0].Role)
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +84,7 @@ func GetTeamById(ctx context.Context, displayId string) (*models.Team, error) {
 
 		memberRows, membersErr := dbClient.conn.Query(ctx,
 			`SELECT user_id, role, created_at, updated_at FROM user_teams WHERE team_id=$1`,
-			team.Id)
+			team.ID)
 		if membersErr != nil {
 			return nil, membersErr
 		}
@@ -124,7 +119,7 @@ func GetAllTeams(ctx context.Context) ([]models.Team, error) {
 		for i, team := range teams {
 			memberRows, membersErr := dbClient.conn.Query(ctx,
 				`SELECT user_id, role, created_at, updated_at FROM user_teams WHERE team_id=$1`,
-				team.Id)
+				team.ID)
 			if membersErr != nil {
 				return nil, membersErr
 			}
@@ -148,7 +143,7 @@ func UpdateTeam(ctx context.Context, team *models.Team) (bool, error) {
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
 		result, err := dbClient.conn.Exec(ctx,
 			`UPDATE teams SET display_id=$1, name=$2, description=$3 WHERE id=$4`,
-			team.DisplayId, team.Name, team.Description, team.Id)
+			team.DisplayID, team.Name, team.Description, team.ID)
 		if err != nil {
 			return false, err
 		}
@@ -199,7 +194,7 @@ func AddMemberToTeam(ctx context.Context, teamDisplayId string, member *models.T
 
 		result, err := dbClient.conn.Exec(ctx,
 			`INSERT INTO user_teams (team_id, user_id, role) VALUES ($1, $2, $3)`,
-			teamId, member.Id, member.Role)
+			teamId, member.ID, member.Role)
 		if err != nil {
 			return false, err
 		}

@@ -3,7 +3,7 @@ package monitors
 import (
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/m-milek/leszmonitor/models"
+	util2 "github.com/m-milek/leszmonitor/models/util"
 	"github.com/m-milek/leszmonitor/util"
 	"time"
 )
@@ -63,7 +63,7 @@ type BaseMonitor struct {
 	Description string            `json:"description"` // Description of the monitor
 	Interval    int               `json:"interval"`    // How often to run the monitor in seconds
 	Type        MonitorConfigType `json:"type"`        // Type of the monitor (http, ping, etc.)
-	models.Timestamps
+	util2.Timestamps
 }
 
 type MonitorConfigType string
@@ -95,13 +95,13 @@ func (m *BaseMonitor) validateBase() error {
 		return fmt.Errorf("monitor type cannot be empty")
 	}
 	if m.GetDisplayId() == "" {
-		return fmt.Errorf("monitor DisplayId cannot be empty")
+		return fmt.Errorf("monitor DisplayID cannot be empty")
 	}
 	return nil
 }
 
 func (m *BaseMonitor) GenerateDisplayId() {
-	m.DisplayId = util.IdFromString(m.GetName())
+	m.DisplayId = util.IDFromString(m.GetName())
 }
 
 func (m *BaseMonitor) GetDisplayId() string {

@@ -9,7 +9,7 @@ import (
 func createTestBaseMonitor() BaseMonitor {
 	name := "Test BaseMonitor"
 	return BaseMonitor{
-		DisplayId:   util.IdFromString(name),
+		DisplayId:   util.IDFromString(name),
 		Name:        name,
 		Description: "Test Description",
 		Interval:    60,
@@ -56,17 +56,17 @@ func TestBaseMonitorValidateEmptyType(t *testing.T) {
 }
 
 func TestBaseMonitorGenerateId(t *testing.T) {
-	t.Run("DisplayId is empty", func(t *testing.T) {
+	t.Run("DisplayID is empty", func(t *testing.T) {
 		monitor := createTestBaseMonitor()
 		monitor.DisplayId = ""
 		monitor.GenerateDisplayId()
-		assert.NotEmpty(t, monitor.DisplayId, "Generated DisplayId should not be empty")
+		assert.NotEmpty(t, monitor.DisplayId, "Generated DisplayID should not be empty")
 	})
 
-	t.Run("DisplayId is already set", func(t *testing.T) {
+	t.Run("DisplayID is already set", func(t *testing.T) {
 		monitor := createTestBaseMonitor()
 		originalId := monitor.DisplayId
 		monitor.GenerateDisplayId()
-		assert.Equal(t, originalId, monitor.DisplayId, "DisplayId should remain unchanged if already set")
+		assert.Equal(t, originalId, monitor.DisplayId, "DisplayID should remain unchanged if already set")
 	})
 }

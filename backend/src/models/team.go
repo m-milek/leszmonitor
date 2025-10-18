@@ -3,44 +3,45 @@ package models
 import (
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/m-milek/leszmonitor/util"
+	util2 "github.com/m-milek/leszmonitor/models/util"
 )
 
+// Team represents a group of users working together. Teams can have multiple members with different roles.
+// They are used to manage access to monitors. Each team can own multiple monitor groups and monitors.
 type Team struct {
-	Id          pgtype.UUID  `json:"id"`          // MongoDB ObjectID for internal use
-	DisplayId   string       `json:"displayId"`   // Unique identifier for the team
-	Name        string       `json:"name"`        // Name of the team
+	ID pgtype.UUID `json:"id"` // ID is the UUID of the team - database primary key
+	util2.DisplayIDFromName
 	Description string       `json:"description"` // Description of the team
-	Members     []TeamMember `json:"members"`     // Map of team members with their roles
-	Timestamps
+	Members     []TeamMember `json:"members"`     // Members of the team
+	util2.Timestamps
 }
 
-func NewTeam(name string, description string, ownerId pgtype.UUID) (*Team, error) {
+// NewTeam creates a new Team instance with the given name, description, and owner UUID.
+// The owner is added as the first member of the team with the "owner" role.
+func NewTeam(name string, description string, ownerID pgtype.UUID) (*Team, error) {
 	initialMembers := []TeamMember{
 		{
-			Id:   ownerId,
-			Role: TeamRoleOwner,
+			ID:   ownerID,
+			Role: RoleOwner,
 		},
 	}
 
 	team := &Team{
-		DisplayId:   util.IdFromString(name),
-		Name:        name,
 		Description: description,
 		Members:     initialMembers,
 	}
+	team.DisplayIDFromName.Init(name)
 
 	err := team.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return team, nil
+
+	return team, err
 }
 
-func (t *Team) IsMember(userId pgtype.UUID) bool {
+// IsMember checks if a user with the given UUID is a member of the team.
+func (t *Team) IsMember(userID pgtype.UUID) bool {
 	exists := false
 	for _, member := range t.Members {
-		if member.Id == userId {
+		if member.ID == userID {
 			exists = true
 			break
 		}
@@ -48,26 +49,24 @@ func (t *Team) IsMember(userId pgtype.UUID) bool {
 	return exists
 }
 
-func (t *Team) GetMember(userId pgtype.UUID) *TeamMember {
+// GetMember retrieves the TeamMember with the given UUID.
+func (t *Team) GetMember(userID pgtype.UUID) *TeamMember {
 	for _, member := range t.Members {
-		if member.Id == userId {
+		if member.ID == userID {
 			return &member
 		}
 	}
 	return nil
 }
 
-func (t *Team) ChangeMemberRole(userId pgtype.UUID, role TeamRole) error {
-	if !t.IsMember(userId) {
-		return fmt.Errorf("user %s is not a member of the team", userId)
-	}
-
-	if role.Validate() != nil {
-		return fmt.Errorf("invalid role: %s", role)
+// ChangeMemberRole changes the role of a team member with the given UUID to the specified role.
+func (t *Team) ChangeMemberRole(userID pgtype.UUID, role Role) error {
+	if !t.IsMember(userID) {
+		return fmt.Errorf("user %s is not a member of the team", userID)
 	}
 
 	for i, member := range t.Members {
-		if member.Id == userId {
+		if member.ID == userID {
 			t.Members[i].Role = role
 			break
 		}
@@ -76,12 +75,11 @@ func (t *Team) ChangeMemberRole(userId pgtype.UUID, role TeamRole) error {
 	return nil
 }
 
+// Validate checks if the Team has valid Name, Description, and Members.
+// It also validates each member's role.
 func (t *Team) Validate() error {
 	if t.Name == "" {
 		return fmt.Errorf("team name cannot be empty")
-	}
-	if t.Description == "" {
-		t.Description = "No description provided"
 	}
 	if len(t.Members) == 0 {
 		return fmt.Errorf("team must have at least one member")
@@ -92,8 +90,4 @@ func (t *Team) Validate() error {
 		}
 	}
 	return nil
-}
-
-func (t *Team) GenerateId() {
-	t.DisplayId = util.IdFromString(t.Name)
 }

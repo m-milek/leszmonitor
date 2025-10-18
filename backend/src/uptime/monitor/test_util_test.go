@@ -26,7 +26,7 @@ func NewTestMonitor() *TestMonitor {
 	name := "Test Monitor"
 	return &TestMonitor{
 		ID:          pgtype.UUID{Valid: false},
-		DisplayId:   util.IdFromString(name),
+		DisplayId:   util.IDFromString(name),
 		Name:        name,
 		Description: "Test monitor description",
 		Interval:    60,
