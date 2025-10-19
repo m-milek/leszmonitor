@@ -16,11 +16,11 @@ func RespondJSON(w http.ResponseWriter, statusCode int, data any) {
 	}
 }
 
-type SimpleResponse struct {
+type simpleResponse struct {
 	Message string `json:"message"`
 }
 
-type ErrorResponse struct {
+type errorResponse struct {
 	Message string `json:"message"`
 }
 
@@ -28,7 +28,7 @@ func RespondMessage(w http.ResponseWriter, statusCode int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 
-	response := SimpleResponse{Message: message}
+	response := simpleResponse{Message: message}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to encode JSON response")
@@ -50,7 +50,7 @@ func RespondError(w http.ResponseWriter, statusCode int, err error) {
 
 	response := map[string]any{
 		"status": statusCode,
-		"error":  ErrorResponse{Message: message},
+		"error":  errorResponse{Message: message},
 	}
 
 	if encodeErr := json.NewEncoder(w).Encode(response); encodeErr != nil {

@@ -71,7 +71,7 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := services.TeamService.GetTeamById(r.Context(), teamAuth)
+	team, err := services.TeamService.GetTeamByID(r.Context(), teamAuth)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)

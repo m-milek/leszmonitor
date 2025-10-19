@@ -11,8 +11,8 @@ import (
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	groupId := r.PathValue("groupId")
-	if groupId == "" {
+	groupID := r.PathValue("groupId")
+	if groupID == "" {
 		logging.Api.Trace().Msg("Group DisplayID is required for creating a monitor")
 		util.RespondMessage(w, http.StatusBadRequest, "Group DisplayID is required")
 		return
@@ -30,7 +30,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(r.Context(), teamAuth, groupId, monitor)
+	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(r.Context(), teamAuth, groupID, monitor)
 
 	if serviceErr != nil {
 		util.RespondError(w, serviceErr.Code, serviceErr.Err)
@@ -41,9 +41,9 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	monitorId := r.PathValue("monitorId")
+	monitorID := r.PathValue("monitorId")
 
-	if monitorId == "" {
+	if monitorID == "" {
 		logging.Api.Trace().Msg("Monitor DisplayID is required for deletion")
 		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor DisplayID is required")
 		return
@@ -54,7 +54,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.MonitorService.DeleteMonitor(r.Context(), teamAuth, monitorId)
+	err := services.MonitorService.DeleteMonitor(r.Context(), teamAuth, monitorID)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -79,10 +79,10 @@ func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(w, http.StatusOK, monitorsList)
 }
 
-func GetMonitorByIdHandler(w http.ResponseWriter, r *http.Request) {
-	monitorId := r.PathValue("monitorId")
+func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
+	monitorID := r.PathValue("monitorId")
 
-	if monitorId == "" {
+	if monitorID == "" {
 		logging.Api.Trace().Msg("Monitor DisplayID is required")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
 		return
@@ -93,7 +93,7 @@ func GetMonitorByIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitor, err := services.MonitorService.GetMonitorById(r.Context(), teamAuth, monitorId)
+	monitor, err := services.MonitorService.GetMonitorByID(r.Context(), teamAuth, monitorID)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -106,9 +106,9 @@ func GetMonitorByIdHandler(w http.ResponseWriter, r *http.Request) {
 // // It expects a JSON payload with the updated monitor config of appropriate type.
 // TODO: Proper update mechanism, maybe custom payload so we can update only specific fields
 func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	monitorId := r.PathValue("monitorId")
+	monitorID := r.PathValue("monitorId")
 
-	if monitorId == "" {
+	if monitorID == "" {
 		logging.Api.Trace().Msg("Monitor DisplayID is required for update")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
 		return

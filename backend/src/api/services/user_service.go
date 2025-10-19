@@ -18,13 +18,13 @@ import (
 
 // UserServiceT handles user-related operations such as registration, login, and retrieval.
 type UserServiceT struct {
-	BaseService
+	baseService
 }
 
 // NewUserService creates a new instance of UserServiceT.
 func newUserService() *UserServiceT {
 	return &UserServiceT{
-		BaseService{
+		baseService{
 			serviceLogger: logging.NewServiceLogger("UserService"),
 		},
 	}

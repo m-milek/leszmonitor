@@ -20,13 +20,13 @@ func TestMapMonitorType(t *testing.T) {
 		want IMonitor
 	}{
 		{
-			name: "Valid Http Monitor Type",
-			args: args{typeTag: Http},
-			want: &HttpMonitor{},
+			name: "Valid httpType Monitor Type",
+			args: args{typeTag: httpType},
+			want: &httpMonitor{},
 		},
 		{
-			name: "Valid Ping Monitor Type",
-			args: args{typeTag: Ping},
+			name: "Valid pingType Monitor Type",
+			args: args{typeTag: pingType},
 			want: &PingMonitor{},
 		},
 		{
@@ -54,7 +54,7 @@ func TestFromReader(t *testing.T) {
 		testMonitor.Name = "Test HTTP Monitor"
 		testMonitor.ID = pgtype.UUID{}
 		testMonitor.Interval = 30
-		testMonitor.HttpConfig.Url = "https://example.com/api"
+		testMonitor.HttpConfig.URL = "https://example.com/api"
 		testMonitor.HttpConfig.ExpectedStatusCodes = []int{200, 201}
 
 		// Convert to JSON
@@ -70,25 +70,25 @@ func TestFromReader(t *testing.T) {
 		// Assert
 		assert.NoError(t, err)
 		assert.NotNil(t, monitor)
-		assert.Equal(t, pgtype.UUID{}, monitor.GetId())
+		assert.Equal(t, pgtype.UUID{}, monitor.GetID())
 		assert.Equal(t, "Test HTTP Monitor", monitor.GetName())
-		assert.Equal(t, Http, monitor.GetType())
+		assert.Equal(t, httpType, monitor.GetType())
 
 		// Type assertion to check specific config
-		httpMonitor, ok := monitor.(*HttpMonitor)
+		httpMonitor, ok := monitor.(*httpMonitor)
 		assert.True(t, ok)
-		assert.Equal(t, "https://example.com/api", httpMonitor.Config.Url)
+		assert.Equal(t, "https://example.com/api", httpMonitor.Config.URL)
 		assert.Equal(t, []int{200, 201}, httpMonitor.Config.ExpectedStatusCodes)
 	})
 
-	t.Run("Successfully parse Ping monitor", func(t *testing.T) {
-		// Create a test Ping monitor
+	t.Run("Successfully parse pingType monitor", func(t *testing.T) {
+		// Create a test pingType monitor
 		testMonitor := NewTestMonitor().AsPing()
-		testMonitor.Name = "Test Ping Monitor"
-		testMonitor.Description = "This is a test ping monitor"
+		testMonitor.Name = "Test pingType Monitor"
+		testMonitor.Description = "This is a test pingType monitor"
 		testMonitor.ID = pgtype.UUID{}
 		testMonitor.Interval = 10
-		testMonitor.PingConfig.Host = "ping.example.com"
+		testMonitor.PingConfig.Host = "pingType.example.com"
 		testMonitor.PingConfig.Port = "443"
 		testMonitor.PingConfig.Protocol = "tcp"
 
@@ -105,14 +105,14 @@ func TestFromReader(t *testing.T) {
 		// Assert
 		assert.NoError(t, err)
 		assert.NotNil(t, monitor)
-		assert.Equal(t, "Test Ping Monitor", monitor.GetName())
-		assert.Equal(t, "This is a test ping monitor", monitor.GetDescription())
-		assert.Equal(t, Ping, monitor.GetType())
+		assert.Equal(t, "Test pingType Monitor", monitor.GetName())
+		assert.Equal(t, "This is a test pingType monitor", monitor.GetDescription())
+		assert.Equal(t, pingType, monitor.GetType())
 
 		// Type assertion to check specific config
 		pingMonitor, ok := monitor.(*PingMonitor)
 		assert.True(t, ok)
-		assert.Equal(t, "ping.example.com", pingMonitor.Config.Host)
+		assert.Equal(t, "pingType.example.com", pingMonitor.Config.Host)
 		assert.Equal(t, "443", pingMonitor.Config.Port)
 		assert.Equal(t, "tcp", pingMonitor.Config.Protocol)
 	})
@@ -183,7 +183,7 @@ func TestFromReader(t *testing.T) {
 		"description": "Test description",
 		"interval": 30,
 		"ownerId": "test_owner",
-		"type": "http",
+		"type": "httpType",
 		"config": {
 			"url": 123,
 			"httpMethod": "GET"
@@ -230,7 +230,7 @@ func TestFromReader(t *testing.T) {
 
 	t.Run("Partial JSON", func(t *testing.T) {
 		// Create a reader with partial JSON
-		reader := strings.NewReader(`{"type": "http", "name": "Test Monitor"`)
+		reader := strings.NewReader(`{"type": "httpType", "name": "Test Monitor"`)
 
 		// Execute
 		monitor, err := FromReader(reader)

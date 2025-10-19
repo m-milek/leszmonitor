@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func createTestToken(claims JwtClaims, secret string) (string, error) {
+func createTestToken(claims jwtClaims, secret string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 }
@@ -101,7 +101,7 @@ func TestJwtFromRequest(t *testing.T) {
 				req.Header.Set("Authorization", tt.authHeader)
 			}
 
-			token, err := JwtFromRequest(req)
+			token, err := jwtFromRequest(req)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -115,7 +115,7 @@ func TestJwtFromRequest(t *testing.T) {
 
 func TestDecodeJwtClaims(t *testing.T) {
 	t.Run("Valid Token", func(t *testing.T) {
-		claims := JwtClaims{
+		claims := jwtClaims{
 			MapClaims: jwt.MapClaims{
 				"sub": "1234567890",
 				"iat": time.Now().Unix(),
@@ -127,14 +127,14 @@ func TestDecodeJwtClaims(t *testing.T) {
 		token, err := createTestToken(claims, testJwtSecret)
 		require.NoError(t, err)
 
-		decodedClaims, err := DecodeJwtClaims(token)
+		decodedClaims, err := decodeJwtClaims(token)
 		assert.NoError(t, err)
 		assert.Equal(t, claims.Username, decodedClaims.Username)
 		assert.Equal(t, claims.Exp, decodedClaims.Exp)
 	})
 
 	t.Run("Expired Token", func(t *testing.T) {
-		claims := JwtClaims{
+		claims := jwtClaims{
 			MapClaims: jwt.MapClaims{
 				"exp": time.Now().Add(-time.Hour).Unix(),
 			},
@@ -145,13 +145,13 @@ func TestDecodeJwtClaims(t *testing.T) {
 		token, err := createTestToken(claims, testJwtSecret)
 		require.NoError(t, err)
 
-		_, err = DecodeJwtClaims(token)
+		_, err = decodeJwtClaims(token)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "token is expired")
 	})
 
 	t.Run("Invalid Signature", func(t *testing.T) {
-		claims := JwtClaims{
+		claims := jwtClaims{
 			Username: "testuser",
 			Exp:      time.Now().Add(time.Hour).Unix(),
 		}
@@ -159,7 +159,7 @@ func TestDecodeJwtClaims(t *testing.T) {
 		token, err := createTestToken(claims, "wrong-secret")
 		require.NoError(t, err)
 
-		_, err = DecodeJwtClaims(token)
+		_, err = decodeJwtClaims(token)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "signature is invalid")
 	})
@@ -176,13 +176,13 @@ func TestDecodeJwtClaims(t *testing.T) {
 		}
 
 		for _, token := range malformedTokens {
-			_, err := DecodeJwtClaims(token)
+			_, err := decodeJwtClaims(token)
 			assert.Error(t, err)
 		}
 	})
 
 	t.Run("Token Without Username", func(t *testing.T) {
-		claims := JwtClaims{
+		claims := jwtClaims{
 			MapClaims: jwt.MapClaims{
 				"sub": "1234567890",
 			},
@@ -192,14 +192,14 @@ func TestDecodeJwtClaims(t *testing.T) {
 		token, err := createTestToken(claims, testJwtSecret)
 		require.NoError(t, err)
 
-		decodedClaims, err := DecodeJwtClaims(token)
+		decodedClaims, err := decodeJwtClaims(token)
 		assert.NoError(t, err)
 		assert.Empty(t, decodedClaims.Username)
 		assert.Equal(t, claims.Exp, decodedClaims.Exp)
 	})
 
 	t.Run("Token With Additional Claims", func(t *testing.T) {
-		claims := JwtClaims{
+		claims := jwtClaims{
 			MapClaims: jwt.MapClaims{
 				"role":   "admin",
 				"userId": "123",
@@ -211,7 +211,7 @@ func TestDecodeJwtClaims(t *testing.T) {
 		token, err := createTestToken(claims, testJwtSecret)
 		require.NoError(t, err)
 
-		decodedClaims, err := DecodeJwtClaims(token)
+		decodedClaims, err := decodeJwtClaims(token)
 		assert.NoError(t, err)
 		assert.Equal(t, claims.Username, decodedClaims.Username)
 		assert.Equal(t, "admin", decodedClaims.MapClaims["role"])
@@ -224,7 +224,7 @@ func TestDecodeJwtClaims(t *testing.T) {
 		os.Unsetenv(env.JwtSecret)
 		defer os.Setenv(env.JwtSecret, originalSecret)
 
-		claims := JwtClaims{
+		claims := jwtClaims{
 			Username: "testuser",
 			Exp:      time.Now().Add(time.Hour).Unix(),
 		}
@@ -232,14 +232,14 @@ func TestDecodeJwtClaims(t *testing.T) {
 		token, err := createTestToken(claims, "")
 		require.NoError(t, err)
 
-		decodedClaims, err := DecodeJwtClaims(token)
+		decodedClaims, err := decodeJwtClaims(token)
 		assert.NoError(t, err)
 		assert.Equal(t, claims.Username, decodedClaims.Username)
 	})
 
 	t.Run("Different Signing Algorithm", func(t *testing.T) {
 		// Create a token with a different algorithm
-		token := jwt.NewWithClaims(jwt.SigningMethodHS512, JwtClaims{
+		token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwtClaims{
 			Username: "testuser",
 			Exp:      time.Now().Add(time.Hour).Unix(),
 		})
@@ -247,7 +247,7 @@ func TestDecodeJwtClaims(t *testing.T) {
 		require.NoError(t, err)
 
 		// This should still work as jwt-go handles multiple algorithms
-		decodedClaims, err := DecodeJwtClaims(tokenString)
+		decodedClaims, err := decodeJwtClaims(tokenString)
 		assert.NoError(t, err)
 		assert.Equal(t, "testuser", decodedClaims.Username)
 	})
@@ -255,7 +255,7 @@ func TestDecodeJwtClaims(t *testing.T) {
 	t.Run("Token Validation Error", func(t *testing.T) {
 		// Create a token that will fail validation
 		token := jwt.New(jwt.SigningMethodHS256)
-		token.Claims = JwtClaims{
+		token.Claims = jwtClaims{
 			Username: "testuser",
 			Exp:      time.Now().Add(time.Hour).Unix(),
 		}
@@ -265,7 +265,7 @@ func TestDecodeJwtClaims(t *testing.T) {
 		require.NoError(t, err)
 
 		// Parse should succeed but the token should be detected as invalid
-		parsedToken, _ := jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+		parsedToken, _ := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(testJwtSecret), nil
 		})
 
@@ -277,7 +277,7 @@ func TestDecodeJwtClaims(t *testing.T) {
 func TestJwtClaimsIntegration(t *testing.T) {
 	t.Run("Full Flow - Request to Claims", func(t *testing.T) {
 		// Create a valid token
-		claims := JwtClaims{
+		claims := jwtClaims{
 			MapClaims: jwt.MapClaims{
 				"iat": time.Now().Unix(),
 			},
@@ -294,12 +294,12 @@ func TestJwtClaimsIntegration(t *testing.T) {
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 		// Extract token from request
-		extractedToken, err := JwtFromRequest(req)
+		extractedToken, err := jwtFromRequest(req)
 		assert.NoError(t, err)
 		assert.Equal(t, token, extractedToken)
 
 		// Decode claims from token
-		decodedClaims, err := DecodeJwtClaims(extractedToken)
+		decodedClaims, err := decodeJwtClaims(extractedToken)
 		assert.NoError(t, err)
 		assert.Equal(t, claims.Username, decodedClaims.Username)
 		assert.Equal(t, claims.Exp, decodedClaims.Exp)
@@ -313,12 +313,12 @@ func BenchmarkJwtFromRequest(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = JwtFromRequest(req)
+		_, _ = jwtFromRequest(req)
 	}
 }
 
 func BenchmarkDecodeJwtClaims(b *testing.B) {
-	claims := JwtClaims{
+	claims := jwtClaims{
 		Username: "benchuser",
 		Exp:      time.Now().Add(time.Hour).Unix(),
 	}
@@ -326,6 +326,6 @@ func BenchmarkDecodeJwtClaims(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = DecodeJwtClaims(token)
+		_, _ = decodeJwtClaims(token)
 	}
 }

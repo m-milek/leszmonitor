@@ -14,13 +14,13 @@ import (
 
 // MonitorServiceT handles monitor-related CRUD operations.
 type MonitorServiceT struct {
-	BaseService
+	baseService
 }
 
 // NewMonitorService creates a new instance of MonitorServiceT.
 func newMonitorService() *MonitorServiceT {
 	return &MonitorServiceT{
-		BaseService{
+		baseService{
 			authService:   newAuthorizationService(),
 			serviceLogger: logging.NewServiceLogger("MonitorService"),
 		},
@@ -30,11 +30,11 @@ func newMonitorService() *MonitorServiceT {
 var MonitorService = newMonitorService()
 
 type MonitorCreateResponse struct {
-	MonitorId string `json:"monitorId"`
+	MonitorID string `json:"monitorId"`
 }
 
 // CreateMonitor creates a new monitor in the specified group.
-func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupId string, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupID string, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
@@ -43,14 +43,14 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		return nil, authErr
 	}
 
-	group, err := GroupService.internalGetMonitorGroupById(ctx, team.DisplayID, groupId)
+	group, err := GroupService.internalGetMonitorGroupByID(ctx, team.DisplayID, groupID)
 	if err != nil {
 		return nil, err
 	}
 
-	monitor.SetGroupId(group.ID)
-	monitor.SetTeamId(team.ID)
-	monitor.GenerateDisplayId()
+	monitor.SetGroupID(group.ID)
+	monitor.SetTeamID(team.ID)
+	monitor.GenerateDisplayID()
 
 	if err := monitor.Validate(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid monitor configuration")
@@ -69,9 +69,9 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	logger.Info().Str("id", monitor.GetId().String()).Msg("Monitor created")
+	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor created")
 	return &MonitorCreateResponse{
-		MonitorId: monitor.GetId().String(),
+		MonitorID: monitor.GetID().String(),
 	}, nil
 }
 
@@ -128,9 +128,9 @@ func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middlewa
 	return monitorsList, nil
 }
 
-// GetMonitorById retrieves a specific monitor by its DisplayID.
-func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middleware.TeamAuth, id string) (monitors.IMonitor, *ServiceError) {
-	logger := s.getMethodLogger("GetMonitorById")
+// GetMonitorByID retrieves a specific monitor by its DisplayID.
+func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, teamAuth *middleware.TeamAuth, id string) (monitors.IMonitor, *ServiceError) {
+	logger := s.getMethodLogger("GetMonitorByID")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by DisplayID")
 
 	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
@@ -138,7 +138,7 @@ func (s *MonitorServiceT) GetMonitorById(ctx context.Context, teamAuth *middlewa
 		return nil, authErr
 	}
 
-	monitor, err := db.GetMonitorById(ctx, id)
+	monitor, err := db.GetMonitorByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found")
@@ -181,7 +181,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 			logger.Warn().Interface("monitor", monitor).Msg("Monitor not found for update")
 			return &ServiceError{
 				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor with DisplayID %s not found", monitor.GetId()),
+				Err:  fmt.Errorf("monitor with DisplayID %s not found", monitor.GetID()),
 			}
 		}
 		logger.Error().Err(err).Interface("monitor", monitor).Msg("Failed to update monitor in database")
@@ -195,10 +195,10 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 		logger.Warn().Interface("monitor", monitor).Msg("Monitor was not updated, possibly not found")
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("monitor with DisplayID %s was not updated", monitor.GetId()),
+			Err:  fmt.Errorf("monitor with DisplayID %s was not updated", monitor.GetID()),
 		}
 	}
 
-	logger.Info().Str("id", monitor.GetId().String()).Msg("Monitor updated")
+	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor updated")
 	return nil
 }

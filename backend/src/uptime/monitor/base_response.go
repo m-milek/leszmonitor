@@ -3,7 +3,7 @@ package monitors
 import "fmt"
 
 type IMonitorResponse interface {
-	GetStatus() MonitorResponseStatus
+	GetStatus() monitorResponseStatus
 	GetDuration() int64
 	GetTimestamp() int64
 	GetErrorsStr() []string
@@ -12,21 +12,21 @@ type IMonitorResponse interface {
 	IsError() bool
 }
 
-type MonitorResponseStatus string
+type monitorResponseStatus string
 
 const (
-	Success MonitorResponseStatus = "success"
-	Failure MonitorResponseStatus = "failure"
-	Error   MonitorResponseStatus = "error"
+	success monitorResponseStatus = "success"
+	failure monitorResponseStatus = "failure"
+	Error   monitorResponseStatus = "error"
 )
 
 // baseMonitorResponse is the base of any monitor response.
 // A monitor run can either succeed, fail, or error.
-// 1. Success: The monitor ran successfully and returned the expected results.
-// 2. Failure: The monitor ran but did not return the expected results (e.g., HTTP status code, response time).
+// 1. success: The monitor ran successfully and returned the expected results.
+// 2. failure: The monitor ran but did not return the expected results (e.g., HTTP status code, response time).
 // 3. Error: The monitor encountered an error while running (e.g., network issues, timeout).
 type baseMonitorResponse struct {
-	Status    MonitorResponseStatus `json:"status" bson:"status"`
+	Status    monitorResponseStatus `json:"status" bson:"status"`
 	Duration  int64                 `json:"duration" bson:"duration"`                     // in milliseconds
 	Timestamp int64                 `json:"timestamp" bson:"timestamp"`                   // Unix timestamp in seconds
 	ErrorsStr []string              `json:"errors,omitempty" bson:"errors,omitempty"`     // List of errors encountered during the monitor run
@@ -53,11 +53,11 @@ func (b *baseMonitorResponse) addFailureMsg(err string) {
 
 	// If the status is not already set to Error, set it to Failure. Error always takes precedence.
 	if b.Status != Error {
-		b.Status = Failure
+		b.Status = failure
 	}
 }
 
-func (b *baseMonitorResponse) GetStatus() MonitorResponseStatus {
+func (b *baseMonitorResponse) GetStatus() monitorResponseStatus {
 	return b.Status
 }
 

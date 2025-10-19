@@ -5,19 +5,19 @@ import (
 	"github.com/m-milek/leszmonitor/common"
 )
 
-type MonitorMessageStatus string
+type monitorMessageStatus string
 
 const (
-	Created MonitorMessageStatus = "created"
-	Edited  MonitorMessageStatus = "edited"
-	Deleted MonitorMessageStatus = "deleted"
-	Stopped MonitorMessageStatus = "stopped"
-	Started MonitorMessageStatus = "started"
+	Created monitorMessageStatus = "created"
+	Edited  monitorMessageStatus = "edited"
+	Deleted monitorMessageStatus = "deleted"
+	Stopped monitorMessageStatus = "stopped"
+	Started monitorMessageStatus = "started"
 )
 
 type MonitorMessage struct {
-	Id      pgtype.UUID
-	Status  MonitorMessageStatus
+	ID      pgtype.UUID
+	Status  monitorMessageStatus
 	Monitor *IConcreteMonitor
 }
 

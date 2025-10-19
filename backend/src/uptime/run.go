@@ -63,7 +63,7 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 	// Validate the monitor before starting
 	err := monitor.Validate()
 	if err != nil {
-		logging.Uptime.Error().Err(err).Str("id", monitor.GetDisplayId()).Str("name", monitor.GetName()).Msgf("Error validating monitor")
+		logging.Uptime.Error().Err(err).Str("id", monitor.GetDisplayID()).Str("name", monitor.GetName()).Msgf("Error validating monitor")
 		return
 	}
 
@@ -72,38 +72,38 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 		for {
 			select {
 			case <-ctx.Done():
-				logging.Uptime.Info().Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Stopping monitor due to context cancellation")
+				logging.Uptime.Info().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Stopping monitor due to context cancellation")
 				return
 			case msg := <-monitorMsgChannel:
 				monitorMutex.Lock()
 				shouldExit := false
 				func() {
 					defer monitorMutex.Unlock()
-					if msg.Id != monitor.GetId() {
-						logging.Uptime.Trace().Str("id", msg.Id.String()).Msgf("Ignoring message for monitor %s", monitor.GetName())
+					if msg.ID != monitor.GetID() {
+						logging.Uptime.Trace().Str("id", msg.ID.String()).Msgf("Ignoring message for monitor %s", monitor.GetName())
 						return
 					}
 
-					logging.Uptime.Trace().Str("id", msg.Id.String()).Msgf("Received message for monitor %s", monitor.GetName())
+					logging.Uptime.Trace().Str("id", msg.ID.String()).Msgf("Received message for monitor %s", monitor.GetName())
 
 					switch msg.Status {
 					case monitors.Edited:
-						logging.Uptime.Debug().Str("name", monitor.GetName()).Str("id", monitor.GetId().String()).Msg("Updating monitor")
+						logging.Uptime.Debug().Str("name", monitor.GetName()).Str("id", monitor.GetID().String()).Msg("Updating monitor")
 						oldInterval := monitor.GetInterval()
 						monitor = *msg.Monitor
 						if monitor.GetInterval() != oldInterval {
-							logging.Uptime.Info().Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Changing monitor interval to %s", monitor.GetInterval())
+							logging.Uptime.Info().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Changing monitor interval to %s", monitor.GetInterval())
 							tickerChangedChannel <- struct{}{}
 						}
 
 					case monitors.Deleted, monitors.Stopped:
-						logging.Uptime.Info().Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Stopping monitor due to deletion or disablement")
+						logging.Uptime.Info().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Stopping monitor due to deletion or disablement")
 						cancelSelf()
 						shouldExit = true
 					}
 				}()
 				if shouldExit {
-					logging.Uptime.Info().Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Exiting monitor handler loop")
+					logging.Uptime.Info().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Exiting monitor handler loop")
 					return
 				}
 			}
@@ -113,7 +113,7 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 	for {
 		select {
 		case <-tickerChangedChannel:
-			logging.Uptime.Debug().Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Monitor interval changed, restarting ticker")
+			logging.Uptime.Debug().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Monitor interval changed, restarting ticker")
 			tickerMutex.Lock()
 			ticker.Reset(monitor.GetInterval())
 			tickerMutex.Unlock()
@@ -125,20 +125,20 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 
 				err := monitor.Validate()
 				if err != nil {
-					logging.Uptime.Error().Err(err).Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Error validating monitor")
+					logging.Uptime.Error().Err(err).Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Error validating monitor")
 					return
 				}
 
-				logging.Uptime.Trace().Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Running monitor")
+				logging.Uptime.Trace().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Running monitor")
 				response := monitor.Run()
-				logging.Uptime.Debug().Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Any("monitor_response", response).Msg("Monitor response")
+				logging.Uptime.Debug().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Any("monitor_response", response).Msg("Monitor response")
 
 				if response.IsError() {
-					logging.Uptime.Error().Errs("errors", response.GetErrors()).Str("id", monitor.GetId().String()).Str("name", monitor.GetName()).Msgf("Monitor check failed")
+					logging.Uptime.Error().Errs("errors", response.GetErrors()).Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Monitor check failed")
 				}
 
 				//	// Optionally, you can save the result to the database or perform further actions
-				//	err = db.SaveMonitorResult(monitor.GetId(), result)
+				//	err = db.SaveMonitorResult(monitor.GetID(), result)
 				//	if err != nil {
 				//		logger.Uptime.Error().Err(err).Msgf("Failed to save result for monitor %s", monitor.GetName())
 				//	}

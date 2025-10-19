@@ -24,7 +24,7 @@ type HttpMonitorResponse struct {
 func NewHttpMonitorResponse() *HttpMonitorResponse {
 	return &HttpMonitorResponse{
 		baseMonitorResponse: baseMonitorResponse{
-			Status:    Success,
+			Status:    success,
 			Timestamp: util.GetUnixTimestamp(),
 			Failures:  []string{},
 			ErrorsStr: []string{},

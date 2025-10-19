@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestIdFromString(t *testing.T) {
+func TestIDFromString(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected string
