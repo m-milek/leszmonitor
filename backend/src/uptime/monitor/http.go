@@ -246,8 +246,8 @@ func (m *httpConfig) validate() error {
 		return fmt.Errorf("invalid URL format: %s", m.URL)
 	}
 
-	if parsedUrl.Scheme != "httpType" && parsedUrl.Scheme != "https" {
-		return fmt.Errorf("URL scheme must be either httpType or https: %s", m.URL)
+	if parsedUrl.Scheme != "http" && parsedUrl.Scheme != "https" {
+		return fmt.Errorf("URL scheme must be either http or https: %s", m.URL)
 	}
 
 	if m.ExpectedResponseTime != nil && *m.ExpectedResponseTime < 0 {
