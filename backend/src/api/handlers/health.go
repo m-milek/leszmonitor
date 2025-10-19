@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-type HealthCheckResponse struct {
+type healthCheckResponse struct {
 	Status    string    `json:"status"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
 func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	response := HealthCheckResponse{
+	response := healthCheckResponse{
 		Status:    "OK",
 		Timestamp: time.Now(),
 	}

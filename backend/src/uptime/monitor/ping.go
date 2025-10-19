@@ -20,10 +20,10 @@ var (
 )
 
 type PingConfig struct {
-	Host            string `json:"host" bson:"host"`             // Host to ping
-	Port            string `json:"port" bson:"port"`             // Port to ping
+	Host            string `json:"host" bson:"host"`             // Host to pingType
+	Port            string `json:"port" bson:"port"`             // Port to pingType
 	Protocol        string `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
-	PingTimeout     int    `json:"timeout" bson:"timeout"`       // PingTimeout in seconds for each ping
+	PingTimeout     int    `json:"timeout" bson:"timeout"`       // PingTimeout in seconds for each pingType
 	RetryCount      int    `json:"retryCount" bson:"retryCount"` // RetryCount is the number of retries until
 	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
@@ -50,7 +50,7 @@ func (m *PingMonitor) Validate() error {
 		return fmt.Errorf("monitor validation failed: %w", err)
 	}
 	if err := m.Config.validate(); err != nil {
-		return fmt.Errorf("ping monitor config validation failed: %w", err)
+		return fmt.Errorf("pingType monitor config validation failed: %w", err)
 	}
 	return nil
 }
@@ -92,7 +92,7 @@ func (m *PingConfig) run() IMonitorResponse {
 	}
 
 	// If we reach here, all retries failed
-	monitorResponse.addFailureMsg(fmt.Sprintf("Failed to ping %s after %d tries", address, m.RetryCount))
+	monitorResponse.addFailureMsg(fmt.Sprintf("Failed to pingType %s after %d tries", address, m.RetryCount))
 
 	return monitorResponse
 }

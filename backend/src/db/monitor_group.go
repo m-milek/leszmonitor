@@ -24,11 +24,11 @@ func CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*model
 	return dbRes.Result, err
 }
 
-func GetMonitorGroupById(ctx context.Context, displayId string) (*models.MonitorGroup, error) {
+func GetMonitorGroupByID(ctx context.Context, displayID string) (*models.MonitorGroup, error) {
 	dbRes, err := withTimeout(ctx, func() (*models.MonitorGroup, error) {
 		rows := dbClient.conn.QueryRow(ctx,
 			`SELECT id, display_id, team_id, name, description, created_at, updated_at FROM groups WHERE display_id=$1`,
-			displayId)
+			displayID)
 
 		group := &models.MonitorGroup{}
 		err := rows.Scan(&group.ID, &group.DisplayID, &group.TeamID, &group.Name, &group.Description, &group.CreatedAt, &group.UpdatedAt)
@@ -43,7 +43,7 @@ func GetMonitorGroupById(ctx context.Context, displayId string) (*models.Monitor
 		return group, err
 	})
 
-	logDbOperation("GetMonitorGroupById", dbRes, err)
+	logDbOperation("GetMonitorGroupByID", dbRes, err)
 
 	return dbRes.Result, err
 }
@@ -99,11 +99,11 @@ func UpdateMonitorGroup(ctx context.Context, team *models.Team, oldGroup, newGro
 	return dbRes.Result, err
 }
 
-func DeleteMonitorGroup(ctx context.Context, team *models.Team, groupId string) (bool, error) {
+func DeleteMonitorGroup(ctx context.Context, team *models.Team, groupID string) (bool, error) {
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
 		result, err := dbClient.conn.Exec(ctx,
 			`DELETE FROM groups WHERE display_id=$1 AND team_id=$2`,
-			groupId, team.ID)
+			groupID, team.ID)
 		if err != nil {
 			return false, err
 		}

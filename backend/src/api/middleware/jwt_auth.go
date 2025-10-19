@@ -102,14 +102,14 @@ func GetUserFromContext(ctx context.Context) (*UserClaims, bool) {
 }
 
 type TeamAuth struct {
-	TeamId   string
+	TeamID   string
 	Username string
 }
 
 func TeamAuthFromRequest(r *http.Request) (*TeamAuth, error) {
-	teamId := r.PathValue("teamId")
-	if teamId == "" {
-		return nil, fmt.Errorf("teamId is required")
+	teamID := r.PathValue("teamId")
+	if teamID == "" {
+		return nil, fmt.Errorf("teamID is required")
 	}
 
 	userClaims, ok := GetUserFromContext(r.Context())
@@ -121,7 +121,7 @@ func TeamAuthFromRequest(r *http.Request) (*TeamAuth, error) {
 	}
 
 	return &TeamAuth{
-		TeamId:   teamId,
+		TeamID:   teamID,
 		Username: userClaims.Username,
 	}, nil
 }

@@ -53,13 +53,13 @@ func TestNewHttpMonitor(t *testing.T) {
 			url:                 "ftp://example.com",
 			expectedStatusCodes: []int{200},
 			expectError:         true,
-			errorMessage:        "URL scheme must be either http or https",
+			errorMessage:        "URL scheme must be either httpType or https",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			monitor, err := NewHttpConfig(
+			monitor, err := newHttpConfig(
 				tt.httpMethod,
 				tt.url,
 				map[string]string{},
@@ -77,8 +77,8 @@ func TestNewHttpMonitor(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, monitor)
-				assert.Equal(t, tt.httpMethod, monitor.HttpMethod)
-				assert.Equal(t, tt.url, monitor.Url)
+				assert.Equal(t, tt.httpMethod, monitor.Method)
+				assert.Equal(t, tt.url, monitor.URL)
 				assert.Equal(t, tt.expectedStatusCodes, monitor.ExpectedStatusCodes)
 			}
 		})
@@ -91,7 +91,7 @@ func TestHttpMonitorValidate(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test invalid URL
-	monitor.Url = "invalid-url"
+	monitor.URL = "invalid-url"
 	err = monitor.validate()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid URL format")
@@ -117,7 +117,7 @@ func TestCreateRequest(t *testing.T) {
 
 	// Test with body
 	monitor.Body = "test body"
-	monitor.HttpMethod = "POST"
+	monitor.Method = "POST"
 	req, err = monitor.createRequest()
 	assert.NoError(t, err)
 	assert.Equal(t, "POST", req.Method)

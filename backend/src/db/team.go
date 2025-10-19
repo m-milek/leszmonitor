@@ -19,7 +19,6 @@ func teamMemberFromCollectableRow(row pgx.CollectableRow) (models.TeamMember, er
 // teamFromCollectableRow maps a pgx.CollectableRow to a models.Team struct.
 func teamFromCollectableRow(row pgx.CollectableRow) (models.Team, error) {
 	var team models.Team
-	//var timestamps models.Timestamps
 	err := row.Scan(&team.ID, &team.DisplayID, &team.Name, &team.Description, &team.CreatedAt, &team.UpdatedAt)
 
 	return team, err
@@ -33,21 +32,21 @@ func CreateTeam(ctx context.Context, team *models.Team) (*struct{}, error) {
 			return nil, err
 		}
 
-		var teamId pgtype.UUID
+		var teamID pgtype.UUID
 		row := tx.QueryRow(ctx,
 			`INSERT INTO teams (display_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
 			team.DisplayID, team.Name, team.Description)
 		if err != nil {
 			return nil, err
 		}
-		err = row.Scan(&teamId)
+		err = row.Scan(&teamID)
 		if err != nil {
 			return nil, err
 		}
 
 		_, err = tx.Exec(ctx,
 			`INSERT INTO user_teams (team_id, user_id, role) VALUES ($1, $2, $3)`,
-			teamId, team.Members[0].ID, team.Members[0].Role)
+			teamID, team.Members[0].ID, team.Members[0].Role)
 		if err != nil {
 			return nil, err
 		}
@@ -64,12 +63,12 @@ func CreateTeam(ctx context.Context, team *models.Team) (*struct{}, error) {
 	return dbRes.Result, err
 }
 
-func GetTeamById(ctx context.Context, displayId string) (*models.Team, error) {
+func GetTeamByID(ctx context.Context, displayID string) (*models.Team, error) {
 	dbRes, err := withTimeout(ctx, func() (*models.Team, error) {
 		var team models.Team
 		row, err := dbClient.conn.Query(ctx,
 			`SELECT id, display_id, name, description, created_at, updated_at FROM teams WHERE display_id=$1`,
-			displayId)
+			displayID)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +97,7 @@ func GetTeamById(ctx context.Context, displayId string) (*models.Team, error) {
 		return &team, nil
 	})
 
-	logDbOperation("GetTeamById", dbRes, err)
+	logDbOperation("GetTeamByID", dbRes, err)
 
 	return dbRes.Result, err
 }
@@ -158,11 +157,11 @@ func UpdateTeam(ctx context.Context, team *models.Team) (bool, error) {
 	return dbRes.Result, err
 }
 
-func DeleteTeam(ctx context.Context, displayId string) (bool, error) {
+func DeleteTeam(ctx context.Context, displayID string) (bool, error) {
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
 		result, err := dbClient.conn.Exec(ctx,
 			`DELETE FROM teams WHERE display_id=$1`,
-			displayId)
+			displayID)
 		if err != nil {
 			return false, err
 		}
@@ -177,14 +176,14 @@ func DeleteTeam(ctx context.Context, displayId string) (bool, error) {
 	return dbRes.Result, err
 }
 
-func AddMemberToTeam(ctx context.Context, teamDisplayId string, member *models.TeamMember) (bool, error) {
+func AddMemberToTeam(ctx context.Context, teamDisplayID string, member *models.TeamMember) (bool, error) {
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
-		var teamId pgtype.UUID
+		var teamID pgtype.UUID
 		row := dbClient.conn.QueryRow(ctx,
 			`SELECT id FROM teams WHERE display_id=$1`,
-			teamDisplayId)
+			teamDisplayID)
 
-		err := row.Scan(&teamId)
+		err := row.Scan(&teamID)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return false, ErrNotFound
@@ -194,7 +193,7 @@ func AddMemberToTeam(ctx context.Context, teamDisplayId string, member *models.T
 
 		result, err := dbClient.conn.Exec(ctx,
 			`INSERT INTO user_teams (team_id, user_id, role) VALUES ($1, $2, $3)`,
-			teamId, member.ID, member.Role)
+			teamID, member.ID, member.Role)
 		if err != nil {
 			return false, err
 		}
@@ -210,14 +209,14 @@ func AddMemberToTeam(ctx context.Context, teamDisplayId string, member *models.T
 	return dbRes.Result, err
 }
 
-func RemoveMemberFromTeam(ctx context.Context, teamDisplayId string, userId pgtype.UUID) (bool, error) {
+func RemoveMemberFromTeam(ctx context.Context, teamDisplayID string, userID pgtype.UUID) (bool, error) {
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
-		var teamId pgtype.UUID
+		var teamID pgtype.UUID
 		row := dbClient.conn.QueryRow(ctx,
 			`SELECT id FROM teams WHERE display_id=$1`,
-			teamDisplayId)
+			teamDisplayID)
 
-		err := row.Scan(&teamId)
+		err := row.Scan(&teamID)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return false, ErrNotFound
@@ -227,7 +226,7 @@ func RemoveMemberFromTeam(ctx context.Context, teamDisplayId string, userId pgty
 
 		result, err := dbClient.conn.Exec(ctx,
 			`DELETE FROM user_teams WHERE team_id=$1 AND user_id=$2`,
-			teamId, userId)
+			teamID, userID)
 		if err != nil {
 			return false, err
 		}

@@ -15,8 +15,8 @@ const (
 )
 
 func Validate() error {
-	envApiPort := os.Getenv(ApiPort)
-	if envApiPort == "" {
+	envAPIPort := os.Getenv(ApiPort)
+	if envAPIPort == "" {
 		return fmt.Errorf("environment variable %s is not set", ApiPort)
 	}
 
