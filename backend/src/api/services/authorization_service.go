@@ -10,16 +10,16 @@ import (
 	"net/http"
 )
 
-// AuthorizationServiceT handles authorization-related operations.
+// authorizationServiceT handles authorization-related operations.
 // It provides methods to authorize actions based on team membership and permissions.
-type AuthorizationServiceT struct {
-	BaseService
+type authorizationServiceT struct {
+	baseService
 }
 
-// NewAuthorizationService creates a new instance of AuthorizationServiceT.
-func newAuthorizationService() *AuthorizationServiceT {
-	return &AuthorizationServiceT{
-		BaseService{
+// NewAuthorizationService creates a new instance of authorizationServiceT.
+func newAuthorizationService() *authorizationServiceT {
+	return &authorizationServiceT{
+		baseService{
 			serviceLogger: logging.NewServiceLogger("AuthorizationService"),
 			methodLoggers: make(map[string]zerolog.Logger),
 		},
@@ -27,13 +27,13 @@ func newAuthorizationService() *AuthorizationServiceT {
 }
 
 // Checks if a given user has given permissions in the context of a specific team.
-func (s *AuthorizationServiceT) authorizeTeamAction(ctx context.Context, teamAuth *middleware.TeamAuth, permissions ...models.Permission) (*models.Team, *ServiceError) {
+func (s *authorizationServiceT) authorizeTeamAction(ctx context.Context, teamAuth *middleware.TeamAuth, permissions ...models.Permission) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("AuthorizeTeamAction")
 
 	requestorUsername := teamAuth.Username
 
 	// Does that team exist?
-	team, err := TeamService.internalGetTeamById(ctx, teamAuth.TeamId)
+	team, err := TeamService.internalGetTeamByID(ctx, teamAuth.TeamID)
 	if err != nil {
 		return nil, err
 	}

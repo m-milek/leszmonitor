@@ -8,7 +8,7 @@ import (
 func TestNewHttpMonitorResponse(t *testing.T) {
 	response := NewHttpMonitorResponse()
 
-	assert.Equal(t, Success, response.Status)
+	assert.Equal(t, success, response.Status)
 	assert.Empty(t, response.ErrorsStr)
 	assert.Empty(t, response.Failures)
 	assert.Empty(t, response.FailedAspects)
@@ -18,8 +18,8 @@ func TestHttpMonitorResponseSetStatus(t *testing.T) {
 	response := NewHttpMonitorResponse()
 
 	// Test setting status to Failure
-	response.setStatus(Failure)
-	assert.EqualValues(t, Failure, response.Status)
+	response.setStatus(failure)
+	assert.EqualValues(t, failure, response.Status)
 
 	// Test setting status to Error
 	response.setStatus(Error)
@@ -59,13 +59,13 @@ func TestHttpMonitorResponseAddFailedAspect(t *testing.T) {
 
 	// Add one aspect
 	response.addFailedAspect(statusCodeAspect)
-	assert.EqualValues(t, Failure, response.Status)
+	assert.EqualValues(t, failure, response.Status)
 	assert.Contains(t, response.FailedAspects, statusCodeAspect)
 	assert.Len(t, response.FailedAspects, 1)
 
 	// Add another aspect
 	response.addFailedAspect(bodyAspect)
-	assert.EqualValues(t, Failure, response.Status)
+	assert.EqualValues(t, failure, response.Status)
 	assert.Contains(t, response.FailedAspects, statusCodeAspect)
 	assert.Contains(t, response.FailedAspects, bodyAspect)
 	assert.Len(t, response.FailedAspects, 2)

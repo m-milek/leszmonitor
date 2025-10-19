@@ -11,17 +11,17 @@ import (
 type IMonitor interface {
 	Run() IMonitorResponse
 	Validate() error
-	GetId() pgtype.UUID
-	GetDisplayId() string
-	GenerateDisplayId()
-	GetTeamId() pgtype.UUID
-	SetTeamId(uuid pgtype.UUID)
-	GetGroupId() pgtype.UUID
+	GetID() pgtype.UUID
+	GetDisplayID() string
+	GenerateDisplayID()
+	GetTeamID() pgtype.UUID
+	SetTeamID(uuid pgtype.UUID)
+	GetGroupID() pgtype.UUID
+	SetGroupID(uuid pgtype.UUID)
 	GetName() string
 	GetDescription() string
 	GetInterval() time.Duration
 	GetType() MonitorConfigType
-	SetGroupId(uuid pgtype.UUID)
 }
 
 type IConcreteMonitor interface {
@@ -37,13 +37,13 @@ type IMonitorConfig interface {
 
 func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonitor, error) {
 	switch base.Type {
-	case Http:
-		monitor := &HttpMonitor{
+	case httpType:
+		monitor := &httpMonitor{
 			BaseMonitor: base,
-			Config:      *config.(*HttpConfig),
+			Config:      *config.(*httpConfig),
 		}
 		return monitor, nil
-	case Ping:
+	case pingType:
 		monitor := &PingMonitor{
 			BaseMonitor: base,
 			Config:      *config.(*PingConfig),
@@ -55,25 +55,25 @@ func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonit
 }
 
 type BaseMonitor struct {
-	Id          pgtype.UUID       `json:"id"`
-	DisplayId   string            `json:"displayId"`   // Unique identifier for the monitor
-	TeamId      pgtype.UUID       `json:"teamId"`      // Id of the owner team of the monitor
-	GroupId     pgtype.UUID       `json:"groupId"`     // Id of the owner group of the monitor
+	ID          pgtype.UUID       `json:"id"`
+	DisplayID   string            `json:"displayId"`   // Unique identifier for the monitor
+	TeamID      pgtype.UUID       `json:"teamId"`      // ID of the owner team of the monitor
+	GroupID     pgtype.UUID       `json:"groupId"`     // ID of the owner group of the monitor
 	Name        string            `json:"name"`        // Name of the monitor
 	Description string            `json:"description"` // Description of the monitor
 	Interval    int               `json:"interval"`    // How often to run the monitor in seconds
-	Type        MonitorConfigType `json:"type"`        // Type of the monitor (http, ping, etc.)
+	Type        MonitorConfigType `json:"type"`        // Type of the monitor (httpType, pingType, etc.)
 	util2.Timestamps
 }
 
 type MonitorConfigType string
 
 const (
-	Http MonitorConfigType = "http"
-	Ping MonitorConfigType = "ping"
+	httpType MonitorConfigType = "http"
+	pingType MonitorConfigType = "ping"
 )
 
-type MonitorTypeExtractor struct {
+type monitorTypeExtractor struct {
 	Type MonitorConfigType `json:"type"`
 }
 
@@ -94,34 +94,34 @@ func (m *BaseMonitor) validateBase() error {
 	if m.GetType() == "" {
 		return fmt.Errorf("monitor type cannot be empty")
 	}
-	if m.GetDisplayId() == "" {
+	if m.GetDisplayID() == "" {
 		return fmt.Errorf("monitor DisplayID cannot be empty")
 	}
 	return nil
 }
 
-func (m *BaseMonitor) GenerateDisplayId() {
-	m.DisplayId = util.IDFromString(m.GetName())
+func (m *BaseMonitor) GenerateDisplayID() {
+	m.DisplayID = util.IDFromString(m.GetName())
 }
 
-func (m *BaseMonitor) GetDisplayId() string {
-	return m.DisplayId
+func (m *BaseMonitor) GetDisplayID() string {
+	return m.DisplayID
 }
 
-func (m *BaseMonitor) GetId() pgtype.UUID {
-	return m.Id
+func (m *BaseMonitor) GetID() pgtype.UUID {
+	return m.ID
 }
 
-func (m *BaseMonitor) GetTeamId() pgtype.UUID {
-	return m.TeamId
+func (m *BaseMonitor) GetTeamID() pgtype.UUID {
+	return m.TeamID
 }
 
-func (m *BaseMonitor) SetTeamId(teamId pgtype.UUID) {
-	m.TeamId = teamId
+func (m *BaseMonitor) SetTeamID(teamID pgtype.UUID) {
+	m.TeamID = teamID
 }
 
-func (m *BaseMonitor) GetGroupId() pgtype.UUID {
-	return m.GroupId
+func (m *BaseMonitor) GetGroupID() pgtype.UUID {
+	return m.GroupID
 }
 
 func (m *BaseMonitor) GetName() string {
@@ -140,6 +140,6 @@ func (m *BaseMonitor) GetType() MonitorConfigType {
 	return m.Type
 }
 
-func (m *BaseMonitor) SetGroupId(groupId pgtype.UUID) {
-	m.GroupId = groupId
+func (m *BaseMonitor) SetGroupID(groupId pgtype.UUID) {
+	m.GroupID = groupId
 }

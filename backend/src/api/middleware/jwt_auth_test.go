@@ -282,7 +282,7 @@ func TestTeamAuthFromRequest(t *testing.T) {
 				return req.WithContext(ctx)
 			},
 			expectedAuth: &TeamAuth{
-				TeamId:   "team123",
+				TeamID:   "team123",
 				Username: "testuser",
 			},
 		},
@@ -335,7 +335,7 @@ func TestTeamAuthFromRequest(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				require.NotNil(t, auth)
-				assert.Equal(t, tt.expectedAuth.TeamId, auth.TeamId)
+				assert.Equal(t, tt.expectedAuth.TeamID, auth.TeamID)
 				assert.Equal(t, tt.expectedAuth.Username, auth.Username)
 			}
 		})

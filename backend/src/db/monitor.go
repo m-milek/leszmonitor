@@ -15,7 +15,7 @@ func monitorFromCollectableRow(row pgx.CollectableRow) (monitors.IConcreteMonito
 	var config []byte
 	var b monitors.BaseMonitor
 
-	err := row.Scan(&b.Id, &b.DisplayId, &b.TeamId, &b.GroupId, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
+	err := row.Scan(&b.ID, &b.DisplayID, &b.TeamID, &b.GroupID, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -39,9 +39,9 @@ func CreateMonitor(ctx context.Context, monitor monitors.IConcreteMonitor) (moni
 		rows, err := dbClient.conn.Query(ctx,
 			`INSERT INTO monitors (display_id, team_id, group_id, name, description, interval, kind, config)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-			monitor.GetDisplayId(),
-			monitor.GetTeamId(),
-			monitor.GetGroupId(),
+			monitor.GetDisplayID(),
+			monitor.GetTeamID(),
+			monitor.GetGroupID(),
 			monitor.GetName(),
 			monitor.GetDescription(),
 			int(monitor.GetInterval().Seconds()),
@@ -68,7 +68,7 @@ func CreateMonitor(ctx context.Context, monitor monitors.IConcreteMonitor) (moni
 
 	// Broadcast that a monitor has been added
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
-		Id:      dbRes.Result.GetId(),
+		ID:      dbRes.Result.GetID(),
 		Status:  monitors.Created,
 		Monitor: &dbRes.Result,
 	})
@@ -106,9 +106,9 @@ func GetAllMonitors(ctx context.Context) ([]monitors.IConcreteMonitor, error) {
 	return dbRes.Result, nil
 }
 
-func DeleteMonitor(ctx context.Context, displayId string) (bool, error) {
+func DeleteMonitor(ctx context.Context, displayID string) (bool, error) {
 	dbRes, err := withTimeout(ctx, func() (*pgtype.UUID, error) {
-		result := dbClient.conn.QueryRow(ctx, `DELETE FROM monitors WHERE display_id=$1 RETURNING id`, displayId)
+		result := dbClient.conn.QueryRow(ctx, `DELETE FROM monitors WHERE display_id=$1 RETURNING id`, displayID)
 
 		var id pgtype.UUID
 		err := result.Scan(&id)
@@ -129,7 +129,7 @@ func DeleteMonitor(ctx context.Context, displayId string) (bool, error) {
 	}
 
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
-		Id:      *dbRes.Result,
+		ID:      *dbRes.Result,
 		Status:  monitors.Deleted,
 		Monitor: nil,
 	})
@@ -140,7 +140,7 @@ func DeleteMonitor(ctx context.Context, displayId string) (bool, error) {
 	return true, nil
 }
 
-func GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, error) {
+func GetMonitorByID(ctx context.Context, id string) (monitors.IMonitor, error) {
 	dbRes, err := withTimeout(ctx, func() (monitors.IMonitor, error) {
 		row, err := dbClient.conn.Query(ctx,
 			`SELECT id, display_id, team_id, group_id, name, description, interval, kind, config FROM monitors WHERE id=$1`,
@@ -161,7 +161,7 @@ func GetMonitorById(ctx context.Context, id string) (monitors.IMonitor, error) {
 		return monitor, nil
 	})
 
-	logDbOperation("GetMonitorById", dbRes, err)
+	logDbOperation("GetMonitorByID", dbRes, err)
 
 	return dbRes.Result, err
 }
@@ -170,15 +170,15 @@ func UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (b
 	dbRes, err := withTimeout(ctx, func() (bool, error) {
 		result, err := dbClient.conn.Exec(ctx,
 			`UPDATE monitors SET display_id=$1, team_id=$2, group_id=$3, name=$4, description=$5, interval=$6, kind=$7, config=$8 WHERE id=$9`,
-			newMonitor.GetDisplayId(),
-			newMonitor.GetTeamId(),
-			newMonitor.GetGroupId(),
+			newMonitor.GetDisplayID(),
+			newMonitor.GetTeamID(),
+			newMonitor.GetGroupID(),
 			newMonitor.GetName(),
 			newMonitor.GetDescription(),
 			int(newMonitor.GetInterval().Seconds()),
 			string(newMonitor.GetType()),
 			newMonitor.GetConfig(),
-			newMonitor.GetId(),
+			newMonitor.GetID(),
 		)
 		if err != nil {
 			return false, err
@@ -197,7 +197,7 @@ func UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (b
 
 	// Broadcast that a monitor has been updated
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
-		Id:      newMonitor.GetId(),
+		ID:      newMonitor.GetID(),
 		Status:  monitors.Edited,
 		Monitor: &newMonitor,
 	})

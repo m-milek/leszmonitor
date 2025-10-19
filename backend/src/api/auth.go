@@ -9,16 +9,16 @@ import (
 	"os"
 )
 
-// JwtClaims represents the claims stored in a Leszmonitor JWT token.
+// jwtClaims represents the claims stored in a Leszmonitor JWT token.
 // It includes standard claims and a custom Username field.
-type JwtClaims struct {
+type jwtClaims struct {
 	jwt2.MapClaims
 	Username string `json:"username"`
 	Exp      int64  `json:"exp"`
 }
 
-// JwtFromRequest extracts the JWT token from the Authorization header of the HTTP request.
-func JwtFromRequest(r *http.Request) (string, error) {
+// jwtFromRequest extracts the JWT token from the Authorization header of the HTTP request.
+func jwtFromRequest(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return "", nil
@@ -32,20 +32,20 @@ func JwtFromRequest(r *http.Request) (string, error) {
 	return authHeader[len(prefix):], nil
 }
 
-func DecodeJwtClaims(jwtString string) (JwtClaims, error) {
-	claims := JwtClaims{}
-	token, err := jwt2.ParseWithClaims(jwtString, &claims, func(token *jwt2.Token) (interface{}, error) {
+func decodeJwtClaims(jwtString string) (jwtClaims, error) {
+	claims := jwtClaims{}
+	token, err := jwt2.ParseWithClaims(jwtString, &claims, func(_ *jwt2.Token) (interface{}, error) {
 		return []byte(os.Getenv(env.JwtSecret)), nil
 	})
 
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to parse JWT token")
-		return JwtClaims{}, err
+		return jwtClaims{}, err
 	}
 
 	if !token.Valid {
 		logging.Api.Warn().Msg("Invalid JWT token")
-		return JwtClaims{}, fmt.Errorf("invalid JWT token")
+		return jwtClaims{}, fmt.Errorf("invalid JWT token")
 	}
 
 	return claims, nil
