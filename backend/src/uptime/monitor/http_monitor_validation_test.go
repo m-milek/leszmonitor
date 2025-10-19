@@ -99,7 +99,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 		monitor.URL = "ftp://example.com"
 		err := monitor.validate()
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "URL scheme must be either httpType or https")
+		assert.Contains(t, err.Error(), "URL scheme must be either http or https")
 	})
 
 	// Test negative expected response time
