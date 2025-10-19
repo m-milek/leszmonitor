@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type Client struct {
+type DBClient struct {
 	conn *pgxpool.Pool
 }
 
@@ -25,11 +25,11 @@ type dbResult[T any] struct {
 	Result   T
 }
 
-var dbClient Client
+var dbClient DBClient
 
 const timeoutDuration = 1000 * time.Second
 
-func InitDbClient(ctx context.Context) error {
+func InitDBClient(ctx context.Context) error {
 	_, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
@@ -42,7 +42,7 @@ func InitDbClient(ctx context.Context) error {
 		return err
 	}
 
-	dbClient = Client{
+	dbClient = DBClient{
 		conn: client,
 	}
 
@@ -62,7 +62,7 @@ func InitDbClient(ctx context.Context) error {
 }
 
 // initSchema reads the database schema from a file and executes it to set up the database structure.
-func (c *Client) initSchema(ctx context.Context) error {
+func (c *DBClient) initSchema(ctx context.Context) error {
 	schemaBytes, err := os.ReadFile(DB_SCHEMA_FILE)
 	if err != nil {
 		return fmt.Errorf("failed to read DB schema file: %w", err)

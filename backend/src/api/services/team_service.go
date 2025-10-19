@@ -13,13 +13,13 @@ import (
 
 // TeamServiceT handles team-related CRUD operations.
 type TeamServiceT struct {
-	BaseService
+	baseService
 }
 
 // newTeamService creates a new instance of TeamServiceT.
 func newTeamService() *TeamServiceT {
 	return &TeamServiceT{
-		BaseService{
+		baseService{
 			authService:   newAuthorizationService(),
 			serviceLogger: logging.NewServiceLogger("TeamService"),
 		},
@@ -34,7 +34,7 @@ type TeamCreatePayload struct {
 }
 
 type TeamCreateResponse struct {
-	TeamId string `json:"teamId"` // The DisplayID of the newly created team
+	TeamID string `json:"teamId"` // The DisplayID of the newly created team
 }
 
 type TeamUpdatePayload struct {
@@ -75,10 +75,10 @@ func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *Service
 	return teams, nil
 }
 
-// GetTeamById retrieves a team by its DisplayID, ensuring the requesting user has at least reader permissions.
-func (s *TeamServiceT) GetTeamById(ctx context.Context, teamAuth *middleware.TeamAuth) (*models.Team, *ServiceError) {
-	logger := s.getMethodLogger("GetTeamById")
-	logger.Trace().Str("teamId", teamAuth.TeamId).Msg("Retrieving team by DisplayID")
+// GetTeamByID retrieves a team by its DisplayID, ensuring the requesting user has at least reader permissions.
+func (s *TeamServiceT) GetTeamByID(ctx context.Context, teamAuth *middleware.TeamAuth) (*models.Team, *ServiceError) {
+	logger := s.getMethodLogger("GetTeamByID")
+	logger.Trace().Str("teamId", teamAuth.TeamID).Msg("Retrieving team by DisplayID")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamReader)
 	if authErr != nil {
@@ -138,7 +138,7 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 
 	logger.Trace().Str("teamId", team.DisplayID).Msg("Team created successfully")
 	return &TeamCreateResponse{
-		TeamId: team.DisplayID,
+		TeamID: team.DisplayID,
 	}, nil
 }
 
@@ -146,7 +146,7 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 // Requires admin permissions.
 func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamAuth *middleware.TeamAuth) *ServiceError {
 	logger := s.getMethodLogger("DeleteTeam")
-	logger.Trace().Str("teamId", teamAuth.TeamId).Str("requestorUsername", teamAuth.Username).Msg("Deleting team")
+	logger.Trace().Str("teamId", teamAuth.TeamID).Str("requestorUsername", teamAuth.Username).Msg("Deleting team")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamAdmin)
 	if authErr != nil {
@@ -170,7 +170,7 @@ func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamAuth *middleware.Team
 // Requires editor permissions or higher.
 func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamAuth *middleware.TeamAuth, payload *TeamUpdatePayload) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("UpdateTeam")
-	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Updating team")
+	logger.Trace().Str("teamId", teamAuth.TeamID).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Updating team")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamEditor)
 	if authErr != nil {
@@ -199,7 +199,7 @@ func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamAuth *middleware.Team
 // Requires editor permissions or higher.
 func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.TeamAuth, payload *TeamAddMemberPayload) *ServiceError {
 	logger := s.getMethodLogger("AddUserToTeam")
-	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Adding user to team")
+	logger.Trace().Str("teamId", teamAuth.TeamID).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Adding user to team")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamEditor)
 	if authErr != nil {
@@ -262,7 +262,7 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.T
 // Requires editor permissions or higher.
 func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middleware.TeamAuth, payload *TeamRemoveMemberPayload) *ServiceError {
 	logger := s.getMethodLogger("RemoveUserFromTeam")
-	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Removing user from team")
+	logger.Trace().Str("teamId", teamAuth.TeamID).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Removing user from team")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamEditor)
 	if authErr != nil {
@@ -306,7 +306,7 @@ func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middlew
 // Requires admin permissions.
 func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamAuth *middleware.TeamAuth, payload TeamChangeMemberRolePayload) *ServiceError {
 	logger := s.getMethodLogger("ChangeMemberRole")
-	logger.Trace().Str("teamId", teamAuth.TeamId).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Changing member role in team")
+	logger.Trace().Str("teamId", teamAuth.TeamID).Any("payload", payload).Str("requestorUsername", teamAuth.Username).Msg("Changing member role in team")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamAdmin)
 	if authErr != nil {
@@ -346,8 +346,8 @@ func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamAuth *middlewar
 	return nil
 }
 
-func (s *TeamServiceT) internalGetTeamById(ctx context.Context, id string) (*models.Team, *ServiceError) {
-	team, err := db.GetTeamById(ctx, id)
+func (s *TeamServiceT) internalGetTeamByID(ctx context.Context, id string) (*models.Team, *ServiceError) {
+	team, err := db.GetTeamByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{

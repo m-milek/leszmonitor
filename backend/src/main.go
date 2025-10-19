@@ -50,7 +50,7 @@ func main() {
 	}
 	logging.Main.Info().Msg("Logger initialized successfully")
 
-	err = db.InitDbClient(ctx)
+	err = db.InitDBClient(ctx)
 	if err != nil {
 		logging.Init.Fatal().Err(err).Msg("Failed to initialize MongoDB connection")
 	}

@@ -7,10 +7,10 @@ import (
 )
 
 var monitorTypeMap = map[MonitorConfigType]func() IConcreteMonitor{
-	Http: func() IConcreteMonitor {
-		return &HttpMonitor{}
+	httpType: func() IConcreteMonitor {
+		return &httpMonitor{}
 	},
-	Ping: func() IConcreteMonitor {
+	pingType: func() IConcreteMonitor {
 		return &PingMonitor{}
 	},
 }
@@ -27,9 +27,9 @@ func MapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
 
 func MapMonitorConfigType(kind MonitorConfigType) IMonitorConfig {
 	switch kind {
-	case Http:
-		return &HttpConfig{}
-	case Ping:
+	case httpType:
+		return &httpConfig{}
+	case pingType:
 		return &PingConfig{}
 	default:
 		return nil
@@ -42,7 +42,7 @@ func FromReader(reader io.Reader) (IConcreteMonitor, error) {
 		return nil, fmt.Errorf("failed to decode request body: %w", err)
 	}
 
-	var monitorTypeExtractor MonitorTypeExtractor
+	var monitorTypeExtractor monitorTypeExtractor
 	if err := json.Unmarshal(rawData, &monitorTypeExtractor); err != nil {
 		return nil, fmt.Errorf("failed to parse monitor type: %w", err)
 	}

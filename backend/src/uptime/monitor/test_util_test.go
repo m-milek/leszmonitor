@@ -9,15 +9,15 @@ import (
 type TestMonitor struct {
 	// Base fields
 	ID          pgtype.UUID
-	DisplayId   string
+	DisplayID   string
 	Name        string
 	Description string
 	Interval    int
-	GroupId     string
+	GroupID     string
 	Type        MonitorConfigType
 
 	// Config fields
-	HttpConfig *HttpConfig
+	HttpConfig *httpConfig
 	PingConfig *PingConfig
 }
 
@@ -26,15 +26,15 @@ func NewTestMonitor() *TestMonitor {
 	name := "Test Monitor"
 	return &TestMonitor{
 		ID:          pgtype.UUID{Valid: false},
-		DisplayId:   util.IDFromString(name),
+		DisplayID:   util.IDFromString(name),
 		Name:        name,
 		Description: "Test monitor description",
 		Interval:    60,
-		GroupId:     "test_owner",
-		Type:        Http,
-		HttpConfig: &HttpConfig{
-			HttpMethod:          "GET",
-			Url:                 "https://example.com",
+		GroupID:     "test_owner",
+		Type:        httpType,
+		HttpConfig: &httpConfig{
+			Method:              "GET",
+			URL:                 "https://example.com",
 			ExpectedStatusCodes: []int{200},
 		},
 	}
@@ -42,11 +42,11 @@ func NewTestMonitor() *TestMonitor {
 
 // AsHttp configures the monitor as an HTTP monitor
 func (t *TestMonitor) AsHttp() *TestMonitor {
-	t.Type = Http
+	t.Type = httpType
 	if t.HttpConfig == nil {
-		t.HttpConfig = &HttpConfig{
-			HttpMethod:          "GET",
-			Url:                 "https://example.com",
+		t.HttpConfig = &httpConfig{
+			Method:              "GET",
+			URL:                 "https://example.com",
 			ExpectedStatusCodes: []int{200},
 		}
 	}
@@ -54,9 +54,9 @@ func (t *TestMonitor) AsHttp() *TestMonitor {
 	return t
 }
 
-// AsPing configures the monitor as a Ping monitor
+// AsPing configures the monitor as a pingType monitor
 func (t *TestMonitor) AsPing() *TestMonitor {
-	t.Type = Ping
+	t.Type = pingType
 	if t.PingConfig == nil {
 		t.PingConfig = &PingConfig{
 			Host:        "example.com",
@@ -73,8 +73,8 @@ func (t *TestMonitor) AsPing() *TestMonitor {
 // Build creates the monitor instance
 func (t *TestMonitor) Build() IMonitor {
 	base := BaseMonitor{
-		Id:          t.ID,
-		DisplayId:   t.DisplayId,
+		ID:          t.ID,
+		DisplayID:   t.DisplayID,
 		Name:        t.Name,
 		Description: t.Description,
 		Interval:    t.Interval,
@@ -82,12 +82,12 @@ func (t *TestMonitor) Build() IMonitor {
 	}
 
 	switch t.Type {
-	case Http:
-		return &HttpMonitor{
+	case httpType:
+		return &httpMonitor{
 			BaseMonitor: base,
 			Config:      *t.HttpConfig,
 		}
-	case Ping:
+	case pingType:
 		return &PingMonitor{
 			BaseMonitor: base,
 			Config:      *t.PingConfig,

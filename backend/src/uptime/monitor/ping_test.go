@@ -83,7 +83,7 @@ func TestPingConfig_ImplementsIMonitorConfig(t *testing.T) {
 
 func TestPingMonitor_ImplementsIMonitor(t *testing.T) {
 	monitor := &PingMonitor{
-		BaseMonitor: BaseMonitor{DisplayId: "test-id"},
+		BaseMonitor: BaseMonitor{DisplayID: "test-id"},
 		Config:      *setupPingMonitorConfig(),
 	}
 	var iMonitor IMonitor = monitor
@@ -167,7 +167,7 @@ func TestPingMonitor_Validate(t *testing.T) {
 func TestPingAddress(t *testing.T) {
 	// This is a bit tricky to test without making actual network calls
 	// We'll use a known reliable service for a simple integration test
-	t.Run("Successful Ping", func(t *testing.T) {
+	t.Run("Successful pingType", func(t *testing.T) {
 		// Skip this test in CI environments or when offline
 		if testing.Short() {
 			t.Skip("Skipping network-dependent test in short mode")
@@ -181,12 +181,12 @@ func TestPingAddress(t *testing.T) {
 		}
 	})
 
-	t.Run("Failed Ping - Invalid Host", func(t *testing.T) {
+	t.Run("Failed pingType - Invalid Host", func(t *testing.T) {
 		success, _ := pingAddress("tcp", "invalid-host-that-does-not-exist:80", 1*time.Second)
 		assert.False(t, success)
 	})
 
-	t.Run("Failed Ping - Invalid Port", func(t *testing.T) {
+	t.Run("Failed pingType - Invalid Port", func(t *testing.T) {
 		success, _ := pingAddress("tcp", "localhost:99999", 1*time.Second)
 		assert.False(t, success)
 	})
@@ -198,7 +198,7 @@ func TestPingMonitor_Run(t *testing.T) {
 	originalPingAddress := pingAddress
 	defer func() { pingAddressFunc = originalPingAddress }()
 
-	t.Run("Successful Ping", func(t *testing.T) {
+	t.Run("Successful pingType", func(t *testing.T) {
 		monitor := setupPingMonitorConfig()
 
 		// Mock the pingAddress function
@@ -210,12 +210,12 @@ func TestPingMonitor_Run(t *testing.T) {
 		}
 
 		response := monitor.run()
-		assert.EqualValues(t, Success, response.GetStatus())
+		assert.EqualValues(t, success, response.GetStatus())
 		assert.Equal(t, int64(100), response.GetDuration())
 		assert.Empty(t, response.GetFailures())
 	})
 
-	t.Run("Failed Ping with Retries", func(t *testing.T) {
+	t.Run("Failed pingType with Retries", func(t *testing.T) {
 		monitor := setupPingMonitorConfig()
 		callCount := 0
 
@@ -228,10 +228,10 @@ func TestPingMonitor_Run(t *testing.T) {
 		response := monitor.run()
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
 		assert.NotEmpty(t, response.GetFailures())
-		assert.Contains(t, response.GetFailures()[0], "Failed to ping")
+		assert.Contains(t, response.GetFailures()[0], "Failed to pingType")
 	})
 
-	t.Run("Successful Ping After Retry", func(t *testing.T) {
+	t.Run("Successful pingType After Retry", func(t *testing.T) {
 		monitor := setupPingMonitorConfig()
 		callCount := 0
 
@@ -246,7 +246,7 @@ func TestPingMonitor_Run(t *testing.T) {
 
 		response := monitor.run()
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
-		assert.EqualValues(t, Success, response.GetStatus())
+		assert.EqualValues(t, success, response.GetStatus())
 		assert.Equal(t, int64(150), response.GetDuration())
 		assert.Empty(t, response.GetFailures())
 	})
@@ -255,7 +255,7 @@ func TestPingMonitor_Run(t *testing.T) {
 func TestPingMonitorResponse(t *testing.T) {
 	t.Run("New Response", func(t *testing.T) {
 		response := NewPingMonitorResponse()
-		assert.EqualValues(t, Success, response.GetStatus())
+		assert.EqualValues(t, success, response.GetStatus())
 		assert.NotZero(t, response.GetTimestamp())
 		assert.Empty(t, response.GetErrorsStr())
 		assert.Empty(t, response.GetFailures())
@@ -263,12 +263,12 @@ func TestPingMonitorResponse(t *testing.T) {
 
 	t.Run("Response Getters", func(t *testing.T) {
 		response := NewPingMonitorResponse()
-		response.Status = Failure
+		response.Status = failure
 		response.Duration = 200
 		response.ErrorsStr = []string{"Test error"}
 		response.Failures = []string{"Test failure"}
 
-		assert.EqualValues(t, Failure, response.GetStatus())
+		assert.EqualValues(t, failure, response.GetStatus())
 		assert.Equal(t, int64(200), response.GetDuration())
 		assert.Equal(t, []string{"Test error"}, response.GetErrorsStr())
 		assert.Equal(t, []string{"Test failure"}, response.GetFailures())

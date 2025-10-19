@@ -12,8 +12,8 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	// Test valid monitor
 	t.Run("Valid HTTP Monitor", func(t *testing.T) {
 		baseMonitor := createTestBaseMonitor()
-		config, _ := NewHttpConfig("GET", "https://example.com", nil, "", []int{200}, "", nil, 1000)
-		monitor := HttpMonitor{
+		config, _ := newHttpConfig("GET", "https://example.com", nil, "", []int{200}, "", nil, 1000)
+		monitor := httpMonitor{
 			BaseMonitor: baseMonitor,
 			Config:      *config,
 		}
@@ -30,7 +30,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	// Test empty URL
 	t.Run("Empty URL", func(t *testing.T) {
 		monitor := setupTestHttpMonitorConfig()
-		monitor.Url = ""
+		monitor.URL = ""
 		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "URL cannot be empty")
@@ -39,7 +39,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	// Test empty HTTP method
 	t.Run("Empty HTTP Method", func(t *testing.T) {
 		monitor := setupTestHttpMonitorConfig()
-		monitor.HttpMethod = ""
+		monitor.Method = ""
 		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "HTTP method cannot be empty")
@@ -48,7 +48,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	// Test invalid HTTP method
 	t.Run("Invalid HTTP Method", func(t *testing.T) {
 		monitor := setupTestHttpMonitorConfig()
-		monitor.HttpMethod = "INVALID"
+		monitor.Method = "INVALID"
 		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid HTTP method")
@@ -87,7 +87,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	// Test invalid URL format
 	t.Run("Invalid URL Format", func(t *testing.T) {
 		monitor := setupTestHttpMonitorConfig()
-		monitor.Url = "not-a-valid-url"
+		monitor.URL = "not-a-valid-url"
 		err := monitor.validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid URL format")
@@ -96,10 +96,10 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	// Test invalid URL scheme
 	t.Run("Invalid URL Scheme", func(t *testing.T) {
 		monitor := setupTestHttpMonitorConfig()
-		monitor.Url = "ftp://example.com"
+		monitor.URL = "ftp://example.com"
 		err := monitor.validate()
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "URL scheme must be either http or https")
+		assert.Contains(t, err.Error(), "URL scheme must be either httpType or https")
 	})
 
 	// Test negative expected response time
@@ -126,7 +126,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 	for _, method := range validMethods {
 		t.Run("Valid HTTP Method: "+method, func(t *testing.T) {
 			monitor := setupTestHttpMonitorConfig()
-			monitor.HttpMethod = method
+			monitor.Method = method
 			err := monitor.validate()
 			assert.NoError(t, err)
 		})
@@ -134,7 +134,7 @@ func TestHttpMonitor_Validate(t *testing.T) {
 }
 
 func TestValidateStatusCode(t *testing.T) {
-	setupTest := func() (*HttpConfig, *http.Response, *HttpMonitorResponse) {
+	setupTest := func() (*httpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, "", nil)
 		monitorResponse := NewHttpMonitorResponse()
@@ -146,7 +146,7 @@ func TestValidateStatusCode(t *testing.T) {
 
 		monitor.checkStatusCode(response, monitorResponse)
 
-		assert.Equal(t, Success, monitorResponse.Status)
+		assert.Equal(t, success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -156,14 +156,14 @@ func TestValidateStatusCode(t *testing.T) {
 
 		monitor.checkStatusCode(response, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Status)
+		assert.EqualValues(t, failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, statusCodeAspect)
 		assert.Contains(t, monitorResponse.Failures[0], "Unexpected status code")
 	})
 }
 
 func TestValidateResponseTime(t *testing.T) {
-	setupTest := func() (*HttpConfig, *HttpMonitorResponse) {
+	setupTest := func() (*httpConfig, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
 		monitorResponse := NewHttpMonitorResponse()
 		return monitor, monitorResponse
@@ -175,7 +175,7 @@ func TestValidateResponseTime(t *testing.T) {
 
 		monitor.checkResponseTime(elapsed, monitorResponse)
 
-		assert.EqualValues(t, Success, monitorResponse.Status)
+		assert.EqualValues(t, success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -185,14 +185,14 @@ func TestValidateResponseTime(t *testing.T) {
 
 		monitor.checkResponseTime(elapsed, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Status)
+		assert.EqualValues(t, failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, responseTimeAspect)
 		assert.Contains(t, monitorResponse.Failures[0], "Response time exceeded")
 	})
 }
 
 func TestValidateResponseHeaders(t *testing.T) {
-	setupTest := func(headers map[string]string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
+	setupTest := func(headers map[string]string) (*httpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, "", headers)
 		monitorResponse := NewHttpMonitorResponse()
@@ -205,7 +205,7 @@ func TestValidateResponseHeaders(t *testing.T) {
 
 		monitor.checkResponseHeaders(response, monitorResponse)
 
-		assert.EqualValues(t, Success, monitorResponse.Status)
+		assert.EqualValues(t, success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -215,14 +215,14 @@ func TestValidateResponseHeaders(t *testing.T) {
 
 		monitor.checkResponseHeaders(response, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Status)
+		assert.EqualValues(t, failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, headersAspect)
 		assert.Contains(t, monitorResponse.Failures[0], "Header mismatch")
 	})
 }
 
 func TestValidateResponseBody(t *testing.T) {
-	setupTest := func(body string) (*HttpConfig, *http.Response, *HttpMonitorResponse) {
+	setupTest := func(body string) (*httpConfig, *http.Response, *HttpMonitorResponse) {
 		monitor := setupTestHttpMonitorConfig()
 		response := createMockResponse(200, body, nil)
 		monitorResponse := NewHttpMonitorResponse()
@@ -234,7 +234,7 @@ func TestValidateResponseBody(t *testing.T) {
 
 		monitor.checkResponseBody(response, monitorResponse)
 
-		assert.EqualValues(t, Success, monitorResponse.Status)
+		assert.EqualValues(t, success, monitorResponse.Status)
 		assert.Empty(t, monitorResponse.FailedAspects)
 	})
 
@@ -243,7 +243,7 @@ func TestValidateResponseBody(t *testing.T) {
 
 		monitor.checkResponseBody(response, monitorResponse)
 
-		assert.EqualValues(t, Failure, monitorResponse.Status)
+		assert.EqualValues(t, failure, monitorResponse.Status)
 		assert.Contains(t, monitorResponse.FailedAspects, bodyAspect)
 		assert.Contains(t, monitorResponse.Failures[0], "Response body does not match regex")
 	})
