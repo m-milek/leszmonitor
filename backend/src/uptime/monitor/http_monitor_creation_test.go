@@ -53,7 +53,7 @@ func TestNewHttpMonitor(t *testing.T) {
 			url:                 "ftp://example.com",
 			expectedStatusCodes: []int{200},
 			expectError:         true,
-			errorMessage:        "URL scheme must be either httpType or https",
+			errorMessage:        "URL scheme must be either http or https",
 		},
 	}
 
