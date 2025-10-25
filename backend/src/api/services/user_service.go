@@ -54,7 +54,7 @@ func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.User, e
 	logger := s.getMethodLogger("GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
-	users, err := db.GetAllUsers(ctx)
+	users, err := db.Get().Users().GetAllUsers(ctx)
 
 	if err != nil {
 		logger.Error().Err(err).Msg("Error retrieving users")
@@ -73,7 +73,7 @@ func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (
 	logger := s.getMethodLogger("GetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
-	user, err := db.GetUserByUsername(ctx, username)
+	user, err := db.Get().Users().GetUserByUsername(ctx, username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -116,7 +116,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
-	err = db.CreateUser(ctx, user)
+	_, err = db.Get().Users().InsertUser(ctx, user)
 
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
@@ -135,7 +135,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 	logger := s.getMethodLogger("Login")
 	logger.Trace().Str("username", payload.Username).Msg("User login attempt")
 
-	user, err := db.GetRawUserByUsername(ctx, payload.Username)
+	user, err := db.Get().Users().GetUserByUsername(ctx, payload.Username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
