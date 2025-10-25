@@ -8,9 +8,27 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 )
 
-func CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*models.MonitorGroup, error) {
-	dbRes, err := withTimeout(ctx, func() (*models.MonitorGroup, error) {
-		rows := dbClient.conn.QueryRow(ctx,
+type IGroupRepository interface {
+	CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*models.MonitorGroup, error)
+	GetMonitorGroupByID(ctx context.Context, displayID string) (*models.MonitorGroup, error)
+	GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.MonitorGroup, error)
+	UpdateMonitorGroup(ctx context.Context, team *models.Team, oldGroup, newGroup *models.MonitorGroup) (bool, error)
+	DeleteMonitorGroup(ctx context.Context, team *models.Team, groupID string) (bool, error)
+}
+
+type groupRepository struct {
+	baseRepository
+}
+
+func newGroupRepository(repository baseRepository) IGroupRepository {
+	return &groupRepository{
+		baseRepository: repository,
+	}
+}
+
+func (r *groupRepository) CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*models.MonitorGroup, error) {
+	return dbWrap(ctx, "CreateMonitorGroup", func() (*models.MonitorGroup, error) {
+		rows := r.pool.QueryRow(ctx,
 			`INSERT INTO groups (display_id, team_id, name, description) VALUES ($1, $2, $3, $4) RETURNING id`,
 			group.DisplayID, group.TeamID, group.Name, group.Description)
 
@@ -18,15 +36,11 @@ func CreateMonitorGroup(ctx context.Context, group *models.MonitorGroup) (*model
 
 		return group, err
 	})
-
-	logDbOperation("CreateMonitorGroup", dbRes, err)
-
-	return dbRes.Result, err
 }
 
-func GetMonitorGroupByID(ctx context.Context, displayID string) (*models.MonitorGroup, error) {
-	dbRes, err := withTimeout(ctx, func() (*models.MonitorGroup, error) {
-		rows := dbClient.conn.QueryRow(ctx,
+func (r *groupRepository) GetMonitorGroupByID(ctx context.Context, displayID string) (*models.MonitorGroup, error) {
+	return dbWrap(ctx, "GetMonitorGroupByID", func() (*models.MonitorGroup, error) {
+		rows := r.pool.QueryRow(ctx,
 			`SELECT id, display_id, team_id, name, description, created_at, updated_at FROM groups WHERE display_id=$1`,
 			displayID)
 
@@ -42,15 +56,11 @@ func GetMonitorGroupByID(ctx context.Context, displayID string) (*models.Monitor
 
 		return group, err
 	})
-
-	logDbOperation("GetMonitorGroupByID", dbRes, err)
-
-	return dbRes.Result, err
 }
 
-func GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.MonitorGroup, error) {
-	dbRes, err := withTimeout(ctx, func() ([]models.MonitorGroup, error) {
-		rows, err := dbClient.conn.Query(ctx,
+func (r *groupRepository) GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.MonitorGroup, error) {
+	return dbWrap(ctx, "GetMonitorGroupsByTeamID", func() ([]models.MonitorGroup, error) {
+		rows, err := r.pool.Query(ctx,
 			`SELECT id, display_id, team_id, name, description, created_at, updated_at FROM groups WHERE team_id=$1`,
 			team.ID)
 		if err != nil {
@@ -72,15 +82,11 @@ func GetMonitorGroupsForTeam(ctx context.Context, team *models.Team) ([]models.M
 		}
 		return groups, nil
 	})
-
-	logDbOperation("GetTeamMonitorGroups", dbRes, err)
-
-	return dbRes.Result, err
 }
 
-func UpdateMonitorGroup(ctx context.Context, team *models.Team, oldGroup, newGroup *models.MonitorGroup) (bool, error) {
-	dbRes, err := withTimeout(ctx, func() (bool, error) {
-		result, err := dbClient.conn.Exec(ctx,
+func (r *groupRepository) UpdateMonitorGroup(ctx context.Context, team *models.Team, oldGroup, newGroup *models.MonitorGroup) (bool, error) {
+	return dbWrap(ctx, "UpdateMonitorGroup", func() (bool, error) {
+		result, err := r.pool.Exec(ctx,
 			`UPDATE groups SET display_id=$1, name=$2, description=$3 WHERE id=$4 AND team_id=$5 RETURNING *`,
 			newGroup.DisplayID, newGroup.Name, newGroup.Description, oldGroup.ID, team.ID)
 
@@ -93,15 +99,11 @@ func UpdateMonitorGroup(ctx context.Context, team *models.Team, oldGroup, newGro
 
 		return true, nil
 	})
-
-	logDbOperation("UpdateMonitorGroup", dbRes, err)
-
-	return dbRes.Result, err
 }
 
-func DeleteMonitorGroup(ctx context.Context, team *models.Team, groupID string) (bool, error) {
-	dbRes, err := withTimeout(ctx, func() (bool, error) {
-		result, err := dbClient.conn.Exec(ctx,
+func (r *groupRepository) DeleteMonitorGroup(ctx context.Context, team *models.Team, groupID string) (bool, error) {
+	return dbWrap(ctx, "DeleteMonitorGroup", func() (bool, error) {
+		result, err := r.pool.Exec(ctx,
 			`DELETE FROM groups WHERE display_id=$1 AND team_id=$2`,
 			groupID, team.ID)
 		if err != nil {
@@ -109,8 +111,4 @@ func DeleteMonitorGroup(ctx context.Context, team *models.Team, groupID string) 
 		}
 		return result.RowsAffected() > 0, nil
 	})
-
-	logDbOperation("DeleteMonitorGroup", dbRes, err)
-
-	return dbRes.Result, err
 }

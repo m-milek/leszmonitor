@@ -1,13 +1,25 @@
 package services
 
 import (
+	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/logging"
 	"github.com/rs/zerolog"
 )
 
 type baseService struct {
+	db            db.DB
 	authService   *authorizationServiceT
 	serviceLogger zerolog.Logger
 	methodLoggers map[string]zerolog.Logger
+}
+
+func NewBaseService(dbConnector db.DB, authService *authorizationServiceT, serviceName string) baseService {
+	return baseService{
+		db:            dbConnector,
+		authService:   authService,
+		serviceLogger: logging.NewServiceLogger(serviceName),
+		methodLoggers: make(map[string]zerolog.Logger),
+	}
 }
 
 // Return a logger for a specific service method, creating it if it doesn't exist yet.

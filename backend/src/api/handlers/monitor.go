@@ -70,7 +70,7 @@ func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitorsList, err := services.MonitorService.GetAllMonitors(r.Context(), teamAuth)
+	monitorsList, err := services.MonitorService.GetMonitorsByTeamID(r.Context(), teamAuth)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return

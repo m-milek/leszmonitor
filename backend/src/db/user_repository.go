@@ -4,12 +4,30 @@ import (
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/models"
 )
 
-func CreateUser(ctx context.Context, user *models.User) error {
-	dbRes, err := withTimeout(ctx, func() (*struct{}, error) {
-		status, err := dbClient.conn.Exec(ctx,
+type IUserRepository interface {
+	InsertUser(ctx context.Context, user *models.User) (*struct{}, error)
+	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
+	GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error)
+	GetAllUsers(ctx context.Context) ([]models.User, error)
+}
+
+type userRepository struct {
+	baseRepository
+}
+
+func newUserRepository(repository baseRepository) IUserRepository {
+	return &userRepository{
+		baseRepository: repository,
+	}
+}
+
+func (r *userRepository) InsertUser(ctx context.Context, user *models.User) (*struct{}, error) {
+	return dbWrap(ctx, "CreateUser", func() (*struct{}, error) {
+		status, err := r.pool.Exec(ctx,
 			`INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING *`,
 			user.Username, user.Email, user.PasswordHash)
 
@@ -21,19 +39,12 @@ func CreateUser(ctx context.Context, user *models.User) error {
 		}
 		return nil, err
 	})
-
-	logDbOperation("CreateUser", dbRes, err)
-
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
-func GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
-	dbRes, err := withTimeout(ctx, func() (*models.User, error) {
+func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		var user models.User
-		row := dbClient.conn.QueryRow(ctx,
+		row := r.pool.QueryRow(ctx,
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username=$1`,
 			username)
 		err := row.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
@@ -45,21 +56,14 @@ func GetUserByUsername(ctx context.Context, username string) (*models.User, erro
 		}
 		return &user, nil
 	})
-
-	logDbOperation("GetUserByUsername", dbRes, err)
-
-	if err != nil {
-		return nil, err
-	}
-	return dbRes.Result, nil
 }
 
-func GetRawUserByUsername(ctx context.Context, username string) (*models.User, error) {
-	dbRes, err := withTimeout(ctx, func() (*models.User, error) {
+func (r *userRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error) {
+	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		var user models.User
-		row := dbClient.conn.QueryRow(ctx,
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username=$1`,
-			username)
+		row := r.pool.QueryRow(ctx,
+			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id=$1`,
+			id)
 		err := row.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
@@ -69,18 +73,11 @@ func GetRawUserByUsername(ctx context.Context, username string) (*models.User, e
 		}
 		return &user, nil
 	})
-
-	logDbOperation("GetRawUserByUsername", dbRes, err)
-
-	if err != nil {
-		return nil, err
-	}
-	return dbRes.Result, nil
 }
 
-func GetAllUsers(ctx context.Context) ([]models.User, error) {
-	dbRes, err := withTimeout(ctx, func() ([]models.User, error) {
-		rows, err := dbClient.conn.Query(ctx,
+func (r *userRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
+	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
+		rows, err := r.pool.Query(ctx,
 			`SELECT id, username, email, password_hash, created_at, updated_at FROM users`)
 		if err != nil {
 			return nil, err
@@ -103,11 +100,4 @@ func GetAllUsers(ctx context.Context) ([]models.User, error) {
 
 		return usersList, nil
 	})
-
-	logDbOperation("GetAllUsers", dbRes, err)
-
-	if err != nil {
-		return nil, err
-	}
-	return dbRes.Result, nil
 }
