@@ -183,7 +183,7 @@ func TestFromReader(t *testing.T) {
 		"description": "Test description",
 		"interval": 30,
 		"ownerId": "test_owner",
-		"type": "httpType",
+		"type": "http",
 		"config": {
 			"url": 123,
 			"httpMethod": "GET"
