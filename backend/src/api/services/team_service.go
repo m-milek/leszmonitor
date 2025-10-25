@@ -61,7 +61,7 @@ func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *Service
 	logger := s.getMethodLogger("GetAllTeams")
 	logger.Trace().Msg("Retrieving all teams")
 
-	teams, err := db.GetAllTeams(ctx)
+	teams, err := db.Get().Teams().GetAllTeams(ctx)
 
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve teams")
@@ -94,7 +94,7 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 	logger := s.getMethodLogger("CreateTeam")
 	logger.Trace().Any("payload", payload).Str("username", ownerUsername).Msg("Creating new team")
 
-	user, err := db.GetUserByUsername(ctx, ownerUsername)
+	user, err := db.Get().Users().GetUserByUsername(ctx, ownerUsername)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("username", ownerUsername).Msg("Requesting user not found")
@@ -119,7 +119,7 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 		}
 	}
 
-	_, err = db.CreateTeam(ctx, team)
+	_, err = db.Get().Teams().InsertTeam(ctx, team)
 
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
@@ -153,7 +153,7 @@ func (s *TeamServiceT) DeleteTeam(ctx context.Context, teamAuth *middleware.Team
 		return authErr
 	}
 
-	_, err := db.DeleteTeam(ctx, team.DisplayID)
+	_, err := db.Get().Teams().DeleteTeamByID(ctx, team.DisplayID)
 	if err != nil {
 		logger.Error().Err(err).Str("teamId", team.DisplayID).Msg("Failed to delete team")
 		return &ServiceError{
@@ -181,7 +181,7 @@ func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamAuth *middleware.Team
 	team.Description = payload.Description
 	team.DisplayIDFromName.Init(team.Name)
 
-	_, err := db.UpdateTeam(ctx, team)
+	_, err := db.Get().Teams().UpdateTeam(ctx, team)
 
 	if err != nil {
 		logger.Error().Err(err).Str("teamId", team.DisplayID).Msg("Failed to update team")
@@ -206,7 +206,7 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.T
 		return authErr
 	}
 
-	user, err := db.GetUserByUsername(ctx, payload.Username)
+	user, err := db.Get().Users().GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("username", payload.Username).Msg("User not found")
@@ -239,7 +239,7 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.T
 		}
 	}
 
-	_, err = db.AddMemberToTeam(ctx, team.DisplayID, teamMember)
+	_, err = db.Get().Teams().AddMemberToTeam(ctx, team.DisplayID, teamMember)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
 			logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("User already a member of team")
@@ -282,7 +282,7 @@ func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middlew
 		}
 	}
 
-	removed, dbErr := db.RemoveMemberFromTeam(ctx, team.DisplayID, user.ID)
+	removed, dbErr := db.Get().Teams().RemoveMemberFromTeam(ctx, team.DisplayID, user.ID)
 	if dbErr != nil {
 		logger.Error().Err(err).Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("Failed to remove user from team")
 		return &ServiceError{
@@ -347,7 +347,7 @@ func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamAuth *middlewar
 }
 
 func (s *TeamServiceT) internalGetTeamByID(ctx context.Context, id string) (*models.Team, *ServiceError) {
-	team, err := db.GetTeamByID(ctx, id)
+	team, err := db.Get().Teams().GetTeamByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{

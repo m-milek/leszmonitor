@@ -60,7 +60,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	_, createErr := db.CreateMonitor(ctx, monitor)
+	dbRes, createErr := db.Get().Monitors().InsertMonitor(ctx, monitor)
 	if createErr != nil {
 		logger.Error().Err(createErr).Msg("Failed to add monitor to database")
 		return nil, &ServiceError{
@@ -68,6 +68,13 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 			Err:  fmt.Errorf("failed to add monitor to database: %w", createErr),
 		}
 	}
+
+	// Broadcast that a monitor has been added
+	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+		ID:      dbRes.GetID(),
+		Status:  monitors.Created,
+		Monitor: &dbRes,
+	})
 
 	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor created")
 	return &MonitorCreateResponse{
@@ -85,7 +92,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 		return authErr
 	}
 
-	wasDeleted, err := db.DeleteMonitor(ctx, id)
+	deletedID, err := db.Get().Monitors().DeleteMonitorByID(ctx, id)
 	if err != nil {
 		logger.Error().Err(err).Str("id", id).Msg("Failed to delete monitor from database")
 		return &ServiceError{
@@ -94,7 +101,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	if !wasDeleted {
+	if deletedID == nil {
 		logger.Warn().Str("id", id).Msg("Monitor not found or already deleted")
 		return &ServiceError{
 			Code: http.StatusNotFound,
@@ -102,21 +109,27 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
+	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+		ID:      *deletedID,
+		Status:  monitors.Deleted,
+		Monitor: nil,
+	})
+
 	logger.Info().Str("id", id).Msg("Monitor deleted")
 	return nil
 }
 
-// GetAllMonitors retrieves all monitors for the team in the provided TeamAuth.
-func (s *MonitorServiceT) GetAllMonitors(ctx context.Context, teamAuth *middleware.TeamAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
-	logger := s.getMethodLogger("GetAllMonitors")
+// GetMonitorsByTeamID retrieves all monitors for the team in the provided TeamAuth.
+func (s *MonitorServiceT) GetMonitorsByTeamID(ctx context.Context, teamAuth *middleware.TeamAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
+	logger := s.getMethodLogger("GetMonitorsByTeamID")
 	logger.Trace().Msg("Retrieving all monitors")
 
-	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
+	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	monitorsList, err := db.GetAllMonitors(ctx)
+	monitorsList, err := db.Get().Monitors().GetMonitorsByTeamID(ctx, team.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
 		return nil, &ServiceError{
@@ -138,7 +151,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, teamAuth *middlewa
 		return nil, authErr
 	}
 
-	monitor, err := db.GetMonitorByID(ctx, id)
+	monitor, err := db.Get().Monitors().GetMonitorByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found")
@@ -175,7 +188,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 		return authErr
 	}
 
-	wasUpdated, err := db.UpdateMonitor(ctx, monitor)
+	updatedMonitor, err := db.Get().Monitors().UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Interface("monitor", monitor).Msg("Monitor not found for update")
@@ -191,13 +204,19 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	if !wasUpdated {
+	if updatedMonitor == nil {
 		logger.Warn().Interface("monitor", monitor).Msg("Monitor was not updated, possibly not found")
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("monitor with DisplayID %s was not updated", monitor.GetID()),
 		}
 	}
+
+	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+		ID:      updatedMonitor.GetID(),
+		Status:  monitors.Edited,
+		Monitor: &updatedMonitor,
+	})
 
 	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor updated")
 	return nil

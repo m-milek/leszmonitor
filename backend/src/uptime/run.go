@@ -16,7 +16,7 @@ import (
 func StartUptimeWorker(ctx context.Context) {
 	logging.Uptime.Info().Msg("Starting uptime worker...")
 
-	allMonitors, err := db.GetAllMonitors(ctx)
+	allMonitors, err := db.Get().Monitors().GetAllMonitors(ctx)
 
 	if err != nil {
 		logging.Uptime.Error().Err(err).Msg("Failed to retrieve monitors from database")
