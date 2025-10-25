@@ -115,7 +115,7 @@ func (r *teamRepository) GetTeamByID(ctx context.Context, displayID string) (*mo
 }
 
 func (r *teamRepository) GetAllTeams(ctx context.Context) ([]models.Team, error) {
-	return dbWrap(ctx, "GetAllTeam", func() ([]models.Team, error) {
+	return dbWrap(ctx, "GetAllTeams", func() ([]models.Team, error) {
 		rows, err := r.pool.Query(ctx,
 			`SELECT id, display_id, name, description, created_at, updated_at FROM teams`)
 		if err != nil {
