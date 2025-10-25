@@ -296,7 +296,7 @@ func TestTeamAuthFromRequest(t *testing.T) {
 				ctx := SetUserContext(req.Context(), claims)
 				return req.WithContext(ctx)
 			},
-			expectedError: "teamId is required",
+			expectedError: "teamID is required",
 		},
 		{
 			name: "missing user claims in context",
