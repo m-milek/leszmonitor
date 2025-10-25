@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"errors"
-	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/models"
@@ -11,7 +10,7 @@ import (
 
 type ITeamRepository interface {
 	InsertTeam(ctx context.Context, team *models.Team) (*struct{}, error)
-	GetTeamByDisplayID(ctx context.Context, displayID string) (*models.Team, error)
+	GetTeamByID(ctx context.Context, displayID string) (*models.Team, error)
 	GetAllTeams(ctx context.Context) ([]models.Team, error)
 	UpdateTeam(ctx context.Context, team *models.Team) (bool, error)
 	DeleteTeamByID(ctx context.Context, displayID string) (bool, error)
@@ -48,24 +47,23 @@ func teamFromCollectableRow(row pgx.CollectableRow) (models.Team, error) {
 func (r *teamRepository) InsertTeam(ctx context.Context, team *models.Team) (*struct{}, error) {
 	return dbWrap(ctx, "InsertTeam", func() (*struct{}, error) {
 		tx, err := r.pool.Begin(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
-		// Create the team and get its ID created by the DB
 		var teamID pgtype.UUID
 		row := tx.QueryRow(ctx,
 			`INSERT INTO teams (display_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
 			team.DisplayID, team.Name, team.Description)
+		if err != nil {
+			return nil, err
+		}
 		err = row.Scan(&teamID)
 		if err != nil {
-			if pgErrIs(err, pgerrcode.UniqueViolation) {
-				return nil, ErrAlreadyExists
-			}
 			return nil, err
 		}
 
-		// Create the owner record
 		_, err = tx.Exec(ctx,
 			`INSERT INTO user_teams (team_id, user_id, role) VALUES ($1, $2, $3)`,
 			teamID, team.Members[0].ID, team.Members[0].Role)
@@ -74,13 +72,15 @@ func (r *teamRepository) InsertTeam(ctx context.Context, team *models.Team) (*st
 		}
 
 		err = tx.Commit(ctx)
-
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
 	})
 }
 
-func (r *teamRepository) GetTeamByDisplayID(ctx context.Context, displayID string) (*models.Team, error) {
-	return dbWrap(ctx, "GetTeamByDisplayID", func() (*models.Team, error) {
+func (r *teamRepository) GetTeamByID(ctx context.Context, displayID string) (*models.Team, error) {
+	return dbWrap(ctx, "GetTeamByID", func() (*models.Team, error) {
 		var team models.Team
 		row, err := r.pool.Query(ctx,
 			`SELECT id, display_id, name, description, created_at, updated_at FROM teams WHERE display_id=$1`,
@@ -115,7 +115,7 @@ func (r *teamRepository) GetTeamByDisplayID(ctx context.Context, displayID strin
 }
 
 func (r *teamRepository) GetAllTeams(ctx context.Context) ([]models.Team, error) {
-	return dbWrap(ctx, "GetAllTeams", func() ([]models.Team, error) {
+	return dbWrap(ctx, "GetAllTeam", func() ([]models.Team, error) {
 		rows, err := r.pool.Query(ctx,
 			`SELECT id, display_id, name, description, created_at, updated_at FROM teams`)
 		if err != nil {
