@@ -50,9 +50,9 @@ func main() {
 	}
 	logging.Main.Info().Msg("Logger initialized successfully")
 
-	err = db.InitDBClient(ctx)
+	err = db.InitFromEnv(ctx)
 	if err != nil {
-		logging.Init.Fatal().Err(err).Msg("Failed to initialize MongoDB connection")
+		logging.Init.Fatal().Err(err).Msg("Failed to initialize PostgreSQL connection")
 	}
 
 	// Start the server
