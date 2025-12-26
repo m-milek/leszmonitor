@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/models"
@@ -25,17 +26,24 @@ func newUserRepository(repository baseRepository) IUserRepository {
 	}
 }
 
+func userFromCollectableRow(row pgx.CollectableRow) (models.User, error) {
+	var user models.User
+	err := row.Scan(&user.ID, &user.Username, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
+
+	return user, err
+}
+
 func (r *userRepository) InsertUser(ctx context.Context, user *models.User) (*struct{}, error) {
 	return dbWrap(ctx, "CreateUser", func() (*struct{}, error) {
-		status, err := r.pool.Exec(ctx,
-			`INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING *`,
-			user.Username, user.Email, user.PasswordHash)
+		_, err := r.pool.Exec(ctx,
+			`INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *`,
+			user.Username, user.PasswordHash)
 
 		if err != nil {
+			if pgErrIs(err, pgerrcode.UniqueViolation) {
+				return nil, ErrAlreadyExists
+			}
 			return nil, err
-		}
-		if status.RowsAffected() == 0 {
-			return nil, ErrAlreadyExists
 		}
 		return nil, err
 	})
@@ -43,11 +51,14 @@ func (r *userRepository) InsertUser(ctx context.Context, user *models.User) (*st
 
 func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
-		var user models.User
-		row := r.pool.QueryRow(ctx,
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE username=$1`,
+		row, err := r.pool.Query(ctx,
+			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE username=$1`,
 			username)
-		err := row.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		user, err := pgx.CollectExactlyOneRow(row, userFromCollectableRow)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, ErrNotFound
@@ -60,11 +71,14 @@ func (r *userRepository) GetUserByUsername(ctx context.Context, username string)
 
 func (r *userRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
-		var user models.User
-		row := r.pool.QueryRow(ctx,
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users WHERE id=$1`,
+		row, err := r.pool.Query(ctx,
+			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE id=$1`,
 			id)
-		err := row.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		user, err := pgx.CollectExactlyOneRow(row, userFromCollectableRow)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, ErrNotFound
@@ -78,26 +92,14 @@ func (r *userRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*mode
 func (r *userRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
 		rows, err := r.pool.Query(ctx,
-			`SELECT id, username, email, password_hash, created_at, updated_at FROM users`)
+			`SELECT id, username, password_hash, created_at, updated_at FROM users`)
 		if err != nil {
 			return nil, err
 		}
 		defer rows.Close()
 
-		usersList := make([]models.User, 0)
+		users, err := pgx.CollectRows(rows, userFromCollectableRow)
 
-		for rows.Next() {
-			var user models.User
-			if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt); err != nil {
-				return nil, err
-			}
-			usersList = append(usersList, user)
-		}
-
-		if err := rows.Err(); err != nil {
-			return nil, err
-		}
-
-		return usersList, nil
+		return users, err
 	})
 }

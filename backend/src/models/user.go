@@ -11,16 +11,14 @@ type User struct {
 	ID           pgtype.UUID `json:"id"`
 	Username     string      `json:"username"`
 	PasswordHash string      `json:"-"`
-	Email        string      `json:"email"`
 	util.Timestamps
 }
 
 // NewUser creates a new User instance with the provided username, password, and email.
-func NewUser(username, hashedPassword, email string) (*User, error) {
+func NewUser(username, hashedPassword string) (*User, error) {
 	user := &User{
 		Username:     username,
 		PasswordHash: hashedPassword,
-		Email:        email,
 	}
 	err := user.Validate()
 
@@ -37,9 +35,6 @@ func (u *User) Validate() error {
 	}
 	if u.PasswordHash == "" {
 		return fmt.Errorf("password hash cannot be empty")
-	}
-	if u.Email == "" {
-		return fmt.Errorf("email cannot be empty")
 	}
 	return nil
 }
