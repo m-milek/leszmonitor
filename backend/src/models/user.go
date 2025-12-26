@@ -15,7 +15,7 @@ type User struct {
 }
 
 // NewUser creates a new User instance with the provided username, password, and email.
-func NewUser(username, hashedPassword, email string) (*User, error) {
+func NewUser(username, hashedPassword string) (*User, error) {
 	user := &User{
 		Username:     username,
 		PasswordHash: hashedPassword,
