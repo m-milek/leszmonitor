@@ -9,7 +9,6 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -55,15 +54,14 @@ CREATE OR REPLACE TRIGGER set_timestamp
 
 CREATE TABLE IF NOT EXISTS groups (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    display_id VARCHAR(50) UNIQUE NOT NULL,
     team_id UUID NOT NULL,
+    display_id VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(1000) NOT NULL,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE (id, team_id),
     FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
 );
 CREATE OR REPLACE TRIGGER set_timestamp

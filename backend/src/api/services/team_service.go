@@ -77,7 +77,7 @@ func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *Service
 
 // GetTeamByID retrieves a team by its DisplayID, ensuring the requesting user has at least reader permissions.
 func (s *TeamServiceT) GetTeamByID(ctx context.Context, teamAuth *middleware.TeamAuth) (*models.Team, *ServiceError) {
-	logger := s.getMethodLogger("GetTeamByID")
+	logger := s.getMethodLogger("GetTeamByDisplayID")
 	logger.Trace().Str("teamId", teamAuth.TeamID).Msg("Retrieving team by DisplayID")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionTeamReader)
@@ -347,7 +347,7 @@ func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamAuth *middlewar
 }
 
 func (s *TeamServiceT) internalGetTeamByID(ctx context.Context, id string) (*models.Team, *ServiceError) {
-	team, err := db.Get().Teams().GetTeamByID(ctx, id)
+	team, err := db.Get().Teams().GetTeamByDisplayID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{

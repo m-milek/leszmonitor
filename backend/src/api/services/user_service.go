@@ -120,6 +120,12 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
+		if errors.Is(err, db.ErrAlreadyExists) {
+			return &ServiceError{
+				Code: http.StatusConflict,
+				Err:  fmt.Errorf("user %s already exists", payload.Username),
+			}
+		}
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("failed to register user %s: %w", payload.Username, err),
@@ -152,9 +158,9 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 		}
 	}
 
-	matches := checkPasswordHash(payload.Password, user.PasswordHash)
-	if !matches {
-		logger.Warn().Str("username", payload.Username).Msg("Invalid password during login")
+	err = checkPasswordHash(payload.Password, user.PasswordHash)
+	if err != nil {
+		logger.Warn().Err(err).Str("username", payload.Username).Msg("Invalid password during login")
 		return nil, &ServiceError{
 			Code: http.StatusUnauthorized,
 			Err:  fmt.Errorf("invalid password for user %s", payload.Username),
@@ -205,7 +211,6 @@ func hashPassword(password string) (string, error) {
 
 // checkPasswordHash compares a plaintext password with a hashed password.
 // Returns true if they match, false otherwise.
-func checkPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+func checkPasswordHash(password, hash string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
