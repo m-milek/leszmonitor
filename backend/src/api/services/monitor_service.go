@@ -35,7 +35,7 @@ type MonitorCreateResponse struct {
 
 // CreateMonitor creates a new monitor in the specified group.
 func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupID string, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
-	logger := s.getMethodLogger("CreateMonitor")
+	logger := s.getMethodLogger("InsertMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
 	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorEditor)
@@ -43,7 +43,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		return nil, authErr
 	}
 
-	group, err := GroupService.internalGetMonitorGroupByID(ctx, team.DisplayID, groupID)
+	group, err := GroupService.internalGetMonitorGroupByID(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 		return authErr
 	}
 
-	deletedID, err := db.Get().Monitors().DeleteMonitorByID(ctx, id)
+	deletedID, err := db.Get().Monitors().DeleteMonitorByDisplayID(ctx, id)
 	if err != nil {
 		logger.Error().Err(err).Str("id", id).Msg("Failed to delete monitor from database")
 		return &ServiceError{

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logging"
@@ -15,7 +16,14 @@ import (
 var ErrNotFound = errors.New("document not found")
 var ErrAlreadyExists = errors.New("resource already exists")
 
-const DB_SCHEMA_FILE = "db/schema.sql"
+func pgErrIs(err error, pgErrCode string) bool {
+	var e *pgconn.PgError
+	return errors.As(err, &e) && e.Code == pgErrCode
+}
+
+const dbSchemaFilePath = "db/schema.sql"
+
+const timeoutDuration = 1000 * time.Second
 
 // DB defines the database access surface. It returns repository interfaces for easy mocking.
 type DB interface {
@@ -49,13 +57,11 @@ type baseRepository struct {
 	dbPool
 }
 
-func NewBaseRepository(pool *pgxpool.Pool) baseRepository {
+func newBaseRepository(pool *pgxpool.Pool) baseRepository {
 	return baseRepository{
 		dbPool: dbPool{pool: pool},
 	}
 }
-
-const timeoutDuration = 1000 * time.Second
 
 // New creates a new DB client using the provided DSN. It pings the DB and ensures the schema exists.
 func New(ctx context.Context, dsn string) (*DBClient, error) {
@@ -73,17 +79,17 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 	}
 
 	// initialize and cache repositories once
-	c.users = newUserRepository(NewBaseRepository(pool))
-	c.monitors = newMonitorRepository(NewBaseRepository(pool))
-	c.groups = newGroupRepository(NewBaseRepository(pool))
-	c.teams = newTeamRepository(NewBaseRepository(pool))
+	c.users = newUserRepository(newBaseRepository(pool))
+	c.monitors = newMonitorRepository(newBaseRepository(pool))
+	c.groups = newGroupRepository(newBaseRepository(pool))
+	c.teams = newTeamRepository(newBaseRepository(pool))
 
 	return c, nil
 }
 
 // initSchema reads the database schema from a file and executes it to set up the database structure.
 func (c *DBClient) initSchema(ctx context.Context, pool *pgxpool.Pool) error {
-	schemaBytes, err := os.ReadFile(DB_SCHEMA_FILE)
+	schemaBytes, err := os.ReadFile(dbSchemaFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read DB schema file: %w", err)
 	}
@@ -142,18 +148,6 @@ func dbWrap[T any](timeoutCtx context.Context, operationName string, operation f
 
 	return result.Result, err
 }
-
-// ping pings the database and returns the duration in milliseconds.
-//func (c *DBClient) ping(ctx context.Context) (int64, error) {
-//	return dbWrap(ctx, "Ping", func() (int64, error) {
-//		start := time.Now()
-//		if err := c.conn.Ping(ctx); err != nil {
-//			return 0, err
-//		}
-//		duration := time.Since(start).Milliseconds()
-//		return duration, nil
-//	})
-//}
 
 // Repository getters (return interfaces for mocking)
 func (c *DBClient) Users() IUserRepository       { return c.users }
