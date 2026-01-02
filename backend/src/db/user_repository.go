@@ -16,12 +16,12 @@ type IUserRepository interface {
 	GetAllUsers(ctx context.Context) ([]models.User, error)
 }
 
-type userRepository struct {
+type UserRepository struct {
 	baseRepository
 }
 
 func newUserRepository(repository baseRepository) IUserRepository {
-	return &userRepository{
+	return &UserRepository{
 		baseRepository: repository,
 	}
 }
@@ -33,7 +33,7 @@ func userFromCollectableRow(row pgx.CollectableRow) (models.User, error) {
 	return user, err
 }
 
-func (r *userRepository) InsertUser(ctx context.Context, user *models.User) (*struct{}, error) {
+func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*struct{}, error) {
 	return dbWrap(ctx, "CreateUser", func() (*struct{}, error) {
 		_, err := r.pool.Exec(ctx,
 			`INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *`,
@@ -49,7 +49,7 @@ func (r *userRepository) InsertUser(ctx context.Context, user *models.User) (*st
 	})
 }
 
-func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		row, err := r.pool.Query(ctx,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE username=$1`,
@@ -69,7 +69,7 @@ func (r *userRepository) GetUserByUsername(ctx context.Context, username string)
 	})
 }
 
-func (r *userRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		row, err := r.pool.Query(ctx,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE id=$1`,
@@ -89,7 +89,7 @@ func (r *userRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*mode
 	})
 }
 
-func (r *userRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
+func (r *UserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
 		rows, err := r.pool.Query(ctx,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users`)
