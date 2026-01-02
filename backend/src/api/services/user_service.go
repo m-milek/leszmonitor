@@ -7,7 +7,6 @@ import (
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -22,20 +21,17 @@ type UserServiceT struct {
 }
 
 // NewUserService creates a new instance of UserServiceT.
-func newUserService() *UserServiceT {
+func newUserService(base baseService) *UserServiceT {
 	return &UserServiceT{
-		baseService{
-			serviceLogger: logging.NewServiceLogger("UserService"),
-		},
+		baseService: base,
 	}
 }
 
-var UserService = newUserService()
+var UserService = newUserService(newBaseService(db.Get(), newAuthorizationService(), "UserService"))
 
 type UserRegisterPayload struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Email    string `json:"email"`
 }
 
 type LoginPayload struct {
@@ -50,11 +46,11 @@ type LoginResponse struct {
 
 // GetAllUsers retrieves all users from the database.
 // Requires no permissions.
-func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.User, error *ServiceError) {
+func (s *UserServiceT) GetAllUsers(ctx context.Context) ([]models.User, *ServiceError) {
 	logger := s.getMethodLogger("GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
-	users, err := db.Get().Users().GetAllUsers(ctx)
+	users, err := s.db.Users().GetAllUsers(ctx)
 
 	if err != nil {
 		logger.Error().Err(err).Msg("Error retrieving users")
@@ -70,10 +66,16 @@ func (s *UserServiceT) GetAllUsers(ctx context.Context) (result []models.User, e
 // GetUserByUsername retrieves a user by their username.
 // Requires no permissions.
 func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
-	logger := s.getMethodLogger("GetUserByUsername")
+	return s.internalGetUserByUsername(ctx, username)
+}
+
+// internalGetUserByUsername retrieves a user by their username without authorization checks.
+// This is used internally by other services to avoid circular dependencies.
+func (s *UserServiceT) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
+	logger := s.getMethodLogger("internalGetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
-	user, err := db.Get().Users().GetUserByUsername(ctx, username)
+	user, err := s.db.Users().GetUserByUsername(ctx, username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -116,7 +118,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
-	_, err = db.Get().Users().InsertUser(ctx, user)
+	_, err = s.db.Users().InsertUser(ctx, user)
 
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
@@ -141,7 +143,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 	logger := s.getMethodLogger("Login")
 	logger.Trace().Str("username", payload.Username).Msg("User login attempt")
 
-	user, err := db.Get().Users().GetUserByUsername(ctx, payload.Username)
+	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {

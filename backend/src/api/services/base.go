@@ -8,12 +8,12 @@ import (
 
 type baseService struct {
 	db            db.DB
-	authService   *authorizationServiceT
+	authService   IAuthorizationService
 	serviceLogger zerolog.Logger
 	methodLoggers map[string]zerolog.Logger
 }
 
-func NewBaseService(dbConnector db.DB, authService *authorizationServiceT, serviceName string) baseService {
+func newBaseService(dbConnector db.DB, authService IAuthorizationService, serviceName string) baseService {
 	return baseService{
 		db:            dbConnector,
 		authService:   authService,
