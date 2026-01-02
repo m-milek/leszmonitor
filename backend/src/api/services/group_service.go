@@ -23,7 +23,7 @@ func newGroupService(service baseService) *GroupServiceT {
 	}
 }
 
-var GroupService = newGroupService(NewBaseService(db.Get(), newAuthorizationService(), "GroupService"))
+var GroupService = newGroupService(newBaseService(db.Get(), newAuthorizationService(), "GroupService"))
 
 type UpdateMonitorGroupPayload struct {
 	Name        string `json:"name"`        // Name of the monitor group
@@ -53,7 +53,7 @@ func (s *GroupServiceT) CreateMonitorGroup(context context.Context, teamAuth *mi
 		}
 	}
 
-	err = db.Get().Groups().InsertGroup(context, monitorGroup)
+	err = s.db.Groups().InsertGroup(context, monitorGroup)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
 			logger.Warn().Str("monitorGroupId", monitorGroup.DisplayID).Msg("Monitor group already exists")
@@ -69,7 +69,7 @@ func (s *GroupServiceT) CreateMonitorGroup(context context.Context, teamAuth *mi
 		}
 	}
 
-	createdGroup, err := db.Get().Groups().GetGroupByDisplayID(context, monitorGroup.DisplayID)
+	createdGroup, err := s.db.Groups().GetGroupByDisplayID(context, monitorGroup.DisplayID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to fetch created monitor group")
 		return nil, &ServiceError{
@@ -91,7 +91,7 @@ func (s *GroupServiceT) GetTeamMonitorGroups(context context.Context, teamAuth *
 		return nil, authErr
 	}
 
-	groups, err := db.Get().Groups().GetGroupsByTeamID(context, team)
+	groups, err := s.db.Groups().GetGroupsByTeamID(context, team)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get monitor groups for team")
 		return nil, &ServiceError{
@@ -147,7 +147,7 @@ func (s *GroupServiceT) DeleteMonitorGroup(context context.Context, teamAuth *mi
 		}
 	}
 
-	deleted, err := db.Get().Groups().DeleteGroup(context, team, groupID)
+	deleted, err := s.db.Groups().DeleteGroup(context, team, groupID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to delete monitor group")
 		return &ServiceError{
@@ -195,7 +195,7 @@ func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamAuth *middle
 	newGroup.Description = payload.Description
 	newGroup.DisplayIDFromName.Init(newGroup.Name)
 
-	_, updateErr := db.Get().Groups().UpdateGroup(ctx, team, oldGroup, &newGroup)
+	_, updateErr := s.db.Groups().UpdateGroup(ctx, team, oldGroup, &newGroup)
 	if updateErr != nil {
 		logger.Error().Err(updateErr).Msg("Failed to update monitor group")
 		return nil, &ServiceError{
@@ -211,7 +211,7 @@ func (s *GroupServiceT) UpdateMonitorGroup(ctx context.Context, teamAuth *middle
 func (s *GroupServiceT) internalGetMonitorGroupByID(ctx context.Context, groupID string) (*models.MonitorGroup, *ServiceError) {
 	logger := s.getMethodLogger("internalGetMonitorGroupByID")
 
-	group, err := db.Get().Groups().GetGroupByDisplayID(ctx, groupID)
+	group, err := s.db.Groups().GetGroupByDisplayID(ctx, groupID)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
