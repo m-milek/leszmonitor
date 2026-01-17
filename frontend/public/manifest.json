@@ -1,6 +1,6 @@
 {
-  "short_name": "Leszmonitor",
-  "name": "Leszmonitor - Monitoring and Log capture",
+  "short_name": "TanStack App",
+  "name": "Create TanStack App Sample",
   "icons": [
     {
       "src": "favicon.ico",
