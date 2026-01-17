@@ -24,13 +24,6 @@ func setupTestGroupService() (context.Context, *GroupServiceT, *db.MockDB) {
 	return ctx, groupService, mockDB
 }
 
-// Note: Most GroupService methods require authorization, which makes them difficult to test
-// without complex authorization service mocking. The tests below focus on the internal
-// helper method that can be tested independently.
-
-// TODO: Add tests for public methods (CreateMonitorGroup, GetTeamMonitorGroups, etc.)
-// These would require proper authorization service mocking to test authorization flows.
-
 func TestGroupServiceT_InternalGetMonitorGroupByID(t *testing.T) {
 	t.Run("Returns monitor group successfully", func(t *testing.T) {
 		ctx, groupService, mockDB := setupTestGroupService()
