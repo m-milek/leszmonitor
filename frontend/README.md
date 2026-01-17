@@ -6,7 +6,7 @@ To run this application:
 
 ```bash
 npm install
-npm run start  
+npm run start
 ```
 
 # Building For Production
@@ -30,15 +30,13 @@ npm run test
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
 
 
-## Linting & Formatting
 
+## Shadcn
 
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
+Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
 
 ```bash
-npm run lint
-npm run format
-npm run check
+pnpm dlx shadcn@latest add button
 ```
 
 
