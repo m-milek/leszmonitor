@@ -26,6 +26,7 @@ import {
   LucideSettings,
   LucideUsers,
 } from "lucide-react";
+import { Logo } from "@/components/leszmonitor/Logo.tsx";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -61,9 +62,11 @@ const SidebarButton = ({
 
 export const AppSidebar = () => {
   return (
-    <Sidebar>
+    <Sidebar variant="inset">
       <SidebarHeader>
-        Leszmonitor
+        <div className="p-2">
+          <Logo />
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
@@ -86,7 +89,7 @@ export const AppSidebar = () => {
               <SidebarButton
                 icon={<LucidePlusCircle />}
                 href="/new-monitor"
-                label="Quick Create"
+                label="New Monitor"
                 variant="primary"
               />
             </SidebarMenu>
@@ -122,6 +125,11 @@ export const AppSidebar = () => {
                 href="/documentation"
                 label="Documentation"
               />
+              <SidebarButton
+                icon={<LucideSearch />}
+                href="/search"
+                label="Search"
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -131,11 +139,6 @@ export const AppSidebar = () => {
               icon={<LucideSettings />}
               href="/settings"
               label="Settings"
-            />
-            <SidebarButton
-              icon={<LucideSearch />}
-              href="/search"
-              label="Search"
             />
           </SidebarGroupContent>
         </SidebarGroup>

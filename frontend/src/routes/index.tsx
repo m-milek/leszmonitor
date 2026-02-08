@@ -7,9 +7,9 @@ export const Route = createFileRoute("/")({
 
 function App() {
   return (
-    <div className="flex">
+    <div className="flex h-screen w-full">
       <AppSidebar />
-      <main>main</main>
+      <main className="flex-1 bg-background">main</main>
     </div>
   );
 }
