@@ -1,13 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
+import { AppSidebar } from "@/components/leszmonitor/AppSidebar.tsx";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: App,
-})
+});
 
 function App() {
   return (
-    <div className="text-center">
-
+    <div className="flex">
+      <AppSidebar />
+      <main>main</main>
     </div>
-  )
+  );
 }
