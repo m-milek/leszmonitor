@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	util2 "github.com/m-milek/leszmonitor/models/util"
 )

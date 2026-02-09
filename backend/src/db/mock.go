@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/mock"
