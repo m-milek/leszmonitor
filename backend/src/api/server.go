@@ -2,11 +2,13 @@ package api
 
 import (
 	"errors"
-	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/logging"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/logging"
+	"github.com/rs/cors"
 )
 
 type ServerConfig struct {
@@ -45,7 +47,16 @@ func createServer(config ServerConfig) (*http.Server, error) {
 		middleware.JwtAuth(protectedRouter).ServeHTTP(w, r)
 	})
 
-	handler := middleware.Logger(combinedHandler)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(combinedHandler)
+
+	handler = middleware.Logger(handler)
 
 	server := &http.Server{
 		Addr:         net.JoinHostPort(config.Host, config.Port),

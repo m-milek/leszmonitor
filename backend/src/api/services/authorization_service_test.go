@@ -3,13 +3,14 @@ package services
 import (
 	"context"
 	"errors"
+	"net/http"
+	"testing"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"testing"
 )
 
 func setupTestAuthorizationService() (context.Context, *authorizationServiceT, *db.MockDB) {
@@ -20,7 +21,6 @@ func setupTestAuthorizationService() (context.Context, *authorizationServiceT, *
 	db.Set(mockDB)
 
 	authService := newAuthorizationService()
-	authService.db = mockDB
 
 	return context.Background(), authService, mockDB
 }

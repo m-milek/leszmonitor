@@ -3,12 +3,13 @@ package services
 import (
 	"context"
 	"errors"
+	"net/http"
+	"testing"
+
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"net/http"
-	"testing"
 )
 
 // setupTestUserService creates a new UserServiceT with a mock database for testing.
@@ -18,7 +19,8 @@ func setupTestUserService() (context.Context, *UserServiceT, *db.MockDB) {
 	mockDB := &db.MockDB{
 		UsersRepo: new(db.MockUserRepository),
 	}
-	base := newBaseService(mockDB, authService, "UserServiceTest")
+	db.Set(mockDB)
+	base := newBaseService(authService, "UserServiceTest")
 	return ctx, newUserService(base), mockDB
 }
 
