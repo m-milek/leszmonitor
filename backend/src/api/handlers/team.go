@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	util "github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/services"
-	"net/http"
 )
 
 func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {

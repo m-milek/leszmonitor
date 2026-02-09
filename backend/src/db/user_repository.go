@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -10,7 +11,7 @@ import (
 )
 
 type IUserRepository interface {
-	InsertUser(ctx context.Context, user *models.User) (*struct{}, error)
+	InsertUser(ctx context.Context, user *models.User) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error)
 	GetAllUsers(ctx context.Context) ([]models.User, error)
@@ -33,10 +34,10 @@ func userFromCollectableRow(row pgx.CollectableRow) (models.User, error) {
 	return user, err
 }
 
-func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*struct{}, error) {
-	return dbWrap(ctx, "CreateUser", func() (*struct{}, error) {
-		_, err := r.pool.Exec(ctx,
-			`INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING *`,
+func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
+	return dbWrap(ctx, "CreateUser", func() (*models.User, error) {
+		row, err := r.pool.Query(ctx,
+			`INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, password_hash, created_at, updated_at`,
 			user.Username, user.PasswordHash)
 
 		if err != nil {
@@ -45,7 +46,12 @@ func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*st
 			}
 			return nil, err
 		}
-		return nil, err
+
+		createdUser, err := pgx.CollectExactlyOneRow(row, userFromCollectableRow)
+		if err != nil {
+			return nil, err
+		}
+		return &createdUser, nil
 	})
 }
 
