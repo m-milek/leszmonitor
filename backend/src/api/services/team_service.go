@@ -120,21 +120,9 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 		}
 	}
 
-	_, err = s.getDB().Teams().InsertTeam(ctx, team)
-
-	if err != nil {
-		if errors.Is(err, db.ErrAlreadyExists) {
-			logger.Warn().Str("DisplayID", team.DisplayID).Msg("Team already exists")
-			return nil, &ServiceError{
-				Code: http.StatusConflict,
-				Err:  fmt.Errorf("team with DisplayID '%s' already exists", team.DisplayID),
-			}
-		}
-		logger.Error().Err(err).Msg("Failed to create team")
-		return nil, &ServiceError{
-			Code: 500,
-			Err:  fmt.Errorf("failed to create: %w", err),
-		}
+	_, serviceErr := s.internalCreateTeam(ctx, team)
+	if serviceErr != nil {
+		return nil, serviceErr
 	}
 
 	logger.Trace().Str("teamId", team.DisplayID).Msg("Team created successfully")
@@ -359,6 +347,23 @@ func (s *TeamServiceT) internalGetTeamByID(ctx context.Context, id string) (*mod
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("failed to retrieve team: %w", err),
+		}
+	}
+	return team, nil
+}
+
+func (s *TeamServiceT) internalCreateTeam(ctx context.Context, team *models.Team) (*models.Team, *ServiceError) {
+	_, err := s.getDB().Teams().InsertTeam(ctx, team)
+	if err != nil {
+		if errors.Is(err, db.ErrAlreadyExists) {
+			return nil, &ServiceError{
+				Code: http.StatusConflict,
+				Err:  fmt.Errorf("team with DisplayID '%s' already exists", team.DisplayID),
+			}
+		}
+		return nil, &ServiceError{
+			Code: http.StatusInternalServerError,
+			Err:  fmt.Errorf("failed to create team: %w", err),
 		}
 	}
 	return team, nil

@@ -110,7 +110,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
-	user, err := models.NewUser(payload.Username, hashedPassword)
+	userModel, err := models.NewUser(payload.Username, hashedPassword)
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
 		return &ServiceError{
@@ -119,7 +119,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
-	_, err = s.getDB().Users().InsertUser(ctx, user)
+	user, err := s.getDB().Users().InsertUser(ctx, userModel)
 
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
@@ -134,6 +134,29 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 			Err:  fmt.Errorf("failed to register user %s: %w", payload.Username, err),
 		}
 	}
+
+	teamName := fmt.Sprintf("%s's Space", payload.Username)
+	teamDescription := fmt.Sprintf("Default space for %s", payload.Username)
+
+	team, teamErr := models.NewTeam(teamName, teamDescription, user.ID)
+	if teamErr != nil {
+		logger.Error().Err(teamErr).Str("username", payload.Username).Msg("Failed to create default team model for user")
+		return &ServiceError{
+			Code: http.StatusInternalServerError,
+			Err:  fmt.Errorf("failed to create default team for user %s: %w", payload.Username, teamErr),
+		}
+	}
+
+	team, teamServiceErr := TeamService.internalCreateTeam(ctx, team)
+	if teamServiceErr != nil {
+		logger.Error().Err(teamServiceErr.Err).Str("username", payload.Username).Msg("Failed to create default team for user")
+		return &ServiceError{
+			Code: teamServiceErr.Code,
+			Err:  fmt.Errorf("failed to create default team for user %s: %w", payload.Username, teamServiceErr.Err),
+		}
+	}
+
+	logger.Trace().Str("username", payload.Username).Str("team", team.Name).Msg("Successfully registered user and created default team")
 
 	return nil
 }
