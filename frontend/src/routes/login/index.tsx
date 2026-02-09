@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Card,
   CardContent,
@@ -18,6 +18,12 @@ import {
   FieldLabel,
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
+import { userAtom, usernameAtom } from "@/lib/atoms.ts";
+import { useSetAtom } from "jotai";
+import { jwtDecode } from "jwt-decode";
+import type { JwtClaims } from "@/lib/types.ts";
+import { fetchUser } from "@/lib/fetchUser.ts";
 
 export const Route = createFileRoute("/login/")({
   component: RouteComponent,
@@ -29,6 +35,11 @@ const loginFormSchema = z.object({
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
+
+  const setUsername = useSetAtom(usernameAtom);
+  const setUser = useSetAtom(userAtom);
+
   const form = useForm({
     defaultValues: {
       username: "",
@@ -38,7 +49,19 @@ function RouteComponent() {
       onSubmit: loginFormSchema,
     },
     onSubmit: async ({ value }) => {
-      console.log(value);
+      const loginResponse = await fetchLoginToken(value);
+      await cookieStore.set({
+        name: "LOGIN_TOKEN",
+        value: loginResponse.jwt,
+      });
+
+      const claims = jwtDecode(loginResponse.jwt) as JwtClaims;
+      setUsername(claims.username);
+
+      const user = await fetchUser(claims.username);
+      setUser(user);
+
+      await navigate({ to: "/", replace: true });
     },
   });
 
@@ -110,7 +133,12 @@ function RouteComponent() {
             </form>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" onClick={() => alert("TODO")}>
+            <Button
+              className="w-full"
+              onClick={() => form.handleSubmit()}
+              type="submit"
+              form="login-form"
+            >
               Log in
             </Button>
           </CardFooter>
