@@ -60,7 +60,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	dbRes, createErr := db.Get().Monitors().InsertMonitor(ctx, monitor)
+	dbRes, createErr := s.getDB().Monitors().InsertMonitor(ctx, monitor)
 	if createErr != nil {
 		logger.Error().Err(createErr).Msg("Failed to add monitor to database")
 		return nil, &ServiceError{
@@ -92,7 +92,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 		return authErr
 	}
 
-	deletedID, err := db.Get().Monitors().DeleteMonitorByDisplayID(ctx, id)
+	deletedID, err := s.getDB().Monitors().DeleteMonitorByDisplayID(ctx, id)
 	if err != nil {
 		logger.Error().Err(err).Str("id", id).Msg("Failed to delete monitor from database")
 		return &ServiceError{
@@ -129,7 +129,7 @@ func (s *MonitorServiceT) GetMonitorsByTeamID(ctx context.Context, teamAuth *mid
 		return nil, authErr
 	}
 
-	monitorsList, err := db.Get().Monitors().GetMonitorsByTeamID(ctx, team.ID)
+	monitorsList, err := s.getDB().Monitors().GetMonitorsByTeamID(ctx, team.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
 		return nil, &ServiceError{
@@ -151,7 +151,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, teamAuth *middlewa
 		return nil, authErr
 	}
 
-	monitor, err := db.Get().Monitors().GetMonitorByID(ctx, id)
+	monitor, err := s.getDB().Monitors().GetMonitorByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found")
@@ -188,7 +188,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 		return authErr
 	}
 
-	updatedMonitor, err := db.Get().Monitors().UpdateMonitor(ctx, monitor)
+	updatedMonitor, err := s.getDB().Monitors().UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Interface("monitor", monitor).Msg("Monitor not found for update")

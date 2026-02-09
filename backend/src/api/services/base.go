@@ -7,19 +7,22 @@ import (
 )
 
 type baseService struct {
-	db            db.DB
 	authService   IAuthorizationService
 	serviceLogger zerolog.Logger
 	methodLoggers map[string]zerolog.Logger
 }
 
-func newBaseService(dbConnector db.DB, authService IAuthorizationService, serviceName string) baseService {
+func newBaseService(authService IAuthorizationService, serviceName string) baseService {
 	return baseService{
-		db:            dbConnector,
 		authService:   authService,
 		serviceLogger: logging.NewServiceLogger(serviceName),
 		methodLoggers: make(map[string]zerolog.Logger),
 	}
+}
+
+// getDB retrieves the database singleton safely
+func (s *baseService) getDB() db.DB {
+	return db.Get()
 }
 
 // Return a logger for a specific service method, creating it if it doesn't exist yet.
