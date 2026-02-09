@@ -147,6 +147,9 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
+	// Override the display ID to be the same as the username for easy access.
+	team.DisplayID = user.Username
+
 	team, teamServiceErr := TeamService.internalCreateTeam(ctx, team)
 	if teamServiceErr != nil {
 		logger.Error().Err(teamServiceErr.Err).Str("username", payload.Username).Msg("Failed to create default team for user")
