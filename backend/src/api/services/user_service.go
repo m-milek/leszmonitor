@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
+
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"
-	"net/http"
-	"os"
-	"strconv"
-	"time"
 )
 
 // UserServiceT handles user-related operations such as registration, login, and retrieval.
@@ -27,7 +28,7 @@ func newUserService(base baseService) *UserServiceT {
 	}
 }
 
-var UserService = newUserService(newBaseService(db.Get(), newAuthorizationService(), "UserService"))
+var UserService = newUserService(newBaseService(newAuthorizationService(), "UserService"))
 
 type UserRegisterPayload struct {
 	Username string `json:"username"`
@@ -50,7 +51,7 @@ func (s *UserServiceT) GetAllUsers(ctx context.Context) ([]models.User, *Service
 	logger := s.getMethodLogger("GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
-	users, err := s.db.Users().GetAllUsers(ctx)
+	users, err := s.getDB().Users().GetAllUsers(ctx)
 
 	if err != nil {
 		logger.Error().Err(err).Msg("Error retrieving users")
@@ -75,7 +76,7 @@ func (s *UserServiceT) internalGetUserByUsername(ctx context.Context, username s
 	logger := s.getMethodLogger("internalGetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
-	user, err := s.db.Users().GetUserByUsername(ctx, username)
+	user, err := s.getDB().Users().GetUserByUsername(ctx, username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -118,7 +119,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
-	_, err = s.db.Users().InsertUser(ctx, user)
+	_, err = s.getDB().Users().InsertUser(ctx, user)
 
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
@@ -143,7 +144,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 	logger := s.getMethodLogger("Login")
 	logger.Trace().Str("username", payload.Username).Msg("User login attempt")
 
-	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
+	user, err := s.getDB().Users().GetUserByUsername(ctx, payload.Username)
 
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {

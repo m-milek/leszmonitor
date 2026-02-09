@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/rs/zerolog"
-	"net/http"
 )
 
 // authorizationServiceT handles authorization-related operations.
@@ -78,12 +79,7 @@ func (s *authorizationServiceT) authorizeTeamAction(ctx context.Context, teamAut
 func (s *authorizationServiceT) internalGetTeamByID(ctx context.Context, teamID string) (*models.Team, *ServiceError) {
 	logger := s.getMethodLogger("internalGetTeamByID")
 
-	dbConn := s.db
-	if dbConn == nil {
-		dbConn = db.Get()
-	}
-
-	team, err := dbConn.Teams().GetTeamByDisplayID(ctx, teamID)
+	team, err := db.Get().Teams().GetTeamByDisplayID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("teamID", teamID).Msg("Team not found")
@@ -106,12 +102,7 @@ func (s *authorizationServiceT) internalGetTeamByID(ctx context.Context, teamID 
 func (s *authorizationServiceT) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
 	logger := s.getMethodLogger("internalGetUserByUsername")
 
-	dbConn := s.db
-	if dbConn == nil {
-		dbConn = db.Get()
-	}
-
-	user, err := dbConn.Users().GetUserByUsername(ctx, username)
+	user, err := db.Get().Users().GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("username", username).Msg("User not found")

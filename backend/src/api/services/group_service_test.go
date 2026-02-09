@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"errors"
+	"net/http"
+	"testing"
+
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"testing"
 )
 
 func setupTestGroupService() (context.Context, *GroupServiceT, *db.MockDB) {
@@ -16,7 +17,7 @@ func setupTestGroupService() (context.Context, *GroupServiceT, *db.MockDB) {
 	}
 	db.Set(mockDB)
 
-	base := newBaseService(mockDB, nil, "GroupServiceTest")
+	base := newBaseService(nil, "GroupServiceTest")
 	groupService := newGroupService(base)
 
 	ctx := context.Background()

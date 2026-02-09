@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
-	"net/http"
 )
 
 // TeamServiceT handles team-related CRUD operations.
@@ -61,7 +62,7 @@ func (s *TeamServiceT) GetAllTeams(ctx context.Context) ([]models.Team, *Service
 	logger := s.getMethodLogger("GetAllTeams")
 	logger.Trace().Msg("Retrieving all teams")
 
-	teams, err := db.Get().Teams().GetAllTeams(ctx)
+	teams, err := s.getDB().Teams().GetAllTeams(ctx)
 
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve teams")
@@ -119,7 +120,7 @@ func (s *TeamServiceT) CreateTeam(ctx context.Context, ownerUsername string, pay
 		}
 	}
 
-	_, err = db.Get().Teams().InsertTeam(ctx, team)
+	_, err = s.getDB().Teams().InsertTeam(ctx, team)
 
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
@@ -181,7 +182,7 @@ func (s *TeamServiceT) UpdateTeam(ctx context.Context, teamAuth *middleware.Team
 	team.Description = payload.Description
 	team.DisplayIDFromName.Init(team.Name)
 
-	_, err := db.Get().Teams().UpdateTeam(ctx, team)
+	_, err := s.getDB().Teams().UpdateTeam(ctx, team)
 
 	if err != nil {
 		logger.Error().Err(err).Str("teamId", team.DisplayID).Msg("Failed to update team")
@@ -239,7 +240,7 @@ func (s *TeamServiceT) AddUserToTeam(ctx context.Context, teamAuth *middleware.T
 		}
 	}
 
-	_, err = db.Get().Teams().AddMemberToTeam(ctx, team.DisplayID, teamMember)
+	_, err = s.getDB().Teams().AddMemberToTeam(ctx, team.DisplayID, teamMember)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
 			logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("User already a member of team")
@@ -282,7 +283,7 @@ func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middlew
 		}
 	}
 
-	removed, dbErr := db.Get().Teams().RemoveMemberFromTeam(ctx, team.DisplayID, user.ID)
+	removed, dbErr := s.getDB().Teams().RemoveMemberFromTeam(ctx, team.DisplayID, user.ID)
 	if dbErr != nil {
 		logger.Error().Err(err).Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("Failed to remove user from team")
 		return &ServiceError{
@@ -347,7 +348,7 @@ func (s *TeamServiceT) ChangeMemberRole(ctx context.Context, teamAuth *middlewar
 }
 
 func (s *TeamServiceT) internalGetTeamByID(ctx context.Context, id string) (*models.Team, *ServiceError) {
-	team, err := db.Get().Teams().GetTeamByDisplayID(ctx, id)
+	team, err := s.getDB().Teams().GetTeamByDisplayID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{
