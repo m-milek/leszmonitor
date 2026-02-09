@@ -11,12 +11,6 @@ import {
 } from "@/components/ui/sidebar.tsx";
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import {
   LayoutDashboardIcon,
   LucideBookText,
   LucideGroup,
@@ -34,6 +28,7 @@ import { fetchUser } from "@/lib/fetchUser.ts";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
+import { TeamSelector } from "@/components/leszmonitor/sidebar/TeamSelector.tsx";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -114,16 +109,7 @@ export const AppSidebar = () => {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>Select Team</SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <span>Acme Inc</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TeamSelector />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
