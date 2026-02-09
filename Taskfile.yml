@@ -84,9 +84,8 @@ tasks:
     cmds:
       - npm run dev
     sources:
-      - 'app/**/*'
-      - 'public/**/*'
-      - 'next.config.ts'
+      - 'src/**/**'
+      - 'public/**/**'
 
   frontend:build:
     desc: Build the front-end for production
