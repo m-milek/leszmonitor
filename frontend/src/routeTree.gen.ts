@@ -13,8 +13,12 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedTeamIdRouteImport } from './routes/_authenticated/$teamId'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
 import { Route as AuthenticatedTeamIdIndexRouteImport } from './routes/_authenticated/$teamId/index'
+import { Route as AuthenticatedTeamIdTeamIndexRouteImport } from './routes/_authenticated/$teamId/team/index'
 import { Route as AuthenticatedTeamIdGroupsIndexRouteImport } from './routes/_authenticated/$teamId/groups/index'
+import { Route as AuthenticatedTeamIdDashboardIndexRouteImport } from './routes/_authenticated/$teamId/dashboard/index'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -35,10 +39,27 @@ const AuthenticatedTeamIdRoute = AuthenticatedTeamIdRouteImport.update({
   path: '/$teamId',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDocsIndexRoute = AuthenticatedDocsIndexRouteImport.update({
+  id: '/docs/',
+  path: '/docs/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedTeamIdIndexRoute =
   AuthenticatedTeamIdIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedTeamIdRoute,
+  } as any)
+const AuthenticatedTeamIdTeamIndexRoute =
+  AuthenticatedTeamIdTeamIndexRouteImport.update({
+    id: '/team/',
+    path: '/team/',
     getParentRoute: () => AuthenticatedTeamIdRoute,
   } as any)
 const AuthenticatedTeamIdGroupsIndexRoute =
@@ -47,19 +68,33 @@ const AuthenticatedTeamIdGroupsIndexRoute =
     path: '/groups/',
     getParentRoute: () => AuthenticatedTeamIdRoute,
   } as any)
+const AuthenticatedTeamIdDashboardIndexRoute =
+  AuthenticatedTeamIdDashboardIndexRouteImport.update({
+    id: '/dashboard/',
+    path: '/dashboard/',
+    getParentRoute: () => AuthenticatedTeamIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/$teamId': typeof AuthenticatedTeamIdRouteWithChildren
   '/login/': typeof LoginIndexRoute
   '/$teamId/': typeof AuthenticatedTeamIdIndexRoute
+  '/docs/': typeof AuthenticatedDocsIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/$teamId/dashboard/': typeof AuthenticatedTeamIdDashboardIndexRoute
   '/$teamId/groups/': typeof AuthenticatedTeamIdGroupsIndexRoute
+  '/$teamId/team/': typeof AuthenticatedTeamIdTeamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
   '/$teamId': typeof AuthenticatedTeamIdIndexRoute
+  '/docs': typeof AuthenticatedDocsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/$teamId/dashboard': typeof AuthenticatedTeamIdDashboardIndexRoute
   '/$teamId/groups': typeof AuthenticatedTeamIdGroupsIndexRoute
+  '/$teamId/team': typeof AuthenticatedTeamIdTeamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,13 +103,34 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/_authenticated/$teamId/': typeof AuthenticatedTeamIdIndexRoute
+  '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/$teamId/dashboard/': typeof AuthenticatedTeamIdDashboardIndexRoute
   '/_authenticated/$teamId/groups/': typeof AuthenticatedTeamIdGroupsIndexRoute
+  '/_authenticated/$teamId/team/': typeof AuthenticatedTeamIdTeamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$teamId' | '/login/' | '/$teamId/' | '/$teamId/groups/'
+  fullPaths:
+    | '/'
+    | '/$teamId'
+    | '/login/'
+    | '/$teamId/'
+    | '/docs/'
+    | '/settings/'
+    | '/$teamId/dashboard/'
+    | '/$teamId/groups/'
+    | '/$teamId/team/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/$teamId' | '/$teamId/groups'
+  to:
+    | '/'
+    | '/login'
+    | '/$teamId'
+    | '/docs'
+    | '/settings'
+    | '/$teamId/dashboard'
+    | '/$teamId/groups'
+    | '/$teamId/team'
   id:
     | '__root__'
     | '/_authenticated'
@@ -82,7 +138,11 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/login/'
     | '/_authenticated/$teamId/'
+    | '/_authenticated/docs/'
+    | '/_authenticated/settings/'
+    | '/_authenticated/$teamId/dashboard/'
     | '/_authenticated/$teamId/groups/'
+    | '/_authenticated/$teamId/team/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -120,11 +180,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTeamIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/docs/': {
+      id: '/_authenticated/docs/'
+      path: '/docs'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof AuthenticatedDocsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/$teamId/': {
       id: '/_authenticated/$teamId/'
       path: '/'
       fullPath: '/$teamId/'
       preLoaderRoute: typeof AuthenticatedTeamIdIndexRouteImport
+      parentRoute: typeof AuthenticatedTeamIdRoute
+    }
+    '/_authenticated/$teamId/team/': {
+      id: '/_authenticated/$teamId/team/'
+      path: '/team'
+      fullPath: '/$teamId/team/'
+      preLoaderRoute: typeof AuthenticatedTeamIdTeamIndexRouteImport
       parentRoute: typeof AuthenticatedTeamIdRoute
     }
     '/_authenticated/$teamId/groups/': {
@@ -134,17 +215,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTeamIdGroupsIndexRouteImport
       parentRoute: typeof AuthenticatedTeamIdRoute
     }
+    '/_authenticated/$teamId/dashboard/': {
+      id: '/_authenticated/$teamId/dashboard/'
+      path: '/dashboard'
+      fullPath: '/$teamId/dashboard/'
+      preLoaderRoute: typeof AuthenticatedTeamIdDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedTeamIdRoute
+    }
   }
 }
 
 interface AuthenticatedTeamIdRouteChildren {
   AuthenticatedTeamIdIndexRoute: typeof AuthenticatedTeamIdIndexRoute
+  AuthenticatedTeamIdDashboardIndexRoute: typeof AuthenticatedTeamIdDashboardIndexRoute
   AuthenticatedTeamIdGroupsIndexRoute: typeof AuthenticatedTeamIdGroupsIndexRoute
+  AuthenticatedTeamIdTeamIndexRoute: typeof AuthenticatedTeamIdTeamIndexRoute
 }
 
 const AuthenticatedTeamIdRouteChildren: AuthenticatedTeamIdRouteChildren = {
   AuthenticatedTeamIdIndexRoute: AuthenticatedTeamIdIndexRoute,
+  AuthenticatedTeamIdDashboardIndexRoute:
+    AuthenticatedTeamIdDashboardIndexRoute,
   AuthenticatedTeamIdGroupsIndexRoute: AuthenticatedTeamIdGroupsIndexRoute,
+  AuthenticatedTeamIdTeamIndexRoute: AuthenticatedTeamIdTeamIndexRoute,
 }
 
 const AuthenticatedTeamIdRouteWithChildren =
@@ -153,11 +246,15 @@ const AuthenticatedTeamIdRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedTeamIdRoute: typeof AuthenticatedTeamIdRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedTeamIdRoute: AuthenticatedTeamIdRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
