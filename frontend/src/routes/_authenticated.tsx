@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full text-foreground">
       <AppSidebar />
       <main className="flex-1 bg-background">
         <Outlet />
