@@ -25,7 +25,7 @@ export interface Team extends Timestamps {
   displayId: string;
   name: string;
   description: string;
-  members: TeamMember;
+  members: TeamMember[];
 }
 
 export interface Group extends Timestamps {

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { fetchGroups } from "@/lib/fetchGroups.ts";
+import { TypographyH1 } from "@/components/leszmonitor/sidebar/Typography.tsx";
 
 export const Route = createFileRoute("/_authenticated/$teamId/groups/")({
   component: Groups,
@@ -21,7 +22,7 @@ function Groups() {
 
   return (
     <MainPanelContainer>
-      <h1 className="text-2xl font-bold">Groups</h1>
+      <TypographyH1>Groups</TypographyH1>
       {data.length === 0 ? (
         <p className="mt-4 text-gray-500">No groups found.</p>
       ) : (

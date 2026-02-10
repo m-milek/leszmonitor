@@ -4,6 +4,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -12,10 +13,10 @@ import {
 
 import {
   LayoutDashboardIcon,
+  LucideActivity,
   LucideBookText,
-  LucideGroup,
+  LucideFolderOpen,
   LucidePlusCircle,
-  LucideScanEye,
   LucideSearch,
   LucideSettings,
   LucideUsers,
@@ -30,6 +31,7 @@ import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
 import { TeamSelector } from "@/components/leszmonitor/sidebar/TeamSelector.tsx";
 import { Link } from "@tanstack/react-router";
+import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -102,11 +104,7 @@ export const AppSidebar = () => {
     }
   }, [userData, setUser]);
 
-  if (!username) {
-    return null;
-  }
-
-  if (!team) {
+  if (!username || !team || !user) {
     return null;
   }
 
@@ -136,6 +134,7 @@ export const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
+          <SidebarGroupLabel>This Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarButton
@@ -144,12 +143,12 @@ export const AppSidebar = () => {
                 label="Dashboard"
               />
               <SidebarButton
-                icon={<LucideScanEye />}
+                icon={<LucideActivity />}
                 href={`/${team.displayId}/monitors`}
                 label="Monitors"
               />
               <SidebarButton
-                icon={<LucideGroup />}
+                icon={<LucideFolderOpen />}
                 href={`/${team.displayId}/groups`}
                 label="Groups"
               />
@@ -162,11 +161,12 @@ export const AppSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
+          <SidebarGroupLabel>Help</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarButton
                 icon={<LucideBookText />}
-                href="/documentation"
+                href="/docs"
                 label="Documentation"
               />
               <SidebarButton
@@ -188,14 +188,7 @@ export const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        {user ? (
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-muted" />
-            <span>{user.username}</span>
-          </div>
-        ) : (
-          <span>Not logged in</span>
-        )}
+        <AppSidebarFooter user={user} />
       </SidebarFooter>
     </Sidebar>
   );
