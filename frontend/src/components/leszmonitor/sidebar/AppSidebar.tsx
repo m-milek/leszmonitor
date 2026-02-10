@@ -21,14 +21,15 @@ import {
   LucideUsers,
 } from "lucide-react";
 import { Logo } from "@/components/leszmonitor/Logo.tsx";
-import { useAtom } from "jotai";
-import { userAtom, usernameAtom } from "@/lib/atoms.ts";
+import { useAtom, useAtomValue } from "jotai";
+import { teamAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUser } from "@/lib/fetchUser.ts";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
 import { TeamSelector } from "@/components/leszmonitor/sidebar/TeamSelector.tsx";
+import { Link } from "@tanstack/react-router";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -55,8 +56,10 @@ const SidebarButton = ({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton onClick={onClick} className={className}>
-        {icon}
-        <span>{label}</span>
+        <Link to={href} className="flex items-center space-x-2">
+          {icon}
+          <span>{label}</span>
+        </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -66,6 +69,8 @@ export const AppSidebar = () => {
   const [username, setUsername] = useAtom(usernameAtom);
   const [user, setUser] = useAtom(userAtom);
   const hasInitialized = useRef(false);
+
+  const team = useAtomValue(teamAtom);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -101,6 +106,10 @@ export const AppSidebar = () => {
     return null;
   }
 
+  if (!team) {
+    return null;
+  }
+
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
@@ -131,20 +140,24 @@ export const AppSidebar = () => {
             <SidebarMenu>
               <SidebarButton
                 icon={<LayoutDashboardIcon />}
-                href="/dashboard"
+                href={`/${team.displayId}/dashboard`}
                 label="Dashboard"
               />
               <SidebarButton
                 icon={<LucideScanEye />}
-                href="/monitors"
+                href={`/${team.displayId}/monitors`}
                 label="Monitors"
               />
               <SidebarButton
                 icon={<LucideGroup />}
-                href="/groups"
+                href={`/${team.displayId}/groups`}
                 label="Groups"
               />
-              <SidebarButton icon={<LucideUsers />} href="/team" label="Team" />
+              <SidebarButton
+                icon={<LucideUsers />}
+                href={`/${team.displayId}/team`}
+                label="Team"
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

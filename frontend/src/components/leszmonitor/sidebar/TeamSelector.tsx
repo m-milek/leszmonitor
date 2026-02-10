@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { fetchTeams } from "@/lib/fetchTeams.ts";
+import { useAtomValue } from "jotai";
+import { teamAtom } from "@/lib/atoms.ts";
 
 interface TeamEntryProps {
   teamName: string;
@@ -27,10 +29,12 @@ export const TeamSelector = () => {
     queryFn: fetchTeams,
   });
 
+  const team = useAtomValue(teamAtom);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="w-full">
-        <Button variant="secondary">Select Team</Button>
+        <Button variant="secondary">{team?.name}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-full">
         <DropdownMenuGroup>
