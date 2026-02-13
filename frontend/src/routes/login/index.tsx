@@ -23,12 +23,11 @@ import { userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useSetAtom } from "jotai";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
-import { fetchUser } from "@/lib/fetchUser.ts";
+import { fetchUser } from "@/lib/data/userData.ts";
 
 export const Route = createFileRoute("/login/")({
   component: RouteComponent,
 });
-
 const loginFormSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
