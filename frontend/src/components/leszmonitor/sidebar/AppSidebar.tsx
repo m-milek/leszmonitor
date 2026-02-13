@@ -25,13 +25,13 @@ import { Logo } from "@/components/leszmonitor/Logo.tsx";
 import { useAtom, useAtomValue } from "jotai";
 import { teamAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUser } from "@/lib/fetchUser.ts";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
 import { TeamSelector } from "@/components/leszmonitor/sidebar/TeamSelector.tsx";
 import { Link } from "@tanstack/react-router";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
+import { fetchUser } from "@/lib/data/userData.ts";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -154,8 +154,13 @@ export const AppSidebar = () => {
               />
               <SidebarButton
                 icon={<LucideUsers />}
-                href={`/${team.displayId}/team`}
-                label="Team"
+                href={`/${team.displayId}/members`}
+                label="Members"
+              />
+              <SidebarButton
+                icon={<LucideSettings />}
+                href={`/${team.displayId}/settings`}
+                label="Settings"
               />
             </SidebarMenu>
           </SidebarGroupContent>
@@ -175,15 +180,6 @@ export const AppSidebar = () => {
                 label="Search"
               />
             </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarButton
-              icon={<LucideSettings />}
-              href="/settings"
-              label="Settings"
-            />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

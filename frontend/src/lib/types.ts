@@ -32,7 +32,7 @@ export interface Group extends Timestamps {
   id: string;
   name: string;
   displayId: string;
-  description: string;
+  description?: string;
 }
 
 export interface LoginPayload {

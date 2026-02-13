@@ -4,7 +4,7 @@ import { useAtomValue } from "jotai";
 import { teamAtom } from "@/lib/atoms.ts";
 import { TypographyH1 } from "@/components/leszmonitor/sidebar/Typography.tsx";
 
-export const Route = createFileRoute("/_authenticated/$teamId/team/")({
+export const Route = createFileRoute("/_authenticated/$teamId/members/")({
   component: TeamRoute,
 });
 

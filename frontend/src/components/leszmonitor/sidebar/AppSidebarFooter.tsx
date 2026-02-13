@@ -1,5 +1,4 @@
 import type { User } from "@/lib/types.ts";
-import { cn } from "@/lib/utils.ts";
 import { LucideEllipsisVertical } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 
@@ -10,16 +9,9 @@ export interface AppSidebarFooterProps {
 export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
   const firstLetter = user.username[0].toUpperCase();
 
-  const userColor = "purple-900"; // TODO generate color based on username or user ID
-
   return (
     <div className="flex items-center m-2">
-      <div
-        className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-full",
-          `bg-${userColor}`,
-        )}
-      >
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-400">
         <span className="text-sm font-medium text-white">{firstLetter}</span>
       </div>
       <div className="flex flex-1 items-center justify-between">
