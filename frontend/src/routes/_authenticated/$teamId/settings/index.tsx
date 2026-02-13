@@ -4,7 +4,7 @@ import { TypographyH1 } from "@/components/leszmonitor/sidebar/Typography.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useTheme } from "@/components/ui/theme-provider.tsx";
 
-export const Route = createFileRoute("/_authenticated/settings/")({
+export const Route = createFileRoute("/_authenticated/$teamId/settings/")({
   component: RouteComponent,
 });
 

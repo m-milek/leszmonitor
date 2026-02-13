@@ -7,9 +7,9 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTeams } from "@/lib/fetchTeams.ts";
 import { useAtomValue } from "jotai";
 import { teamAtom } from "@/lib/atoms.ts";
+import { fetchTeams } from "@/lib/data/teamData.ts";
 
 interface TeamEntryProps {
   teamName: string;

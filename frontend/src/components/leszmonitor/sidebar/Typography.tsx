@@ -14,7 +14,7 @@ export function TypographyH1({ children }: TypographyProps) {
 
 export function TypographyH2({ children }: TypographyProps) {
   return (
-    <h2 className="scroll-m-20 border-b text-xl font-semibold tracking-tight first:mt-0">
+    <h2 className="scroll-m-20 text-xl font-semibold tracking-tight first:mt-0">
       {children}
     </h2>
   );
