@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { useAtomValue } from "jotai";
 import { teamAtom } from "@/lib/atoms.ts";
-import { TypographyH1 } from "@/components/leszmonitor/sidebar/Typography.tsx";
+import {
+  TypographyH1,
+  TypographyH2,
+} from "@/components/leszmonitor/sidebar/Typography.tsx";
+import { TeamMembersTable } from "@/components/leszmonitor/tables/TeamMembersTable.tsx";
+import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 
 export const Route = createFileRoute("/_authenticated/team/$teamId/members/")({
   component: TeamRoute,
@@ -18,22 +23,17 @@ function TeamRoute() {
   return (
     <MainPanelContainer>
       <TypographyH1>Members</TypographyH1>
-      {team.members.length === 0 ? (
-        <p className="mt-2 text-gray-500">No members in this team yet.</p>
-      ) : (
-        <ul>
-          {team.members.map((member) => (
-            <li key={member.id}>
-              <div className="flex items-center gap-2">
-                <div>{member.id}</div>
-                <div>{member.role}</div>
-                <div>{member.createdAt.toISOString()}</div>
-                <div>{member.updatedAt.toISOString()}</div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <Card>
+        <CardHeader>
+          <TypographyH2>
+            {team.members.length}{" "}
+            {team.members.length === 1 ? "Member" : "Members"}
+          </TypographyH2>
+        </CardHeader>
+        <CardContent>
+          <TeamMembersTable members={team.members} />
+        </CardContent>
+      </Card>
     </MainPanelContainer>
   );
 }

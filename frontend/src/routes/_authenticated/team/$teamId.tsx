@@ -3,18 +3,20 @@ import { useSetAtom } from "jotai";
 import { teamAtom } from "@/lib/atoms.ts";
 import { useEffect } from "react";
 import { getTeam } from "@/lib/data/teamData.ts";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/team/$teamId")({
-  loader: async ({ params }) => {
-    const team = await getTeam(params.teamId);
-    return { team };
-  },
   component: TeamLayout,
 });
 
 function TeamLayout() {
-  const { team } = Route.useLoaderData();
+  const { teamId } = Route.useParams();
   const setTeamAtom = useSetAtom(teamAtom);
+
+  const { data: team } = useQuery({
+    queryKey: ["team", teamId],
+    queryFn: () => getTeam(teamId),
+  });
 
   useEffect(() => {
     if (team) {

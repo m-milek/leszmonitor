@@ -33,7 +33,7 @@ func newTeamRepository(repository baseRepository) ITeamRepository {
 // teamMemberFromCollectableRow maps a pgx.CollectableRow to a models.TeamMember struct.
 func teamMemberFromCollectableRow(row pgx.CollectableRow) (models.TeamMember, error) {
 	member := models.TeamMember{}
-	err := row.Scan(&member.ID, &member.Role, &member.CreatedAt, &member.UpdatedAt)
+	err := row.Scan(&member.ID, &member.Username, &member.Role, &member.CreatedAt, &member.UpdatedAt)
 
 	return member, err
 }
@@ -99,7 +99,9 @@ func (r *teamRepository) GetTeamByDisplayID(ctx context.Context, displayID strin
 		}
 
 		memberRows, membersErr := r.pool.Query(ctx,
-			`SELECT user_id, role, created_at, updated_at FROM user_teams WHERE team_id=$1`,
+			`SELECT ut.user_id, u.username, ut.role, ut.created_at, ut.updated_at 
+             FROM user_teams ut JOIN users u ON u.id = ut.user_id 
+             WHERE team_id=$1`,
 			team.ID)
 		if membersErr != nil {
 			return nil, membersErr
@@ -130,7 +132,7 @@ func (r *teamRepository) GetAllTeams(ctx context.Context) ([]models.Team, error)
 
 		for i, team := range teams {
 			memberRows, membersErr := r.pool.Query(ctx,
-				`SELECT user_id, role, created_at, updated_at FROM user_teams WHERE team_id=$1`,
+				`SELECT user_id, u.username, role, ut.created_at, ut.updated_at FROM user_teams ut JOIN users u ON u.id = ut.user_id WHERE team_id=$1`,
 				team.ID)
 			if membersErr != nil {
 				return nil, membersErr

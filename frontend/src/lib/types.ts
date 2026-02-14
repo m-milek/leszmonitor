@@ -17,6 +17,7 @@ export enum TeamRole {
 
 export interface TeamMember extends Timestamps {
   id: string;
+  username: string;
   role: TeamRole;
 }
 

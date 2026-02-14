@@ -13,7 +13,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
-import { Route as AuthenticatedUserUserIdRouteImport } from './routes/_authenticated/user/$userId'
+import { Route as AuthenticatedUserUsernameRouteImport } from './routes/_authenticated/user/$username'
 import { Route as AuthenticatedTeamTeamIdRouteImport } from './routes/_authenticated/team/$teamId'
 import { Route as AuthenticatedTeamTeamIdIndexRouteImport } from './routes/_authenticated/team/$teamId/index'
 import { Route as AuthenticatedTeamTeamIdSettingsIndexRouteImport } from './routes/_authenticated/team/$teamId/settings/index'
@@ -41,11 +41,12 @@ const AuthenticatedDocsIndexRoute = AuthenticatedDocsIndexRouteImport.update({
   path: '/docs/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedUserUserIdRoute = AuthenticatedUserUserIdRouteImport.update({
-  id: '/user/$userId',
-  path: '/user/$userId',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+const AuthenticatedUserUsernameRoute =
+  AuthenticatedUserUsernameRouteImport.update({
+    id: '/user/$username',
+    path: '/user/$username',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTeamTeamIdRoute = AuthenticatedTeamTeamIdRouteImport.update({
   id: '/team/$teamId',
   path: '/team/$teamId',
@@ -92,7 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/team/$teamId': typeof AuthenticatedTeamTeamIdRouteWithChildren
-  '/user/$userId': typeof AuthenticatedUserUserIdRoute
+  '/user/$username': typeof AuthenticatedUserUsernameRoute
   '/docs/': typeof AuthenticatedDocsIndexRoute
   '/team/$teamId/': typeof AuthenticatedTeamTeamIdIndexRoute
   '/team/$teamId/dashboard/': typeof AuthenticatedTeamTeamIdDashboardIndexRoute
@@ -104,7 +105,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
-  '/user/$userId': typeof AuthenticatedUserUserIdRoute
+  '/user/$username': typeof AuthenticatedUserUsernameRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
   '/team/$teamId': typeof AuthenticatedTeamTeamIdIndexRoute
   '/team/$teamId/dashboard': typeof AuthenticatedTeamTeamIdDashboardIndexRoute
@@ -119,7 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/_authenticated/team/$teamId': typeof AuthenticatedTeamTeamIdRouteWithChildren
-  '/_authenticated/user/$userId': typeof AuthenticatedUserUserIdRoute
+  '/_authenticated/user/$username': typeof AuthenticatedUserUsernameRoute
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
   '/_authenticated/team/$teamId/': typeof AuthenticatedTeamTeamIdIndexRoute
   '/_authenticated/team/$teamId/dashboard/': typeof AuthenticatedTeamTeamIdDashboardIndexRoute
@@ -134,7 +135,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login/'
     | '/team/$teamId'
-    | '/user/$userId'
+    | '/user/$username'
     | '/docs/'
     | '/team/$teamId/'
     | '/team/$teamId/dashboard/'
@@ -146,7 +147,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/user/$userId'
+    | '/user/$username'
     | '/docs'
     | '/team/$teamId'
     | '/team/$teamId/dashboard'
@@ -160,7 +161,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/login/'
     | '/_authenticated/team/$teamId'
-    | '/_authenticated/user/$userId'
+    | '/_authenticated/user/$username'
     | '/_authenticated/docs/'
     | '/_authenticated/team/$teamId/'
     | '/_authenticated/team/$teamId/dashboard/'
@@ -205,11 +206,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/user/$userId': {
-      id: '/_authenticated/user/$userId'
-      path: '/user/$userId'
-      fullPath: '/user/$userId'
-      preLoaderRoute: typeof AuthenticatedUserUserIdRouteImport
+    '/_authenticated/user/$username': {
+      id: '/_authenticated/user/$username'
+      path: '/user/$username'
+      fullPath: '/user/$username'
+      preLoaderRoute: typeof AuthenticatedUserUsernameRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/team/$teamId': {
@@ -296,14 +297,14 @@ const AuthenticatedTeamTeamIdRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedTeamTeamIdRoute: typeof AuthenticatedTeamTeamIdRouteWithChildren
-  AuthenticatedUserUserIdRoute: typeof AuthenticatedUserUserIdRoute
+  AuthenticatedUserUsernameRoute: typeof AuthenticatedUserUsernameRoute
   AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedTeamTeamIdRoute: AuthenticatedTeamTeamIdRouteWithChildren,
-  AuthenticatedUserUserIdRoute: AuthenticatedUserUserIdRoute,
+  AuthenticatedUserUsernameRoute: AuthenticatedUserUsernameRoute,
   AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
 }
 

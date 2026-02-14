@@ -35,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
+import { formatDate } from "@/lib/utils.ts";
 
 export const Route = createFileRoute("/_authenticated/team/$teamId/groups/")({
   component: Groups,
@@ -101,16 +102,14 @@ function Groups() {
       accessorKey: "createdAt",
       header: "Created At",
       cell: ({ row }) => {
-        const createdAt = row.original.createdAt;
-        return createdAt.toLocaleString();
+        return formatDate(row.original.createdAt);
       },
     },
     {
       accessorKey: "updatedAt",
       header: "Updated At",
       cell: ({ row }) => {
-        const createdAt = row.original.createdAt;
-        return createdAt.toLocaleString();
+        return formatDate(row.original.updatedAt);
       },
     },
     {
@@ -131,159 +130,153 @@ function Groups() {
 
   return (
     <MainPanelContainer>
-      <div className="flex flex-col gap-6">
-        <TypographyH1>Groups</TypographyH1>
-        <Card>
-          <CardHeader>
-            <TypographyH2>Create New Group</TypographyH2>
-          </CardHeader>
-          <CardContent>
-            <form
-              id="group-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-              }}
-            >
-              <FieldGroup className="gap-2">
-                <div className="flex gap-8">
-                  <form.Field
-                    name="name"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid;
-                      return (
-                        <Field>
-                          <FieldLabel htmlFor={field.name}>
-                            Group Name
-                          </FieldLabel>
-                          <Input
-                            id={field.name}
-                            name={field.name}
-                            value={field.state.value}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            autoComplete="off"
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      );
-                    }}
-                  />
-                  <form.Field
-                    name="displayId"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid;
-                      return (
-                        <Field>
-                          <FieldLabel htmlFor={field.name}>
-                            Display ID
-                          </FieldLabel>
-                          <Input
-                            id={field.name}
-                            name={field.name}
-                            value={field.state.value}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            autoComplete="off"
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      );
-                    }}
-                  />
-                </div>
+      <TypographyH1>Groups</TypographyH1>
+      <Card>
+        <CardHeader>
+          <TypographyH2>Create New Group</TypographyH2>
+        </CardHeader>
+        <CardContent>
+          <form
+            id="group-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit();
+            }}
+          >
+            <FieldGroup className="gap-2">
+              <div className="flex gap-8">
                 <form.Field
-                  name="description"
+                  name="name"
                   children={(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field>
-                        <FieldLabel htmlFor={field.name}>
-                          Description (Optional)
-                        </FieldLabel>
-                        <Textarea
+                        <FieldLabel htmlFor={field.name}>Group Name</FieldLabel>
+                        <Input
                           id={field.name}
                           name={field.name}
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
                           autoComplete="off"
                         />
+                        {isInvalid && (
+                          <FieldError errors={field.state.meta.errors} />
+                        )}
                       </Field>
                     );
                   }}
                 />
-              </FieldGroup>
-            </form>
-          </CardContent>
-          <CardFooter className="justify-end">
-            <Button
-              type="submit"
-              form="group-form"
-              disabled={addGroupMutation.isPending}
-            >
-              {addGroupMutation.isPending ? "Adding..." : "Add Group"}
-            </Button>
-          </CardFooter>
-        </Card>
-        <Card>
-          <CardHeader>
-            <TypographyH2>Existing Groups</TypographyH2>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      );
-                    })}
+                <form.Field
+                  name="displayId"
+                  children={(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor={field.name}>Display ID</FieldLabel>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          autoComplete="off"
+                        />
+                        {isInvalid && (
+                          <FieldError errors={field.state.meta.errors} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
+              </div>
+              <form.Field
+                name="description"
+                children={(field) => {
+                  return (
+                    <Field>
+                      <FieldLabel htmlFor={field.name}>
+                        Description (Optional)
+                      </FieldLabel>
+                      <Textarea
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        autoComplete="off"
+                      />
+                    </Field>
+                  );
+                }}
+              />
+            </FieldGroup>
+          </form>
+        </CardContent>
+        <CardFooter className="justify-end">
+          <Button
+            type="submit"
+            form="group-form"
+            disabled={addGroupMutation.isPending}
+          >
+            {addGroupMutation.isPending ? "Adding..." : "Add Group"}
+          </Button>
+        </CardFooter>
+      </Card>
+      <Card>
+        <CardHeader>
+          <TypographyH2>Existing Groups</TypographyH2>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </MainPanelContainer>
   );
 }
