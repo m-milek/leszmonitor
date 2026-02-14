@@ -8,7 +8,12 @@ export const Route = createRootRoute({
     </Providers>
   ),
   beforeLoad: async ({ location }) => {
-    if (location.pathname === "/login" || location.pathname === "/login/") {
+    if (
+      location.pathname === "/login" ||
+      location.pathname === "/login/" ||
+      location.pathname === "/register" ||
+      location.pathname === "/register/"
+    ) {
       return;
     }
 

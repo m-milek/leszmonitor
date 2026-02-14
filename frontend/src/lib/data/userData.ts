@@ -11,3 +11,24 @@ export const fetchUser = async (username: string): Promise<User> => {
 
   return (await res.json()) as User;
 };
+
+export interface RegisterUserPayload {
+  username: string;
+  password: string;
+}
+
+export const registerUser = async (
+  payload: RegisterUserPayload,
+): Promise<void> => {
+  const res = await fetch(`${BACKEND_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to register user");
+  }
+};

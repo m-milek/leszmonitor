@@ -23,18 +23,18 @@ import { userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useSetAtom } from "jotai";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
-import { fetchUser } from "@/lib/data/userData.ts";
+import { fetchUser, registerUser } from "@/lib/data/userData.ts";
 
-export const Route = createFileRoute("/login/")({
-  component: RouteComponent,
+export const Route = createFileRoute("/register/")({
+  component: RegisterComponent,
 });
 
-const loginFormSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+const registerFormSchema = z.object({
+  username: z.string().min(2, "Username has to be at least 2 characters long"),
+  password: z.string().min(6, "Password has to be at least 6 characters long"),
 });
 
-function RouteComponent() {
+function RegisterComponent() {
   const navigate = useNavigate();
 
   const setUsername = useSetAtom(usernameAtom);
@@ -46,10 +46,13 @@ function RouteComponent() {
       password: "",
     },
     validators: {
-      onSubmit: loginFormSchema,
+      onSubmit: registerFormSchema,
     },
     onSubmit: async ({ value }) => {
+      await registerUser(value);
+
       const loginResponse = await fetchLoginToken(value);
+
       await cookieStore.set({
         name: "LOGIN_TOKEN",
         value: loginResponse.jwt,
@@ -73,7 +76,9 @@ function RouteComponent() {
             <CardTitle className="flex flex-col items-center">
               <Logo />
             </CardTitle>
-            <CardDescription>Log in to Leszmonitor</CardDescription>
+            <CardDescription>
+              Register a new account on Leszmonitor
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form
@@ -120,7 +125,7 @@ function RouteComponent() {
                           type="password"
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="current-password"
+                          autoComplete="new-password"
                         />
                         {isInvalid && (
                           <FieldError errors={field.state.meta.errors} />
@@ -132,18 +137,15 @@ function RouteComponent() {
               </FieldGroup>
             </form>
           </CardContent>
-          <CardFooter className="flex-col items-center gap-4">
+          <CardFooter>
             <Button
               className="w-full"
               onClick={() => form.handleSubmit()}
               type="submit"
               form="login-form"
             >
-              Log in
+              Register
             </Button>
-            <Link to="/register" className="text-sm text-primary">
-              Don&#39;t have an account?
-            </Link>
           </CardFooter>
         </Card>
       </div>
