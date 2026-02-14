@@ -11,7 +11,7 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
 
   return (
     <div className="flex items-center m-2">
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-400">
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
         <span className="text-sm font-medium text-white">{firstLetter}</span>
       </div>
       <div className="flex flex-1 items-center justify-between">
