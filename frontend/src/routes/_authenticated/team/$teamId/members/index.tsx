@@ -4,7 +4,7 @@ import { useAtomValue } from "jotai";
 import { teamAtom } from "@/lib/atoms.ts";
 import { TypographyH1 } from "@/components/leszmonitor/sidebar/Typography.tsx";
 
-export const Route = createFileRoute("/_authenticated/$teamId/members/")({
+export const Route = createFileRoute("/_authenticated/team/$teamId/members/")({
   component: TeamRoute,
 });
 
@@ -17,7 +17,7 @@ function TeamRoute() {
 
   return (
     <MainPanelContainer>
-      <TypographyH1>{team.name}</TypographyH1>
+      <TypographyH1>Members</TypographyH1>
       {team.members.length === 0 ? (
         <p className="mt-2 text-gray-500">No members in this team yet.</p>
       ) : (
