@@ -34,8 +34,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
+import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
 
-export const Route = createFileRoute("/_authenticated/$teamId/groups/")({
+export const Route = createFileRoute("/_authenticated/team/$teamId/groups/")({
   component: Groups,
 });
 
@@ -80,6 +81,17 @@ function Groups() {
     {
       accessorKey: "name",
       header: "Name",
+      cell: ({ row }) => {
+        const name = row.original.name;
+        return (
+          <StyledLink
+            to="/team/$teamId/groups/$groupId"
+            params={{ teamId, groupId: row.original.displayId }}
+          >
+            {name}
+          </StyledLink>
+        );
+      },
     },
     {
       accessorKey: "displayId",
@@ -206,12 +218,11 @@ function Groups() {
               </FieldGroup>
             </form>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="justify-end">
             <Button
               type="submit"
               form="group-form"
               disabled={addGroupMutation.isPending}
-              className="w-full"
             >
               {addGroupMutation.isPending ? "Adding..." : "Add Group"}
             </Button>

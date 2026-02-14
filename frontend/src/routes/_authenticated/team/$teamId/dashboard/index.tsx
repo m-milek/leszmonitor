@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/sidebar/Typography.tsx";
 
-export const Route = createFileRoute("/_authenticated/$teamId/dashboard/")({
+export const Route = createFileRoute("/_authenticated/team/$teamId/dashboard/")({
   component: DashboardComponent,
 });
 

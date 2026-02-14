@@ -19,6 +19,26 @@ export const getGroups = async (teamId: string): Promise<Group[]> => {
   }));
 };
 
+export const getGroup = async (
+  teamId: string,
+  groupId: string,
+): Promise<Group> => {
+  const res = await authFetch(
+    `${BACKEND_URL}/teams/${teamId}/groups/${groupId}`,
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch group");
+  }
+
+  const group = (await res.json()) as Group;
+  return {
+    ...group,
+    createdAt: new Date(group.createdAt),
+    updatedAt: new Date(group.updatedAt),
+  };
+};
+
 export const addGroup = async (
   teamId: string,
   group: GroupInput,

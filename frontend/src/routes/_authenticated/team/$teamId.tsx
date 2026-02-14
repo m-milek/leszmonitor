@@ -4,7 +4,7 @@ import { teamAtom } from "@/lib/atoms.ts";
 import { useEffect } from "react";
 import { getTeam } from "@/lib/data/teamData.ts";
 
-export const Route = createFileRoute("/_authenticated/$teamId")({
+export const Route = createFileRoute("/_authenticated/team/$teamId")({
   loader: async ({ params }) => {
     const team = await getTeam(params.teamId);
     return { team };

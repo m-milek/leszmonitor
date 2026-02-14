@@ -139,27 +139,27 @@ export const AppSidebar = () => {
             <SidebarMenu>
               <SidebarButton
                 icon={<LayoutDashboardIcon />}
-                href={`/${team.displayId}/dashboard`}
+                href={`/team/${team.displayId}/dashboard`}
                 label="Dashboard"
               />
               <SidebarButton
                 icon={<LucideActivity />}
-                href={`/${team.displayId}/monitors`}
+                href={`/team/${team.displayId}/monitors`}
                 label="Monitors"
               />
               <SidebarButton
                 icon={<LucideFolderOpen />}
-                href={`/${team.displayId}/groups`}
+                href={`/team/${team.displayId}/groups`}
                 label="Groups"
               />
               <SidebarButton
                 icon={<LucideUsers />}
-                href={`/${team.displayId}/members`}
+                href={`/team/${team.displayId}/members`}
                 label="Members"
               />
               <SidebarButton
                 icon={<LucideSettings />}
-                href={`/${team.displayId}/settings`}
+                href={`/team/${team.displayId}/settings`}
                 label="Settings"
               />
             </SidebarMenu>
