@@ -2,14 +2,16 @@ package models
 
 import (
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/models/util"
 )
 
 // TeamMember represents a member of a team with a specific role.
 type TeamMember struct {
-	ID   pgtype.UUID `json:"id"`   // ID is the UUID of the user who this instance represents
-	Role Role        `json:"role"` // Role is the role of the team member (e.g., owner, admin, member)
+	ID       pgtype.UUID `json:"id"`       // ID is the UUID of the user who this instance represents
+	Username string      `json:"username"` // Username is the username of the user (for display purposes)
+	Role     Role        `json:"role"`     // Role is the role of the team member (e.g., owner, admin, member)
 	util.Timestamps
 }
 
