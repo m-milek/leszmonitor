@@ -29,10 +29,21 @@ export const Route = createFileRoute("/register/")({
   component: RegisterComponent,
 });
 
-const registerFormSchema = z.object({
-  username: z.string().min(2, "Username has to be at least 2 characters long"),
-  password: z.string().min(6, "Password has to be at least 6 characters long"),
-});
+const registerFormSchema = z
+  .object({
+    username: z
+      .string()
+      .min(2, "Username has to be at least 2 characters long"),
+    password: z
+      .string()
+      .min(6, "Password has to be at least 6 characters long"),
+    passwordConfirm: z
+      .string()
+      .min(6, "Verify the password by entering it again"),
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: "Passwords don't match",
+  });
 
 function RegisterComponent() {
   const navigate = useNavigate();
@@ -44,6 +55,7 @@ function RegisterComponent() {
     defaultValues: {
       username: "",
       password: "",
+      passwordConfirm: "",
     },
     validators: {
       onSubmit: registerFormSchema,
@@ -119,6 +131,31 @@ function RegisterComponent() {
                     return (
                       <Field>
                         <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          type="password"
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          autoComplete="new-password"
+                        />
+                        {isInvalid && (
+                          <FieldError errors={field.state.meta.errors} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
+                <form.Field
+                  name="passwordConfirm"
+                  children={(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    return (
+                      <Field>
+                        <FieldLabel htmlFor={field.name}>
+                          Confirm your password
+                        </FieldLabel>
                         <Input
                           id={field.name}
                           name={field.name}
