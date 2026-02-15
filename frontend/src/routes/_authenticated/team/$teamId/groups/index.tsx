@@ -4,8 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TypographyH1,
   TypographyH2,
-} from "@/components/leszmonitor/sidebar/Typography.tsx";
-import { addGroup, getGroups, type GroupInput } from "@/lib/data/groupData.ts";
+} from "@/components/leszmonitor/Typography.tsx";
+import {
+  addGroup,
+  deleteGroup,
+  getGroups,
+  type GroupInput,
+} from "@/lib/data/groupData.ts";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -23,19 +28,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
-import type { Group } from "@/lib/types.ts";
-import { flexRender, useReactTable } from "@tanstack/react-table";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table.tsx";
-import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
-import { formatDate } from "@/lib/utils.ts";
+import { GroupsTable } from "@/components/leszmonitor/tables/GroupsTable.tsx";
 
 export const Route = createFileRoute("/_authenticated/team/$teamId/groups/")({
   component: Groups,
@@ -64,6 +57,13 @@ function Groups() {
     },
   });
 
+  const deleteGroupMutation = useMutation({
+    mutationFn: (groupId: string) => deleteGroup(teamId, groupId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groups", teamId] });
+    },
+  });
+
   const form = useForm({
     defaultValues: {
       name: "",
@@ -76,52 +76,6 @@ function Groups() {
     onSubmit: async ({ value }) => {
       await addGroupMutation.mutateAsync(value);
     },
-  });
-
-  const columns: ColumnDef<Group>[] = [
-    {
-      accessorKey: "name",
-      header: "Name",
-      cell: ({ row }) => {
-        const name = row.original.name;
-        return (
-          <StyledLink
-            to="/team/$teamId/groups/$groupId"
-            params={{ teamId, groupId: row.original.displayId }}
-          >
-            {name}
-          </StyledLink>
-        );
-      },
-    },
-    {
-      accessorKey: "displayId",
-      header: "Display ID",
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Created At",
-      cell: ({ row }) => {
-        return formatDate(row.original.createdAt);
-      },
-    },
-    {
-      accessorKey: "updatedAt",
-      header: "Updated At",
-      cell: ({ row }) => {
-        return formatDate(row.original.updatedAt);
-      },
-    },
-    {
-      accessorKey: "description",
-      header: "Description",
-    },
-  ];
-
-  const table = useReactTable({
-    data: data || [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
   });
 
   if (!data) {
@@ -227,54 +181,13 @@ function Groups() {
           <TypographyH2>Existing Groups</TypographyH2>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <GroupsTable
+            groups={data}
+            teamId={teamId}
+            onGroupDeleted={async (groupId) =>
+              deleteGroupMutation.mutateAsync(groupId)
+            }
+          />
         </CardContent>
       </Card>
     </MainPanelContainer>
