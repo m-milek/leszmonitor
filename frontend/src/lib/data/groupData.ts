@@ -62,3 +62,19 @@ export const addGroup = async (
     updatedAt: new Date(newGroup.updatedAt),
   };
 };
+
+export const deleteGroup = async (
+  teamId: string,
+  groupId: string,
+): Promise<void> => {
+  const res = await authFetch(
+    `${BACKEND_URL}/teams/${teamId}/groups/${groupId}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to delete group");
+  }
+};

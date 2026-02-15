@@ -2,16 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/Typography.tsx";
 
-export const Route = createFileRoute("/_authenticated/team/$teamId/dashboard/")(
-  {
-    component: DashboardComponent,
-  },
-);
+export const Route = createFileRoute("/_authenticated/team/$teamId/monitors/")({
+  component: MonitorsComponent,
+});
 
-function DashboardComponent() {
+function MonitorsComponent() {
   return (
     <MainPanelContainer>
-      <TypographyH1>Dashboard</TypographyH1>
+      <TypographyH1>Monitors</TypographyH1>
     </MainPanelContainer>
   );
 }

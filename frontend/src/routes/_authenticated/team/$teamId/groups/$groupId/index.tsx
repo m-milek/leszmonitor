@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
-import { TypographyH1 } from "@/components/leszmonitor/sidebar/Typography.tsx";
+import { TypographyH1 } from "@/components/leszmonitor/Typography.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getGroup } from "@/lib/data/groupData.ts";
 
