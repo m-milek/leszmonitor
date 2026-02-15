@@ -1,11 +1,11 @@
 import type { User } from "@/lib/types.ts";
-import { LucideEllipsisVertical } from "lucide-react";
+import { LucideEllipsisVertical, LucideLogOut } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useRouter } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 
@@ -40,9 +40,12 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuLabel>
-              <button onClick={logOut}>Log out</button>
-            </DropdownMenuLabel>
+            <DropdownMenuItem className="text-destructive" onSelect={logOut}>
+              <div className="flex items-center w-full justify-between">
+                <span>Log out</span>
+                <LucideLogOut className="text-destructive" />
+              </div>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
