@@ -157,11 +157,6 @@ export const AppSidebar = () => {
                 href={`/team/${team.displayId}/members`}
                 label="Members"
               />
-              <SidebarButton
-                icon={<LucideSettings />}
-                href={`/team/${team.displayId}/settings`}
-                label="Settings"
-              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -178,6 +173,11 @@ export const AppSidebar = () => {
                 icon={<LucideSearch />}
                 href="/search"
                 label="Search"
+              />
+              <SidebarButton
+                icon={<LucideSettings />}
+                href={`/user/${user.username}/settings`}
+                label="Settings"
               />
             </SidebarMenu>
           </SidebarGroupContent>
