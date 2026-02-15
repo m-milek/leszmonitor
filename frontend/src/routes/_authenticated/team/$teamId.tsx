@@ -22,7 +22,7 @@ function TeamLayout() {
     if (team) {
       setTeamAtom(team);
     }
-  }, [team, setTeamAtom]);
+  }, [team, teamId, setTeamAtom]);
 
   return <Outlet />;
 }
