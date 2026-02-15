@@ -263,11 +263,20 @@ func (s *TeamServiceT) RemoveUserFromTeam(ctx context.Context, teamAuth *middlew
 		return err
 	}
 
-	if !team.IsMember(user.ID) {
+	teamMember := team.GetMember(user.ID)
+	if teamMember == nil {
 		logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("User not a member of team")
 		return &ServiceError{
 			Code: 400,
 			Err:  fmt.Errorf("user %s is not a member of team %s", payload.Username, team.DisplayID),
+		}
+	}
+
+	if teamMember.Role == models.RoleOwner {
+		logger.Warn().Str("teamId", team.DisplayID).Str("username", payload.Username).Msg("Cannot remove team owner")
+		return &ServiceError{
+			Code: 400,
+			Err:  fmt.Errorf("cannot remove team owner %s from team %s", payload.Username, team.DisplayID),
 		}
 	}
 

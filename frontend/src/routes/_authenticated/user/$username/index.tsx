@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUser } from "@/lib/data/userData.ts";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
-export const Route = createFileRoute("/_authenticated/user/$username")({
+export const Route = createFileRoute("/_authenticated/user/$username/")({
   component: UserProfileComponent,
 });
 

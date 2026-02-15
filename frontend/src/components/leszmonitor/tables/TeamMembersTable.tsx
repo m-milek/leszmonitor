@@ -11,47 +11,70 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { formatDate } from "@/lib/utils.ts";
-
-const columns: ColumnDef<TeamMember>[] = [
-  {
-    accessorKey: "username",
-    header: "User",
-    cell: ({ row }) => {
-      return (
-        <StyledLink
-          to="/user/$username"
-          params={{ username: row.original.username }}
-        >
-          {row.original.username}
-        </StyledLink>
-      );
-    },
-  },
-  {
-    accessorKey: "role",
-    header: "Role",
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Joined at",
-    cell: ({ row }) => {
-      return formatDate(row.original.createdAt);
-    },
-  },
-  {
-    accessorKey: "updatedAt",
-    header: "Last updated",
-    cell: ({ row }) => {
-      return formatDate(row.original.updatedAt);
-    },
-  },
-];
+import { Button } from "@/components/ui/button.tsx";
+import { LucideUserMinus } from "lucide-react";
 
 export interface TeamMembersTableProps {
   members: TeamMember[];
+  onMemberRemoved: (username: string) => Promise<void>;
 }
 
-export const TeamMembersTable = ({ members }: TeamMembersTableProps) => {
+export const TeamMembersTable = ({
+  members,
+  onMemberRemoved,
+}: TeamMembersTableProps) => {
+  const columns: ColumnDef<TeamMember>[] = [
+    {
+      accessorKey: "username",
+      header: "User",
+      cell: ({ row }) => {
+        return (
+          <StyledLink
+            to="/user/$username"
+            params={{ username: row.original.username }}
+          >
+            {row.original.username}
+          </StyledLink>
+        );
+      },
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Joined at",
+      cell: ({ row }) => {
+        return formatDate(row.original.createdAt);
+      },
+    },
+    {
+      accessorKey: "updatedAt",
+      header: "Last updated",
+      cell: ({ row }) => {
+        return formatDate(row.original.updatedAt);
+      },
+    },
+    {
+      header: "Actions",
+      cell: ({ row }) => {
+        const isOwner = row.original.role === "owner";
+        return (
+          <Button
+            onClick={async () => {
+              await onMemberRemoved(row.original.username);
+            }}
+            variant="ghost"
+            disabled={isOwner}
+          >
+            <LucideUserMinus className="text-destructive" />
+          </Button>
+        );
+      },
+    },
+  ];
+
   const table = useReactTable({
     data: members,
     columns,
