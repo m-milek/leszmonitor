@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/models"
 	monitors "github.com/m-milek/leszmonitor/uptime/monitor"
-	"net/http"
 )
 
 // MonitorServiceT handles monitor-related CRUD operations.
@@ -43,12 +44,14 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 		return nil, authErr
 	}
 
-	group, err := GroupService.internalGetMonitorGroupByID(ctx, groupID)
-	if err != nil {
-		return nil, err
+	if groupID != "" {
+		group, err := GroupService.internalGetMonitorGroupByID(ctx, groupID)
+		if err != nil {
+			return nil, err
+		}
+		monitor.SetGroupID(group.ID)
 	}
 
-	monitor.SetGroupID(group.ID)
 	monitor.SetTeamID(team.ID)
 	monitor.GenerateDisplayID()
 

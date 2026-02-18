@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -35,7 +36,7 @@ func monitorFromCollectableRow(row pgx.CollectableRow) (monitors.IConcreteMonito
 	var config []byte
 	var b monitors.BaseMonitor
 
-	err := row.Scan(&b.ID, &b.DisplayID, &b.TeamID, &b.GroupID, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
+	err := row.Scan(&b.ID, &b.DisplayID, &b.GroupID, &b.TeamID, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
