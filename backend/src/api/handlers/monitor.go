@@ -1,21 +1,20 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/services"
 	"github.com/m-milek/leszmonitor/logging"
 	"github.com/m-milek/leszmonitor/uptime/monitor"
-	"net/http"
 )
 
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	groupID := r.PathValue("groupId")
+	groupID := r.URL.Query().Get("groupId")
 	if groupID == "" {
-		logging.Api.Trace().Msg("Group DisplayID is required for creating a monitor")
-		util.RespondMessage(w, http.StatusBadRequest, "Group DisplayID is required")
-		return
+		logging.Api.Debug().Msg("Received request to create monitor without groupId")
 	}
 
 	monitor, err := monitors.FromReader(r.Body)
