@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/m-milek/leszmonitor/api/handlers"
 	"net/http"
+
+	"github.com/m-milek/leszmonitor/api/handlers"
 )
 
 func SetupRouters(
@@ -29,18 +30,18 @@ func SetupRouters(
 	protectedRouter.HandleFunc("DELETE /teams/{teamId}/members", handlers.TeamRemoveMemberHandler)
 	protectedRouter.HandleFunc("PATCH /teams/{teamId}/{userId}", handlers.TeamChangeMemberRoleHandler)
 
+	// Monitors
+	protectedRouter.HandleFunc("GET /teams/{teamId}/monitors", handlers.GetAllMonitorsHandler)
+	protectedRouter.HandleFunc("GET /teams/{teamId}/monitors/{monitorId}", handlers.GetMonitorByIDHandler)
+	protectedRouter.HandleFunc("POST /teams/{teamId}/monitors", handlers.CreateMonitorHandler)
+	protectedRouter.HandleFunc("DELETE /teams/{teamId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
+	protectedRouter.HandleFunc("PATCH /teams/{teamId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
+
 	// Monitor Groups
 	protectedRouter.HandleFunc("POST /teams/{teamId}/groups", handlers.CreateMonitorGroupHandler)
 	protectedRouter.HandleFunc("GET /teams/{teamId}/groups", handlers.GetTeamMonitorGroupsHandler)
 	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}", handlers.GetTeamMonitorGroupByID)
 	protectedRouter.HandleFunc("PATCH /teams/{teamId}/groups/{groupId}", handlers.UpdateMonitorGroupHandler)
 	protectedRouter.HandleFunc("DELETE /teams/{teamId}/groups/{groupId}", handlers.DeleteMonitorGroupHandler)
-
-	// Monitors
-	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}/monitors", handlers.GetAllMonitorsHandler)
-	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}/monitors/{monitorId}", handlers.GetMonitorByIDHandler)
-	protectedRouter.HandleFunc("POST /teams/{teamId}/groups/{groupId}/monitors", handlers.CreateMonitorHandler)
-	protectedRouter.HandleFunc("DELETE /teams/{teamId}/groups/{groupId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
-	protectedRouter.HandleFunc("PATCH /teams/{teamId}/groups/{groupId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
 
 }
