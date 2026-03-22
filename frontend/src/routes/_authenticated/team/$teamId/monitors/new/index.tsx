@@ -3,6 +3,7 @@ import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.
 import { TypographyH1 } from "@/components/leszmonitor/Typography.tsx";
 import { useForm } from "@tanstack/react-form";
 import {
+  type MonitorType,
   newMonitorSchema,
   newMonitorSchemaDefaultValues,
 } from "@/lib/types.ts";
@@ -23,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { getGroups } from "@/lib/data/groupData.ts";
 
 export const Route = createFileRoute(
   "/_authenticated/team/$teamId/monitors/new/",
@@ -31,6 +34,8 @@ export const Route = createFileRoute(
 });
 
 function NewMonitorComponent() {
+  const { teamId } = Route.useParams();
+
   const form = useForm({
     defaultValues: newMonitorSchemaDefaultValues,
     validators: {
@@ -45,10 +50,20 @@ function NewMonitorComponent() {
     },
   });
 
+  const { data: groups } = useQuery({
+    queryKey: ["groups", teamId],
+    queryFn: () => getGroups(teamId),
+  });
+
   const onSubmit = (e: React.SubmitEvent) => {
-    console.log("Submitting form");
     e.preventDefault();
     form.handleSubmit();
+  };
+
+  const [selectedMonitorType, setSelectedMonitorType] =
+    React.useState<MonitorType | null>(null);
+  const onMonitorTypeChange = (value: string) => {
+    setSelectedMonitorType(value);
   };
 
   return (
@@ -81,6 +96,33 @@ function NewMonitorComponent() {
               }}
             />
             <form.Field
+              name={"groupId"}
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+                return (
+                  <Field>
+                    <FieldLabel>Group</FieldLabel>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {groups?.map((group) => (
+                          <SelectItem key={group.id} value={group.id}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+            <form.Field
               name={"type"}
               children={(field) => {
                 const isInvalid =
@@ -88,7 +130,7 @@ function NewMonitorComponent() {
                 return (
                   <Field>
                     <FieldLabel>Type</FieldLabel>
-                    <Select>
+                    <Select onValueChange={onMonitorTypeChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select Monitor Type" />
                       </SelectTrigger>
@@ -104,8 +146,8 @@ function NewMonitorComponent() {
                 );
               }}
             />
-            {form.state.values.type === "http" && <div>Dupa</div>}
-            {form.state.values.type === "ping" && <div>Ping</div>}
+            {selectedMonitorType === "http" && <div>http</div>}
+            {selectedMonitorType === "ping" && <div>ping</div>}
           </form>
         </CardContent>
         <CardFooter>
