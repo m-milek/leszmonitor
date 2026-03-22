@@ -28,8 +28,10 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 	t.Run("Registers a new user successfully", func(t *testing.T) {
 		ctx, userService, mockDB := setupTestUserService()
 
+		mockUser, _ := models.NewUser("testuser", "123")
 		mockUserRepo := mockDB.UsersRepo.(*db.MockUserRepository)
-		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(&struct{}{}, nil)
+		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(mockUser, nil)
+		mockUserRepo.On("GetUserByUsername", ctx, "testuser").Return(mockUser, nil)
 
 		payload := &UserRegisterPayload{
 			Username: "testuser",
@@ -37,8 +39,10 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 		}
 
 		err := userService.RegisterUser(ctx, payload)
+		savedUser, err := userService.GetUserByUsername(ctx, "testuser")
 
 		assert.Nil(t, err)
+		assert.Equal(t, "testuser", savedUser.Username)
 		mockUserRepo.AssertExpectations(t)
 	})
 
@@ -80,7 +84,7 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 		ctx, userService, mockDB := setupTestUserService()
 
 		mockUserRepo := mockDB.UsersRepo.(*db.MockUserRepository)
-		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(&struct{}{}, errors.New("database error"))
+		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(&models.User{}, errors.New("database error"))
 
 		payload := &UserRegisterPayload{
 			Username: "username",
@@ -97,7 +101,7 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 		ctx, userService, mockDB := setupTestUserService()
 
 		mockUserRepo := mockDB.UsersRepo.(*db.MockUserRepository)
-		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(&struct{}{}, db.ErrAlreadyExists)
+		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return((*models.User)(nil), db.ErrAlreadyExists)
 
 		payload := &UserRegisterPayload{
 			Username: "username",
