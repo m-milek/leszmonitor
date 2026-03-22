@@ -3,6 +3,7 @@ import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.
 import { TypographyH1 } from "@/components/leszmonitor/Typography.tsx";
 import { useForm } from "@tanstack/react-form";
 import {
+  isValidMonitorType,
   type MonitorType,
   newMonitorSchema,
   newMonitorSchemaDefaultValues,
@@ -62,7 +63,12 @@ function NewMonitorComponent() {
 
   const [selectedMonitorType, setSelectedMonitorType] =
     React.useState<MonitorType | null>(null);
+
   const onMonitorTypeChange = (value: string) => {
+    if (!isValidMonitorType(value)) {
+      console.error("Invalid monitor type selected:", value);
+      return;
+    }
     setSelectedMonitorType(value);
   };
 
