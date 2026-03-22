@@ -22,9 +22,9 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (r *MockUserRepository) InsertUser(ctx context.Context, user *models.User) (*struct{}, error) {
+func (r *MockUserRepository) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
 	args := r.Called(ctx, user)
-	return args.Get(0).(*struct{}), args.Error(1)
+	return args.Get(0).(*models.User), args.Error(1)
 }
 
 func (r *MockUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
