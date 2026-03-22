@@ -122,12 +122,20 @@ export const pingMonitorConfigSchemaDefaultValues: PingMonitorConfig = {
 };
 
 export const newMonitorSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  displayId: z.string().min(1, "Display ID is required"),
+  name: z.string({ message: "Name is required" }).min(1, "Name is required"),
+  displayId: z
+    .string({ message: "Display ID is required" })
+    .min(1, "Display ID is required"),
   description: z.string().optional(),
   groupId: z.string().optional(),
-  interval: z.number().min(1, "Interval must be at least 1 second"),
-  type: z.enum(["http", "ping"]),
+  interval: z
+    .number({
+      message: "Interval must be a number",
+    })
+    .min(1, "Interval must be at least 1 second"),
+  type: z.enum(["http", "ping"], {
+    message: "Please select a monitor type",
+  }),
   config: z
     .union([httpMonitorConfigSchema, pingMonitorConfigSchema])
     .optional(),
