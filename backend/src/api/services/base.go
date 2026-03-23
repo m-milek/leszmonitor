@@ -7,12 +7,12 @@ import (
 )
 
 type baseService struct {
-	authService   IAuthorizationService
+	authService   ITeamActionAuthorizer
 	serviceLogger zerolog.Logger
 	methodLoggers map[string]zerolog.Logger
 }
 
-func newBaseService(authService IAuthorizationService, serviceName string) baseService {
+func newBaseService(authService ITeamActionAuthorizer, serviceName string) baseService {
 	return baseService{
 		authService:   authService,
 		serviceLogger: logging.NewServiceLogger(serviceName),
