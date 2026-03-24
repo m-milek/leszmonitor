@@ -12,9 +12,9 @@ import (
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	groupID := r.URL.Query().Get("groupId")
-	if groupID == "" {
-		logging.Api.Debug().Msg("Received request to create monitor without groupId")
+	projectID := r.URL.Query().Get("projectId")
+	if projectID == "" {
+		logging.Api.Debug().Msg("Received request to create monitor without projectId")
 	}
 
 	monitor, err := monitors.FromReader(r.Body)
@@ -24,12 +24,12 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(r.Context(), teamAuth, groupID, monitor)
+	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(r.Context(), orgAuth, projectID, monitor)
 
 	if serviceErr != nil {
 		util.RespondError(w, serviceErr.Code, serviceErr.Err)
@@ -48,12 +48,12 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	err := services.MonitorService.DeleteMonitor(r.Context(), teamAuth, monitorID)
+	err := services.MonitorService.DeleteMonitor(r.Context(), orgAuth, monitorID)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
@@ -64,12 +64,12 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	monitorsList, err := services.MonitorService.GetMonitorsByTeamID(r.Context(), teamAuth)
+	monitorsList, err := services.MonitorService.GetMonitorsByOrgID(r.Context(), orgAuth)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -87,12 +87,12 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	monitor, err := services.MonitorService.GetMonitorByID(r.Context(), teamAuth, monitorID)
+	monitor, err := services.MonitorService.GetMonitorByID(r.Context(), orgAuth, monitorID)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -120,12 +120,12 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	serviceErr := services.MonitorService.UpdateMonitor(r.Context(), teamAuth, monitor)
+	serviceErr := services.MonitorService.UpdateMonitor(r.Context(), orgAuth, monitor)
 	if serviceErr != nil {
 		util.RespondError(w, serviceErr.Code, serviceErr.Err)
 		return

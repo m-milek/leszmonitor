@@ -19,7 +19,7 @@ CREATE OR REPLACE TRIGGER set_timestamp
     FOR EACH ROW
     EXECUTE PROCEDURE update_timestamp();
 
-CREATE TABLE IF NOT EXISTS teams (
+CREATE TABLE IF NOT EXISTS orgs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     display_id VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -29,32 +29,32 @@ CREATE TABLE IF NOT EXISTS teams (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 CREATE OR REPLACE TRIGGER set_timestamp
-    BEFORE UPDATE ON teams
+    BEFORE UPDATE ON orgs
     FOR EACH ROW
     EXECUTE PROCEDURE update_timestamp();
 
-CREATE TABLE IF NOT EXISTS user_teams (
+CREATE TABLE IF NOT EXISTS user_orgs (
     user_id UUID NOT NULL,
-    team_id UUID NOT NULL,
+    org_id UUID NOT NULL,
     role team_role NOT NULL,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    PRIMARY KEY (user_id, team_id),
+    PRIMARY KEY (user_id, org_id),
 
-    UNIQUE (user_id, team_id),
+    UNIQUE (user_id, org_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+    FOREIGN KEY (org_id) REFERENCES orgs (id) ON DELETE CASCADE
 );
 CREATE OR REPLACE TRIGGER set_timestamp
-    BEFORE UPDATE ON user_teams
+    BEFORE UPDATE ON user_orgs
     FOR EACH ROW
     EXECUTE PROCEDURE update_timestamp();
 
-CREATE TABLE IF NOT EXISTS groups (
+CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    team_id UUID NOT NULL,
+    org_id UUID NOT NULL,
     display_id VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(1000) NOT NULL,
@@ -62,10 +62,10 @@ CREATE TABLE IF NOT EXISTS groups (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+    FOREIGN KEY (org_id) REFERENCES orgs (id) ON DELETE CASCADE
 );
 CREATE OR REPLACE TRIGGER set_timestamp
-    BEFORE UPDATE ON groups
+    BEFORE UPDATE ON projects
     FOR EACH ROW
 EXECUTE PROCEDURE update_timestamp();
 
@@ -84,7 +84,7 @@ CREATE OR REPLACE TRIGGER set_timestamp
 EXECUTE PROCEDURE update_timestamp();
 
 DO $$ BEGIN
-    CREATE TYPE team_role AS ENUM ('owner', 'admin', 'member', 'viewer');
+    CREATE TYPE org_role AS ENUM ('owner', 'admin', 'member', 'viewer');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -92,8 +92,8 @@ END $$;
 CREATE TABLE IF NOT EXISTS monitors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     display_id VARCHAR(50) NOT NULL,
-    group_id UUID,
-    team_id UUID NOT NULL,
+    project_id UUID,
+    org_id UUID NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(1000) NOT NULL,
     interval INT NOT NULL,
@@ -103,10 +103,10 @@ CREATE TABLE IF NOT EXISTS monitors (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE (id, group_id),
+    UNIQUE (id, project_id),
 
-    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL
+    FOREIGN KEY (org_id) REFERENCES orgs (id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
 );
 CREATE OR REPLACE TRIGGER set_timestamp
     BEFORE UPDATE ON monitors

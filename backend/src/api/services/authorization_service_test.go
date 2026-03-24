@@ -16,7 +16,7 @@ import (
 func setupTestAuthorizationService() (context.Context, *authorizationServiceT, *db.MockDB) {
 	mockDB := &db.MockDB{
 		UsersRepo: new(db.MockUserRepository),
-		TeamsRepo: new(db.MockTeamRepository),
+		OrgsRepo:  new(db.MockOrgRepository),
 	}
 	db.Set(mockDB)
 
@@ -32,29 +32,29 @@ func createTestUser(username string) *models.User {
 	}
 }
 
-func createTestTeam(name string, members []models.TeamMember) *models.Team {
-	team := &models.Team{
+func createTestOrg(name string, members []models.OrgMember) *models.Org {
+	org := &models.Org{
 		ID:      pgtype.UUID{Bytes: [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, Valid: true},
 		Members: members,
 	}
-	team.DisplayIDFromName.Init(name)
-	return team
+	org.DisplayIDFromName.Init(name)
+	return org
 }
 
-// Helper to setup team and user with role
-func setupTeamWithUser(username string, role models.Role) (*models.User, *models.Team) {
+// Helper to set up org and user with role
+func setupOrgWithUser(username string, role models.Role) (*models.User, *models.Org) {
 	user := createTestUser(username)
-	team := createTestTeam("test-team", []models.TeamMember{{ID: user.ID, Role: role}})
-	return user, team
+	org := createTestOrg("test-org", []models.OrgMember{{ID: user.ID, Role: role}})
+	return user, org
 }
 
-// Helper to mock successful team and user retrieval
-func mockTeamAndUser(mockDB *db.MockDB, ctx context.Context, team *models.Team, user *models.User) {
-	mockDB.TeamsRepo.(*db.MockTeamRepository).On("GetTeamByDisplayID", ctx, team.DisplayID).Return(team, nil)
+// Helper to mock successful org and user retrieval
+func mockOrgAndUser(mockDB *db.MockDB, ctx context.Context, org *models.Org, user *models.User) {
+	mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, org.DisplayID).Return(org, nil)
 	mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, user.Username).Return(user, nil)
 }
 
-func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
+func TestAuthorizationServiceT_AuthorizeOrgAction(t *testing.T) {
 	// Test successful authorization for different roles
 	roleTests := []struct {
 		name       string
@@ -62,10 +62,10 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 		role       models.Role
 		permission models.Permission
 	}{
-		{"Authorizes owner with all permissions", "owner", models.RoleOwner, models.PermissionTeamReader},
-		{"Authorizes admin with edit permissions", "admin", models.RoleAdmin, models.PermissionTeamEditor},
+		{"Authorizes owner with all permissions", "owner", models.RoleOwner, models.PermissionOrgReader},
+		{"Authorizes admin with edit permissions", "admin", models.RoleAdmin, models.PermissionOrgEditor},
 		{"Authorizes member with monitor edit", "member", models.RoleMember, models.PermissionMonitorEditor},
-		{"Authorizes viewer with read permissions", "viewer", models.RoleViewer, models.PermissionTeamReader},
+		{"Authorizes viewer with read permissions", "viewer", models.RoleViewer, models.PermissionOrgReader},
 	}
 
 	for _, tt := range roleTests {
@@ -73,51 +73,51 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 			ctx, authService, mockDB := setupTestAuthorizationService()
 			defer db.Set(nil)
 
-			user, team := setupTeamWithUser(tt.username, tt.role)
-			mockTeamAndUser(mockDB, ctx, team, user)
+			user, org := setupOrgWithUser(tt.username, tt.role)
+			mockOrgAndUser(mockDB, ctx, org, user)
 
-			resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-				TeamID:   team.DisplayID,
+			resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+				OrgID:    org.DisplayID,
 				Username: tt.username,
 			}, tt.permission)
 
 			assert.Nil(t, err)
-			assert.NotNil(t, resultTeam)
-			assert.Equal(t, team.DisplayID, resultTeam.DisplayID)
+			assert.NotNil(t, resultOrg)
+			assert.Equal(t, org.DisplayID, resultOrg.DisplayID)
 		})
 	}
 
 	// Test database error scenarios
-	t.Run("Fails when team does not exist", func(t *testing.T) {
+	t.Run("Fails when org does not exist", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		mockDB.TeamsRepo.(*db.MockTeamRepository).On("GetTeamByDisplayID", ctx, "nonexistent-team").
-			Return((*models.Team)(nil), db.ErrNotFound)
+		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, "nonexistent-org").
+			Return((*models.Org)(nil), db.ErrNotFound)
 
-		resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-			TeamID:   "nonexistent-team",
+		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+			OrgID:    "nonexistent-org",
 			Username: "testuser",
-		}, models.PermissionTeamReader)
+		}, models.PermissionOrgReader)
 
-		assert.Nil(t, resultTeam)
+		assert.Nil(t, resultOrg)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
 	})
 
-	t.Run("Fails when team retrieval returns database error", func(t *testing.T) {
+	t.Run("Fails when org retrieval returns database error", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		mockDB.TeamsRepo.(*db.MockTeamRepository).On("GetTeamByDisplayID", ctx, "test-team").
-			Return((*models.Team)(nil), errors.New("database error"))
+		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, "test-org").
+			Return((*models.Org)(nil), errors.New("database error"))
 
-		resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-			TeamID:   "test-team",
+		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+			OrgID:    "test-org",
 			Username: "testuser",
-		}, models.PermissionTeamReader)
+		}, models.PermissionOrgReader)
 
-		assert.Nil(t, resultTeam)
+		assert.Nil(t, resultOrg)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, err.Code)
 	})
@@ -127,17 +127,17 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		_, team := setupTeamWithUser("testuser", models.RoleOwner)
-		mockDB.TeamsRepo.(*db.MockTeamRepository).On("GetTeamByDisplayID", ctx, team.DisplayID).Return(team, nil)
+		_, org := setupOrgWithUser("testuser", models.RoleOwner)
+		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, org.DisplayID).Return(org, nil)
 		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, "nonexistent").
 			Return((*models.User)(nil), db.ErrNotFound)
 
-		resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-			TeamID:   team.DisplayID,
+		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+			OrgID:    org.DisplayID,
 			Username: "nonexistent",
-		}, models.PermissionTeamReader)
+		}, models.PermissionOrgReader)
 
-		assert.Nil(t, resultTeam)
+		assert.Nil(t, resultOrg)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
 	})
@@ -146,22 +146,22 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		user, team := setupTeamWithUser("testuser", models.RoleOwner)
-		mockDB.TeamsRepo.(*db.MockTeamRepository).On("GetTeamByDisplayID", ctx, team.DisplayID).Return(team, nil)
+		user, org := setupOrgWithUser("testuser", models.RoleOwner)
+		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, org.DisplayID).Return(org, nil)
 		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, user.Username).
 			Return((*models.User)(nil), errors.New("database error"))
 
-		resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-			TeamID:   team.DisplayID,
+		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+			OrgID:    org.DisplayID,
 			Username: user.Username,
-		}, models.PermissionTeamReader)
+		}, models.PermissionOrgReader)
 
-		assert.Nil(t, resultTeam)
+		assert.Nil(t, resultOrg)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, err.Code)
 	})
 
-	t.Run("Fails when user is not a member of the team", func(t *testing.T) {
+	t.Run("Fails when user is not a member of the org", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
@@ -169,18 +169,18 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 		otherUser := createTestUser("otheruser")
 		otherUser.ID = pgtype.UUID{Bytes: [16]byte{99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84}, Valid: true}
 
-		team := createTestTeam("test-team", []models.TeamMember{{ID: otherUser.ID, Role: models.RoleOwner}})
-		mockTeamAndUser(mockDB, ctx, team, user)
+		org := createTestOrg("test-org", []models.OrgMember{{ID: otherUser.ID, Role: models.RoleOwner}})
+		mockOrgAndUser(mockDB, ctx, org, user)
 
-		resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-			TeamID:   team.DisplayID,
+		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+			OrgID:    org.DisplayID,
 			Username: user.Username,
-		}, models.PermissionTeamReader)
+		}, models.PermissionOrgReader)
 
-		assert.Nil(t, resultTeam)
+		assert.Nil(t, resultOrg)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusForbidden, err.Code)
-		assert.Contains(t, err.Err.Error(), "is not a member of team")
+		assert.Contains(t, err.Err.Error(), "is not a member")
 	})
 
 	// Test permission failures
@@ -189,8 +189,8 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 		role       models.Role
 		permission models.Permission
 	}{
-		{"Fails when viewer lacks edit permissions", models.RoleViewer, models.PermissionTeamEditor},
-		{"Fails when member lacks admin permissions", models.RoleMember, models.PermissionTeamAdmin},
+		{"Fails when viewer lacks edit permissions", models.RoleViewer, models.PermissionOrgEditor},
+		{"Fails when member lacks admin permissions", models.RoleMember, models.PermissionOrgAdmin},
 	}
 
 	for _, tt := range permissionFailTests {
@@ -198,15 +198,15 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 			ctx, authService, mockDB := setupTestAuthorizationService()
 			defer db.Set(nil)
 
-			user, team := setupTeamWithUser("testuser", tt.role)
-			mockTeamAndUser(mockDB, ctx, team, user)
+			user, org := setupOrgWithUser("testuser", tt.role)
+			mockOrgAndUser(mockDB, ctx, org, user)
 
-			resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-				TeamID:   team.DisplayID,
+			resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+				OrgID:    org.DisplayID,
 				Username: user.Username,
 			}, tt.permission)
 
-			assert.Nil(t, resultTeam)
+			assert.Nil(t, resultOrg)
 			assert.NotNil(t, err)
 			assert.Equal(t, http.StatusForbidden, err.Code)
 			assert.Contains(t, err.Err.Error(), "does not have required permissions")
@@ -218,31 +218,31 @@ func TestAuthorizationServiceT_AuthorizeTeamAction(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		user, team := setupTeamWithUser("owner", models.RoleOwner)
-		mockTeamAndUser(mockDB, ctx, team, user)
+		user, org := setupOrgWithUser("owner", models.RoleOwner)
+		mockOrgAndUser(mockDB, ctx, org, user)
 
-		resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-			TeamID:   team.DisplayID,
+		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+			OrgID:    org.DisplayID,
 			Username: user.Username,
-		}, models.PermissionTeamAdmin, models.PermissionMonitorAdmin)
+		}, models.PermissionOrgAdmin, models.PermissionMonitorAdmin)
 
 		assert.Nil(t, err)
-		assert.NotNil(t, resultTeam)
+		assert.NotNil(t, resultOrg)
 	})
 
 	t.Run("Fails with multiple permissions when user lacks one", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		user, team := setupTeamWithUser("admin", models.RoleAdmin)
-		mockTeamAndUser(mockDB, ctx, team, user)
+		user, org := setupOrgWithUser("admin", models.RoleAdmin)
+		mockOrgAndUser(mockDB, ctx, org, user)
 
-		resultTeam, err := authService.authorizeTeamAction(ctx, &middleware.TeamAuth{
-			TeamID:   team.DisplayID,
+		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
+			OrgID:    org.DisplayID,
 			Username: user.Username,
-		}, models.PermissionTeamEditor, models.PermissionTeamAdmin)
+		}, models.PermissionOrgEditor, models.PermissionOrgAdmin)
 
-		assert.Nil(t, resultTeam)
+		assert.Nil(t, resultOrg)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusForbidden, err.Code)
 	})

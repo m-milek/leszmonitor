@@ -135,31 +135,31 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 		}
 	}
 
-	teamName := fmt.Sprintf("%s's Space", payload.Username)
-	teamDescription := fmt.Sprintf("Default space for %s", payload.Username)
+	orgName := fmt.Sprintf("%s's Organization", payload.Username)
+	orgDescription := fmt.Sprintf("Personal organization for %s", payload.Username)
 
-	team, teamErr := models.NewTeam(teamName, teamDescription, user.ID)
-	if teamErr != nil {
-		logger.Error().Err(teamErr).Str("username", payload.Username).Msg("Failed to create default team model for user")
+	org, orgErr := models.NewOrg(orgName, orgDescription, user.ID)
+	if orgErr != nil {
+		logger.Error().Err(orgErr).Str("username", payload.Username).Msg("Failed to create personal org for user")
 		return &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to create default team for user %s: %w", payload.Username, teamErr),
+			Err:  fmt.Errorf("failed to create personal org for user %s: %w", payload.Username, orgErr),
 		}
 	}
 
 	// Override the display ID to be the same as the username for easy access.
-	team.DisplayID = user.Username
+	org.DisplayID = user.Username
 
-	team, teamServiceErr := TeamService.internalCreateTeam(ctx, team)
-	if teamServiceErr != nil {
-		logger.Error().Err(teamServiceErr.Err).Str("username", payload.Username).Msg("Failed to create default team for user")
+	org, orgServiceErr := OrgService.internalCreateOrg(ctx, org)
+	if orgServiceErr != nil {
+		logger.Error().Err(orgServiceErr.Err).Str("username", payload.Username).Msg("Failed to create default org for user")
 		return &ServiceError{
-			Code: teamServiceErr.Code,
-			Err:  fmt.Errorf("failed to create default team for user %s: %w", payload.Username, teamServiceErr.Err),
+			Code: orgServiceErr.Code,
+			Err:  fmt.Errorf("failed to create default org for user %s: %w", payload.Username, orgServiceErr.Err),
 		}
 	}
 
-	logger.Trace().Str("username", payload.Username).Str("team", team.Name).Msg("Successfully registered user and created default team")
+	logger.Trace().Str("username", payload.Username).Str("org", org.Name).Msg("Successfully registered user and created default org")
 
 	return nil
 }

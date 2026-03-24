@@ -264,45 +264,45 @@ func TestGetUserFromContext(t *testing.T) {
 	})
 }
 
-func TestTeamAuthFromRequest(t *testing.T) {
+func TestOrgAuthFromRequest(t *testing.T) {
 	tests := []struct {
 		name          string
 		setupRequest  func() *http.Request
-		expectedAuth  *TeamAuth
+		expectedAuth  *OrgAuth
 		expectedError string
 	}{
 		{
-			name: "valid request with team DisplayID and user claims",
+			name: "valid request with org DisplayID and user claims",
 			setupRequest: func() *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/teams/team123", nil)
-				req.SetPathValue("teamId", "team123")
+				req := httptest.NewRequest(http.MethodGet, "/orgs/org123", nil)
+				req.SetPathValue("orgId", "org123")
 
 				claims := &UserClaims{Username: "testuser"}
 				ctx := SetUserContext(req.Context(), claims)
 				return req.WithContext(ctx)
 			},
-			expectedAuth: &TeamAuth{
-				TeamID:   "team123",
+			expectedAuth: &OrgAuth{
+				OrgID:    "org123",
 				Username: "testuser",
 			},
 		},
 		{
-			name: "missing team DisplayID",
+			name: "missing org DisplayID",
 			setupRequest: func() *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/teams/", nil)
-				// No teamId path value set
+				req := httptest.NewRequest(http.MethodGet, "/orgs/", nil)
+				// No orgId path value set
 
 				claims := &UserClaims{Username: "testuser"}
 				ctx := SetUserContext(req.Context(), claims)
 				return req.WithContext(ctx)
 			},
-			expectedError: "teamID is required",
+			expectedError: "orgID is required",
 		},
 		{
 			name: "missing user claims in context",
 			setupRequest: func() *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/teams/team123", nil)
-				req.SetPathValue("teamId", "team123")
+				req := httptest.NewRequest(http.MethodGet, "/orgs/org123", nil)
+				req.SetPathValue("orgId", "org123")
 				// No user claims in context
 				return req
 			},
@@ -311,8 +311,8 @@ func TestTeamAuthFromRequest(t *testing.T) {
 		{
 			name: "empty username in claims",
 			setupRequest: func() *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/teams/team123", nil)
-				req.SetPathValue("teamId", "team123")
+				req := httptest.NewRequest(http.MethodGet, "/orgs/org123", nil)
+				req.SetPathValue("orgId", "org123")
 
 				claims := &UserClaims{Username: ""} // Empty username
 				ctx := SetUserContext(req.Context(), claims)
@@ -326,7 +326,7 @@ func TestTeamAuthFromRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := tt.setupRequest()
 
-			auth, err := TeamAuthFromRequest(req)
+			auth, err := OrgAuthFromRequest(req)
 
 			if tt.expectedError != "" {
 				assert.Error(t, err)
@@ -335,7 +335,7 @@ func TestTeamAuthFromRequest(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				require.NotNil(t, auth)
-				assert.Equal(t, tt.expectedAuth.TeamID, auth.TeamID)
+				assert.Equal(t, tt.expectedAuth.OrgID, auth.OrgID)
 				assert.Equal(t, tt.expectedAuth.Username, auth.Username)
 			}
 		})

@@ -3,12 +3,13 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logging"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/m-milek/leszmonitor/env"
+	"github.com/m-milek/leszmonitor/logging"
 )
 
 // UserClaims extends standard JWT claims with custom fields.
@@ -101,15 +102,15 @@ func GetUserFromContext(ctx context.Context) (*UserClaims, bool) {
 	return claims, ok
 }
 
-type TeamAuth struct {
-	TeamID   string
+type OrgAuth struct {
+	OrgID    string
 	Username string
 }
 
-func TeamAuthFromRequest(r *http.Request) (*TeamAuth, error) {
-	teamID := r.PathValue("teamId")
-	if teamID == "" {
-		return nil, fmt.Errorf("teamID is required")
+func OrgAuthFromRequest(r *http.Request) (*OrgAuth, error) {
+	orgID := r.PathValue("orgId")
+	if orgID == "" {
+		return nil, fmt.Errorf("orgID is required")
 	}
 
 	userClaims, ok := GetUserFromContext(r.Context())
@@ -120,8 +121,8 @@ func TeamAuthFromRequest(r *http.Request) (*TeamAuth, error) {
 		return nil, fmt.Errorf("username is missing in user claims")
 	}
 
-	return &TeamAuth{
-		TeamID:   teamID,
+	return &OrgAuth{
+		OrgID:    orgID,
 		Username: userClaims.Username,
 	}, nil
 }

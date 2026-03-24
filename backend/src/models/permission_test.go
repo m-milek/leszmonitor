@@ -26,27 +26,27 @@ func TestNewPermission(t *testing.T) {
 
 func TestGetEffectivePermissions(t *testing.T) {
 	t.Run("Permission with no implications", func(t *testing.T) {
-		perms := getEffectivePermissions(PermissionTeamReader)
+		perms := getEffectivePermissions(PermissionOrgReader)
 
 		assert.Len(t, perms, 1)
-		assert.Contains(t, perms, PermissionTeamReader)
+		assert.Contains(t, perms, PermissionOrgReader)
 	})
 
 	t.Run("Permission with single level implication", func(t *testing.T) {
-		perms := getEffectivePermissions(PermissionTeamEditor)
+		perms := getEffectivePermissions(PermissionOrgEditor)
 
 		assert.Len(t, perms, 2)
-		assert.Contains(t, perms, PermissionTeamEditor)
-		assert.Contains(t, perms, PermissionTeamReader)
+		assert.Contains(t, perms, PermissionOrgEditor)
+		assert.Contains(t, perms, PermissionOrgReader)
 	})
 
 	t.Run("Permission with multi-level implications", func(t *testing.T) {
-		perms := getEffectivePermissions(PermissionTeamAdmin)
+		perms := getEffectivePermissions(PermissionOrgAdmin)
 
 		assert.Len(t, perms, 3)
-		assert.Contains(t, perms, PermissionTeamAdmin)
-		assert.Contains(t, perms, PermissionTeamEditor)
-		assert.Contains(t, perms, PermissionTeamReader)
+		assert.Contains(t, perms, PermissionOrgAdmin)
+		assert.Contains(t, perms, PermissionOrgEditor)
+		assert.Contains(t, perms, PermissionOrgReader)
 	})
 
 	t.Run("Monitor permissions hierarchy", func(t *testing.T) {
@@ -67,54 +67,54 @@ func TestGetEffectivePermissions(t *testing.T) {
 	})
 }
 
-func TestTeamRoleHasPermissions(t *testing.T) {
+func TestOrgRoleHasPermissions(t *testing.T) {
 	t.Run("Owner has all permissions", func(t *testing.T) {
 		owner := RoleOwner
 
 		// Direct permissions
-		assert.True(t, owner.HasPermissions(PermissionTeamAdmin))
+		assert.True(t, owner.HasPermissions(PermissionOrgAdmin))
 		assert.True(t, owner.HasPermissions(PermissionMonitorAdmin))
 
 		// Implied permissions
-		assert.True(t, owner.HasPermissions(PermissionTeamEditor))
-		assert.True(t, owner.HasPermissions(PermissionTeamReader))
+		assert.True(t, owner.HasPermissions(PermissionOrgEditor))
+		assert.True(t, owner.HasPermissions(PermissionOrgReader))
 		assert.True(t, owner.HasPermissions(PermissionMonitorEditor))
 		assert.True(t, owner.HasPermissions(PermissionMonitorReader))
 
 		// Multiple permissions
-		assert.True(t, owner.HasPermissions(PermissionTeamAdmin, PermissionMonitorAdmin))
-		assert.True(t, owner.HasPermissions(PermissionTeamReader, PermissionMonitorReader))
+		assert.True(t, owner.HasPermissions(PermissionOrgAdmin, PermissionMonitorAdmin))
+		assert.True(t, owner.HasPermissions(PermissionOrgReader, PermissionMonitorReader))
 	})
 
 	t.Run("Admin has correct permissions", func(t *testing.T) {
 		admin := RoleAdmin
 
 		// Direct permissions
-		assert.True(t, admin.HasPermissions(PermissionTeamEditor))
+		assert.True(t, admin.HasPermissions(PermissionOrgEditor))
 		assert.True(t, admin.HasPermissions(PermissionMonitorAdmin))
 
 		// Implied permissions
-		assert.True(t, admin.HasPermissions(PermissionTeamReader))
+		assert.True(t, admin.HasPermissions(PermissionOrgReader))
 		assert.True(t, admin.HasPermissions(PermissionMonitorEditor))
 		assert.True(t, admin.HasPermissions(PermissionMonitorReader))
 
 		// Should not have
-		assert.False(t, admin.HasPermissions(PermissionTeamAdmin))
+		assert.False(t, admin.HasPermissions(PermissionOrgAdmin))
 	})
 
 	t.Run("Member has limited permissions", func(t *testing.T) {
 		member := RoleMember
 
 		// Direct permissions
-		assert.True(t, member.HasPermissions(PermissionTeamReader))
+		assert.True(t, member.HasPermissions(PermissionOrgReader))
 		assert.True(t, member.HasPermissions(PermissionMonitorEditor))
 
 		// Implied permissions
 		assert.True(t, member.HasPermissions(PermissionMonitorReader))
 
 		// Should not have
-		assert.False(t, member.HasPermissions(PermissionTeamEditor))
-		assert.False(t, member.HasPermissions(PermissionTeamAdmin))
+		assert.False(t, member.HasPermissions(PermissionOrgEditor))
+		assert.False(t, member.HasPermissions(PermissionOrgAdmin))
 		assert.False(t, member.HasPermissions(PermissionMonitorAdmin))
 	})
 
@@ -122,12 +122,12 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 		viewer := RoleViewer
 
 		// Direct permissions
-		assert.True(t, viewer.HasPermissions(PermissionTeamReader))
+		assert.True(t, viewer.HasPermissions(PermissionOrgReader))
 		assert.True(t, viewer.HasPermissions(PermissionMonitorReader))
 
 		// Should not have any write permissions
-		assert.False(t, viewer.HasPermissions(PermissionTeamEditor))
-		assert.False(t, viewer.HasPermissions(PermissionTeamAdmin))
+		assert.False(t, viewer.HasPermissions(PermissionOrgEditor))
+		assert.False(t, viewer.HasPermissions(PermissionOrgAdmin))
 		assert.False(t, viewer.HasPermissions(PermissionMonitorEditor))
 		assert.False(t, viewer.HasPermissions(PermissionMonitorAdmin))
 	})
@@ -139,22 +139,22 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 
 	t.Run("Nil role", func(t *testing.T) {
 		var nilRole *Role
-		assert.False(t, nilRole.HasPermissions(PermissionTeamReader))
+		assert.False(t, nilRole.HasPermissions(PermissionOrgReader))
 	})
 
 	t.Run("Invalid role", func(t *testing.T) {
 		invalidRole := Role("invalid")
-		assert.False(t, invalidRole.HasPermissions(PermissionTeamReader))
+		assert.False(t, invalidRole.HasPermissions(PermissionOrgReader))
 	})
 
 	t.Run("Multiple permissions check - all required", func(t *testing.T) {
 		member := RoleMember
 
 		// Should have both
-		assert.True(t, member.HasPermissions(PermissionTeamReader, PermissionMonitorReader))
+		assert.True(t, member.HasPermissions(PermissionOrgReader, PermissionMonitorReader))
 
 		// Should not have one of them
-		assert.False(t, member.HasPermissions(PermissionTeamReader, PermissionTeamAdmin))
+		assert.False(t, member.HasPermissions(PermissionOrgReader, PermissionOrgAdmin))
 		assert.False(t, member.HasPermissions(PermissionMonitorAdmin, PermissionMonitorReader))
 	})
 
@@ -169,9 +169,9 @@ func TestTeamRoleHasPermissions(t *testing.T) {
 func TestPermissionImplicationsConsistency(t *testing.T) {
 	t.Run("All permissions in implications map exist", func(t *testing.T) {
 		allPerms := []Permission{
-			PermissionTeamAdmin,
-			PermissionTeamEditor,
-			PermissionTeamReader,
+			PermissionOrgAdmin,
+			PermissionOrgEditor,
+			PermissionOrgReader,
 			PermissionMonitorAdmin,
 			PermissionMonitorEditor,
 			PermissionMonitorReader,
