@@ -34,25 +34,25 @@ type MonitorCreateResponse struct {
 	MonitorID string `json:"monitorId"`
 }
 
-// CreateMonitor creates a new monitor in the specified group.
-func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, groupID string, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
+// CreateMonitor creates a new monitor in the specified project.
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, orgAuth *middleware.OrgAuth, projectID string, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("InsertMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
-	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorEditor)
+	org, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorEditor)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	if groupID != "" {
-		group, err := GroupService.internalGetMonitorGroupByID(ctx, groupID)
+	if projectID != "" {
+		project, err := ProjectService.internalGetProjectByDisplayID(ctx, projectID)
 		if err != nil {
 			return nil, err
 		}
-		monitor.SetGroupID(group.ID)
+		monitor.SetProjectID(project.ID)
 	}
 
-	monitor.SetTeamID(team.ID)
+	monitor.SetOrgID(org.ID)
 	monitor.GenerateDisplayID()
 
 	if err := monitor.Validate(); err != nil {
@@ -86,11 +86,11 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, teamAuth *middlewar
 }
 
 // DeleteMonitor deletes a monitor by its DisplayID.
-func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, id string) *ServiceError {
+func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, orgAuth *middleware.OrgAuth, id string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
 
-	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorAdmin)
+	_, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorAdmin)
 	if authErr != nil {
 		return authErr
 	}
@@ -122,17 +122,17 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, teamAuth *middlewar
 	return nil
 }
 
-// GetMonitorsByTeamID retrieves all monitors for the team in the provided TeamAuth.
-func (s *MonitorServiceT) GetMonitorsByTeamID(ctx context.Context, teamAuth *middleware.TeamAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
-	logger := s.getMethodLogger("GetMonitorsByTeamID")
+// GetMonitorsByOrgID retrieves all monitors for the org in the provided OrgAuth.
+func (s *MonitorServiceT) GetMonitorsByOrgID(ctx context.Context, orgAuth *middleware.OrgAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
+	logger := s.getMethodLogger("GetMonitorsByOrgID")
 	logger.Trace().Msg("Retrieving all monitors")
 
-	team, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
+	org, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	monitorsList, err := s.getDB().Monitors().GetMonitorsByTeamID(ctx, team.ID)
+	monitorsList, err := s.getDB().Monitors().GetMonitorsByOrgID(ctx, org.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
 		return nil, &ServiceError{
@@ -145,11 +145,11 @@ func (s *MonitorServiceT) GetMonitorsByTeamID(ctx context.Context, teamAuth *mid
 }
 
 // GetMonitorByID retrieves a specific monitor by its DisplayID.
-func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, teamAuth *middleware.TeamAuth, id string) (monitors.IMonitor, *ServiceError) {
+func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, orgAuth *middleware.OrgAuth, id string) (monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorByID")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by DisplayID")
 
-	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorReader)
+	_, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		return nil, authErr
 	}
@@ -174,7 +174,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, teamAuth *middlewa
 }
 
 // UpdateMonitor updates an existing monitor's configuration.
-func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middleware.TeamAuth, monitor monitors.IConcreteMonitor) *ServiceError {
+func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, orgAuth *middleware.OrgAuth, monitor monitors.IConcreteMonitor) *ServiceError {
 	logger := s.getMethodLogger("UpdateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
 
@@ -186,7 +186,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, teamAuth *middlewar
 		}
 	}
 
-	_, authErr := s.authService.authorizeTeamAction(ctx, teamAuth, models.PermissionMonitorEditor)
+	_, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorEditor)
 	if authErr != nil {
 		return authErr
 	}

@@ -14,7 +14,7 @@ import (
 )
 
 // authorizationServiceT handles authorization-related operations.
-// It provides methods to authorize actions based on team membership and permissions.
+// It provides methods to authorize actions based on org membership and permissions.
 type authorizationServiceT struct {
 	baseService
 }
@@ -29,14 +29,14 @@ func newAuthorizationService() *authorizationServiceT {
 	}
 }
 
-// Checks if a given user has given permissions in the context of a specific team.
-func (s *authorizationServiceT) authorizeTeamAction(ctx context.Context, teamAuth *middleware.TeamAuth, permissions ...models.Permission) (*models.Team, *ServiceError) {
-	logger := s.getMethodLogger("AuthorizeTeamAction")
+// Checks if a given user has given permissions in the context of a specific org.
+func (s *authorizationServiceT) authorizeOrgAction(ctx context.Context, orgAuth *middleware.OrgAuth, permissions ...models.Permission) (*models.Org, *ServiceError) {
+	logger := s.getMethodLogger("authorizeOrgAction")
 
-	requestorUsername := teamAuth.Username
+	requestorUsername := orgAuth.Username
 
-	// Does that team exist?
-	team, err := s.internalGetTeamByID(ctx, teamAuth.TeamID)
+	// Does that org exist?
+	org, err := s.internalGetOrgByID(ctx, orgAuth.OrgID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,55 +47,55 @@ func (s *authorizationServiceT) authorizeTeamAction(ctx context.Context, teamAut
 		return nil, err
 	}
 
-	// Is the requestor a member of that team?
-	if !team.IsMember(user.ID) {
-		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Msg("User is not a member of the team")
+	// Is the requestor a member of that org?
+	if !org.IsMember(user.ID) {
+		logger.Warn().Str("username", requestorUsername).Str("org", org.Name).Msg("User is not a member of the org")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,
-			Err:  fmt.Errorf("user %s is not a member of team %s", requestorUsername, team.Name),
+			Err:  fmt.Errorf("user %s is not a member of org %s", requestorUsername, org.Name),
 		}
 	}
 
-	// What permissions does the requestor have in that team?
+	// What permissions does the requestor have in that org?
 	permissionIDs := make([]string, 0, len(permissions))
 	for _, perm := range permissions {
 		permissionIDs = append(permissionIDs, perm.ID)
 	}
 
 	// Does the requestor have the required permissions?
-	if !team.GetMember(user.ID).Role.HasPermissions(permissions...) {
-		logger.Warn().Str("username", requestorUsername).Str("team", team.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for team")
+	if !org.GetMember(user.ID).Role.HasPermissions(permissions...) {
+		logger.Warn().Str("username", requestorUsername).Str("org", org.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for org")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,
-			Err:  fmt.Errorf("user %s does not have required permissions for team %s", requestorUsername, team.Name),
+			Err:  fmt.Errorf("user %s does not have required permissions for org %s", requestorUsername, org.Name),
 		}
 	}
 
-	logger.Trace().Str("username", requestorUsername).Str("team", team.Name).Strs("permissions", permissionIDs).Msg("User has required permissions for team")
-	return team, nil
+	logger.Trace().Str("username", requestorUsername).Str("org", org.Name).Strs("permissions", permissionIDs).Msg("User has required permissions for org")
+	return org, nil
 }
 
-// internalGetTeamByID retrieves a team by its display ID without authorization checks.
-func (s *authorizationServiceT) internalGetTeamByID(ctx context.Context, teamID string) (*models.Team, *ServiceError) {
-	logger := s.getMethodLogger("internalGetTeamByID")
+// internalGetOrgByID retrieves an org by its display ID without authorization checks.
+func (s *authorizationServiceT) internalGetOrgByID(ctx context.Context, orgID string) (*models.Org, *ServiceError) {
+	logger := s.getMethodLogger("internalGetOrgByID")
 
-	team, err := db.Get().Teams().GetTeamByDisplayID(ctx, teamID)
+	org, err := db.Get().Orgs().GetOrgByDisplayID(ctx, orgID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("teamID", teamID).Msg("Team not found")
+			logger.Warn().Str("orgID", orgID).Msg("Org not found")
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("team %s not found", teamID),
+				Err:  fmt.Errorf("org %s not found", orgID),
 			}
 		}
-		logger.Error().Err(err).Str("teamID", teamID).Msg("Error retrieving team")
+		logger.Error().Err(err).Str("orgID", orgID).Msg("Error retrieving org")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("error retrieving team %s: %w", teamID, err),
+			Err:  fmt.Errorf("error retrieving org %s: %w", orgID, err),
 		}
 	}
 
-	return team, nil
+	return org, nil
 }
 
 // internalGetUserByUsername retrieves a user by username without authorization checks.

@@ -8,8 +8,8 @@ import (
 	"github.com/m-milek/leszmonitor/api/services"
 )
 
-func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {
-	var payload services.TeamCreatePayload
+func CreateOrgHandler(w http.ResponseWriter, r *http.Request) {
+	var payload services.CreateOrgPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -20,23 +20,23 @@ func TeamCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamCreateResponse, err := services.TeamService.CreateTeam(r.Context(), userClaims.Username, &payload)
+	orgCreateResponse, err := services.OrgService.CreateOrg(r.Context(), userClaims.Username, &payload)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusCreated, teamCreateResponse)
+	util.RespondJSON(w, http.StatusCreated, orgCreateResponse)
 }
 
-func TeamDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+func DeleteOrgHandler(w http.ResponseWriter, r *http.Request) {
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	err := services.TeamService.DeleteTeam(r.Context(), teamAuth)
+	err := services.OrgService.DeleteOrg(r.Context(), orgAuth)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -45,113 +45,113 @@ func TeamDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondMessage(w, http.StatusOK, "")
 }
 
-func TeamUpdateHandler(w http.ResponseWriter, r *http.Request) {
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+func UpdateOrgHandler(w http.ResponseWriter, r *http.Request) {
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	var payload services.TeamUpdatePayload
+	var payload services.UpdateOrgPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
 	}
 
-	team, err := services.TeamService.UpdateTeam(r.Context(), teamAuth, &payload)
+	org, err := services.OrgService.UpdateOrg(r.Context(), orgAuth, &payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, team)
+	util.RespondJSON(w, http.StatusOK, org)
 }
 
-func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+func GetOrgHandler(w http.ResponseWriter, r *http.Request) {
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	team, err := services.TeamService.GetTeamByID(r.Context(), teamAuth)
+	org, err := services.OrgService.GetOrgByID(r.Context(), orgAuth)
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, team)
+	util.RespondJSON(w, http.StatusOK, org)
 }
 
-func GetAllTeamsHandler(w http.ResponseWriter, r *http.Request) {
-	teams, err := services.TeamService.GetAllTeams(r.Context())
+func GetAllOrgsHandler(w http.ResponseWriter, r *http.Request) {
+	orgs, err := services.OrgService.GetAllOrgs(r.Context())
 
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, teams)
+	util.RespondJSON(w, http.StatusOK, orgs)
 }
 
-func TeamAddMemberHandler(w http.ResponseWriter, r *http.Request) {
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+func AddOrgMemberHandler(w http.ResponseWriter, r *http.Request) {
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	var payload services.TeamAddMemberPayload
+	var payload services.AddOrgMemberPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
 	}
 
-	err := services.TeamService.AddUserToTeam(r.Context(), teamAuth, &payload)
+	err := services.OrgService.AddUserToOrg(r.Context(), orgAuth, &payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondMessage(w, http.StatusOK, "User added to team successfully")
+	util.RespondMessage(w, http.StatusOK, "Member added to org successfully")
 }
 
-func TeamRemoveMemberHandler(w http.ResponseWriter, r *http.Request) {
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+func RemoveOrgMemberHandler(w http.ResponseWriter, r *http.Request) {
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	var payload services.TeamRemoveMemberPayload
+	var payload services.RemoveOrgMemberPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
 	}
 
-	err := services.TeamService.RemoveUserFromTeam(r.Context(), teamAuth, &payload)
+	err := services.OrgService.RemoveUserFromOrg(r.Context(), orgAuth, &payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondMessage(w, http.StatusOK, "User removed from team successfully")
+	util.RespondMessage(w, http.StatusOK, "Member removed from org successfully")
 }
 
-func TeamChangeMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
-	teamAuth, ok := util.GetTeamAuthOrRespond(w, r)
+func ChangeOrgMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
+	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	var payload services.TeamChangeMemberRolePayload
+	var payload services.ChangeOrgMemberRolePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
 	}
 
-	err := services.TeamService.ChangeMemberRole(r.Context(), teamAuth, payload)
+	err := services.OrgService.ChangeMemberRole(r.Context(), orgAuth, payload)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondMessage(w, http.StatusOK, "User role updated successfully")
+	util.RespondMessage(w, http.StatusOK, "Member role updated successfully")
 }
