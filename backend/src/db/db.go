@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/m-milek/leszmonitor/env"
 	"github.com/m-milek/leszmonitor/logging"
-	"os"
-	"sync"
-	"time"
 )
 
 var ErrNotFound = errors.New("document not found")
@@ -29,8 +30,8 @@ const timeoutDuration = 1000 * time.Second
 type DB interface {
 	Users() IUserRepository
 	Monitors() IMonitorRepository
-	Groups() IGroupRepository
-	Teams() ITeamRepository
+	Projects() IProjectRepository
+	Orgs() IOrgRepository
 	Close()
 }
 
@@ -40,8 +41,8 @@ type DBClient struct {
 	// cached repositories to avoid re-allocation on every getter call
 	users    IUserRepository
 	monitors IMonitorRepository
-	groups   IGroupRepository
-	teams    ITeamRepository
+	projects IProjectRepository
+	orgs     IOrgRepository
 }
 
 type dbPool struct {
@@ -81,8 +82,8 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 	// initialize and cache repositories once
 	c.users = newUserRepository(newBaseRepository(pool))
 	c.monitors = newMonitorRepository(newBaseRepository(pool))
-	c.groups = newGroupRepository(newBaseRepository(pool))
-	c.teams = newTeamRepository(newBaseRepository(pool))
+	c.projects = newProjectRepository(newBaseRepository(pool))
+	c.orgs = newOrgRepository(newBaseRepository(pool))
 
 	return c, nil
 }
@@ -152,8 +153,8 @@ func dbWrap[T any](timeoutCtx context.Context, operationName string, operation f
 // Repository getters (return interfaces for mocking)
 func (c *DBClient) Users() IUserRepository       { return c.users }
 func (c *DBClient) Monitors() IMonitorRepository { return c.monitors }
-func (c *DBClient) Groups() IGroupRepository     { return c.groups }
-func (c *DBClient) Teams() ITeamRepository       { return c.teams }
+func (c *DBClient) Projects() IProjectRepository { return c.projects }
+func (c *DBClient) Orgs() IOrgRepository         { return c.orgs }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)
@@ -163,7 +164,7 @@ var (
 	instMu   sync.RWMutex
 )
 
-// Get returns the current DB singleton (may be nil if not initialized).
+// Get returns the current DB singleton (maybe nil if not initialized).
 func Get() DB {
 	instMu.RLock()
 	defer instMu.RUnlock()

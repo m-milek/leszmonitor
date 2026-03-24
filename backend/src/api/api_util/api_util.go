@@ -2,9 +2,10 @@ package util
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/logging"
-	"net/http"
 )
 
 func RespondJSON(w http.ResponseWriter, statusCode int, data any) {
@@ -58,14 +59,14 @@ func RespondError(w http.ResponseWriter, statusCode int, err error) {
 	}
 }
 
-func GetTeamAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.TeamAuth, bool) {
-	teamAuth, err := middleware.TeamAuthFromRequest(r)
+func GetOrgAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.OrgAuth, bool) {
+	orgAuth, err := middleware.OrgAuthFromRequest(r)
 	if err != nil {
 		logging.Api.Warn().Err(err).Msg("Failed to authenticate")
 		RespondError(w, http.StatusUnauthorized, err)
 		return nil, false
 	}
-	return teamAuth, true
+	return orgAuth, true
 }
 
 // ExtractUserOrRespond returns the user from context or writes a 401 response and returns nil, false.

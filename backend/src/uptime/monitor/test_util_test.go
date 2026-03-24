@@ -13,7 +13,7 @@ type TestMonitor struct {
 	Name        string
 	Description string
 	Interval    int
-	GroupID     string
+	ProjectID   string
 	Type        MonitorConfigType
 
 	// Config fields
@@ -30,7 +30,7 @@ func NewTestMonitor() *TestMonitor {
 		Name:        name,
 		Description: "Test monitor description",
 		Interval:    60,
-		GroupID:     "test_owner",
+		ProjectID:   "test_owner",
 		Type:        httpType,
 		HttpConfig: &httpConfig{
 			Method:              "GET",
