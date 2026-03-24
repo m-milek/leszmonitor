@@ -2,11 +2,12 @@ version: '3'
 
 vars:
   APP_NAME: 'leszmonitor'
-  BACKEND_DIR: '{{.TASKFILE_DIR}}/backend'
+  ROOT_DIR: '{{if .TASKFILE_DIR}}{{.TASKFILE_DIR}}{{else}}{{.USER_WORKING_DIR}}{{end}}'
+  BACKEND_DIR: '{{.ROOT_DIR}}/backend'
   BACKEND_SRC_DIR: '{{.BACKEND_DIR}}/src'
   BACKEND_BIN_DIR: '{{.BACKEND_DIR}}/bin'
-  FRONTEND_DIR: '{{.TASKFILE_DIR}}/frontend'
-  DB_DIR: '{{.TASKFILE_DIR}}/db'
+  FRONTEND_DIR: '{{.ROOT_DIR}}/frontend'
+  DB_DIR: '{{.ROOT_DIR}}/db'
 
 env:
   "LOG_FILE_PATH": '{{.BACKEND_DIR}}/.dev-logs/backend.log'

@@ -18,30 +18,30 @@ func SetupRouters(
 	publicRouter.HandleFunc("POST /auth/register", handlers.UserRegisterHandler)
 	publicRouter.HandleFunc("POST /auth/login", handlers.UserLoginHandler)
 
-	// Teams
-	protectedRouter.HandleFunc("GET /teams", handlers.GetAllTeamsHandler)
-	protectedRouter.HandleFunc("GET /teams/{teamId}", handlers.GetTeamHandler)
-	protectedRouter.HandleFunc("POST /teams", handlers.TeamCreateHandler)
-	protectedRouter.HandleFunc("DELETE /teams/{teamId}", handlers.TeamDeleteHandler)
-	protectedRouter.HandleFunc("PATCH /teams/{teamId}", handlers.TeamUpdateHandler)
+	// Orgs
+	protectedRouter.HandleFunc("GET /orgs", handlers.GetAllOrgsHandler)
+	protectedRouter.HandleFunc("GET /orgs/{orgId}", handlers.GetOrgHandler)
+	protectedRouter.HandleFunc("POST /orgs", handlers.CreateOrgHandler)
+	protectedRouter.HandleFunc("DELETE /orgs/{orgId}", handlers.DeleteOrgHandler)
+	protectedRouter.HandleFunc("PATCH /orgs/{orgId}", handlers.UpdateOrgHandler)
 
-	// Team Members
-	protectedRouter.HandleFunc("POST /teams/{teamId}/members", handlers.TeamAddMemberHandler)
-	protectedRouter.HandleFunc("DELETE /teams/{teamId}/members", handlers.TeamRemoveMemberHandler)
-	protectedRouter.HandleFunc("PATCH /teams/{teamId}/{userId}", handlers.TeamChangeMemberRoleHandler)
+	// Org Members
+	protectedRouter.HandleFunc("POST /orgs/{orgId}/members", handlers.AddOrgMemberHandler)
+	protectedRouter.HandleFunc("DELETE /orgs/{orgId}/members", handlers.RemoveOrgMemberHandler)
+	protectedRouter.HandleFunc("PATCH /orgs/{orgId}/members/{userId}", handlers.ChangeOrgMemberRoleHandler)
 
 	// Monitors
-	protectedRouter.HandleFunc("GET /teams/{teamId}/monitors", handlers.GetAllMonitorsHandler)
-	protectedRouter.HandleFunc("GET /teams/{teamId}/monitors/{monitorId}", handlers.GetMonitorByIDHandler)
-	protectedRouter.HandleFunc("POST /teams/{teamId}/monitors", handlers.CreateMonitorHandler)
-	protectedRouter.HandleFunc("DELETE /teams/{teamId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
-	protectedRouter.HandleFunc("PATCH /teams/{teamId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
+	protectedRouter.HandleFunc("GET /orgs/{orgId}/monitors", handlers.GetAllMonitorsHandler)
+	protectedRouter.HandleFunc("GET /orgs/{orgId}/monitors/{monitorId}", handlers.GetMonitorByIDHandler)
+	protectedRouter.HandleFunc("POST /orgs/{orgId}/monitors", handlers.CreateMonitorHandler)
+	protectedRouter.HandleFunc("DELETE /orgs/{orgId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
+	protectedRouter.HandleFunc("PATCH /orgs/{orgId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
 
-	// Monitor Groups
-	protectedRouter.HandleFunc("POST /teams/{teamId}/groups", handlers.CreateMonitorGroupHandler)
-	protectedRouter.HandleFunc("GET /teams/{teamId}/groups", handlers.GetTeamMonitorGroupsHandler)
-	protectedRouter.HandleFunc("GET /teams/{teamId}/groups/{groupId}", handlers.GetTeamMonitorGroupByID)
-	protectedRouter.HandleFunc("PATCH /teams/{teamId}/groups/{groupId}", handlers.UpdateMonitorGroupHandler)
-	protectedRouter.HandleFunc("DELETE /teams/{teamId}/groups/{groupId}", handlers.DeleteMonitorGroupHandler)
+	// Projects
+	protectedRouter.HandleFunc("POST /orgs/{orgId}/projects", handlers.CreateProjectHandler)
+	protectedRouter.HandleFunc("GET /orgs/{orgId}/projects", handlers.GetProjectsOfOrgHandler)
+	protectedRouter.HandleFunc("GET /orgs/{orgId}/projects/{projectId}", handlers.GetProjectsByOrgID)
+	protectedRouter.HandleFunc("PATCH /orgs/{orgId}/projects/{projectId}", handlers.UpdateProjectHandler)
+	protectedRouter.HandleFunc("DELETE /orgs/{orgId}/projects/{projectId}", handlers.DeleteProjectHandler)
 
 }

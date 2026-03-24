@@ -4,31 +4,31 @@ import (
 	"fmt"
 )
 
-// Role represents the role of a team member within a team.
+// Role represents the role of an org member within an org.
 type Role string
 
 const (
-	RoleOwner  Role = "owner"  // RoleOwner has full permissions to manage the team
-	RoleAdmin  Role = "admin"  // RoleAdmin has full permissions to manage monitors and the team
-	RoleMember Role = "member" // RoleMember can manage monitors and view team details
-	RoleViewer Role = "viewer" // RoleViewer can only view monitor statuses and team details
+	RoleOwner  Role = "owner"  // RoleOwner has full permissions to manage the org
+	RoleAdmin  Role = "admin"  // RoleAdmin has full permissions to manage monitors and the org
+	RoleMember Role = "member" // RoleMember can manage monitors and view org details
+	RoleViewer Role = "viewer" // RoleViewer can only view monitor statuses and org details
 )
 
 var rolePermissions = map[Role][]Permission{
 	RoleOwner: {
-		PermissionTeamAdmin,
+		PermissionOrgAdmin,
 		PermissionMonitorAdmin,
 	},
 	RoleAdmin: {
-		PermissionTeamEditor,
+		PermissionOrgEditor,
 		PermissionMonitorAdmin,
 	},
 	RoleMember: {
-		PermissionTeamReader,
+		PermissionOrgReader,
 		PermissionMonitorEditor,
 	},
 	RoleViewer: {
-		PermissionTeamReader,
+		PermissionOrgReader,
 		PermissionMonitorReader,
 	},
 }
@@ -39,7 +39,7 @@ func (r *Role) Validate() error {
 	case RoleOwner, RoleAdmin, RoleMember, RoleViewer:
 		return nil
 	default:
-		return fmt.Errorf("invalid team role: %s", *r)
+		return fmt.Errorf("invalid org role: %s", *r)
 	}
 }
 
