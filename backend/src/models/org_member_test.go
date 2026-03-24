@@ -1,9 +1,10 @@
 package models
 
 import (
+	"testing"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func makeMemberUUID(a byte) pgtype.UUID {
@@ -12,10 +13,10 @@ func makeMemberUUID(a byte) pgtype.UUID {
 	return pgtype.UUID{Bytes: b, Valid: true}
 }
 
-func TestNewTeamMember_Success(t *testing.T) {
+func TestNewOrgMember_Success(t *testing.T) {
 	id := makeMemberUUID(1)
 
-	member, err := NewTeamMember(id, RoleMember)
+	member, err := NewOrgMember(id, RoleMember)
 
 	assert.NoError(t, err)
 	if assert.NotNil(t, member) {
@@ -24,10 +25,10 @@ func TestNewTeamMember_Success(t *testing.T) {
 	}
 }
 
-func TestNewTeamMember_InvalidID_ReturnsError(t *testing.T) {
+func TestNewOrgMember_InvalidID_ReturnsError(t *testing.T) {
 	invalid := pgtype.UUID{} // Valid=false
 
-	member, err := NewTeamMember(invalid, RoleMember)
+	member, err := NewOrgMember(invalid, RoleMember)
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "is not valid UUID")
@@ -35,18 +36,18 @@ func TestNewTeamMember_InvalidID_ReturnsError(t *testing.T) {
 	assert.NotNil(t, member)
 }
 
-func TestNewTeamMember_InvalidRole_ReturnsError(t *testing.T) {
+func TestNewOrgMember_InvalidRole_ReturnsError(t *testing.T) {
 	id := makeMemberUUID(2)
 
-	member, err := NewTeamMember(id, "invalid")
+	member, err := NewOrgMember(id, "invalid")
 
 	if assert.Error(t, err) {
-		assert.Equal(t, "invalid team role: invalid", err.Error())
+		assert.Equal(t, "invalid org role: invalid", err.Error())
 	}
 	assert.NotNil(t, member)
 }
 
-func TestTeamMember_Validate_Success(t *testing.T) {
-	m := &TeamMember{ID: makeMemberUUID(3), Role: RoleAdmin}
+func TestOrgMember_Validate_Success(t *testing.T) {
+	m := &OrgMember{ID: makeMemberUUID(3), Role: RoleAdmin}
 	assert.NoError(t, m.Validate())
 }

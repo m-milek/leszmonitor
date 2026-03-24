@@ -2,10 +2,11 @@ package monitors
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	util2 "github.com/m-milek/leszmonitor/models/util"
 	"github.com/m-milek/leszmonitor/util"
-	"time"
 )
 
 type IMonitor interface {
@@ -14,10 +15,10 @@ type IMonitor interface {
 	GetID() pgtype.UUID
 	GetDisplayID() string
 	GenerateDisplayID()
-	GetTeamID() pgtype.UUID
-	SetTeamID(uuid pgtype.UUID)
-	GetGroupID() pgtype.UUID
-	SetGroupID(uuid pgtype.UUID)
+	GetOrgID() pgtype.UUID
+	SetOrgID(uuid pgtype.UUID)
+	GetProjectID() pgtype.UUID
+	SetProjectID(uuid pgtype.UUID)
 	GetName() string
 	GetDescription() string
 	GetInterval() time.Duration
@@ -57,8 +58,8 @@ func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonit
 type BaseMonitor struct {
 	ID          pgtype.UUID       `json:"id"`
 	DisplayID   string            `json:"displayId"`   // Unique identifier for the monitor
-	TeamID      pgtype.UUID       `json:"teamId"`      // ID of the owner team of the monitor
-	GroupID     pgtype.UUID       `json:"groupId"`     // ID of the owner group of the monitor
+	OrgID       pgtype.UUID       `json:"orgID"`       // ID of the owner org of the monitor
+	ProjectID   pgtype.UUID       `json:"projectID"`   // ID of the owner project of the monitor
 	Name        string            `json:"name"`        // Name of the monitor
 	Description string            `json:"description"` // Description of the monitor
 	Interval    int               `json:"interval"`    // How often to run the monitor in seconds
@@ -112,16 +113,16 @@ func (m *BaseMonitor) GetID() pgtype.UUID {
 	return m.ID
 }
 
-func (m *BaseMonitor) GetTeamID() pgtype.UUID {
-	return m.TeamID
+func (m *BaseMonitor) GetOrgID() pgtype.UUID {
+	return m.OrgID
 }
 
-func (m *BaseMonitor) SetTeamID(teamID pgtype.UUID) {
-	m.TeamID = teamID
+func (m *BaseMonitor) SetOrgID(orgID pgtype.UUID) {
+	m.OrgID = orgID
 }
 
-func (m *BaseMonitor) GetGroupID() pgtype.UUID {
-	return m.GroupID
+func (m *BaseMonitor) GetProjectID() pgtype.UUID {
+	return m.ProjectID
 }
 
 func (m *BaseMonitor) GetName() string {
@@ -140,6 +141,6 @@ func (m *BaseMonitor) GetType() MonitorConfigType {
 	return m.Type
 }
 
-func (m *BaseMonitor) SetGroupID(groupId pgtype.UUID) {
-	m.GroupID = groupId
+func (m *BaseMonitor) SetProjectID(projectID pgtype.UUID) {
+	m.ProjectID = projectID
 }
