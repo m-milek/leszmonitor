@@ -3,7 +3,7 @@ import { BACKEND_URL } from "@/lib/consts.ts";
 import type { Monitor } from "@/lib/types.ts";
 
 export const getMonitors = async (teamId: string): Promise<Monitor> => {
-  const res = await authFetch(`${BACKEND_URL}/teams/${teamId}/monitors`);
+  const res = await authFetch(`${BACKEND_URL}/orgs/${teamId}/monitors`);
 
   if (!res.ok) {
     throw new Error("Failed to fetch monitors");

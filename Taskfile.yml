@@ -8,6 +8,7 @@ vars:
   BACKEND_BIN_DIR: '{{.BACKEND_DIR}}/bin'
   FRONTEND_DIR: '{{.ROOT_DIR}}/frontend'
   DB_DIR: '{{.ROOT_DIR}}/db'
+  LOCAL_POSTGRES_URI: 'postgres://leszmonitor-dev:dev-password@localhost:5432/leszmonitor?sslmode=disable'
 
 env:
   "LOG_FILE_PATH": '{{.BACKEND_DIR}}/.dev-logs/backend.log'
@@ -31,15 +32,19 @@ tasks:
 
   backend:run:
     desc: Run the back-end binary
-    deps: [backend:build, db:run]
+    deps: [backend:build, db:start]
     dir: '{{.BACKEND_DIR}}'
+    env:
+      POSTGRES_URI: '{{.LOCAL_POSTGRES_URI}}'
     cmds:
       - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
 
   backend:dev:
     desc: Run the back-end dev server with air for live reload
-    deps: [db:run]
+    deps: [db:start]
     dir: '{{.BACKEND_SRC_DIR}}'
+    env:
+      POSTGRES_URI: '{{.LOCAL_POSTGRES_URI}}'
     cmds:
       - $GOPATH/bin/air -build.stop_on_error true
 
@@ -150,19 +155,17 @@ tasks:
       - docker stop {{.APP_NAME}}-frontend || true
       - docker rm {{.APP_NAME}}-frontend || true
 
-  db:run:
+  db:start:
     desc: Run the TimescaleDB Docker container
-    dir: '{{.DB_DIR}}'
     cmds:
       - task: db:stop
-      - cd {{.DB_DIR}} && docker compose up -d
+      - docker compose up -d db
       - echo "TimescaleDB container started on port 5432"
 
   db:stop:
     desc: Stop the TimescaleDB Docker container
-    dir: '{{.DB_DIR}}'
     cmds:
-      - docker compose down || true
+      - docker compose down db
       - echo "TimescaleDB container stopped"
 
   # Combined tasks

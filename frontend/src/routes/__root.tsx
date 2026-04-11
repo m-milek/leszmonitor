@@ -1,5 +1,6 @@
 import { Outlet, createRootRoute, redirect } from "@tanstack/react-router";
 import { Providers } from "@/components/leszmonitor/Providers.tsx";
+import { GlobalNotFound } from "@/components/leszmonitor/GlobalNotFound.tsx";
 
 export const Route = createRootRoute({
   component: () => (
@@ -22,4 +23,5 @@ export const Route = createRootRoute({
       throw redirect({ to: "/login" });
     }
   },
+  notFoundComponent: GlobalNotFound,
 });

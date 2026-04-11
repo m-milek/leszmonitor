@@ -5,7 +5,7 @@ import { authFetch } from "@/lib/data/utils.ts";
 export type GroupInput = Omit<Group, "id" | keyof Timestamps>;
 
 export const getGroups = async (teamId: string): Promise<Group[]> => {
-  const res = await authFetch(`${BACKEND_URL}/teams/${teamId}/groups`);
+  const res = await authFetch(`${BACKEND_URL}/orgs/${teamId}/projects`);
 
   if (!res.ok) {
     throw new Error("Failed to fetch groups");
@@ -24,7 +24,7 @@ export const getGroup = async (
   groupId: string,
 ): Promise<Group> => {
   const res = await authFetch(
-    `${BACKEND_URL}/teams/${teamId}/groups/${groupId}`,
+    `${BACKEND_URL}/orgs/${teamId}/projects/${groupId}`,
   );
 
   if (!res.ok) {

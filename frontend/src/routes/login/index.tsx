@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { Logo } from "@/components/leszmonitor/Logo.tsx";
+import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
@@ -71,7 +71,7 @@ function RouteComponent() {
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
             <CardTitle className="flex flex-col items-center">
-              <Logo />
+              <LeszmonitorLogo />
             </CardTitle>
             <CardDescription>Log in to Leszmonitor</CardDescription>
           </CardHeader>

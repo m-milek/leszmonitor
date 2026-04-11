@@ -5,7 +5,7 @@ import { teamAtom } from "@/lib/atoms.ts";
 import {
   TypographyH1,
   TypographyH2,
-} from "@/components/leszmonitor/Typography.tsx";
+} from "@/components/leszmonitor/ui/Typography.tsx";
 import { TeamMembersTable } from "@/components/leszmonitor/tables/TeamMembersTable.tsx";
 import {
   Card,
