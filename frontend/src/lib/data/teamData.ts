@@ -3,7 +3,7 @@ import { BACKEND_URL } from "@/lib/consts.ts";
 import { authFetch } from "@/lib/data/utils.ts";
 
 export async function getTeam(teamName: string): Promise<Team | null> {
-  const res = await authFetch(`${BACKEND_URL}/teams/${teamName}`);
+  const res = await authFetch(`${BACKEND_URL}/orgs/${teamName}`);
 
   if (!res.ok) {
     throw new Error("Failed to fetch team");
@@ -23,7 +23,7 @@ export async function getTeam(teamName: string): Promise<Team | null> {
 }
 
 export async function fetchTeams(): Promise<Team[]> {
-  const res = await authFetch(`${BACKEND_URL}/teams`);
+  const res = await authFetch(`${BACKEND_URL}/orgs`);
 
   if (!res.ok) {
     throw new Error("Failed to fetch teams");

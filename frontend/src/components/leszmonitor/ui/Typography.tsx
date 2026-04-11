@@ -6,7 +6,7 @@ interface TypographyProps {
 
 export function TypographyH1({ children }: TypographyProps) {
   return (
-    <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight text-balance dark:text-foreground">
+    <h1 className="scroll-m-20 text-3xl font-extrabold tracking-tight text-balance dark:text-foreground">
       {children}
     </h1>
   );

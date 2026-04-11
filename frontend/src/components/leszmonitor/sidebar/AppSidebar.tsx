@@ -21,7 +21,7 @@ import {
   LucideSettings,
   LucideUsers,
 } from "lucide-react";
-import { Logo } from "@/components/leszmonitor/Logo.tsx";
+import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx";
 import { useAtom, useAtomValue } from "jotai";
 import { teamAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useQuery } from "@tanstack/react-query";
@@ -52,17 +52,17 @@ const SidebarButton = ({
 
   const className =
     variant === "primary"
-      ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-      : "";
+      ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground cursor-pointer"
+      : "cursor-pointer";
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton onClick={onClick} className={className}>
-        <Link to={href} className="flex items-center space-x-2">
+      <Link to={href} className="flex items-center space-x-2 cursor-pointer">
+        <SidebarMenuButton onClick={onClick} className={className}>
           {icon}
           <span>{label}</span>
-        </Link>
-      </SidebarMenuButton>
+        </SidebarMenuButton>
+      </Link>
     </SidebarMenuItem>
   );
 };
@@ -112,7 +112,7 @@ export const AppSidebar = () => {
     <Sidebar variant="inset">
       <SidebarHeader>
         <div className="p-2">
-          <Logo />
+          <LeszmonitorLogo />
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
