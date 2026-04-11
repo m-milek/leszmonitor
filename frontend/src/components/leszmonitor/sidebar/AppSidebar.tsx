@@ -23,12 +23,12 @@ import {
 } from "lucide-react";
 import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx";
 import { useAtom, useAtomValue } from "jotai";
-import { teamAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
+import { orgAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
-import { TeamSelector } from "@/components/leszmonitor/sidebar/TeamSelector.tsx";
+import { OrgSelector } from "@/components/leszmonitor/sidebar/OrgSelector.tsx";
 import { Link } from "@tanstack/react-router";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
 import { fetchUser } from "@/lib/data/userData.ts";
@@ -72,7 +72,7 @@ export const AppSidebar = () => {
   const [user, setUser] = useAtom(userAtom);
   const hasInitialized = useRef(false);
 
-  const team = useAtomValue(teamAtom);
+  const org = useAtomValue(orgAtom);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -104,7 +104,7 @@ export const AppSidebar = () => {
     }
   }, [userData, setUser]);
 
-  if (!username || !team || !user) {
+  if (!username || !org || !user) {
     return null;
   }
 
@@ -116,7 +116,7 @@ export const AppSidebar = () => {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <TeamSelector />
+              <OrgSelector />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -139,22 +139,22 @@ export const AppSidebar = () => {
             <SidebarMenu>
               <SidebarButton
                 icon={<LayoutDashboardIcon />}
-                href={`/team/${team.displayId}/dashboard`}
+                href={`/org/${org.displayId}/dashboard`}
                 label="Dashboard"
               />
               <SidebarButton
                 icon={<LucideActivity />}
-                href={`/team/${team.displayId}/monitors`}
+                href={`/org/${org.displayId}/monitors`}
                 label="Monitors"
               />
               <SidebarButton
                 icon={<LucideFolderOpen />}
-                href={`/team/${team.displayId}/groups`}
-                label="Groups"
+                href={`/org/${org.displayId}/projects`}
+                label="Projects"
               />
               <SidebarButton
                 icon={<LucideUsers />}
-                href={`/team/${team.displayId}/members`}
+                href={`/org/${org.displayId}/members`}
                 label="Members"
               />
             </SidebarMenu>

@@ -1,31 +1,31 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
-import { teamAtom } from "@/lib/atoms.ts";
+import { orgAtom } from "@/lib/atoms.ts";
 import { useEffect } from "react";
-import { getTeam } from "@/lib/data/teamData.ts";
+import { getOrg } from "@/lib/data/orgData.ts";
 import { useQuery } from "@tanstack/react-query";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 
-export const Route = createFileRoute("/_authenticated/team/$teamId")({
-  component: TeamLayout,
+export const Route = createFileRoute("/_authenticated/org/$orgId")({
+  component: OrgLayout,
   notFoundComponent: NotFound,
 });
 
-function TeamLayout() {
-  const { teamId } = Route.useParams();
-  const setTeamAtom = useSetAtom(teamAtom);
+function OrgLayout() {
+  const { orgId } = Route.useParams();
+  const setOrgAtom = useSetAtom(orgAtom);
 
-  const { data: team } = useQuery({
-    queryKey: ["team", teamId],
-    queryFn: () => getTeam(teamId),
+  const { data: org } = useQuery({
+    queryKey: ["org", orgId],
+    queryFn: () => getOrg(orgId),
   });
 
   useEffect(() => {
-    if (team) {
-      setTeamAtom(team);
+    if (org) {
+      setOrgAtom(org);
     }
-  }, [team, teamId, setTeamAtom]);
+  }, [org, orgId, setOrgAtom]);
 
   return <Outlet />;
 }

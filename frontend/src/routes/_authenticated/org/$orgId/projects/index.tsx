@@ -6,11 +6,11 @@ import {
   TypographyH2,
 } from "@/components/leszmonitor/ui/Typography.tsx";
 import {
-  addGroup,
-  deleteGroup,
-  getGroups,
-  type GroupInput,
-} from "@/lib/data/groupData.ts";
+  addProject,
+  deleteProject,
+  getProjects,
+  type ProjectInput,
+} from "@/lib/data/projectData.ts";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -28,39 +28,39 @@ import { Input } from "@/components/ui/input.tsx";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { GroupsTable } from "@/components/leszmonitor/tables/GroupsTable.tsx";
+import { ProjectsTable } from "@/components/leszmonitor/tables/ProjectsTable.tsx";
 
-export const Route = createFileRoute("/_authenticated/team/$teamId/groups/")({
-  component: Groups,
+export const Route = createFileRoute("/_authenticated/org/$orgId/projects/")({
+  component: Projects,
 });
 
-const groupFormSchema = z.object({
-  name: z.string().min(1, "Group name is required"),
+const projectFormSchema = z.object({
+  name: z.string().min(1, "Project name is required"),
   displayId: z.string().min(1, "Display ID is required"),
   description: z.string(),
 });
 
-function Groups() {
-  const teamId = Route.useParams().teamId;
+function Projects() {
+  const { orgId } = Route.useParams();
   const queryClient = useQueryClient();
 
   const { data } = useQuery({
-    queryKey: ["groups", teamId],
-    queryFn: () => getGroups(teamId),
+    queryKey: ["projects", orgId],
+    queryFn: () => getProjects(orgId),
   });
 
-  const addGroupMutation = useMutation({
-    mutationFn: (newGroup: GroupInput) => addGroup(teamId, newGroup),
+  const addProjectMutation = useMutation({
+    mutationFn: (newProject: ProjectInput) => addProject(orgId, newProject),
     onSuccess: () => {
       form.reset();
-      queryClient.invalidateQueries({ queryKey: ["groups", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["projects", orgId] });
     },
   });
 
-  const deleteGroupMutation = useMutation({
-    mutationFn: (groupId: string) => deleteGroup(teamId, groupId),
+  const deleteProjectMutation = useMutation({
+    mutationFn: (projectId: string) => deleteProject(orgId, projectId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["groups", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["projects", orgId] });
     },
   });
 
@@ -71,10 +71,10 @@ function Groups() {
       description: "",
     },
     validators: {
-      onSubmit: groupFormSchema,
+      onSubmit: projectFormSchema,
     },
     onSubmit: async ({ value }) => {
-      await addGroupMutation.mutateAsync(value);
+      await addProjectMutation.mutateAsync(value);
     },
   });
 
@@ -84,14 +84,14 @@ function Groups() {
 
   return (
     <MainPanelContainer>
-      <TypographyH1>Groups</TypographyH1>
+      <TypographyH1>Projects</TypographyH1>
       <Card>
         <CardHeader>
-          <TypographyH2>Create New Group</TypographyH2>
+          <TypographyH2>Create New Project</TypographyH2>
         </CardHeader>
         <CardContent>
           <form
-            id="group-form"
+            id="project-form"
             onSubmit={(e) => {
               e.preventDefault();
               form.handleSubmit();
@@ -106,7 +106,7 @@ function Groups() {
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field>
-                        <FieldLabel htmlFor={field.name}>Group Name</FieldLabel>
+                        <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
                         <Input
                           id={field.name}
                           name={field.name}
@@ -169,23 +169,23 @@ function Groups() {
         <CardFooter className="justify-end">
           <Button
             type="submit"
-            form="group-form"
-            disabled={addGroupMutation.isPending}
+            form="project-form"
+            disabled={addProjectMutation.isPending}
           >
-            {addGroupMutation.isPending ? "Adding..." : "Add Group"}
+            {addProjectMutation.isPending ? "Adding..." : "Add Project"}
           </Button>
         </CardFooter>
       </Card>
       <Card>
         <CardHeader>
-          <TypographyH2>Existing Groups</TypographyH2>
+          <TypographyH2>Existing Projects</TypographyH2>
         </CardHeader>
         <CardContent>
-          <GroupsTable
-            groups={data}
-            teamId={teamId}
-            onGroupDeleted={async (groupId) =>
-              deleteGroupMutation.mutateAsync(groupId)
+          <ProjectsTable
+            projects={data}
+            orgId={orgId}
+            onProjectDeleted={async (projectId) =>
+              deleteProjectMutation.mutateAsync(projectId)
             }
           />
         </CardContent>

@@ -8,41 +8,46 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { teamAtom } from "@/lib/atoms.ts";
-import { fetchTeams } from "@/lib/data/teamData.ts";
+import { orgAtom } from "@/lib/atoms.ts";
+import { fetchOrgs } from "@/lib/data/orgData.ts";
 
-interface TeamEntryProps {
-  teamName: string;
+interface OrgEntryProps {
+  orgName: string;
   isCurrent: boolean;
 }
-export const TeamEntry = ({ teamName, isCurrent }: TeamEntryProps) => {
+export const OrgEntry = ({ orgName, isCurrent }: OrgEntryProps) => {
   return (
     <DropdownMenuItem>
-      {teamName} {isCurrent && "(current)"}
+      {orgName} {isCurrent && "(current)"}
     </DropdownMenuItem>
   );
 };
 
-export const TeamSelector = () => {
-  const { data: teamsData } = useQuery({
-    queryKey: ["teams"],
-    queryFn: fetchTeams,
+export const OrgSelector = () => {
+  const { data: orgsData } = useQuery({
+    queryKey: ["orgs"],
+    queryFn: fetchOrgs,
   });
 
-  const team = useAtomValue(teamAtom);
+  const org = useAtomValue(orgAtom);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="w-full">
-        <Button variant="secondary">{team?.name}</Button>
+        <Button variant="secondary">{org?.name}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-full">
         <DropdownMenuGroup>
-          {teamsData?.map((team) => (
-            <TeamEntry key={team.id} teamName={team.name} isCurrent={false} />
+          {orgsData?.map((orgItem) => (
+            <OrgEntry
+              key={orgItem.id}
+              orgName={orgItem.name}
+              isCurrent={false}
+            />
           ))}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 };
+

@@ -26,16 +26,16 @@ import {
 } from "@/components/ui/select.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { getGroups } from "@/lib/data/groupData.ts";
+import { getProjects } from "@/lib/data/projectData.ts";
 
 export const Route = createFileRoute(
-  "/_authenticated/team/$teamId/monitors/new/",
+  "/_authenticated/org/$orgId/monitors/new/",
 )({
   component: NewMonitorComponent,
 });
 
 function NewMonitorComponent() {
-  const { teamId } = Route.useParams();
+  const { orgId } = Route.useParams();
 
   const form = useForm({
     defaultValues: newMonitorSchemaDefaultValues,
@@ -51,9 +51,9 @@ function NewMonitorComponent() {
     },
   });
 
-  const { data: groups } = useQuery({
-    queryKey: ["groups", teamId],
-    queryFn: () => getGroups(teamId),
+  const { data: projects } = useQuery({
+    queryKey: ["projects", orgId],
+    queryFn: () => getProjects(orgId),
   });
 
   const onSubmit = (e: React.SubmitEvent) => {
@@ -102,21 +102,21 @@ function NewMonitorComponent() {
               }}
             />
             <form.Field
-              name={"groupId"}
+              name={"projectId"}
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field>
-                    <FieldLabel>Group</FieldLabel>
+                    <FieldLabel>Project</FieldLabel>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select Group" />
+                        <SelectValue placeholder="Select Project" />
                       </SelectTrigger>
                       <SelectContent>
-                        {groups?.map((group) => (
-                          <SelectItem key={group.id} value={group.id}>
-                            {group.name}
+                        {projects?.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

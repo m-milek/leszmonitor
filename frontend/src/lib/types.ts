@@ -10,28 +10,28 @@ export interface User extends Timestamps {
   username: string;
 }
 
-export enum TeamRole {
+export enum OrgRole {
   Owner = "owner",
   Admin = "admin",
   Member = "member",
   Viewer = "viewer",
 }
 
-export interface TeamMember extends Timestamps {
+export interface OrgMember extends Timestamps {
   id: string;
   username: string;
-  role: TeamRole;
+  role: OrgRole;
 }
 
-export interface Team extends Timestamps {
+export interface Org extends Timestamps {
   id: string;
   displayId: string;
   name: string;
   description: string;
-  members: TeamMember[];
+  members: OrgMember[];
 }
 
-export interface Group extends Timestamps {
+export interface Project extends Timestamps {
   id: string;
   name: string;
   displayId: string;
@@ -43,8 +43,8 @@ export interface Monitor extends Timestamps {
   name: string;
   displayId: string;
   description?: string;
-  groupId?: string;
-  teamId: string;
+  projectId?: string;
+  orgId: string;
   interval: number;
   type: MonitorType;
   config?: HttpMonitorConfig | PingMonitorConfig;
@@ -132,7 +132,7 @@ export const newMonitorSchema = z.object({
     .string({ message: "Display ID is required" })
     .min(1, "Display ID is required"),
   description: z.string().optional(),
-  groupId: z.string().optional(),
+  projectId: z.string().optional(),
   interval: z
     .number({
       message: "Interval must be a number",
@@ -147,7 +147,7 @@ export const newMonitorSchema = z.object({
 });
 
 export const newMonitorSchemaDefaultValues: Partial<
-  Omit<Monitor, keyof Timestamps | "id" | "teamId">
+  Omit<Monitor, keyof Timestamps | "id" | "orgId">
 > = {};
 
 export interface LoginPayload {

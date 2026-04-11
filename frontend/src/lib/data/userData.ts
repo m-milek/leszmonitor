@@ -1,6 +1,6 @@
 import { BACKEND_URL } from "@/lib/consts.ts";
 import { authFetch } from "@/lib/data/utils.ts";
-import { TeamRole, type User } from "@/lib/types.ts";
+import { OrgRole, type User } from "@/lib/types.ts";
 
 export const fetchUser = async (username: string): Promise<User> => {
   const res = await authFetch(`${BACKEND_URL}/users/${username}`);
@@ -22,16 +22,16 @@ export const fetchAllUsers = async (): Promise<User[]> => {
   return (await res.json()) as User[];
 };
 
-export interface AddUserToTeamPayload {
+export interface AddUserToOrgPayload {
   username: string;
-  role: TeamRole;
+  role: OrgRole;
 }
 
-export const addUserToTeam = async (
-  teamId: string,
-  { username, role }: AddUserToTeamPayload,
+export const addUserToOrg = async (
+  orgId: string,
+  { username, role }: AddUserToOrgPayload,
 ): Promise<void> => {
-  const res = await authFetch(`${BACKEND_URL}/teams/${teamId}/members`, {
+  const res = await authFetch(`${BACKEND_URL}/orgs/${orgId}/members`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -40,19 +40,19 @@ export const addUserToTeam = async (
   });
 
   if (!res.ok) {
-    throw new Error("Failed to add user to team");
+    throw new Error("Failed to add user to org");
   }
 };
 
-export interface RemoveUserFromTeamPayload {
+export interface RemoveUserFromOrgPayload {
   username: string;
 }
 
-export const removeUserFromTeam = async (
-  teamId: string,
-  payload: RemoveUserFromTeamPayload,
+export const removeUserFromOrg = async (
+  orgId: string,
+  payload: RemoveUserFromOrgPayload,
 ): Promise<void> => {
-  const res = await authFetch(`${BACKEND_URL}/teams/${teamId}/members`, {
+  const res = await authFetch(`${BACKEND_URL}/orgs/${orgId}/members`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export const removeUserFromTeam = async (
   });
 
   if (!res.ok) {
-    throw new Error("Failed to remove user from team");
+    throw new Error("Failed to remove user from org");
   }
 };
 

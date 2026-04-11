@@ -11,8 +11,8 @@ export const Route = createFileRoute("/_authenticated/")({
 
       if (claims.username) {
         throw redirect({
-          to: "/team/$teamId",
-          params: { teamId: claims.username },
+          to: "/org/$orgId",
+          params: { orgId: claims.username },
         });
       }
     }

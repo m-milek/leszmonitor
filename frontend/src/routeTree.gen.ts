@@ -14,16 +14,16 @@ import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
-import { Route as AuthenticatedTeamTeamIdRouteImport } from './routes/_authenticated/team/$teamId'
+import { Route as AuthenticatedOrgOrgIdRouteImport } from './routes/_authenticated/org/$orgId'
 import { Route as AuthenticatedUserUsernameIndexRouteImport } from './routes/_authenticated/user/$username/index'
-import { Route as AuthenticatedTeamTeamIdIndexRouteImport } from './routes/_authenticated/team/$teamId/index'
+import { Route as AuthenticatedOrgOrgIdIndexRouteImport } from './routes/_authenticated/org/$orgId/index'
 import { Route as AuthenticatedUserUsernameSettingsIndexRouteImport } from './routes/_authenticated/user/$username/settings/index'
-import { Route as AuthenticatedTeamTeamIdMonitorsIndexRouteImport } from './routes/_authenticated/team/$teamId/monitors/index'
-import { Route as AuthenticatedTeamTeamIdMembersIndexRouteImport } from './routes/_authenticated/team/$teamId/members/index'
-import { Route as AuthenticatedTeamTeamIdGroupsIndexRouteImport } from './routes/_authenticated/team/$teamId/groups/index'
-import { Route as AuthenticatedTeamTeamIdDashboardIndexRouteImport } from './routes/_authenticated/team/$teamId/dashboard/index'
-import { Route as AuthenticatedTeamTeamIdMonitorsNewIndexRouteImport } from './routes/_authenticated/team/$teamId/monitors/new/index'
-import { Route as AuthenticatedTeamTeamIdGroupsGroupIdIndexRouteImport } from './routes/_authenticated/team/$teamId/groups/$groupId/index'
+import { Route as AuthenticatedOrgOrgIdProjectsIndexRouteImport } from './routes/_authenticated/org/$orgId/projects/index'
+import { Route as AuthenticatedOrgOrgIdMonitorsIndexRouteImport } from './routes/_authenticated/org/$orgId/monitors/index'
+import { Route as AuthenticatedOrgOrgIdMembersIndexRouteImport } from './routes/_authenticated/org/$orgId/members/index'
+import { Route as AuthenticatedOrgOrgIdDashboardIndexRouteImport } from './routes/_authenticated/org/$orgId/dashboard/index'
+import { Route as AuthenticatedOrgOrgIdProjectsProjectIdIndexRouteImport } from './routes/_authenticated/org/$orgId/projects/$projectId/index'
+import { Route as AuthenticatedOrgOrgIdMonitorsNewIndexRouteImport } from './routes/_authenticated/org/$orgId/monitors/new/index'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -49,9 +49,9 @@ const AuthenticatedDocsIndexRoute = AuthenticatedDocsIndexRouteImport.update({
   path: '/docs/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedTeamTeamIdRoute = AuthenticatedTeamTeamIdRouteImport.update({
-  id: '/team/$teamId',
-  path: '/team/$teamId',
+const AuthenticatedOrgOrgIdRoute = AuthenticatedOrgOrgIdRouteImport.update({
+  id: '/org/$orgId',
+  path: '/org/$orgId',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedUserUsernameIndexRoute =
@@ -60,11 +60,11 @@ const AuthenticatedUserUsernameIndexRoute =
     path: '/user/$username/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedTeamTeamIdIndexRoute =
-  AuthenticatedTeamTeamIdIndexRouteImport.update({
+const AuthenticatedOrgOrgIdIndexRoute =
+  AuthenticatedOrgOrgIdIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedTeamTeamIdRoute,
+    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
   } as any)
 const AuthenticatedUserUsernameSettingsIndexRoute =
   AuthenticatedUserUsernameSettingsIndexRouteImport.update({
@@ -72,73 +72,73 @@ const AuthenticatedUserUsernameSettingsIndexRoute =
     path: '/user/$username/settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedTeamTeamIdMonitorsIndexRoute =
-  AuthenticatedTeamTeamIdMonitorsIndexRouteImport.update({
+const AuthenticatedOrgOrgIdProjectsIndexRoute =
+  AuthenticatedOrgOrgIdProjectsIndexRouteImport.update({
+    id: '/projects/',
+    path: '/projects/',
+    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
+  } as any)
+const AuthenticatedOrgOrgIdMonitorsIndexRoute =
+  AuthenticatedOrgOrgIdMonitorsIndexRouteImport.update({
     id: '/monitors/',
     path: '/monitors/',
-    getParentRoute: () => AuthenticatedTeamTeamIdRoute,
+    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
   } as any)
-const AuthenticatedTeamTeamIdMembersIndexRoute =
-  AuthenticatedTeamTeamIdMembersIndexRouteImport.update({
+const AuthenticatedOrgOrgIdMembersIndexRoute =
+  AuthenticatedOrgOrgIdMembersIndexRouteImport.update({
     id: '/members/',
     path: '/members/',
-    getParentRoute: () => AuthenticatedTeamTeamIdRoute,
+    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
   } as any)
-const AuthenticatedTeamTeamIdGroupsIndexRoute =
-  AuthenticatedTeamTeamIdGroupsIndexRouteImport.update({
-    id: '/groups/',
-    path: '/groups/',
-    getParentRoute: () => AuthenticatedTeamTeamIdRoute,
-  } as any)
-const AuthenticatedTeamTeamIdDashboardIndexRoute =
-  AuthenticatedTeamTeamIdDashboardIndexRouteImport.update({
+const AuthenticatedOrgOrgIdDashboardIndexRoute =
+  AuthenticatedOrgOrgIdDashboardIndexRouteImport.update({
     id: '/dashboard/',
     path: '/dashboard/',
-    getParentRoute: () => AuthenticatedTeamTeamIdRoute,
+    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
   } as any)
-const AuthenticatedTeamTeamIdMonitorsNewIndexRoute =
-  AuthenticatedTeamTeamIdMonitorsNewIndexRouteImport.update({
+const AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute =
+  AuthenticatedOrgOrgIdProjectsProjectIdIndexRouteImport.update({
+    id: '/projects/$projectId/',
+    path: '/projects/$projectId/',
+    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
+  } as any)
+const AuthenticatedOrgOrgIdMonitorsNewIndexRoute =
+  AuthenticatedOrgOrgIdMonitorsNewIndexRouteImport.update({
     id: '/monitors/new/',
     path: '/monitors/new/',
-    getParentRoute: () => AuthenticatedTeamTeamIdRoute,
-  } as any)
-const AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute =
-  AuthenticatedTeamTeamIdGroupsGroupIdIndexRouteImport.update({
-    id: '/groups/$groupId/',
-    path: '/groups/$groupId/',
-    getParentRoute: () => AuthenticatedTeamTeamIdRoute,
+    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
-  '/team/$teamId': typeof AuthenticatedTeamTeamIdRouteWithChildren
+  '/org/$orgId': typeof AuthenticatedOrgOrgIdRouteWithChildren
   '/docs/': typeof AuthenticatedDocsIndexRoute
-  '/team/$teamId/': typeof AuthenticatedTeamTeamIdIndexRoute
+  '/org/$orgId/': typeof AuthenticatedOrgOrgIdIndexRoute
   '/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
-  '/team/$teamId/dashboard/': typeof AuthenticatedTeamTeamIdDashboardIndexRoute
-  '/team/$teamId/groups/': typeof AuthenticatedTeamTeamIdGroupsIndexRoute
-  '/team/$teamId/members/': typeof AuthenticatedTeamTeamIdMembersIndexRoute
-  '/team/$teamId/monitors/': typeof AuthenticatedTeamTeamIdMonitorsIndexRoute
+  '/org/$orgId/dashboard/': typeof AuthenticatedOrgOrgIdDashboardIndexRoute
+  '/org/$orgId/members/': typeof AuthenticatedOrgOrgIdMembersIndexRoute
+  '/org/$orgId/monitors/': typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
+  '/org/$orgId/projects/': typeof AuthenticatedOrgOrgIdProjectsIndexRoute
   '/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
-  '/team/$teamId/groups/$groupId/': typeof AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute
-  '/team/$teamId/monitors/new/': typeof AuthenticatedTeamTeamIdMonitorsNewIndexRoute
+  '/org/$orgId/monitors/new/': typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
+  '/org/$orgId/projects/$projectId/': typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
   '/register': typeof RegisterIndexRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
-  '/team/$teamId': typeof AuthenticatedTeamTeamIdIndexRoute
+  '/org/$orgId': typeof AuthenticatedOrgOrgIdIndexRoute
   '/user/$username': typeof AuthenticatedUserUsernameIndexRoute
-  '/team/$teamId/dashboard': typeof AuthenticatedTeamTeamIdDashboardIndexRoute
-  '/team/$teamId/groups': typeof AuthenticatedTeamTeamIdGroupsIndexRoute
-  '/team/$teamId/members': typeof AuthenticatedTeamTeamIdMembersIndexRoute
-  '/team/$teamId/monitors': typeof AuthenticatedTeamTeamIdMonitorsIndexRoute
+  '/org/$orgId/dashboard': typeof AuthenticatedOrgOrgIdDashboardIndexRoute
+  '/org/$orgId/members': typeof AuthenticatedOrgOrgIdMembersIndexRoute
+  '/org/$orgId/monitors': typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
+  '/org/$orgId/projects': typeof AuthenticatedOrgOrgIdProjectsIndexRoute
   '/user/$username/settings': typeof AuthenticatedUserUsernameSettingsIndexRoute
-  '/team/$teamId/groups/$groupId': typeof AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute
-  '/team/$teamId/monitors/new': typeof AuthenticatedTeamTeamIdMonitorsNewIndexRoute
+  '/org/$orgId/monitors/new': typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
+  '/org/$orgId/projects/$projectId': typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -146,17 +146,17 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
-  '/_authenticated/team/$teamId': typeof AuthenticatedTeamTeamIdRouteWithChildren
+  '/_authenticated/org/$orgId': typeof AuthenticatedOrgOrgIdRouteWithChildren
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
-  '/_authenticated/team/$teamId/': typeof AuthenticatedTeamTeamIdIndexRoute
+  '/_authenticated/org/$orgId/': typeof AuthenticatedOrgOrgIdIndexRoute
   '/_authenticated/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
-  '/_authenticated/team/$teamId/dashboard/': typeof AuthenticatedTeamTeamIdDashboardIndexRoute
-  '/_authenticated/team/$teamId/groups/': typeof AuthenticatedTeamTeamIdGroupsIndexRoute
-  '/_authenticated/team/$teamId/members/': typeof AuthenticatedTeamTeamIdMembersIndexRoute
-  '/_authenticated/team/$teamId/monitors/': typeof AuthenticatedTeamTeamIdMonitorsIndexRoute
+  '/_authenticated/org/$orgId/dashboard/': typeof AuthenticatedOrgOrgIdDashboardIndexRoute
+  '/_authenticated/org/$orgId/members/': typeof AuthenticatedOrgOrgIdMembersIndexRoute
+  '/_authenticated/org/$orgId/monitors/': typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
+  '/_authenticated/org/$orgId/projects/': typeof AuthenticatedOrgOrgIdProjectsIndexRoute
   '/_authenticated/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
-  '/_authenticated/team/$teamId/groups/$groupId/': typeof AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute
-  '/_authenticated/team/$teamId/monitors/new/': typeof AuthenticatedTeamTeamIdMonitorsNewIndexRoute
+  '/_authenticated/org/$orgId/monitors/new/': typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
+  '/_authenticated/org/$orgId/projects/$projectId/': typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -164,49 +164,49 @@ export interface FileRouteTypes {
     | '/'
     | '/login/'
     | '/register/'
-    | '/team/$teamId'
+    | '/org/$orgId'
     | '/docs/'
-    | '/team/$teamId/'
+    | '/org/$orgId/'
     | '/user/$username/'
-    | '/team/$teamId/dashboard/'
-    | '/team/$teamId/groups/'
-    | '/team/$teamId/members/'
-    | '/team/$teamId/monitors/'
+    | '/org/$orgId/dashboard/'
+    | '/org/$orgId/members/'
+    | '/org/$orgId/monitors/'
+    | '/org/$orgId/projects/'
     | '/user/$username/settings/'
-    | '/team/$teamId/groups/$groupId/'
-    | '/team/$teamId/monitors/new/'
+    | '/org/$orgId/monitors/new/'
+    | '/org/$orgId/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/register'
     | '/docs'
-    | '/team/$teamId'
+    | '/org/$orgId'
     | '/user/$username'
-    | '/team/$teamId/dashboard'
-    | '/team/$teamId/groups'
-    | '/team/$teamId/members'
-    | '/team/$teamId/monitors'
+    | '/org/$orgId/dashboard'
+    | '/org/$orgId/members'
+    | '/org/$orgId/monitors'
+    | '/org/$orgId/projects'
     | '/user/$username/settings'
-    | '/team/$teamId/groups/$groupId'
-    | '/team/$teamId/monitors/new'
+    | '/org/$orgId/monitors/new'
+    | '/org/$orgId/projects/$projectId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/_authenticated/'
     | '/login/'
     | '/register/'
-    | '/_authenticated/team/$teamId'
+    | '/_authenticated/org/$orgId'
     | '/_authenticated/docs/'
-    | '/_authenticated/team/$teamId/'
+    | '/_authenticated/org/$orgId/'
     | '/_authenticated/user/$username/'
-    | '/_authenticated/team/$teamId/dashboard/'
-    | '/_authenticated/team/$teamId/groups/'
-    | '/_authenticated/team/$teamId/members/'
-    | '/_authenticated/team/$teamId/monitors/'
+    | '/_authenticated/org/$orgId/dashboard/'
+    | '/_authenticated/org/$orgId/members/'
+    | '/_authenticated/org/$orgId/monitors/'
+    | '/_authenticated/org/$orgId/projects/'
     | '/_authenticated/user/$username/settings/'
-    | '/_authenticated/team/$teamId/groups/$groupId/'
-    | '/_authenticated/team/$teamId/monitors/new/'
+    | '/_authenticated/org/$orgId/monitors/new/'
+    | '/_authenticated/org/$orgId/projects/$projectId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -252,11 +252,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/team/$teamId': {
-      id: '/_authenticated/team/$teamId'
-      path: '/team/$teamId'
-      fullPath: '/team/$teamId'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdRouteImport
+    '/_authenticated/org/$orgId': {
+      id: '/_authenticated/org/$orgId'
+      path: '/org/$orgId'
+      fullPath: '/org/$orgId'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/user/$username/': {
@@ -266,12 +266,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUserUsernameIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/team/$teamId/': {
-      id: '/_authenticated/team/$teamId/'
+    '/_authenticated/org/$orgId/': {
+      id: '/_authenticated/org/$orgId/'
       path: '/'
-      fullPath: '/team/$teamId/'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdIndexRouteImport
-      parentRoute: typeof AuthenticatedTeamTeamIdRoute
+      fullPath: '/org/$orgId/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgIdRoute
     }
     '/_authenticated/user/$username/settings/': {
       id: '/_authenticated/user/$username/settings/'
@@ -280,86 +280,85 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUserUsernameSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/team/$teamId/monitors/': {
-      id: '/_authenticated/team/$teamId/monitors/'
+    '/_authenticated/org/$orgId/projects/': {
+      id: '/_authenticated/org/$orgId/projects/'
+      path: '/projects'
+      fullPath: '/org/$orgId/projects/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdProjectsIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgIdRoute
+    }
+    '/_authenticated/org/$orgId/monitors/': {
+      id: '/_authenticated/org/$orgId/monitors/'
       path: '/monitors'
-      fullPath: '/team/$teamId/monitors/'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdMonitorsIndexRouteImport
-      parentRoute: typeof AuthenticatedTeamTeamIdRoute
+      fullPath: '/org/$orgId/monitors/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdMonitorsIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgIdRoute
     }
-    '/_authenticated/team/$teamId/members/': {
-      id: '/_authenticated/team/$teamId/members/'
+    '/_authenticated/org/$orgId/members/': {
+      id: '/_authenticated/org/$orgId/members/'
       path: '/members'
-      fullPath: '/team/$teamId/members/'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdMembersIndexRouteImport
-      parentRoute: typeof AuthenticatedTeamTeamIdRoute
+      fullPath: '/org/$orgId/members/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdMembersIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgIdRoute
     }
-    '/_authenticated/team/$teamId/groups/': {
-      id: '/_authenticated/team/$teamId/groups/'
-      path: '/groups'
-      fullPath: '/team/$teamId/groups/'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdGroupsIndexRouteImport
-      parentRoute: typeof AuthenticatedTeamTeamIdRoute
-    }
-    '/_authenticated/team/$teamId/dashboard/': {
-      id: '/_authenticated/team/$teamId/dashboard/'
+    '/_authenticated/org/$orgId/dashboard/': {
+      id: '/_authenticated/org/$orgId/dashboard/'
       path: '/dashboard'
-      fullPath: '/team/$teamId/dashboard/'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdDashboardIndexRouteImport
-      parentRoute: typeof AuthenticatedTeamTeamIdRoute
+      fullPath: '/org/$orgId/dashboard/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgIdRoute
     }
-    '/_authenticated/team/$teamId/monitors/new/': {
-      id: '/_authenticated/team/$teamId/monitors/new/'
+    '/_authenticated/org/$orgId/projects/$projectId/': {
+      id: '/_authenticated/org/$orgId/projects/$projectId/'
+      path: '/projects/$projectId'
+      fullPath: '/org/$orgId/projects/$projectId/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgIdRoute
+    }
+    '/_authenticated/org/$orgId/monitors/new/': {
+      id: '/_authenticated/org/$orgId/monitors/new/'
       path: '/monitors/new'
-      fullPath: '/team/$teamId/monitors/new/'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdMonitorsNewIndexRouteImport
-      parentRoute: typeof AuthenticatedTeamTeamIdRoute
-    }
-    '/_authenticated/team/$teamId/groups/$groupId/': {
-      id: '/_authenticated/team/$teamId/groups/$groupId/'
-      path: '/groups/$groupId'
-      fullPath: '/team/$teamId/groups/$groupId/'
-      preLoaderRoute: typeof AuthenticatedTeamTeamIdGroupsGroupIdIndexRouteImport
-      parentRoute: typeof AuthenticatedTeamTeamIdRoute
+      fullPath: '/org/$orgId/monitors/new/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgIdMonitorsNewIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgIdRoute
     }
   }
 }
 
-interface AuthenticatedTeamTeamIdRouteChildren {
-  AuthenticatedTeamTeamIdIndexRoute: typeof AuthenticatedTeamTeamIdIndexRoute
-  AuthenticatedTeamTeamIdDashboardIndexRoute: typeof AuthenticatedTeamTeamIdDashboardIndexRoute
-  AuthenticatedTeamTeamIdGroupsIndexRoute: typeof AuthenticatedTeamTeamIdGroupsIndexRoute
-  AuthenticatedTeamTeamIdMembersIndexRoute: typeof AuthenticatedTeamTeamIdMembersIndexRoute
-  AuthenticatedTeamTeamIdMonitorsIndexRoute: typeof AuthenticatedTeamTeamIdMonitorsIndexRoute
-  AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute: typeof AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute
-  AuthenticatedTeamTeamIdMonitorsNewIndexRoute: typeof AuthenticatedTeamTeamIdMonitorsNewIndexRoute
+interface AuthenticatedOrgOrgIdRouteChildren {
+  AuthenticatedOrgOrgIdIndexRoute: typeof AuthenticatedOrgOrgIdIndexRoute
+  AuthenticatedOrgOrgIdDashboardIndexRoute: typeof AuthenticatedOrgOrgIdDashboardIndexRoute
+  AuthenticatedOrgOrgIdMembersIndexRoute: typeof AuthenticatedOrgOrgIdMembersIndexRoute
+  AuthenticatedOrgOrgIdMonitorsIndexRoute: typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
+  AuthenticatedOrgOrgIdProjectsIndexRoute: typeof AuthenticatedOrgOrgIdProjectsIndexRoute
+  AuthenticatedOrgOrgIdMonitorsNewIndexRoute: typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
+  AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute: typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
 }
 
-const AuthenticatedTeamTeamIdRouteChildren: AuthenticatedTeamTeamIdRouteChildren =
-  {
-    AuthenticatedTeamTeamIdIndexRoute: AuthenticatedTeamTeamIdIndexRoute,
-    AuthenticatedTeamTeamIdDashboardIndexRoute:
-      AuthenticatedTeamTeamIdDashboardIndexRoute,
-    AuthenticatedTeamTeamIdGroupsIndexRoute:
-      AuthenticatedTeamTeamIdGroupsIndexRoute,
-    AuthenticatedTeamTeamIdMembersIndexRoute:
-      AuthenticatedTeamTeamIdMembersIndexRoute,
-    AuthenticatedTeamTeamIdMonitorsIndexRoute:
-      AuthenticatedTeamTeamIdMonitorsIndexRoute,
-    AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute:
-      AuthenticatedTeamTeamIdGroupsGroupIdIndexRoute,
-    AuthenticatedTeamTeamIdMonitorsNewIndexRoute:
-      AuthenticatedTeamTeamIdMonitorsNewIndexRoute,
-  }
+const AuthenticatedOrgOrgIdRouteChildren: AuthenticatedOrgOrgIdRouteChildren = {
+  AuthenticatedOrgOrgIdIndexRoute: AuthenticatedOrgOrgIdIndexRoute,
+  AuthenticatedOrgOrgIdDashboardIndexRoute:
+    AuthenticatedOrgOrgIdDashboardIndexRoute,
+  AuthenticatedOrgOrgIdMembersIndexRoute:
+    AuthenticatedOrgOrgIdMembersIndexRoute,
+  AuthenticatedOrgOrgIdMonitorsIndexRoute:
+    AuthenticatedOrgOrgIdMonitorsIndexRoute,
+  AuthenticatedOrgOrgIdProjectsIndexRoute:
+    AuthenticatedOrgOrgIdProjectsIndexRoute,
+  AuthenticatedOrgOrgIdMonitorsNewIndexRoute:
+    AuthenticatedOrgOrgIdMonitorsNewIndexRoute,
+  AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute:
+    AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute,
+}
 
-const AuthenticatedTeamTeamIdRouteWithChildren =
-  AuthenticatedTeamTeamIdRoute._addFileChildren(
-    AuthenticatedTeamTeamIdRouteChildren,
+const AuthenticatedOrgOrgIdRouteWithChildren =
+  AuthenticatedOrgOrgIdRoute._addFileChildren(
+    AuthenticatedOrgOrgIdRouteChildren,
   )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedTeamTeamIdRoute: typeof AuthenticatedTeamTeamIdRouteWithChildren
+  AuthenticatedOrgOrgIdRoute: typeof AuthenticatedOrgOrgIdRouteWithChildren
   AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
   AuthenticatedUserUsernameIndexRoute: typeof AuthenticatedUserUsernameIndexRoute
   AuthenticatedUserUsernameSettingsIndexRoute: typeof AuthenticatedUserUsernameSettingsIndexRoute
@@ -367,7 +366,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedTeamTeamIdRoute: AuthenticatedTeamTeamIdRouteWithChildren,
+  AuthenticatedOrgOrgIdRoute: AuthenticatedOrgOrgIdRouteWithChildren,
   AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
   AuthenticatedUserUsernameIndexRoute: AuthenticatedUserUsernameIndexRoute,
   AuthenticatedUserUsernameSettingsIndexRoute:

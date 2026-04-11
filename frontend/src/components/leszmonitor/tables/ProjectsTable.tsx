@@ -1,6 +1,8 @@
+import type { Project } from "@/lib/types";
+import { formatDate } from "@/lib/utils.ts";
+import { StyledLink } from "../StyledLink";
 import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
-import type { TeamMember } from "@/lib/types.ts";
-import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { flexRender, useReactTable } from "@tanstack/react-table";
 import {
   Table,
@@ -10,65 +12,68 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
-import { formatDate } from "@/lib/utils.ts";
-import { Button } from "@/components/ui/button.tsx";
-import { LucideUserMinus } from "lucide-react";
+import { LucideTrash2 } from "lucide-react";
 
-export interface TeamMembersTableProps {
-  members: TeamMember[];
-  onMemberRemoved: (username: string) => Promise<void>;
+export interface ProjectsTableProps {
+  projects: Project[];
+  orgId: string;
+  onProjectDeleted: (projectId: string) => Promise<void>;
 }
 
-export const TeamMembersTable = ({
-  members,
-  onMemberRemoved,
-}: TeamMembersTableProps) => {
-  const columns: ColumnDef<TeamMember>[] = [
+export const ProjectsTable = ({
+  projects,
+  orgId,
+  onProjectDeleted,
+}: ProjectsTableProps) => {
+  const columns: ColumnDef<Project>[] = [
     {
-      accessorKey: "username",
-      header: "User",
+      accessorKey: "name",
+      header: "Name",
       cell: ({ row }) => {
+        const name = row.original.name;
         return (
           <StyledLink
-            to="/user/$username"
-            params={{ username: row.original.username }}
+            to="/org/$orgId/projects/$projectId"
+            params={{ orgId, projectId: row.original.displayId }}
           >
-            {row.original.username}
+            {name}
           </StyledLink>
         );
       },
     },
     {
-      accessorKey: "role",
-      header: "Role",
+      accessorKey: "displayId",
+      header: "Display ID",
     },
     {
       accessorKey: "createdAt",
-      header: "Joined at",
+      header: "Created At",
       cell: ({ row }) => {
         return formatDate(row.original.createdAt);
       },
     },
     {
       accessorKey: "updatedAt",
-      header: "Last updated",
+      header: "Updated At",
       cell: ({ row }) => {
         return formatDate(row.original.updatedAt);
       },
     },
     {
+      accessorKey: "description",
+      header: "Description",
+    },
+    {
       header: "Actions",
       cell: ({ row }) => {
-        const isOwner = row.original.role === "owner";
+        const projectId = row.original.displayId;
         return (
           <Button
-            onClick={async () => {
-              await onMemberRemoved(row.original.username);
-            }}
             variant="ghost"
-            disabled={isOwner}
+            onClick={() => onProjectDeleted(projectId)}
+            className="text-destructive"
           >
-            <LucideUserMinus className="text-destructive" />
+            <LucideTrash2 />
           </Button>
         );
       },
@@ -76,7 +81,7 @@ export const TeamMembersTable = ({
   ];
 
   const table = useReactTable({
-    data: members,
+    data: projects || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -126,3 +131,4 @@ export const TeamMembersTable = ({
     </Table>
   );
 };
+

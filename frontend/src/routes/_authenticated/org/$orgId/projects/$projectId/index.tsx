@@ -2,20 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { getGroup } from "@/lib/data/groupData.ts";
+import { getProject } from "@/lib/data/projectData.ts";
 
 export const Route = createFileRoute(
-  "/_authenticated/team/$teamId/groups/$groupId/",
+  "/_authenticated/org/$orgId/projects/$projectId/",
 )({
-  component: GroupDetailsComponent,
+  component: ProjectDetailsComponent,
 });
 
-function GroupDetailsComponent() {
-  const { teamId, groupId } = Route.useParams();
+function ProjectDetailsComponent() {
+  const { orgId, projectId } = Route.useParams();
 
   const { data } = useQuery({
-    queryKey: ["groups", teamId, groupId],
-    queryFn: () => getGroup(teamId, groupId),
+    queryKey: ["projects", orgId, projectId],
+    queryFn: () => getProject(orgId, projectId),
   });
 
   if (!data) {
@@ -24,7 +24,7 @@ function GroupDetailsComponent() {
 
   return (
     <MainPanelContainer>
-      <TypographyH1>Group Details</TypographyH1>
+      <TypographyH1>Project Details</TypographyH1>
       <div>
         <p>
           <strong>Name:</strong> {data.name}
