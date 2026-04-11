@@ -33,7 +33,9 @@ COPY --from=builder /app/src/main .
 # Copy any necessary environment files
 COPY .env* ./
 
-# Create log directory
+# Include DB schema where the app expects it: /app/db/schema.sql
+COPY --from=builder /app/src/db/schema.sql ./db/schema.sql
+
 RUN mkdir -p /var/log/leszmonitor
 
 # Expose port 7001

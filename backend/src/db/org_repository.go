@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/m-milek/leszmonitor/models"
 )
@@ -52,15 +53,25 @@ func (r *orgRepository) InsertOrg(ctx context.Context, org *models.Org) (*struct
 		if err != nil {
 			return nil, err
 		}
+		defer func() {
+			_ = tx.Rollback(ctx)
+		}()
 
 		// Create the org and get its ID created by the DB
 		var orgID pgtype.UUID
 		row := tx.QueryRow(ctx,
-			`INSERT INTO projects (display_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
+			`INSERT INTO orgs (display_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
 			org.DisplayID, org.Name, org.Description)
 		err = row.Scan(&orgID)
 		if err != nil {
 			if pgErrIs(err, pgerrcode.UniqueViolation) {
+				return nil, ErrAlreadyExists
+			}
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 				return nil, ErrAlreadyExists
 			}
 			return nil, err
@@ -71,12 +82,17 @@ func (r *orgRepository) InsertOrg(ctx context.Context, org *models.Org) (*struct
 			`INSERT INTO user_orgs (org_id, user_id, role) VALUES ($1, $2, $3)`,
 			orgID, org.Members[0].ID, org.Members[0].Role)
 		if err != nil {
+			if pgErrIs(err, pgerrcode.UniqueViolation) {
+				return nil, ErrAlreadyExists
+			}
 			return nil, err
 		}
 
-		err = tx.Commit(ctx)
+		if err = tx.Commit(ctx); err != nil {
+			return nil, err
+		}
 
-		return nil, err
+		return nil, nil
 	})
 }
 
@@ -84,7 +100,7 @@ func (r *orgRepository) GetOrgByDisplayID(ctx context.Context, displayID string)
 	return dbWrap(ctx, "GetOrgByDisplayID", func() (*models.Org, error) {
 		var org models.Org
 		row, err := r.pool.Query(ctx,
-			`SELECT id, display_id, name, description, created_at, updated_at FROM projects WHERE display_id=$1`,
+			`SELECT id, display_id, name, description, created_at, updated_at FROM orgs WHERE display_id=$1`,
 			displayID)
 		if err != nil {
 			return nil, err
@@ -120,7 +136,7 @@ func (r *orgRepository) GetOrgByDisplayID(ctx context.Context, displayID string)
 func (r *orgRepository) GetAllOrgs(ctx context.Context) ([]models.Org, error) {
 	return dbWrap(ctx, "GetAllOrgs", func() ([]models.Org, error) {
 		rows, err := r.pool.Query(ctx,
-			`SELECT id, display_id, name, description, created_at, updated_at FROM projects`)
+			`SELECT id, display_id, name, description, created_at, updated_at FROM orgs`)
 		if err != nil {
 			return nil, err
 		}
@@ -152,7 +168,7 @@ func (r *orgRepository) GetAllOrgs(ctx context.Context) ([]models.Org, error) {
 func (r *orgRepository) UpdateOrg(ctx context.Context, org *models.Org) (bool, error) {
 	return dbWrap(ctx, "UpdateOrg", func() (bool, error) {
 		result, err := r.pool.Exec(ctx,
-			`UPDATE projects SET display_id=$1, name=$2, description=$3 WHERE id=$4`,
+			`UPDATE orgs SET display_id=$1, name=$2, description=$3 WHERE id=$4`,
 			org.DisplayID, org.Name, org.Description, org.ID)
 		if err != nil {
 			return false, err
@@ -167,7 +183,7 @@ func (r *orgRepository) UpdateOrg(ctx context.Context, org *models.Org) (bool, e
 func (r *orgRepository) DeleteOrgByID(ctx context.Context, displayID string) (bool, error) {
 	return dbWrap(ctx, "DeleteOrg", func() (bool, error) {
 		result, err := r.pool.Exec(ctx,
-			`DELETE FROM projects WHERE display_id=$1`,
+			`DELETE FROM orgs WHERE display_id=$1`,
 			displayID)
 		if err != nil {
 			return false, err
@@ -183,7 +199,7 @@ func (r *orgRepository) AddMemberToOrg(ctx context.Context, orgDisplayID string,
 	return dbWrap(ctx, "AddMemberToOrg", func() (bool, error) {
 		var orgID pgtype.UUID
 		row := r.pool.QueryRow(ctx,
-			`SELECT id FROM projects WHERE display_id=$1`,
+			`SELECT id FROM orgs WHERE display_id=$1`,
 			orgDisplayID)
 
 		err := row.Scan(&orgID)
@@ -212,7 +228,7 @@ func (r *orgRepository) RemoveMemberFromOrg(ctx context.Context, orgDisplayID st
 	return dbWrap(ctx, "RemoveMemberFromOrg", func() (bool, error) {
 		var orgID pgtype.UUID
 		row := r.pool.QueryRow(ctx,
-			`SELECT id FROM projects WHERE display_id=$1`,
+			`SELECT id FROM orgs WHERE display_id=$1`,
 			orgDisplayID)
 
 		err := row.Scan(&orgID)
