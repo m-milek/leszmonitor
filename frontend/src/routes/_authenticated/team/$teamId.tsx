@@ -4,9 +4,12 @@ import { teamAtom } from "@/lib/atoms.ts";
 import { useEffect } from "react";
 import { getTeam } from "@/lib/data/teamData.ts";
 import { useQuery } from "@tanstack/react-query";
+import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
+import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 
 export const Route = createFileRoute("/_authenticated/team/$teamId")({
   component: TeamLayout,
+  notFoundComponent: NotFound,
 });
 
 function TeamLayout() {
@@ -25,4 +28,12 @@ function TeamLayout() {
   }, [team, teamId, setTeamAtom]);
 
   return <Outlet />;
+}
+
+function NotFound() {
+  return (
+    <MainPanelContainer>
+      <TypographyH1>Not Found</TypographyH1>;
+    </MainPanelContainer>
+  );
 }

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TypographyH1,
   TypographyH2,
-} from "@/components/leszmonitor/Typography.tsx";
+} from "@/components/leszmonitor/ui/Typography.tsx";
 import {
   addGroup,
   deleteGroup,
