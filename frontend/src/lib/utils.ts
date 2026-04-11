@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { TeamRole } from "@/lib/types.ts";
+import { OrgRole } from "@/lib/types.ts";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -21,15 +21,15 @@ export function formatDate(date: Date): string {
   });
 }
 
-export function formatRole(role: TeamRole): string {
+export function formatRole(role: OrgRole): string {
   switch (role) {
-    case TeamRole.Viewer:
+    case OrgRole.Viewer:
       return "Viewer";
-    case TeamRole.Member:
+    case OrgRole.Member:
       return "Member";
-    case TeamRole.Admin:
+    case OrgRole.Admin:
       return "Admin";
-    case TeamRole.Owner:
+    case OrgRole.Owner:
       return "Owner";
     default:
       return role;

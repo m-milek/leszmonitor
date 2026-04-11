@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { useAtomValue } from "jotai";
-import { teamAtom } from "@/lib/atoms.ts";
+import { orgAtom } from "@/lib/atoms.ts";
 import {
   TypographyH1,
   TypographyH2,
 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { TeamMembersTable } from "@/components/leszmonitor/tables/TeamMembersTable.tsx";
+import { OrgMembersTable } from "@/components/leszmonitor/tables/OrgMembersTable.tsx";
 import {
   Card,
   CardContent,
@@ -31,26 +31,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import { TeamRole } from "@/lib/types.ts";
+import { OrgRole } from "@/lib/types.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  addUserToTeam,
-  type AddUserToTeamPayload,
+  addUserToOrg,
+  type AddUserToOrgPayload,
   fetchAllUsers,
-  removeUserFromTeam,
+  removeUserFromOrg,
 } from "@/lib/data/userData.ts";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 
-export const Route = createFileRoute("/_authenticated/team/$teamId/members/")({
-  component: TeamRoute,
+export const Route = createFileRoute("/_authenticated/org/$orgId/members/")({
+  component: OrgMembersRoute,
 });
 
-function TeamRoute() {
-  const team = useAtomValue(teamAtom);
+function OrgMembersRoute() {
+  const org = useAtomValue(orgAtom);
 
-  const roles = Object.values(TeamRole);
+  const roles = Object.values(OrgRole);
 
   const queryClient = useQueryClient();
 
@@ -60,22 +60,22 @@ function TeamRoute() {
   });
 
   const addMemberMutation = useMutation({
-    mutationFn: (value: AddUserToTeamPayload) =>
-      addUserToTeam(team!.displayId, {
+    mutationFn: (value: AddUserToOrgPayload) =>
+      addUserToOrg(org!.displayId, {
         username: value.username,
         role: value.role,
       }),
     onSuccess: () => {
       form.reset();
-      queryClient.invalidateQueries({ queryKey: ["team", team!.displayId] });
+      queryClient.invalidateQueries({ queryKey: ["org", org!.displayId] });
     },
   });
 
   const removeMemberMutation = useMutation({
     mutationFn: (username: string) =>
-      removeUserFromTeam(team!.displayId, { username }),
+      removeUserFromOrg(org!.displayId, { username }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team", team!.displayId] });
+      queryClient.invalidateQueries({ queryKey: ["org", org!.displayId] });
     },
   });
   const onMemberRemoved = async (username: string) => {
@@ -83,7 +83,7 @@ function TeamRoute() {
     await removeMemberMutation.mutateAsync(username);
   };
 
-  const addUserToTeamFormSchema = z.object({
+  const addUserToOrgFormSchema = z.object({
     username: z.string().min(1, "Username is required"),
     role: z.enum(roles),
   });
@@ -91,10 +91,10 @@ function TeamRoute() {
   const form = useForm({
     defaultValues: {
       username: "",
-      role: TeamRole.Member,
-    } as AddUserToTeamPayload,
+      role: OrgRole.Member,
+    } as AddUserToOrgPayload,
     validators: {
-      onSubmit: addUserToTeamFormSchema,
+      onSubmit: addUserToOrgFormSchema,
     },
     onSubmit: async ({ value }) => {
       await addMemberMutation.mutateAsync(value);
@@ -103,14 +103,14 @@ function TeamRoute() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  if (!team || !users) {
+  if (!org || !users) {
     return null;
   }
 
   const validUsernames = users
     .map((user) => user.username)
     .filter((username) => {
-      return !team.members.some((member) => member.username === username);
+      return !org.members.some((member) => member.username === username);
     });
 
   return (
@@ -177,7 +177,7 @@ function TeamRoute() {
                     <FieldLabel htmlFor={field.name}>Role</FieldLabel>
                     <Select
                       onValueChange={(value) =>
-                        field.handleChange(value as TeamRole)
+                        field.handleChange(value as OrgRole)
                       }
                       defaultValue={field.state.value}
                     >
@@ -207,8 +207,8 @@ function TeamRoute() {
         <CardHeader>
           <div className="flex justify-between">
             <TypographyH2>
-              {team.members.length}{" "}
-              {team.members.length === 1 ? "Member" : "Members"}
+              {org.members.length}{" "}
+              {org.members.length === 1 ? "Member" : "Members"}
             </TypographyH2>
           </div>
           <Input
@@ -218,9 +218,9 @@ function TeamRoute() {
           />
         </CardHeader>
         <CardContent>
-          <TeamMembersTable
+          <OrgMembersTable
             onMemberRemoved={onMemberRemoved}
-            members={team.members.filter((member) =>
+            members={org.members.filter((member) =>
               member.username.toLowerCase().includes(searchTerm.toLowerCase()),
             )}
           />
