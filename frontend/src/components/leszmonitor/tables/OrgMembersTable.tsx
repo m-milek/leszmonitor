@@ -1,8 +1,6 @@
-import type { Group } from "@/lib/types";
-import { formatDate } from "@/lib/utils.ts";
-import { StyledLink } from "../StyledLink";
 import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
-import { Button } from "@/components/ui/button.tsx";
+import type { OrgMember } from "@/lib/types.ts";
+import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
 import { flexRender, useReactTable } from "@tanstack/react-table";
 import {
   Table,
@@ -12,68 +10,65 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table.tsx";
-import { LucideTrash2 } from "lucide-react";
+import { formatDate } from "@/lib/utils.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { LucideUserMinus } from "lucide-react";
 
-export interface GroupsTableProps {
-  groups: Group[];
-  teamId: string;
-  onGroupDeleted: (groupId: string) => Promise<void>;
+export interface OrgMembersTableProps {
+  members: OrgMember[];
+  onMemberRemoved: (username: string) => Promise<void>;
 }
 
-export const GroupsTable = ({
-  groups,
-  teamId,
-  onGroupDeleted,
-}: GroupsTableProps) => {
-  const columns: ColumnDef<Group>[] = [
+export const OrgMembersTable = ({
+  members,
+  onMemberRemoved,
+}: OrgMembersTableProps) => {
+  const columns: ColumnDef<OrgMember>[] = [
     {
-      accessorKey: "name",
-      header: "Name",
+      accessorKey: "username",
+      header: "User",
       cell: ({ row }) => {
-        const name = row.original.name;
         return (
           <StyledLink
-            to="/team/$teamId/groups/$groupId"
-            params={{ teamId, groupId: row.original.displayId }}
+            to="/user/$username"
+            params={{ username: row.original.username }}
           >
-            {name}
+            {row.original.username}
           </StyledLink>
         );
       },
     },
     {
-      accessorKey: "displayId",
-      header: "Display ID",
+      accessorKey: "role",
+      header: "Role",
     },
     {
       accessorKey: "createdAt",
-      header: "Created At",
+      header: "Joined at",
       cell: ({ row }) => {
         return formatDate(row.original.createdAt);
       },
     },
     {
       accessorKey: "updatedAt",
-      header: "Updated At",
+      header: "Last updated",
       cell: ({ row }) => {
         return formatDate(row.original.updatedAt);
       },
     },
     {
-      accessorKey: "description",
-      header: "Description",
-    },
-    {
       header: "Actions",
       cell: ({ row }) => {
-        const groupId = row.original.displayId;
+        const isOwner = row.original.role === "owner";
         return (
           <Button
+            onClick={async () => {
+              await onMemberRemoved(row.original.username);
+            }}
             variant="ghost"
-            onClick={() => onGroupDeleted(groupId)}
-            className="text-destructive"
+            disabled={isOwner}
           >
-            <LucideTrash2 />
+            <LucideUserMinus className="text-destructive" />
           </Button>
         );
       },
@@ -81,7 +76,7 @@ export const GroupsTable = ({
   ];
 
   const table = useReactTable({
-    data: groups || [],
+    data: members,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -131,3 +126,4 @@ export const GroupsTable = ({
     </Table>
   );
 };
+

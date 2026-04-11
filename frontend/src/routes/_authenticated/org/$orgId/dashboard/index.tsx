@@ -2,16 +2,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 
-export const Route = createFileRoute("/_authenticated/team/$teamId/")({
-  component: TeamDashboard,
-});
+export const Route = createFileRoute("/_authenticated/org/$orgId/dashboard/")(
+  {
+    component: DashboardComponent,
+  },
+);
 
-function TeamDashboard() {
-  const { teamId } = Route.useParams();
-
+function DashboardComponent() {
   return (
     <MainPanelContainer>
-      <TypographyH1>Team Dashboard for Team ID: {teamId}</TypographyH1>
+      <TypographyH1>Dashboard</TypographyH1>
     </MainPanelContainer>
   );
 }
