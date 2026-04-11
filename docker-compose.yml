@@ -3,30 +3,26 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:7001}
     ports:
       - "3000:3000"
     depends_on:
       - backend
     env_file:
       - ./frontend/.env
-    volumes:
-      - log-data:/var/log/leszmonitor
     restart: unless-stopped
     networks:
-      - app-network
+      - leszmonitor
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    depends_on:
+      - db
     ports:
       - "7001:7001"
-    volumes:
-      - log-data:/var/log/leszmonitor
-      - type: bind
-        source: ./backend/src
-        target: /app/src
-        read_only: true
     env_file:
       - ./backend/.env
     environment:
@@ -34,16 +30,26 @@ services:
       - LOG_FILE_PATH=/var/log/leszmonitor/backend.log
     restart: unless-stopped
     networks:
-      - app-network
+      - leszmonitor
+
+  db:
+    image: timescale/timescaledb:2.22.1-pg17
+    container_name: timescaledb
+    environment:
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: leszmonitor
+      POSTGRES_USER: leszmonitor-dev
+      POSTGRES_PASSWORD: dev-password
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    networks:
+      - leszmonitor
 
 networks:
-  app-network:
+  leszmonitor:
     driver: bridge
 
 volumes:
-  log-data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/.logs
-      o: bind
+  timescale_data:

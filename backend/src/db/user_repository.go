@@ -36,9 +36,11 @@ func userFromCollectableRow(row pgx.CollectableRow) (models.User, error) {
 
 func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
 	return dbWrap(ctx, "CreateUser", func() (*models.User, error) {
-		row, err := r.pool.Query(ctx,
+		var createdUser models.User
+		err := r.pool.QueryRow(ctx,
 			`INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, password_hash, created_at, updated_at`,
-			user.Username, user.PasswordHash)
+			user.Username, user.PasswordHash,
+		).Scan(&createdUser.ID, &createdUser.Username, &createdUser.PasswordHash, &createdUser.CreatedAt, &createdUser.UpdatedAt)
 
 		if err != nil {
 			if pgErrIs(err, pgerrcode.UniqueViolation) {
@@ -47,10 +49,6 @@ func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*mo
 			return nil, err
 		}
 
-		createdUser, err := pgx.CollectExactlyOneRow(row, userFromCollectableRow)
-		if err != nil {
-			return nil, err
-		}
 		return &createdUser, nil
 	})
 }

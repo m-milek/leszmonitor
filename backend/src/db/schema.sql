@@ -6,6 +6,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DO $$ BEGIN
+    CREATE TYPE org_role AS ENUM ('owner', 'admin', 'member', 'viewer');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -36,7 +42,7 @@ CREATE OR REPLACE TRIGGER set_timestamp
 CREATE TABLE IF NOT EXISTS user_orgs (
     user_id UUID NOT NULL,
     org_id UUID NOT NULL,
-    role team_role NOT NULL,
+    role org_role NOT NULL,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -82,12 +88,6 @@ CREATE OR REPLACE TRIGGER set_timestamp
     BEFORE UPDATE ON permissions
     FOR EACH ROW
 EXECUTE PROCEDURE update_timestamp();
-
-DO $$ BEGIN
-    CREATE TYPE org_role AS ENUM ('owner', 'admin', 'member', 'viewer');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
 
 CREATE TABLE IF NOT EXISTS monitors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
