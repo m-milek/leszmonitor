@@ -1,5 +1,5 @@
 services:
-  frontend:
+  ui:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -8,14 +8,14 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      - api
     env_file:
       - ./frontend/.env
     restart: unless-stopped
     networks:
       - leszmonitor
 
-  backend:
+  api:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -34,7 +34,6 @@ services:
 
   db:
     image: timescale/timescaledb:2.22.1-pg17
-    container_name: timescaledb
     environment:
       POSTGRES_PORT: 5432
       POSTGRES_DB: leszmonitor
