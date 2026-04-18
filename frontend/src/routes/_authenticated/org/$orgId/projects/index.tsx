@@ -18,26 +18,12 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card.tsx";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
-import { Textarea } from "@/components/ui/textarea.tsx";
+import { NewProjectForm } from "@/components/leszmonitor/forms/NewProjectForm.tsx";
 import { ProjectsTable } from "@/components/leszmonitor/tables/ProjectsTable.tsx";
+import { QUERY_KEYS } from "@/lib/consts.ts";
 
 export const Route = createFileRoute("/_authenticated/org/$orgId/projects/")({
   component: Projects,
-});
-
-const projectFormSchema = z.object({
-  name: z.string().min(1, "Project name is required"),
-  displayId: z.string().min(1, "Display ID is required"),
-  description: z.string(),
 });
 
 function Projects() {
@@ -45,36 +31,21 @@ function Projects() {
   const queryClient = useQueryClient();
 
   const { data } = useQuery({
-    queryKey: ["projects", orgId],
+    queryKey: [QUERY_KEYS.PROJECTS, orgId],
     queryFn: () => getProjects(orgId),
   });
 
   const addProjectMutation = useMutation({
     mutationFn: (newProject: ProjectInput) => addProject(orgId, newProject),
     onSuccess: () => {
-      form.reset();
-      queryClient.invalidateQueries({ queryKey: ["projects", orgId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROJECTS, orgId] });
     },
   });
 
   const deleteProjectMutation = useMutation({
     mutationFn: (projectId: string) => deleteProject(orgId, projectId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects", orgId] });
-    },
-  });
-
-  const form = useForm({
-    defaultValues: {
-      name: "",
-      displayId: "",
-      description: "",
-    },
-    validators: {
-      onSubmit: projectFormSchema,
-    },
-    onSubmit: async ({ value }) => {
-      await addProjectMutation.mutateAsync(value);
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROJECTS, orgId] });
     },
   });
 
@@ -90,81 +61,10 @@ function Projects() {
           <TypographyH2>Create New Project</TypographyH2>
         </CardHeader>
         <CardContent>
-          <form
-            id="project-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-          >
-            <FieldGroup className="gap-2">
-              <div className="flex gap-8">
-                <form.Field
-                  name="name"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Project Name</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-                <form.Field
-                  name="displayId"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Display ID</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
-                />
-              </div>
-              <form.Field
-                name="description"
-                children={(field) => {
-                  return (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>
-                        Description (Optional)
-                      </FieldLabel>
-                      <Textarea
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        autoComplete="off"
-                      />
-                    </Field>
-                  );
-                }}
-              />
-            </FieldGroup>
-          </form>
+          <NewProjectForm
+            formId="project-form"
+            onSubmitProject={(value) => addProjectMutation.mutateAsync(value)}
+          />
         </CardContent>
         <CardFooter className="justify-end">
           <Button
