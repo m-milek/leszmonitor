@@ -17,6 +17,13 @@ export enum OrgRole {
   Viewer = "viewer",
 }
 
+export const mapOrgRoleToDisplayName: Record<OrgRole, string> = {
+  [OrgRole.Owner]: "Owner",
+  [OrgRole.Admin]: "Admin",
+  [OrgRole.Member]: "Member",
+  [OrgRole.Viewer]: "Viewer",
+};
+
 export interface OrgMember extends Timestamps {
   id: string;
   username: string;

@@ -46,12 +46,7 @@ export const LMInputField = ({
   return (
     <Field>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-      <Flex
-        direction="horizontal"
-        gap="0.5rem"
-        align="flex-start"
-        wrap="nowrap"
-      >
+      <Flex direction="horizontal" gap="0.5rem" align="center" wrap="nowrap">
         {isTextarea ? (
           <Textarea
             id={field.name}
