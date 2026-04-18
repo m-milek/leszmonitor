@@ -1,13 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { useForm } from "@tanstack/react-form";
-import {
-  isValidMonitorType,
-  type MonitorType,
-  newMonitorSchema,
-  newMonitorSchemaDefaultValues,
-} from "@/lib/types.ts";
 import {
   Card,
   CardContent,
@@ -15,18 +8,9 @@ import {
   CardHeader,
 } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { LMInputField } from "@/components/leszmonitor/forms/LMInputField.tsx";
-import * as React from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getProjects } from "@/lib/data/projectData.ts";
+import { NewMonitorForm } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
 
 export const Route = createFileRoute(
   "/_authenticated/org/$orgId/monitors/new/",
@@ -37,39 +21,13 @@ export const Route = createFileRoute(
 function NewMonitorComponent() {
   const { orgId } = Route.useParams();
 
-  const form = useForm({
-    defaultValues: newMonitorSchemaDefaultValues,
-    validators: {
-      onSubmit: newMonitorSchema,
-    },
-    onSubmit: ({ value }) => {
-      console.log(value);
-    },
-    onSubmitInvalid: ({ value }) => {
-      console.log("Invalid form submission");
-      console.log("Values:", value);
-    },
-  });
-
   const { data: projects } = useQuery({
     queryKey: ["projects", orgId],
     queryFn: () => getProjects(orgId),
   });
 
-  const onSubmit = (e: React.SubmitEvent) => {
-    e.preventDefault();
-    form.handleSubmit();
-  };
-
-  const [selectedMonitorType, setSelectedMonitorType] =
-    React.useState<MonitorType | null>(null);
-
-  const onMonitorTypeChange = (value: string) => {
-    if (!isValidMonitorType(value)) {
-      console.error("Invalid monitor type selected:", value);
-      return;
-    }
-    setSelectedMonitorType(value);
+  const onSubmit = async (value: unknown) => {
+    console.log(value);
   };
 
   return (
@@ -78,83 +36,20 @@ function NewMonitorComponent() {
       <Card>
         <CardHeader>Form</CardHeader>
         <CardContent>
-          <form
-            id="new-monitor-form"
-            onSubmit={onSubmit}
-            className="flex items-end gap-4"
-          >
-            <form.Field
-              name="name"
-              children={(field) => {
-                return <LMInputField label="Name" field={field} />;
-              }}
-            />
-            <form.Field
-              name="displayId"
-              children={(field) => {
-                return <LMInputField label="Display ID" field={field} />;
-              }}
-            />
-            <form.Field
-              name="interval"
-              children={(field) => {
-                return <LMInputField label="Interval (s)" field={field} />;
-              }}
-            />
-            <form.Field
-              name={"projectId"}
-              children={(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field>
-                    <FieldLabel>Project</FieldLabel>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projects?.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            />
-            <form.Field
-              name={"type"}
-              children={(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field>
-                    <FieldLabel>Type</FieldLabel>
-                    <Select onValueChange={onMonitorTypeChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Monitor Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={"http"}>HTTP</SelectItem>
-                        <SelectItem value={"ping"}>Ping</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            />
-            {selectedMonitorType === "http" && <div>http</div>}
-            {selectedMonitorType === "ping" && <div>ping</div>}
-          </form>
+          <NewMonitorForm
+            formId="new-monitor-form"
+            onSubmitMonitor={onSubmit}
+            projects={projects}
+            renderMonitorTypeContent={(type) => {
+              if (type === "http") {
+                return <div>http</div>;
+              }
+              if (type === "ping") {
+                return <div>ping</div>;
+              }
+              return null;
+            }}
+          />
         </CardContent>
         <CardFooter>
           <Button type="submit" form="new-monitor-form">

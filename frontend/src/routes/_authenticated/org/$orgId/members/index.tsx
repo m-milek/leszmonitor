@@ -16,22 +16,6 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { useState } from "react";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { OrgRole } from "@/lib/types.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addUserToOrg,
@@ -39,9 +23,7 @@ import {
   fetchAllUsers,
   removeUserFromOrg,
 } from "@/lib/data/userData.ts";
-import { useForm } from "@tanstack/react-form";
-import { z } from "zod";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { AddMemberForm } from "@/components/leszmonitor/forms/AddMemberForm.tsx";
 
 export const Route = createFileRoute("/_authenticated/org/$orgId/members/")({
   component: OrgMembersRoute,
@@ -49,8 +31,6 @@ export const Route = createFileRoute("/_authenticated/org/$orgId/members/")({
 
 function OrgMembersRoute() {
   const org = useAtomValue(orgAtom);
-
-  const roles = Object.values(OrgRole);
 
   const queryClient = useQueryClient();
 
@@ -66,7 +46,6 @@ function OrgMembersRoute() {
         role: value.role,
       }),
     onSuccess: () => {
-      form.reset();
       queryClient.invalidateQueries({ queryKey: ["org", org!.displayId] });
     },
   });
@@ -78,28 +57,12 @@ function OrgMembersRoute() {
       queryClient.invalidateQueries({ queryKey: ["org", org!.displayId] });
     },
   });
+
   const onMemberRemoved = async (username: string) => {
     console.log("Removing member", username);
     await removeMemberMutation.mutateAsync(username);
   };
 
-  const addUserToOrgFormSchema = z.object({
-    username: z.string().min(1, "Username is required"),
-    role: z.enum(roles),
-  });
-
-  const form = useForm({
-    defaultValues: {
-      username: "",
-      role: OrgRole.Member,
-    } as AddUserToOrgPayload,
-    validators: {
-      onSubmit: addUserToOrgFormSchema,
-    },
-    onSubmit: async ({ value }) => {
-      await addMemberMutation.mutateAsync(value);
-    },
-  });
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -121,87 +84,23 @@ function OrgMembersRoute() {
           <TypographyH2>Add Members</TypographyH2>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <form
-            id="add-member-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
+          <AddMemberForm
+            formId="add-member-form"
+            onSubmitMember={async (value) => {
+              await addMemberMutation.mutateAsync(value);
             }}
-            className="flex items-end gap-4"
-          >
-            <form.Field
-              name="username"
-              children={(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-                    <Combobox
-                      items={validUsernames}
-                      value={field.state.value}
-                      onValueChange={(value) => field.handleChange(value ?? "")}
-                    >
-                      <ComboboxInput
-                        placeholder="Find by username..."
-                        id={field.name}
-                        name={field.name}
-                      />
-                      <ComboboxContent>
-                        <ComboboxEmpty>No users found.</ComboboxEmpty>
-                        <ComboboxList>
-                          {(value) => {
-                            return (
-                              <ComboboxItem key={value} value={value}>
-                                {value}
-                              </ComboboxItem>
-                            );
-                          }}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            />
-            <form.Field
-              name="role"
-              children={(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-                return (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>Role</FieldLabel>
-                    <Select
-                      onValueChange={(value) =>
-                        field.handleChange(value as OrgRole)
-                      }
-                      defaultValue={field.state.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a role..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role} value={role}>
-                            {role}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            />
-            <Button type="submit">Add Member</Button>
-          </form>
+            validUsernames={validUsernames}
+          />
         </CardContent>
+        <CardFooter className="justify-end">
+          <Button
+            type="submit"
+            form="add-member-form"
+            disabled={addMemberMutation.isPending}
+          >
+            {addMemberMutation.isPending ? "Adding..." : "Add Member"}
+          </Button>
+        </CardFooter>
       </Card>
       <Card>
         <CardHeader>
