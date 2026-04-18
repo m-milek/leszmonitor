@@ -5,17 +5,11 @@ import {
   newMonitorSchema,
   newMonitorSchemaDefaultValues,
 } from "@/lib/types.ts";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { LMInputField } from "@/components/leszmonitor/forms/LMInputField.tsx";
 import type { ReactNode } from "react";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
+import { LMSelect } from "@/components/leszmonitor/forms/LMSelect.tsx";
 
 export interface MonitorFormValues {
   name: string;
@@ -57,6 +51,18 @@ export function NewMonitorForm({
   const isValidType =
     selectedMonitorType && isValidMonitorType(selectedMonitorType);
 
+  const projectSelectItems = projects
+    ? projects.map((project) => ({
+        value: project.id,
+        label: project.name,
+      }))
+    : [];
+
+  const monitorTypeSelectItems: { value: MonitorType; label: string }[] = [
+    { value: "http", label: "HTTP" },
+    { value: "ping", label: "Ping" },
+  ];
+
   return (
     <Flex direction="vertical" gap="1rem" className="w-full" align="stretch">
       <form
@@ -93,21 +99,12 @@ export function NewMonitorForm({
               return (
                 <Field>
                   <FieldLabel>Project</FieldLabel>
-                  <Select
+                  <LMSelect
                     value={field.state.value}
                     onValueChange={(value) => field.handleChange(value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects?.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select Project"
+                    items={projectSelectItems}
+                  />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
@@ -120,23 +117,17 @@ export function NewMonitorForm({
                 field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field>
-                  <FieldLabel>Type</FieldLabel>
-                  <Select
+                  <FieldLabel>Monitor Type</FieldLabel>
+                  <LMSelect
                     value={field.state.value}
                     onValueChange={(value) => {
                       if (isValidMonitorType(value)) {
                         field.handleChange(value as MonitorType);
                       }
                     }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Monitor Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={"http"}>HTTP</SelectItem>
-                      <SelectItem value={"ping"}>Ping</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select Monitor Type"
+                    items={monitorTypeSelectItems}
+                  />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
@@ -150,5 +141,3 @@ export function NewMonitorForm({
     </Flex>
   );
 }
-
-

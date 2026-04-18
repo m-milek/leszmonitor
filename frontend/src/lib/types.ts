@@ -58,6 +58,7 @@ export interface Monitor extends Timestamps {
 }
 
 export type MonitorType = "http" | "ping";
+
 export const isValidMonitorType = (value: string): value is MonitorType => {
   const values = ["http", "ping"] as MonitorType[];
   return values.includes(value as MonitorType);

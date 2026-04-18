@@ -2,14 +2,6 @@ import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { mapOrgRoleToDisplayName, OrgRole } from "@/lib/types.ts";
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox.tsx";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,10 +11,11 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import type { AddUserToOrgPayload } from "@/lib/data/userData.ts";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
+import { LMCombobox } from "@/components/leszmonitor/forms/LMCombobox.tsx";
 
 const addUserToOrgFormSchema = z.object({
   username: z.string().min(1, "Username is required"),
-  role: z.nativeEnum(OrgRole),
+  role: z.enum(OrgRole),
 });
 
 export interface AddMemberFormProps {
@@ -70,31 +63,15 @@ export function AddMemberForm({
               <Field>
                 <FieldLabel htmlFor={field.name}>Username</FieldLabel>
                 <Flex direction="horizontal">
-                  <Combobox
+                  <LMCombobox
                     items={validUsernames}
                     value={field.state.value}
                     onValueChange={(value) => field.handleChange(value ?? "")}
-                  >
-                    <ComboboxInput
-                      placeholder="Find by username..."
-                      id={field.name}
-                      name={field.name}
-                      className="max-w-1/2"
-                      autoComplete="off"
-                    />
-                    <ComboboxContent>
-                      <ComboboxEmpty>No users found.</ComboboxEmpty>
-                      <ComboboxList>
-                        {(value) => {
-                          return (
-                            <ComboboxItem key={value} value={value}>
-                              {value}
-                            </ComboboxItem>
-                          );
-                        }}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
+                    placeholder="Find by username..."
+                    id={field.name}
+                    name={field.name}
+                    className="max-w-1/2"
+                  />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Flex>
               </Field>
