@@ -2,7 +2,8 @@ import z from "zod";
 import { FieldGroup } from "@/components/ui/field.tsx";
 import { useForm } from "@tanstack/react-form";
 import type { ProjectInput } from "@/lib/data/projectData.ts";
-import { LMInputField } from "@/components/leszmonitor/forms/LMInputField.tsx";
+import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
+import { LMTextareaField } from "@/components/leszmonitor/forms/inputs/LMTextareaField.tsx";
 
 const projectFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -58,10 +59,9 @@ export function NewProjectForm({
         <form.Field
           name="description"
           children={(field) => (
-            <LMInputField
+            <LMTextareaField
               label="Description (Optional)"
               field={field}
-              type="textarea"
               rows={4}
             />
           )}

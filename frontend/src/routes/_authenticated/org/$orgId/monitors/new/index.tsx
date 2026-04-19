@@ -1,12 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardFooter } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { getProjects } from "@/lib/data/projectData.ts";
@@ -34,7 +29,6 @@ function NewMonitorComponent() {
     <MainPanelContainer>
       <TypographyH1>New Monitor Wizard</TypographyH1>
       <Card>
-        <CardHeader>Form</CardHeader>
         <CardContent>
           <NewMonitorForm
             formId="new-monitor-form"
