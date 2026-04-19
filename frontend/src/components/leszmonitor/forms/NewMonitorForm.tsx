@@ -1,5 +1,6 @@
-import { useForm } from "@tanstack/react-form";
+import { useForm, type FormValidateOrFn } from "@tanstack/react-form";
 import {
+  defaultConfigs,
   isValidMonitorType,
   type MonitorType,
   newMonitorSchema,
@@ -7,7 +8,6 @@ import {
 } from "@/lib/types.ts";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
-import type { ReactNode } from "react";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
 import {
@@ -16,20 +16,45 @@ import {
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
 import { LMTextareaField } from "@/components/leszmonitor/forms/inputs/LMTextareaField.tsx";
 import { Divider } from "@/components/leszmonitor/ui/Divider.tsx";
+import { MonitorConfigFields } from "@/components/leszmonitor/forms/monitors/MonitorConfigFields.tsx";
+import type {
+  HttpMonitorFormValues,
+  PingMonitorFormValues,
+  MonitorFormValues,
+} from "@/lib/types.ts";
 
-export interface MonitorFormValues {
-  name: string;
-  displayId: string;
-  interval: string;
-  projectId: string;
-  type: MonitorType;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function __monitorFormHelper() {
+  return useForm({
+    defaultValues: {} as MonitorFormValues,
+    validators: {
+      onSubmit:
+        newMonitorSchema as unknown as FormValidateOrFn<MonitorFormValues>,
+    },
+  });
 }
+export type MonitorFormApi = ReturnType<typeof __monitorFormHelper>;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function __httpMonitorFormHelper() {
+  return useForm({
+    defaultValues: {} as HttpMonitorFormValues,
+  });
+}
+export type HttpMonitorFormApi = ReturnType<typeof __httpMonitorFormHelper>;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function __pingMonitorFormHelper() {
+  return useForm({
+    defaultValues: {} as PingMonitorFormValues,
+  });
+}
+export type PingMonitorFormApi = ReturnType<typeof __pingMonitorFormHelper>;
 
 export interface NewMonitorFormProps {
-  onSubmitMonitor: (value: MonitorFormValues | unknown) => Promise<unknown>;
+  onSubmitMonitor: (value: MonitorFormValues) => Promise<unknown>;
   projects: Array<{ id: string; name: string }> | undefined;
   formId?: string;
-  renderMonitorTypeContent?: (type: MonitorType | null) => ReactNode;
 }
 
 export function NewMonitorForm({
@@ -38,12 +63,13 @@ export function NewMonitorForm({
   formId = "new-monitor-form",
 }: NewMonitorFormProps) {
   const form = useForm({
-    defaultValues: newMonitorSchemaDefaultValues,
+    defaultValues: newMonitorSchemaDefaultValues as MonitorFormValues,
     validators: {
-      onSubmit: newMonitorSchema,
+      onSubmit:
+        newMonitorSchema as unknown as FormValidateOrFn<MonitorFormValues>,
     },
     onSubmit: async ({ value }) => {
-      await onSubmitMonitor(value);
+      await onSubmitMonitor(value as MonitorFormValues);
     },
     onSubmitInvalid: ({ value }) => {
       console.log("Invalid form submission");
@@ -74,10 +100,41 @@ export function NewMonitorForm({
       <Flex direction="row">
         <Flex direction="column" className="flex-1 gap-2">
           <form.Field
+            name={"type"}
+            listeners={{
+              onChange: ({ value }) => {
+                if (isValidMonitorType(value)) {
+                  form.setFieldValue("config", defaultConfigs[value]);
+                }
+              },
+            }}
+            children={(field) => {
+              return (
+                <Field>
+                  <FieldLabel>Type</FieldLabel>
+                  <LMSelect
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onValueChange={(value) => {
+                      if (isValidMonitorType(value)) {
+                        field.handleChange(value as MonitorType);
+                      }
+                    }}
+                    placeholder="Select Monitor Type"
+                    items={monitorTypeSelectItems}
+                    isInvalid={isFieldInvalid(field)}
+                    errorMessage={getFirstError(field)}
+                  />
+                </Field>
+              );
+            }}
+          />
+          <form.Field
             name="name"
             children={(field) => (
               <Field>
-                <FieldLabel>Monitor Name</FieldLabel>
+                <FieldLabel>Name</FieldLabel>
                 <LMInputField
                   name={field.name}
                   value={field.state.value}
@@ -126,7 +183,7 @@ export function NewMonitorForm({
                 <FieldLabel>Interval (s)</FieldLabel>
                 <LMInputField
                   name={field.name}
-                  value={field.state.value}
+                  value={field.state.value.toString()}
                   onChange={(e) => field.handleChange(Number(e.target.value))}
                   isInvalid={isFieldInvalid(field)}
                   errorMessage={getFirstError(field)}
@@ -154,33 +211,11 @@ export function NewMonitorForm({
               );
             }}
           />
-          <form.Field
-            name={"type"}
-            children={(field) => {
-              return (
-                <Field>
-                  <FieldLabel>Monitor Type</FieldLabel>
-                  <LMSelect
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onValueChange={(value) => {
-                      if (isValidMonitorType(value)) {
-                        field.handleChange(value as MonitorType);
-                      }
-                    }}
-                    placeholder="Select Monitor Type"
-                    items={monitorTypeSelectItems}
-                    isInvalid={isFieldInvalid(field)}
-                    errorMessage={getFirstError(field)}
-                  />
-                </Field>
-              );
-            }}
-          />
         </Flex>
         <Divider direction="column" className="mx-4" />
-        <Flex direction="column" className="flex-1 gap-2"></Flex>
+        <Flex direction="column" className="flex-1 gap-2">
+          <MonitorConfigFields form={form} />
+        </Flex>
       </Flex>
     </form>
   );

@@ -11,7 +11,7 @@ export function GlobalNotFound() {
     <div className="flex h-screen w-full">
       <MainPanelContainer>
         <Center>
-          <Flex direction="vertical" align="center" gap={1}>
+          <Flex direction="column" className="gap-4 items-center">
             <TypographyH1>404</TypographyH1>
             <TypographyH3>Not Found</TypographyH3>
           </Flex>
