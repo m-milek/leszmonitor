@@ -32,6 +32,8 @@ import { OrgSelector } from "@/components/leszmonitor/sidebar/OrgSelector.tsx";
 import { Link } from "@tanstack/react-router";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
 import { fetchUser } from "@/lib/data/userData.ts";
+import { fetchOrgs } from "@/lib/data/orgData.ts";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -98,94 +100,105 @@ export const AppSidebar = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: orgsData } = useQuery({
+    queryKey: ["orgs"],
+    queryFn: fetchOrgs,
+  });
+
   useEffect(() => {
     if (userData) {
       setUser(userData);
     }
   }, [userData, setUser]);
 
-  if (!username || !org || !user) {
-    return null;
-  }
-
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
         <div className="p-2">
-          <LeszmonitorLogo />
+          <Link to={"/"}>
+            <LeszmonitorLogo />
+          </Link>
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-              <OrgSelector />
+            {orgsData ? (
+              <OrgSelector orgs={orgsData} />
+            ) : (
+              <Skeleton className="h-8 w-full" />
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarButton
-                icon={<LucidePlusCircle />}
-                href="/new-monitor"
-                label="New Monitor"
-                variant="primary"
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>This Workspace</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarButton
-                icon={<LayoutDashboardIcon />}
-                href={`/org/${org.displayId}/dashboard`}
-                label="Dashboard"
-              />
-              <SidebarButton
-                icon={<LucideActivity />}
-                href={`/org/${org.displayId}/monitors`}
-                label="Monitors"
-              />
-              <SidebarButton
-                icon={<LucideFolderOpen />}
-                href={`/org/${org.displayId}/projects`}
-                label="Projects"
-              />
-              <SidebarButton
-                icon={<LucideUsers />}
-                href={`/org/${org.displayId}/members`}
-                label="Members"
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Help</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarButton
-                icon={<LucideBookText />}
-                href="/docs"
-                label="Documentation"
-              />
-              <SidebarButton
-                icon={<LucideSearch />}
-                href="/search"
-                label="Search"
-              />
-              <SidebarButton
-                icon={<LucideSettings />}
-                href={`/user/${user.username}/settings`}
-                label="Settings"
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <AppSidebarFooter user={user} />
-      </SidebarFooter>
+
+      {org ? (
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarButton
+                  icon={<LucidePlusCircle />}
+                  href={`/org/${org.displayId}/monitors/new`}
+                  label="New Monitor"
+                  variant="primary"
+                />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>This Organization</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarButton
+                  icon={<LayoutDashboardIcon />}
+                  href={`/org/${org.displayId}/dashboard`}
+                  label="Dashboard"
+                />
+                <SidebarButton
+                  icon={<LucideActivity />}
+                  href={`/org/${org.displayId}/monitors`}
+                  label="Monitors"
+                />
+                <SidebarButton
+                  icon={<LucideFolderOpen />}
+                  href={`/org/${org.displayId}/projects`}
+                  label="Projects"
+                />
+                <SidebarButton
+                  icon={<LucideUsers />}
+                  href={`/org/${org.displayId}/members`}
+                  label="Members"
+                />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel>Help</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarButton
+                  icon={<LucideBookText />}
+                  href="/docs"
+                  label="Documentation"
+                />
+                <SidebarButton
+                  icon={<LucideSearch />}
+                  href="/search"
+                  label="Search"
+                />
+                <SidebarButton
+                  icon={<LucideSettings />}
+                  href={`/user/${user?.username}/settings`}
+                  label="Settings"
+                />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      ) : (
+        <Skeleton className="h-full w-full" />
+      )}
+
+      <SidebarFooter>{user && <AppSidebarFooter user={user} />}</SidebarFooter>
     </Sidebar>
   );
 };
