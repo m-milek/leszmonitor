@@ -27,31 +27,31 @@ export interface LMSelectProps {
 
 export function LMSelect(props: LMSelectProps) {
   return (
-    <ErrorTooltip
-      isOpen={props.isInvalid ?? false}
-      message={props.errorMessage ?? ""}
+    <Select
+      value={props.value}
+      onValueChange={props.onValueChange}
+      autoComplete="off"
     >
-      <Select
-        value={props.value}
-        onValueChange={props.onValueChange}
-        autoComplete="off"
+      <ErrorTooltip
+        isOpen={props.isInvalid ?? false}
+        message={props.errorMessage ?? ""}
       >
         <SelectTrigger
           className={cn(
             props.className,
-            props.isInvalid && "border-red-500 focus:ring-red-500",
+            props.isInvalid && "border-destructive focus:ring-destructive",
           )}
         >
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>
-        <SelectContent position="popper">
-          {props.items?.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </ErrorTooltip>
+      </ErrorTooltip>
+      <SelectContent position="popper">
+        {props.items?.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

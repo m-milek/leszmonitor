@@ -24,39 +24,36 @@ export interface LMComboboxProps {
 
 export function LMCombobox(props: LMComboboxProps) {
   return (
-    <ErrorTooltip
-      isOpen={props.isInvalid ?? false}
-      message={props.errorMessage ?? ""}
+    <Combobox
+      items={props.items}
+      value={props.value}
+      onValueChange={props.onValueChange}
     >
-      <Combobox
-        items={props.items}
-        value={props.value}
-        onValueChange={props.onValueChange}
+      <ErrorTooltip
+        isOpen={props.isInvalid ?? false}
+        message={props.errorMessage ?? ""}
       >
         <ComboboxInput
           placeholder={props.placeholder ?? ""}
           id={props.id}
           name={props.name}
           className={cn(
-            "w-full",
             props.className,
-            props.isInvalid && "border-red-500 focus:ring-red-500",
+            props.isInvalid && "border-destructive focus:ring-destructive",
           )}
           autoComplete="off"
         />
-        <ComboboxContent>
-          <ComboboxEmpty>{props.emptyText ?? ""}</ComboboxEmpty>
-          <ComboboxList>
-            {(value) => {
-              return (
-                <ComboboxItem key={value} value={value}>
-                  {value}
-                </ComboboxItem>
-              );
-            }}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
-    </ErrorTooltip>
+      </ErrorTooltip>
+      <ComboboxContent>
+        <ComboboxEmpty>{props.emptyText ?? ""}</ComboboxEmpty>
+        <ComboboxList>
+          {(value) => (
+            <ComboboxItem key={value} value={value}>
+              {value}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   );
 }
