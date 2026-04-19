@@ -1,17 +1,15 @@
 import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { mapOrgRoleToDisplayName, OrgRole } from "@/lib/types.ts";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import type { AddUserToOrgPayload } from "@/lib/data/userData.ts";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
-import { LMCombobox } from "@/components/leszmonitor/forms/LMCombobox.tsx";
+import { LMCombobox } from "@/components/leszmonitor/forms/inputs/LMCombobox.tsx";
+import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
+import {
+  getFirstError,
+  isFieldInvalid,
+} from "@/components/leszmonitor/forms/inputs/utils.ts";
 
 const addUserToOrgFormSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -45,6 +43,11 @@ export function AddMemberForm({
     },
   });
 
+  const roleSelectItems = roles.map((role) => ({
+    value: role,
+    label: mapOrgRoleToDisplayName[role],
+  }));
+
   return (
     <form
       id={formId}
@@ -57,23 +60,20 @@ export function AddMemberForm({
         <form.Field
           name="username"
           children={(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
             return (
               <Field>
                 <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-                <Flex direction="horizontal">
-                  <LMCombobox
-                    items={validUsernames}
-                    value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value ?? "")}
-                    placeholder="Find by username..."
-                    id={field.name}
-                    name={field.name}
-                    className="max-w-1/2"
-                  />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                </Flex>
+                <LMCombobox
+                  items={validUsernames}
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value ?? "")}
+                  placeholder="Find by username..."
+                  id={field.name}
+                  name={field.name}
+                  className="max-w-1/2"
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
               </Field>
             );
           }}
@@ -81,31 +81,22 @@ export function AddMemberForm({
         <form.Field
           name="role"
           children={(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
             return (
               <Field>
                 <FieldLabel htmlFor={field.name}>Role</FieldLabel>
-                <Flex direction="horizontal">
-                  <Select
-                    onValueChange={(value) =>
-                      field.handleChange(value as OrgRole)
-                    }
-                    defaultValue={field.state.value}
-                  >
-                    <SelectTrigger className="max-w-1/2">
-                      <SelectValue placeholder="Choose a role..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {mapOrgRoleToDisplayName[role]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
-                </Flex>
+                <LMSelect
+                  value={field.state.value}
+                  onValueChange={(value) =>
+                    field.handleChange(value as OrgRole)
+                  }
+                  placeholder="Choose a role..."
+                  items={roleSelectItems}
+                  id={field.name}
+                  name={field.name}
+                  className="max-w-1/2"
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
               </Field>
             );
           }}

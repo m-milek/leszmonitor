@@ -5,11 +5,15 @@ import {
   newMonitorSchema,
   newMonitorSchemaDefaultValues,
 } from "@/lib/types.ts";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field.tsx";
-import { LMInputField } from "@/components/leszmonitor/forms/LMInputField.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
 import type { ReactNode } from "react";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
-import { LMSelect } from "@/components/leszmonitor/forms/LMSelect.tsx";
+import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
+import {
+  getFirstError,
+  isFieldInvalid,
+} from "@/components/leszmonitor/forms/inputs/utils.ts";
 
 export interface MonitorFormValues {
   name: string;
@@ -82,7 +86,7 @@ export function NewMonitorForm({
           <form.Field
             name="displayId"
             children={(field) => {
-              return <LMInputField label="Display ID" field={field} />;
+              return <LMInputField label="Slug" field={field} />;
             }}
           />
           <form.Field
@@ -94,18 +98,19 @@ export function NewMonitorForm({
           <form.Field
             name={"projectId"}
             children={(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field>
                   <FieldLabel>Project</FieldLabel>
                   <LMSelect
+                    id={field.name}
+                    name={field.name}
                     value={field.state.value}
                     onValueChange={(value) => field.handleChange(value)}
                     placeholder="Select Project"
                     items={projectSelectItems}
+                    isInvalid={isFieldInvalid(field)}
+                    errorMessage={getFirstError(field)}
                   />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
@@ -113,12 +118,12 @@ export function NewMonitorForm({
           <form.Field
             name={"type"}
             children={(field) => {
-              const isInvalid =
-                field.state.meta.isTouched && !field.state.meta.isValid;
               return (
                 <Field>
                   <FieldLabel>Monitor Type</FieldLabel>
                   <LMSelect
+                    id={field.name}
+                    name={field.name}
                     value={field.state.value}
                     onValueChange={(value) => {
                       if (isValidMonitorType(value)) {
@@ -127,8 +132,9 @@ export function NewMonitorForm({
                     }}
                     placeholder="Select Monitor Type"
                     items={monitorTypeSelectItems}
+                    isInvalid={isFieldInvalid(field)}
+                    errorMessage={getFirstError(field)}
                   />
-                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
