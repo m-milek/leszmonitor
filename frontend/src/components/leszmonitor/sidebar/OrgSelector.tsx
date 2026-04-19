@@ -6,10 +6,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { orgAtom } from "@/lib/atoms.ts";
-import { fetchOrgs } from "@/lib/data/orgData.ts";
+import type { Org } from "@/lib/types.ts";
 
 interface OrgEntryProps {
   orgName: string;
@@ -23,31 +22,25 @@ export const OrgEntry = ({ orgName, isCurrent }: OrgEntryProps) => {
   );
 };
 
-export const OrgSelector = () => {
-  const { data: orgsData } = useQuery({
-    queryKey: ["orgs"],
-    queryFn: fetchOrgs,
-  });
+export interface OrgSelectorProps {
+  orgs: Org[];
+}
 
+export const OrgSelector = ({ orgs }: OrgSelectorProps) => {
   const org = useAtomValue(orgAtom);
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild className="w-full">
+      <DropdownMenuTrigger asChild className="w-full h-8">
         <Button variant="secondary">{org?.name}</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-full">
         <DropdownMenuGroup>
-          {orgsData?.map((orgItem) => (
-            <OrgEntry
-              key={orgItem.id}
-              orgName={orgItem.name}
-              isCurrent={false}
-            />
+          {orgs?.map((org) => (
+            <OrgEntry key={org.id} orgName={org.name} isCurrent={false} />
           ))}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 };
-

@@ -80,9 +80,9 @@ export interface HttpMonitorConfig {
 }
 
 export interface PingMonitorConfig {
-  Host: string;
-  Port: number;
-  Protocol: "tcp" | "udp" | "tcp4" | "tcp6" | "udp4" | "udp6";
+  host: string;
+  port: number;
+  protocol: "tcp" | "udp" | "tcp4" | "tcp6" | "udp4" | "udp6";
   timeoutMs: number;
   retryCount: number;
 }
@@ -103,36 +103,16 @@ export const httpMonitorConfigSchema = z.object({
     .optional(),
 });
 
-export const httpMonitorConfigSchemaDefaultValues: HttpMonitorConfig = {
-  method: "GET",
-  url: "",
-  headers: {},
-  body: "",
-  saveResponseBody: false,
-  saveResponseHeaders: false,
-  expectedStatusCodes: [],
-  expectedHeaders: {},
-  expectedResponseTimeMs: undefined,
-};
-
 export const pingMonitorConfigSchema = z.object({
-  Host: z.string().min(1, "Host is required"),
-  Port: z
+  host: z.string().min(1, "Host is required"),
+  port: z
     .number()
     .min(1, "Port must be at least 1")
     .max(65535, "Port must be at most 65535"),
-  Protocol: z.enum(["tcp", "udp", "tcp4", "tcp6", "udp4", "udp6"]),
+  protocol: z.enum(["tcp", "udp", "tcp4", "tcp6", "udp4", "udp6"]),
   timeoutMs: z.number().min(1, "Timeout must be at least 1 ms"),
   retryCount: z.number().min(0, "Retry count cannot be negative"),
 });
-
-export const pingMonitorConfigSchemaDefaultValues: PingMonitorConfig = {
-  Host: "",
-  Port: 80,
-  Protocol: "tcp",
-  timeoutMs: 5000,
-  retryCount: 3,
-};
 
 export const newMonitorSchema = z.object({
   name: z.string({ message: "Name is required" }).min(1, "Name is required"),
@@ -151,7 +131,10 @@ export const newMonitorSchema = z.object({
     message: "Please select a monitor type",
   }),
   config: z
-    .union([httpMonitorConfigSchema, pingMonitorConfigSchema])
+    .discriminatedUnion("type", [
+      httpMonitorConfigSchema,
+      pingMonitorConfigSchema,
+    ])
     .optional(),
 });
 
