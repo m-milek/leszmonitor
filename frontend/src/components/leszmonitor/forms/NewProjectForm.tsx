@@ -1,9 +1,14 @@
 import z from "zod";
-import { FieldGroup } from "@/components/ui/field.tsx";
+import { Field, FieldLabel } from "@/components/ui/field.tsx";
 import { useForm } from "@tanstack/react-form";
 import type { ProjectInput } from "@/lib/data/projectData.ts";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
 import { LMTextareaField } from "@/components/leszmonitor/forms/inputs/LMTextareaField.tsx";
+import {
+  getFirstError,
+  isFieldInvalid,
+} from "@/components/leszmonitor/forms/inputs/utils.ts";
+import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 
 const projectFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -43,17 +48,37 @@ export function NewProjectForm({
         form.handleSubmit();
       }}
     >
-      <FieldGroup className="gap-2">
+      <Flex direction="vertical" gap="0.5rem">
         <form.Field
           name="name"
           children={(field) => (
-            <LMInputField label="Project Name" field={field} type="text" />
+            <Field>
+              <FieldLabel>Project Name</FieldLabel>
+              <LMInputField
+                name={field.name}
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                type="text"
+                isInvalid={isFieldInvalid(field)}
+                errorMessage={getFirstError(field)}
+              />
+            </Field>
           )}
         />
         <form.Field
           name="displayId"
           children={(field) => (
-            <LMInputField label="Display ID" field={field} type="text" />
+            <Field>
+              <FieldLabel>Display ID</FieldLabel>
+              <LMInputField
+                name={field.name}
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                type="text"
+                isInvalid={isFieldInvalid(field)}
+                errorMessage={getFirstError(field)}
+              />
+            </Field>
           )}
         />
         <form.Field
@@ -66,7 +91,7 @@ export function NewProjectForm({
             />
           )}
         />
-      </FieldGroup>
+      </Flex>
     </form>
   );
 }
