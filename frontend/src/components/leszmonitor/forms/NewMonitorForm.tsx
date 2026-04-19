@@ -14,6 +14,8 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
+import { LMTextareaField } from "@/components/leszmonitor/forms/inputs/LMTextareaField.tsx";
+import { Divider } from "@/components/leszmonitor/ui/Divider.tsx";
 
 export interface MonitorFormValues {
   name: string;
@@ -34,7 +36,6 @@ export function NewMonitorForm({
   onSubmitMonitor,
   projects,
   formId = "new-monitor-form",
-  renderMonitorTypeContent,
 }: NewMonitorFormProps) {
   const form = useForm({
     defaultValues: newMonitorSchemaDefaultValues,
@@ -50,11 +51,6 @@ export function NewMonitorForm({
     },
   });
 
-  const selectedMonitorType = form.state.values.type;
-
-  const isValidType =
-    selectedMonitorType && isValidMonitorType(selectedMonitorType);
-
   const projectSelectItems = projects
     ? projects.map((project) => ({
         value: project.id,
@@ -68,15 +64,15 @@ export function NewMonitorForm({
   ];
 
   return (
-    <Flex direction="vertical" gap="1rem" className="w-full" align="stretch">
-      <form
-        id={formId}
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        <Flex direction="vertical" gap="1rem" align="stretch">
+    <form
+      id={formId}
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+    >
+      <Flex direction="row">
+        <Flex direction="column" className="flex-1 gap-2">
           <form.Field
             name="name"
             children={(field) => (
@@ -99,6 +95,21 @@ export function NewMonitorForm({
               <Field>
                 <FieldLabel>Slug</FieldLabel>
                 <LMInputField
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
+          />
+          <form.Field
+            name="description"
+            children={(field) => (
+              <Field>
+                <FieldLabel>Description</FieldLabel>
+                <LMTextareaField
                   name={field.name}
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
@@ -168,10 +179,11 @@ export function NewMonitorForm({
             }}
           />
         </Flex>
-      </form>
-      {isValidType &&
-        renderMonitorTypeContent &&
-        renderMonitorTypeContent(selectedMonitorType)}
-    </Flex>
+        <Divider direction="column" className="mx-4" />
+        <Flex direction="column" className="flex-1 gap-2">
+          Monitor Type Options
+        </Flex>
+      </Flex>
+    </form>
   );
 }

@@ -140,6 +140,7 @@ export const newMonitorSchema = z.object({
     .string({ message: "Display ID is required" })
     .min(1, "Display ID is required"),
   description: z.string().optional(),
+  orgId: z.string(),
   projectId: z.string(),
   interval: z
     .number({
