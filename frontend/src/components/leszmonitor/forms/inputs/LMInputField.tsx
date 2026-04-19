@@ -58,8 +58,7 @@ export const LMInputField = ({
           placeholder={placeholder}
           inputMode={inputMode}
           className={cn(
-            "max-w-1/2",
-            isInvalid && "border-red-500 focus:ring-red-500",
+            isInvalid && "border-destructive focus:ring-destructive",
           )}
         />
       </ErrorTooltip>

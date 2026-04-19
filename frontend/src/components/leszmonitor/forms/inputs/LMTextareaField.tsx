@@ -52,10 +52,7 @@ export const LMTextareaField = ({
           autoComplete="off"
           placeholder={placeholder}
           rows={rows}
-          className={cn(
-            "max-w-1/2",
-            isInvalid && "border-red-500 focus:ring-red-500",
-          )}
+          className={cn(isInvalid && "border-red-500 focus:ring-red-500")}
         />
       </ErrorTooltip>
     </Field>
