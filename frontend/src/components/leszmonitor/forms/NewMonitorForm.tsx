@@ -180,9 +180,7 @@ export function NewMonitorForm({
           />
         </Flex>
         <Divider direction="column" className="mx-4" />
-        <Flex direction="column" className="flex-1 gap-2">
-          Monitor Type Options
-        </Flex>
+        <Flex direction="column" className="flex-1 gap-2"></Flex>
       </Flex>
     </form>
   );
