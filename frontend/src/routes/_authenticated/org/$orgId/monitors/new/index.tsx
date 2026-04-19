@@ -34,15 +34,6 @@ function NewMonitorComponent() {
             formId="new-monitor-form"
             onSubmitMonitor={onSubmit}
             projects={projects}
-            renderMonitorTypeContent={(type) => {
-              if (type === "http") {
-                return <div>http</div>;
-              }
-              if (type === "ping") {
-                return <div>ping</div>;
-              }
-              return null;
-            }}
           />
         </CardContent>
         <CardFooter>
