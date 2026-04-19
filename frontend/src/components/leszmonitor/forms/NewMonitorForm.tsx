@@ -79,21 +79,49 @@ export function NewMonitorForm({
         <Flex direction="vertical" gap="1rem" align="stretch">
           <form.Field
             name="name"
-            children={(field) => {
-              return <LMInputField label="Name" field={field} />;
-            }}
+            children={(field) => (
+              <Field>
+                <FieldLabel>Monitor Name</FieldLabel>
+                <LMInputField
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="My Monitor"
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
           />
           <form.Field
             name="displayId"
-            children={(field) => {
-              return <LMInputField label="Slug" field={field} />;
-            }}
+            children={(field) => (
+              <Field>
+                <FieldLabel>Slug</FieldLabel>
+                <LMInputField
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
           />
           <form.Field
             name="interval"
-            children={(field) => {
-              return <LMInputField label="Interval (s)" field={field} />;
-            }}
+            children={(field) => (
+              <Field>
+                <FieldLabel>Interval (s)</FieldLabel>
+                <LMInputField
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(Number(e.target.value))}
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
           />
           <form.Field
             name={"projectId"}
