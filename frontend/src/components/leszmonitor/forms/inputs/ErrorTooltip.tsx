@@ -16,7 +16,7 @@ export function ErrorTooltip({
   isOpen,
   message,
   children,
-  side = "bottom",
+  side = "top",
 }: ErrorTooltipProps) {
   return (
     <Tooltip open={isOpen}>
@@ -24,8 +24,8 @@ export function ErrorTooltip({
       {isOpen && (
         <TooltipContent
           side={side}
-          className="bg-red-500 text-white border-red-600"
-          arrowClassName="bg-red-500 fill-red-500"
+          className="bg-destructive text-white border-destructive"
+          arrowClassName="bg-destructive fill-destructive"
         >
           {message}
         </TooltipContent>
