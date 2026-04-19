@@ -48,7 +48,7 @@ export function NewProjectForm({
         form.handleSubmit();
       }}
     >
-      <Flex direction="vertical" gap="0.5rem">
+      <Flex direction="column" className="gap-2">
         <form.Field
           name="name"
           children={(field) => (
@@ -84,11 +84,17 @@ export function NewProjectForm({
         <form.Field
           name="description"
           children={(field) => (
-            <LMTextareaField
-              label="Description (Optional)"
-              field={field}
-              rows={4}
-            />
+            <Field>
+              <FieldLabel>Description (Optional)</FieldLabel>
+              <LMTextareaField
+                name={field.name}
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                rows={4}
+                isInvalid={isFieldInvalid(field)}
+                errorMessage={getFirstError(field)}
+              />
+            </Field>
           )}
         />
       </Flex>

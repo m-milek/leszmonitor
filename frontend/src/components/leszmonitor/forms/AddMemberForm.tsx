@@ -56,7 +56,7 @@ export function AddMemberForm({
         form.handleSubmit();
       }}
     >
-      <Flex direction="vertical" gap="0.5rem">
+      <Flex direction="column" className="gap-2">
         <form.Field
           name="username"
           children={(field) => {
