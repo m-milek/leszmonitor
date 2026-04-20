@@ -15,8 +15,8 @@ import (
 
 func setupTestAuthorizationService() (context.Context, *authorizationServiceT, *db.MockDB) {
 	mockDB := &db.MockDB{
-		UsersRepo: new(db.MockUserRepository),
-		OrgsRepo:  new(db.MockOrgRepository),
+		UsersRepo:    new(db.MockUserRepository),
+		ProjectsRepo: new(db.MockProjectRepository),
 	}
 	db.Set(mockDB)
 
@@ -32,40 +32,39 @@ func createTestUser(username string) *models.User {
 	}
 }
 
-func createTestOrg(name string, members []models.OrgMember) *models.Org {
-	org := &models.Org{
+func createTestProject(name string, members []models.ProjectMember) *models.Project {
+	project := &models.Project{
 		ID:      pgtype.UUID{Bytes: [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, Valid: true},
 		Members: members,
 	}
-	org.DisplayIDFromName.Init(name)
-	return org
+	project.DisplayIDFromName.Init(name)
+	return project
 }
 
-// Helper to set up org and user with role
-func setupOrgWithUser(username string, role models.Role) (*models.User, *models.Org) {
+// Helper to set up project and user with role
+func setupProjectWithUser(username string, role models.Role) (*models.User, *models.Project) {
 	user := createTestUser(username)
-	org := createTestOrg("test-org", []models.OrgMember{{ID: user.ID, Role: role}})
-	return user, org
+	project := createTestProject("test-project", []models.ProjectMember{{ID: user.ID, Role: role}})
+	return user, project
 }
 
-// Helper to mock successful org and user retrieval
-func mockOrgAndUser(mockDB *db.MockDB, ctx context.Context, org *models.Org, user *models.User) {
-	mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, org.DisplayID).Return(org, nil)
+// Helper to mock successful project and user retrieval
+func mockProjectAndUser(mockDB *db.MockDB, ctx context.Context, project *models.Project, user *models.User) {
+	mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, project.DisplayID).Return(project, nil)
 	mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, user.Username).Return(user, nil)
 }
 
-func TestAuthorizationServiceT_AuthorizeOrgAction(t *testing.T) {
-	// Test successful authorization for different roles
+func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 	roleTests := []struct {
 		name       string
 		username   string
 		role       models.Role
 		permission models.Permission
 	}{
-		{"Authorizes owner with all permissions", "owner", models.RoleOwner, models.PermissionOrgReader},
-		{"Authorizes admin with edit permissions", "admin", models.RoleAdmin, models.PermissionOrgEditor},
+		{"Authorizes owner with all permissions", "owner", models.RoleOwner, models.PermissionProjectReader},
+		{"Authorizes admin with edit permissions", "admin", models.RoleAdmin, models.PermissionProjectEditor},
 		{"Authorizes member with monitor edit", "member", models.RoleMember, models.PermissionMonitorEditor},
-		{"Authorizes viewer with read permissions", "viewer", models.RoleViewer, models.PermissionOrgReader},
+		{"Authorizes viewer with read permissions", "viewer", models.RoleViewer, models.PermissionProjectReader},
 	}
 
 	for _, tt := range roleTests {
@@ -73,95 +72,74 @@ func TestAuthorizationServiceT_AuthorizeOrgAction(t *testing.T) {
 			ctx, authService, mockDB := setupTestAuthorizationService()
 			defer db.Set(nil)
 
-			user, org := setupOrgWithUser(tt.username, tt.role)
-			mockOrgAndUser(mockDB, ctx, org, user)
+			user, project := setupProjectWithUser(tt.username, tt.role)
+			mockProjectAndUser(mockDB, ctx, project, user)
 
-			resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-				OrgID:    org.DisplayID,
-				Username: tt.username,
+			resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+				ProjectID: project.DisplayID,
+				Username:  tt.username,
 			}, tt.permission)
 
 			assert.Nil(t, err)
-			assert.NotNil(t, resultOrg)
-			assert.Equal(t, org.DisplayID, resultOrg.DisplayID)
+			assert.NotNil(t, resultProject)
+			assert.Equal(t, project.DisplayID, resultProject.DisplayID)
 		})
 	}
 
-	// Test database error scenarios
-	t.Run("Fails when org does not exist", func(t *testing.T) {
+	t.Run("Fails when project does not exist", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, "nonexistent-org").
-			Return((*models.Org)(nil), db.ErrNotFound)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "nonexistent").
+			Return((*models.Project)(nil), db.ErrNotFound)
 
-		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-			OrgID:    "nonexistent-org",
-			Username: "testuser",
-		}, models.PermissionOrgReader)
+		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			ProjectID: "nonexistent",
+			Username:  "testuser",
+		}, models.PermissionProjectReader)
 
-		assert.Nil(t, resultOrg)
+		assert.Nil(t, resultProject)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
 	})
 
-	t.Run("Fails when org retrieval returns database error", func(t *testing.T) {
+	t.Run("Fails when project retrieval returns database error", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, "test-org").
-			Return((*models.Org)(nil), errors.New("database error"))
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "test-project").
+			Return((*models.Project)(nil), errors.New("database error"))
 
-		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-			OrgID:    "test-org",
-			Username: "testuser",
-		}, models.PermissionOrgReader)
+		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			ProjectID: "test-project",
+			Username:  "testuser",
+		}, models.PermissionProjectReader)
 
-		assert.Nil(t, resultOrg)
+		assert.Nil(t, resultProject)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, err.Code)
 	})
 
-	// Test user error scenarios
 	t.Run("Fails when user does not exist", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		_, org := setupOrgWithUser("testuser", models.RoleOwner)
-		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, org.DisplayID).Return(org, nil)
+		_, project := setupProjectWithUser("testuser", models.RoleOwner)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, project.DisplayID).Return(project, nil)
 		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, "nonexistent").
 			Return((*models.User)(nil), db.ErrNotFound)
 
-		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-			OrgID:    org.DisplayID,
-			Username: "nonexistent",
-		}, models.PermissionOrgReader)
+		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			ProjectID: project.DisplayID,
+			Username:  "nonexistent",
+		}, models.PermissionProjectReader)
 
-		assert.Nil(t, resultOrg)
+		assert.Nil(t, resultProject)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
 	})
 
-	t.Run("Fails when user retrieval returns database error", func(t *testing.T) {
-		ctx, authService, mockDB := setupTestAuthorizationService()
-		defer db.Set(nil)
-
-		user, org := setupOrgWithUser("testuser", models.RoleOwner)
-		mockDB.OrgsRepo.(*db.MockOrgRepository).On("GetOrgByDisplayID", ctx, org.DisplayID).Return(org, nil)
-		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, user.Username).
-			Return((*models.User)(nil), errors.New("database error"))
-
-		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-			OrgID:    org.DisplayID,
-			Username: user.Username,
-		}, models.PermissionOrgReader)
-
-		assert.Nil(t, resultOrg)
-		assert.NotNil(t, err)
-		assert.Equal(t, http.StatusInternalServerError, err.Code)
-	})
-
-	t.Run("Fails when user is not a member of the org", func(t *testing.T) {
+	t.Run("Fails when user is not a member of the project", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
@@ -169,28 +147,27 @@ func TestAuthorizationServiceT_AuthorizeOrgAction(t *testing.T) {
 		otherUser := createTestUser("otheruser")
 		otherUser.ID = pgtype.UUID{Bytes: [16]byte{99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84}, Valid: true}
 
-		org := createTestOrg("test-org", []models.OrgMember{{ID: otherUser.ID, Role: models.RoleOwner}})
-		mockOrgAndUser(mockDB, ctx, org, user)
+		project := createTestProject("test-project", []models.ProjectMember{{ID: otherUser.ID, Role: models.RoleOwner}})
+		mockProjectAndUser(mockDB, ctx, project, user)
 
-		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-			OrgID:    org.DisplayID,
-			Username: user.Username,
-		}, models.PermissionOrgReader)
+		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			ProjectID: project.DisplayID,
+			Username:  user.Username,
+		}, models.PermissionProjectReader)
 
-		assert.Nil(t, resultOrg)
+		assert.Nil(t, resultProject)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusForbidden, err.Code)
 		assert.Contains(t, err.Err.Error(), "is not a member")
 	})
 
-	// Test permission failures
 	permissionFailTests := []struct {
 		name       string
 		role       models.Role
 		permission models.Permission
 	}{
-		{"Fails when viewer lacks edit permissions", models.RoleViewer, models.PermissionOrgEditor},
-		{"Fails when member lacks admin permissions", models.RoleMember, models.PermissionOrgAdmin},
+		{"Fails when viewer lacks edit permissions", models.RoleViewer, models.PermissionProjectEditor},
+		{"Fails when member lacks admin permissions", models.RoleMember, models.PermissionProjectAdmin},
 	}
 
 	for _, tt := range permissionFailTests {
@@ -198,51 +175,50 @@ func TestAuthorizationServiceT_AuthorizeOrgAction(t *testing.T) {
 			ctx, authService, mockDB := setupTestAuthorizationService()
 			defer db.Set(nil)
 
-			user, org := setupOrgWithUser("testuser", tt.role)
-			mockOrgAndUser(mockDB, ctx, org, user)
+			user, project := setupProjectWithUser("testuser", tt.role)
+			mockProjectAndUser(mockDB, ctx, project, user)
 
-			resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-				OrgID:    org.DisplayID,
-				Username: user.Username,
+			resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+				ProjectID: project.DisplayID,
+				Username:  user.Username,
 			}, tt.permission)
 
-			assert.Nil(t, resultOrg)
+			assert.Nil(t, resultProject)
 			assert.NotNil(t, err)
 			assert.Equal(t, http.StatusForbidden, err.Code)
 			assert.Contains(t, err.Err.Error(), "does not have required permissions")
 		})
 	}
 
-	// Test multiple permissions
 	t.Run("Authorizes with multiple permissions when user has all", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		user, org := setupOrgWithUser("owner", models.RoleOwner)
-		mockOrgAndUser(mockDB, ctx, org, user)
+		user, project := setupProjectWithUser("owner", models.RoleOwner)
+		mockProjectAndUser(mockDB, ctx, project, user)
 
-		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-			OrgID:    org.DisplayID,
-			Username: user.Username,
-		}, models.PermissionOrgAdmin, models.PermissionMonitorAdmin)
+		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			ProjectID: project.DisplayID,
+			Username:  user.Username,
+		}, models.PermissionProjectAdmin, models.PermissionMonitorAdmin)
 
 		assert.Nil(t, err)
-		assert.NotNil(t, resultOrg)
+		assert.NotNil(t, resultProject)
 	})
 
 	t.Run("Fails with multiple permissions when user lacks one", func(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		user, org := setupOrgWithUser("admin", models.RoleAdmin)
-		mockOrgAndUser(mockDB, ctx, org, user)
+		user, project := setupProjectWithUser("admin", models.RoleAdmin)
+		mockProjectAndUser(mockDB, ctx, project, user)
 
-		resultOrg, err := authService.authorizeOrgAction(ctx, &middleware.OrgAuth{
-			OrgID:    org.DisplayID,
-			Username: user.Username,
-		}, models.PermissionOrgEditor, models.PermissionOrgAdmin)
+		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			ProjectID: project.DisplayID,
+			Username:  user.Username,
+		}, models.PermissionProjectEditor, models.PermissionProjectAdmin)
 
-		assert.Nil(t, resultOrg)
+		assert.Nil(t, resultProject)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusForbidden, err.Code)
 	})

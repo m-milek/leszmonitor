@@ -102,15 +102,17 @@ func GetUserFromContext(ctx context.Context) (*UserClaims, bool) {
 	return claims, ok
 }
 
-type OrgAuth struct {
-	OrgID    string
-	Username string
+// ProjectAuth bundles the project display ID and the authenticated username for authorization.
+type ProjectAuth struct {
+	ProjectID string
+	Username  string
 }
 
-func OrgAuthFromRequest(r *http.Request) (*OrgAuth, error) {
-	orgID := r.PathValue("orgId")
-	if orgID == "" {
-		return nil, fmt.Errorf("orgID is required")
+// ProjectAuthFromRequest extracts the project ID from the URL path and the username from the JWT context.
+func ProjectAuthFromRequest(r *http.Request) (*ProjectAuth, error) {
+	projectID := r.PathValue("projectId")
+	if projectID == "" {
+		return nil, fmt.Errorf("projectID is required")
 	}
 
 	userClaims, ok := GetUserFromContext(r.Context())
@@ -121,8 +123,8 @@ func OrgAuthFromRequest(r *http.Request) (*OrgAuth, error) {
 		return nil, fmt.Errorf("username is missing in user claims")
 	}
 
-	return &OrgAuth{
-		OrgID:    orgID,
-		Username: userClaims.Username,
+	return &ProjectAuth{
+		ProjectID: projectID,
+		Username:  userClaims.Username,
 	}, nil
 }

@@ -15,8 +15,6 @@ type IMonitor interface {
 	GetID() pgtype.UUID
 	GetDisplayID() string
 	GenerateDisplayID()
-	GetOrgID() pgtype.UUID
-	SetOrgID(uuid pgtype.UUID)
 	GetProjectID() pgtype.UUID
 	SetProjectID(uuid pgtype.UUID)
 	GetName() string
@@ -58,8 +56,7 @@ func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonit
 type BaseMonitor struct {
 	ID          pgtype.UUID       `json:"id"`
 	DisplayID   string            `json:"displayId"`   // Unique identifier for the monitor
-	OrgID       pgtype.UUID       `json:"orgID"`       // ID of the owner org of the monitor
-	ProjectID   pgtype.UUID       `json:"projectID"`   // ID of the owner project of the monitor
+	ProjectID   pgtype.UUID       `json:"projectID"`   // ID of the project this monitor belongs to
 	Name        string            `json:"name"`        // Name of the monitor
 	Description string            `json:"description"` // Description of the monitor
 	Interval    int               `json:"interval"`    // How often to run the monitor in seconds
@@ -113,16 +110,12 @@ func (m *BaseMonitor) GetID() pgtype.UUID {
 	return m.ID
 }
 
-func (m *BaseMonitor) GetOrgID() pgtype.UUID {
-	return m.OrgID
-}
-
-func (m *BaseMonitor) SetOrgID(orgID pgtype.UUID) {
-	m.OrgID = orgID
-}
-
 func (m *BaseMonitor) GetProjectID() pgtype.UUID {
 	return m.ProjectID
+}
+
+func (m *BaseMonitor) SetProjectID(projectID pgtype.UUID) {
+	m.ProjectID = projectID
 }
 
 func (m *BaseMonitor) GetName() string {
@@ -139,8 +132,4 @@ func (m *BaseMonitor) GetInterval() time.Duration {
 
 func (m *BaseMonitor) GetType() MonitorConfigType {
 	return m.Type
-}
-
-func (m *BaseMonitor) SetProjectID(projectID pgtype.UUID) {
-	m.ProjectID = projectID
 }
