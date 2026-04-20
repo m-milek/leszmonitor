@@ -1,5 +1,5 @@
 import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
-import type { OrgMember } from "@/lib/types.ts";
+import type { ProjectMember } from "@/lib/types.ts";
 import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
 import { flexRender, useReactTable } from "@tanstack/react-table";
 import {
@@ -14,16 +14,16 @@ import { formatDate } from "@/lib/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { LucideUserMinus } from "lucide-react";
 
-export interface OrgMembersTableProps {
-  members: OrgMember[];
+export interface ProjectMembersTableProps {
+  members: ProjectMember[];
   onMemberRemoved: (username: string) => Promise<void>;
 }
 
-export const OrgMembersTable = ({
+export const ProjectMembersTable = ({
   members,
   onMemberRemoved,
-}: OrgMembersTableProps) => {
-  const columns: ColumnDef<OrgMember>[] = [
+}: ProjectMembersTableProps) => {
+  const columns: ColumnDef<ProjectMember>[] = [
     {
       accessorKey: "username",
       header: "User",
@@ -126,4 +126,3 @@ export const OrgMembersTable = ({
     </Table>
   );
 };
-

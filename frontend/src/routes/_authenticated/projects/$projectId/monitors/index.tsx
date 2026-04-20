@@ -12,16 +12,18 @@ import { getMonitors } from "@/lib/data/monitorData.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
 
-export const Route = createFileRoute("/_authenticated/org/$orgId/monitors/")({
+export const Route = createFileRoute(
+  "/_authenticated/projects/$projectId/monitors/",
+)({
   component: MonitorsComponent,
 });
 
 function MonitorsComponent() {
-  const { orgId } = Route.useParams();
+  const { projectId } = Route.useParams();
 
   const { data } = useQuery({
-    queryKey: ["monitors", orgId],
-    queryFn: () => getMonitors(orgId),
+    queryKey: ["monitors", projectId],
+    queryFn: () => getMonitors(projectId),
   });
 
   if (!data) {
@@ -33,7 +35,10 @@ function MonitorsComponent() {
       <TypographyH1>Monitors</TypographyH1>
       <Card>
         <CardHeader>
-          <StyledLink to="/org/$orgId/monitors/new" params={{ orgId }}>
+          <StyledLink
+            to="/projects/$projectId/monitors/new"
+            params={{ projectId }}
+          >
             <Button>New Monitor</Button>
           </StyledLink>
         </CardHeader>

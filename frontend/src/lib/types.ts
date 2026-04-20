@@ -10,39 +10,32 @@ export interface User extends Timestamps {
   username: string;
 }
 
-export enum OrgRole {
+export enum ProjectRole {
   Owner = "owner",
   Admin = "admin",
   Member = "member",
   Viewer = "viewer",
 }
 
-export const mapOrgRoleToDisplayName: Record<OrgRole, string> = {
-  [OrgRole.Owner]: "Owner",
-  [OrgRole.Admin]: "Admin",
-  [OrgRole.Member]: "Member",
-  [OrgRole.Viewer]: "Viewer",
+export const mapProjectRoleToDisplayName: Record<ProjectRole, string> = {
+  [ProjectRole.Owner]: "Owner",
+  [ProjectRole.Admin]: "Admin",
+  [ProjectRole.Member]: "Member",
+  [ProjectRole.Viewer]: "Viewer",
 };
 
-export interface OrgMember extends Timestamps {
+export interface ProjectMember extends Timestamps {
   id: string;
   username: string;
-  role: OrgRole;
-}
-
-export interface Org extends Timestamps {
-  id: string;
-  displayId: string;
-  name: string;
-  description: string;
-  members: OrgMember[];
+  role: ProjectRole;
 }
 
 export interface Project extends Timestamps {
   id: string;
-  name: string;
   displayId: string;
-  description?: string;
+  name: string;
+  description: string;
+  members: ProjectMember[];
 }
 
 export interface Monitor extends Timestamps {
@@ -50,8 +43,7 @@ export interface Monitor extends Timestamps {
   name: string;
   displayId: string;
   description?: string;
-  projectId?: string;
-  orgId: string;
+  projectId: string;
   interval: number;
   type: MonitorType;
   config?: HttpMonitorConfig | PingMonitorConfig;
@@ -120,7 +112,6 @@ const baseMonitorFields = {
     .string({ message: "Display ID is required" })
     .min(1, "Display ID is required"),
   description: z.string().optional(),
-  orgId: z.string(),
   projectId: z.string(),
   interval: z
     .number({ message: "Interval must be a number" })
@@ -152,7 +143,6 @@ export const newMonitorSchemaDefaultValues = {
   name: "",
   displayId: "",
   description: "",
-  orgId: "",
   projectId: "",
   interval: 60,
 } satisfies Partial<MonitorFormValues>;

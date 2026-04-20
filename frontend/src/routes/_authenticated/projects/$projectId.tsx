@@ -1,31 +1,31 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
-import { orgAtom } from "@/lib/atoms.ts";
+import { projectAtom } from "@/lib/atoms.ts";
 import { useEffect } from "react";
-import { getOrg } from "@/lib/data/orgData.ts";
+import { getProject } from "@/lib/data/projectData.ts";
 import { useQuery } from "@tanstack/react-query";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 
-export const Route = createFileRoute("/_authenticated/org/$orgId")({
-  component: OrgLayout,
+export const Route = createFileRoute("/_authenticated/projects/$projectId")({
+  component: ProjectLayout,
   notFoundComponent: NotFound,
 });
 
-function OrgLayout() {
-  const { orgId } = Route.useParams();
-  const setOrgAtom = useSetAtom(orgAtom);
+function ProjectLayout() {
+  const { projectId } = Route.useParams();
+  const setProjectAtom = useSetAtom(projectAtom);
 
-  const { data: org } = useQuery({
-    queryKey: ["org", orgId],
-    queryFn: () => getOrg(orgId),
+  const { data: project } = useQuery({
+    queryKey: ["project", projectId],
+    queryFn: () => getProject(projectId),
   });
 
   useEffect(() => {
-    if (org) {
-      setOrgAtom(org);
+    if (project) {
+      setProjectAtom(project);
     }
-  }, [org, orgId, setOrgAtom]);
+  }, [project, projectId, setProjectAtom]);
 
   return <Outlet />;
 }
