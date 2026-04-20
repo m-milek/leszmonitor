@@ -9,7 +9,6 @@ import (
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func setupTestProjectService() (context.Context, *ProjectServiceT, *db.MockDB) {
@@ -68,39 +67,5 @@ func TestProjectServiceT_InternalGetProjectByDisplayID(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, err.Code)
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
-	})
-}
-
-func setupTestUserService2() (context.Context, *UserServiceT, *db.MockDB) {
-	authService := newAuthorizationService()
-	ctx := context.Background()
-	mockDB := &db.MockDB{
-		UsersRepo: new(db.MockUserRepository),
-	}
-	db.Set(mockDB)
-	base := newBaseService(authService, "UserServiceTest")
-	return ctx, newUserService(base), mockDB
-}
-
-func TestUserServiceT_RegisterUser_NoOrgCreated(t *testing.T) {
-	t.Run("Registers a new user successfully without creating an org", func(t *testing.T) {
-		ctx, userService, mockDB := setupTestUserService2()
-		defer db.Set(nil)
-
-		mockUser, _ := models.NewUser("testuser", "123")
-		mockUserRepo := mockDB.UsersRepo.(*db.MockUserRepository)
-		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(mockUser, nil)
-
-		payload := &UserRegisterPayload{
-			Username: "testuser",
-			Password: "password123",
-		}
-
-		err := userService.RegisterUser(ctx, payload)
-
-		assert.Nil(t, err)
-		// Ensure no org-related calls were made
-		mockUserRepo.AssertExpectations(t)
-		mockUserRepo.AssertNumberOfCalls(t, "InsertUser", 1)
 	})
 }

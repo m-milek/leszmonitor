@@ -1,8 +1,8 @@
 import z from "zod";
 import { useForm } from "@tanstack/react-form";
-import { mapOrgRoleToDisplayName, OrgRole } from "@/lib/types.ts";
+import { mapProjectRoleToDisplayName, ProjectRole } from "@/lib/types.ts";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import type { AddUserToOrgPayload } from "@/lib/data/userData.ts";
+import type { AddProjectMemberPayload } from "@/lib/data/projectData.ts";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { LMCombobox } from "@/components/leszmonitor/forms/inputs/LMCombobox.tsx";
 import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
@@ -11,13 +11,13 @@ import {
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
 
-const addUserToOrgFormSchema = z.object({
+const addMemberFormSchema = z.object({
   username: z.string().min(1, "Username is required"),
-  role: z.enum(OrgRole),
+  role: z.enum(ProjectRole),
 });
 
 export interface AddMemberFormProps {
-  onSubmitMember: (value: AddUserToOrgPayload) => Promise<unknown>;
+  onSubmitMember: (value: AddProjectMemberPayload) => Promise<unknown>;
   validUsernames: string[];
   formId?: string;
 }
@@ -27,15 +27,15 @@ export function AddMemberForm({
   validUsernames,
   formId = "add-member-form",
 }: AddMemberFormProps) {
-  const roles = Object.values(OrgRole);
+  const roles = Object.values(ProjectRole);
 
   const form = useForm({
     defaultValues: {
       username: "",
-      role: OrgRole.Member,
-    } as AddUserToOrgPayload,
+      role: ProjectRole.Member,
+    } as AddProjectMemberPayload,
     validators: {
-      onSubmit: addUserToOrgFormSchema,
+      onSubmit: addMemberFormSchema,
     },
     onSubmit: async ({ value }) => {
       await onSubmitMember(value);
@@ -45,7 +45,7 @@ export function AddMemberForm({
 
   const roleSelectItems = roles.map((role) => ({
     value: role,
-    label: mapOrgRoleToDisplayName[role],
+    label: mapProjectRoleToDisplayName[role],
   }));
 
   return (
@@ -87,7 +87,7 @@ export function AddMemberForm({
                 <LMSelect
                   value={field.state.value}
                   onValueChange={(value) =>
-                    field.handleChange(value as OrgRole)
+                    field.handleChange(value as ProjectRole)
                   }
                   placeholder="Choose a role..."
                   items={roleSelectItems}

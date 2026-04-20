@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { useAtomValue } from "jotai";
-import { orgAtom } from "@/lib/atoms.ts";
+import { projectAtom } from "@/lib/atoms.ts";
 import {
   TypographyH1,
   TypographyH2,
 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { OrgMembersTable } from "@/components/leszmonitor/tables/OrgMembersTable.tsx";
+import { ProjectMembersTable } from "@/components/leszmonitor/tables/OrgMembersTable.tsx";
 import {
   Card,
   CardContent,
@@ -18,20 +18,21 @@ import { Input } from "@/components/ui/input.tsx";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  addUserToOrg,
-  type AddUserToOrgPayload,
-  fetchAllUsers,
-  removeUserFromOrg,
-} from "@/lib/data/userData.ts";
+  addMemberToProject,
+  type AddProjectMemberPayload,
+  removeMemberFromProject,
+} from "@/lib/data/projectData.ts";
+import { fetchAllUsers } from "@/lib/data/userData.ts";
 import { AddMemberForm } from "@/components/leszmonitor/forms/AddMemberForm.tsx";
 
-export const Route = createFileRoute("/_authenticated/org/$orgId/members/")({
-  component: OrgMembersRoute,
+export const Route = createFileRoute(
+  "/_authenticated/projects/$projectId/members/",
+)({
+  component: ProjectMembersRoute,
 });
 
-function OrgMembersRoute() {
-  const org = useAtomValue(orgAtom);
-
+function ProjectMembersRoute() {
+  const project = useAtomValue(projectAtom);
   const queryClient = useQueryClient();
 
   const { data: users } = useQuery({
@@ -40,40 +41,35 @@ function OrgMembersRoute() {
   });
 
   const addMemberMutation = useMutation({
-    mutationFn: (value: AddUserToOrgPayload) =>
-      addUserToOrg(org!.displayId, {
-        username: value.username,
-        role: value.role,
-      }),
+    mutationFn: (value: AddProjectMemberPayload) =>
+      addMemberToProject(project!.displayId, value),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org", org!.displayId] });
+      queryClient.invalidateQueries({ queryKey: ["project", project!.displayId] });
     },
   });
 
   const removeMemberMutation = useMutation({
     mutationFn: (username: string) =>
-      removeUserFromOrg(org!.displayId, { username }),
+      removeMemberFromProject(project!.displayId, { username }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org", org!.displayId] });
+      queryClient.invalidateQueries({ queryKey: ["project", project!.displayId] });
     },
   });
 
   const onMemberRemoved = async (username: string) => {
-    console.log("Removing member", username);
     await removeMemberMutation.mutateAsync(username);
   };
 
-
   const [searchTerm, setSearchTerm] = useState("");
 
-  if (!org || !users) {
+  if (!project || !users) {
     return null;
   }
 
   const validUsernames = users
     .map((user) => user.username)
     .filter((username) => {
-      return !org.members.some((member) => member.username === username);
+      return !project.members.some((member) => member.username === username);
     });
 
   return (
@@ -106,8 +102,8 @@ function OrgMembersRoute() {
         <CardHeader>
           <div className="flex justify-between">
             <TypographyH2>
-              {org.members.length}{" "}
-              {org.members.length === 1 ? "Member" : "Members"}
+              {project.members.length}{" "}
+              {project.members.length === 1 ? "Member" : "Members"}
             </TypographyH2>
           </div>
           <Input
@@ -117,9 +113,9 @@ function OrgMembersRoute() {
           />
         </CardHeader>
         <CardContent>
-          <OrgMembersTable
+          <ProjectMembersTable
             onMemberRemoved={onMemberRemoved}
-            members={org.members.filter((member) =>
+            members={project.members.filter((member) =>
               member.username.toLowerCase().includes(searchTerm.toLowerCase()),
             )}
           />

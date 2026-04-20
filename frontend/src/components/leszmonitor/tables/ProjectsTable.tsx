@@ -16,13 +16,11 @@ import { LucideTrash2 } from "lucide-react";
 
 export interface ProjectsTableProps {
   projects: Project[];
-  orgId: string;
   onProjectDeleted: (projectId: string) => Promise<void>;
 }
 
 export const ProjectsTable = ({
   projects,
-  orgId,
   onProjectDeleted,
 }: ProjectsTableProps) => {
   const columns: ColumnDef<Project>[] = [
@@ -33,8 +31,8 @@ export const ProjectsTable = ({
         const name = row.original.name;
         return (
           <StyledLink
-            to="/org/$orgId/projects/$projectId"
-            params={{ orgId, projectId: row.original.displayId }}
+            to="/projects/$projectId"
+            params={{ projectId: row.original.displayId }}
           >
             {name}
           </StyledLink>

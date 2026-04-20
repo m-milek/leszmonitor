@@ -17,7 +17,8 @@ func setupTestUserService() (context.Context, *UserServiceT, *db.MockDB) {
 	authService := newAuthorizationService()
 	ctx := context.Background()
 	mockDB := &db.MockDB{
-		UsersRepo: new(db.MockUserRepository),
+		UsersRepo:    new(db.MockUserRepository),
+		ProjectsRepo: new(db.MockProjectRepository),
 	}
 	db.Set(mockDB)
 	base := newBaseService(authService, "UserServiceTest")
@@ -32,6 +33,12 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 		mockUser, _ := models.NewUser("testuser", "123")
 		mockUserRepo := mockDB.UsersRepo.(*db.MockUserRepository)
 		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(mockUser, nil)
+
+		// Expect project service to initialize sandbox
+		mockUserRepo.On("GetUserByUsername", ctx, "testuser").Return(mockUser, nil).Once()
+		mockProjectRepo := mockDB.ProjectsRepo.(*db.MockProjectRepository)
+		mockProjectRepo.On("InsertProject", ctx, mock.AnythingOfType("*models.Project")).Return(nil).Once()
+		mockProjectRepo.On("GetProjectByDisplayID", ctx, mock.AnythingOfType("string")).Return(&models.Project{}, nil).Once()
 
 		payload := &UserRegisterPayload{
 			Username: "testuser",

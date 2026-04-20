@@ -22,30 +22,29 @@ import { NewProjectForm } from "@/components/leszmonitor/forms/NewProjectForm.ts
 import { ProjectsTable } from "@/components/leszmonitor/tables/ProjectsTable.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 
-export const Route = createFileRoute("/_authenticated/org/$orgId/projects/")({
+export const Route = createFileRoute("/_authenticated/projects/")({
   component: Projects,
 });
 
 function Projects() {
-  const { orgId } = Route.useParams();
   const queryClient = useQueryClient();
 
   const { data } = useQuery({
-    queryKey: [QUERY_KEYS.PROJECTS, orgId],
-    queryFn: () => getProjects(orgId),
+    queryKey: [QUERY_KEYS.PROJECTS],
+    queryFn: () => getProjects(),
   });
 
   const addProjectMutation = useMutation({
-    mutationFn: (newProject: ProjectInput) => addProject(orgId, newProject),
+    mutationFn: (newProject: ProjectInput) => addProject(newProject),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROJECTS, orgId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROJECTS] });
     },
   });
 
   const deleteProjectMutation = useMutation({
-    mutationFn: (projectId: string) => deleteProject(orgId, projectId),
+    mutationFn: (projectId: string) => deleteProject(projectId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROJECTS, orgId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROJECTS] });
     },
   });
 
@@ -78,12 +77,11 @@ function Projects() {
       </Card>
       <Card>
         <CardHeader>
-          <TypographyH2>Existing Projects</TypographyH2>
+          <TypographyH2>Your Projects</TypographyH2>
         </CardHeader>
         <CardContent>
           <ProjectsTable
             projects={data}
-            orgId={orgId}
             onProjectDeleted={async (projectId) =>
               deleteProjectMutation.mutateAsync(projectId)
             }

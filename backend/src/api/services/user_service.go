@@ -109,6 +109,16 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 	}
 
 	logger.Trace().Str("username", payload.Username).Msg("User registered successfully")
+
+	_, projectErr := ProjectService.CreateProject(ctx, payload.Username, CreateProjectPayload{
+		Name:        fmt.Sprintf("%s's Sandbox", payload.Username),
+		Description: "Your default sandbox project",
+	})
+	if projectErr != nil {
+		logger.Error().Err(projectErr.Err).Msg("Failed to auto-create sandbox project for new user")
+		// We don't fail the registration if the sandbox fails
+	}
+
 	return nil
 }
 

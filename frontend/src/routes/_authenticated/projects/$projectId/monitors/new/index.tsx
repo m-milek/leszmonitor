@@ -3,23 +3,16 @@ import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Card, CardContent, CardFooter } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useQuery } from "@tanstack/react-query";
-import { getProjects } from "@/lib/data/projectData.ts";
 import { NewMonitorForm } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
 
 export const Route = createFileRoute(
-  "/_authenticated/org/$orgId/monitors/new/",
+  "/_authenticated/projects/$projectId/monitors/new/",
 )({
   component: NewMonitorComponent,
 });
 
 function NewMonitorComponent() {
-  const { orgId } = Route.useParams();
-
-  const { data: projects } = useQuery({
-    queryKey: ["projects", orgId],
-    queryFn: () => getProjects(orgId),
-  });
+  const { projectId } = Route.useParams();
 
   const onSubmit = async (value: unknown) => {
     console.log(value);
@@ -33,7 +26,7 @@ function NewMonitorComponent() {
           <NewMonitorForm
             formId="new-monitor-form"
             onSubmitMonitor={onSubmit}
-            projects={projects}
+            projectId={projectId}
           />
         </CardContent>
         <CardFooter>

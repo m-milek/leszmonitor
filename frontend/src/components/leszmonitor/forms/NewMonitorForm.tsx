@@ -53,17 +53,20 @@ export type PingMonitorFormApi = ReturnType<typeof __pingMonitorFormHelper>;
 
 export interface NewMonitorFormProps {
   onSubmitMonitor: (value: MonitorFormValues) => Promise<unknown>;
-  projects: Array<{ id: string; name: string }> | undefined;
+  projectId: string;
   formId?: string;
 }
 
 export function NewMonitorForm({
   onSubmitMonitor,
-  projects,
+  projectId,
   formId = "new-monitor-form",
 }: NewMonitorFormProps) {
   const form = useForm({
-    defaultValues: newMonitorSchemaDefaultValues as MonitorFormValues,
+    defaultValues: {
+      ...newMonitorSchemaDefaultValues,
+      projectId,
+    } as MonitorFormValues,
     validators: {
       onSubmit:
         newMonitorSchema as unknown as FormValidateOrFn<MonitorFormValues>,
@@ -76,13 +79,6 @@ export function NewMonitorForm({
       console.log("Values:", value);
     },
   });
-
-  const projectSelectItems = projects
-    ? projects.map((project) => ({
-        value: project.id,
-        label: project.name,
-      }))
-    : [];
 
   const monitorTypeSelectItems: { value: MonitorType; label: string }[] = [
     { value: "http", label: "HTTP" },
@@ -190,26 +186,6 @@ export function NewMonitorForm({
                 />
               </Field>
             )}
-          />
-          <form.Field
-            name={"projectId"}
-            children={(field) => {
-              return (
-                <Field>
-                  <FieldLabel>Project</FieldLabel>
-                  <LMSelect
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
-                    placeholder="Select Project"
-                    items={projectSelectItems}
-                    isInvalid={isFieldInvalid(field)}
-                    errorMessage={getFirstError(field)}
-                  />
-                </Field>
-              );
-            }}
           />
         </Flex>
         <form.Subscribe selector={(form) => form.values.type}>
