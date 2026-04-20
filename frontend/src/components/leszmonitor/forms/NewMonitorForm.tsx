@@ -97,7 +97,7 @@ export function NewMonitorForm({
         form.handleSubmit();
       }}
     >
-      <Flex direction="row">
+      <Flex direction="column">
         <Flex direction="column" className="flex-1 gap-2">
           <form.Field
             name={"type"}
@@ -212,7 +212,13 @@ export function NewMonitorForm({
             }}
           />
         </Flex>
-        <Divider direction="column" className="mx-4" />
+        <form.Subscribe selector={(form) => form.values.type}>
+          {(type) => {
+            if (!type) return null;
+            return <Divider direction="row" className="my-4" />;
+          }}
+        </form.Subscribe>
+
         <Flex direction="column" className="flex-1 gap-2">
           <MonitorConfigFields form={form} />
         </Flex>

@@ -9,6 +9,8 @@ import {
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
 import type { HttpMonitorFormApi } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
 import { LMSwitch } from "@/components/leszmonitor/forms/inputs/LMSwitch.tsx";
+import { LMKeyValueInput } from "@/components/leszmonitor/forms/inputs/LMKeyValue.tsx";
+import { LMMultiSelect } from "@/components/leszmonitor/forms/inputs/LMMultiSelect.tsx";
 
 const httpMethodItems = [
   { value: "GET", label: "GET" },
@@ -18,6 +20,10 @@ const httpMethodItems = [
   { value: "PATCH", label: "PATCH" },
 ];
 
+const statusCodes = Array.from({ length: 600 }, (_, i) => i)
+  .filter((code) => code >= 100 && code < 600)
+  .map((code) => String(code));
+
 export function HttpMonitorConfigFields({
   form,
 }: {
@@ -26,6 +32,23 @@ export function HttpMonitorConfigFields({
   return (
     <Flex direction="column" className="gap-4 items-stretch">
       <div className="text-lg font-semibold">HTTP Settings</div>
+
+      <form.Field
+        name="config.url"
+        children={(field) => (
+          <Field>
+            <FieldLabel>URL</FieldLabel>
+            <LMInputField
+              name={field.name}
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              placeholder="https://example.com/health"
+              isInvalid={isFieldInvalid(field)}
+              errorMessage={getFirstError(field)}
+            />
+          </Field>
+        )}
+      />
 
       <form.Field
         name="config.method"
@@ -51,23 +74,6 @@ export function HttpMonitorConfigFields({
       />
 
       <form.Field
-        name="config.url"
-        children={(field) => (
-          <Field>
-            <FieldLabel>URL</FieldLabel>
-            <LMInputField
-              name={field.name}
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-              placeholder="https://example.com/health"
-              isInvalid={isFieldInvalid(field)}
-              errorMessage={getFirstError(field)}
-            />
-          </Field>
-        )}
-      />
-
-      <form.Field
         name="config.body"
         children={(field) => (
           <Field>
@@ -78,6 +84,45 @@ export function HttpMonitorConfigFields({
               onChange={(e) => field.handleChange(e.target.value)}
               placeholder='{"key": "value"}'
               rows={4}
+              isInvalid={isFieldInvalid(field)}
+              errorMessage={getFirstError(field)}
+            />
+          </Field>
+        )}
+      />
+
+      <form.Field
+        name="config.headers"
+        children={(field) => (
+          <Field>
+            <FieldLabel>Request Headers</FieldLabel>
+            <LMKeyValueInput
+              name={field.name}
+              value={field.state.value}
+              onChange={(value) => field.handleChange(value)}
+              keyPlaceholder="Header"
+              valuePlaceholder="Header Value"
+              isInvalid={isFieldInvalid(field)}
+              errorMessage={getFirstError(field)}
+            />
+          </Field>
+        )}
+      />
+
+      <div className="text-lg font-semibold">Expected Response</div>
+
+      <form.Field
+        name="config.expectedStatusCodes"
+        children={(field) => (
+          <Field>
+            <FieldLabel>Expected Status Codes</FieldLabel>
+            <LMMultiSelect
+              name={field.name}
+              options={statusCodes}
+              value={Array.isArray(field.state.value) ? field.state.value.map(String) : []}
+              onChange={(values) => field.handleChange(values.map(Number))}
+              placeholder="Add status code"
+              emptyMessage="No status codes found."
               isInvalid={isFieldInvalid(field)}
               errorMessage={getFirstError(field)}
             />
@@ -124,6 +169,27 @@ export function HttpMonitorConfigFields({
           </Field>
         )}
       />
+
+      <form.Field
+        name="config.expectedHeaders"
+        children={(field) => (
+          <Field>
+            <FieldLabel>Expected Response Headers</FieldLabel>
+            <LMKeyValueInput
+              name={field.name}
+              value={field.state.value}
+              onChange={(value) => field.handleChange(value)}
+              keyPlaceholder="Header"
+              valuePlaceholder="Header Value"
+              isInvalid={isFieldInvalid(field)}
+              errorMessage={getFirstError(field)}
+            />
+          </Field>
+        )}
+      />
+
+      <div className="text-lg font-semibold">Capture Response</div>
+
       <form.Field
         name="config.saveResponseBody"
         children={(field) => (
@@ -158,12 +224,6 @@ export function HttpMonitorConfigFields({
           </Field>
         )}
       />
-
-      {/* TODO: config.headers — needs a key-value pair editor component */}
-      {/* TODO: config.expectedHeaders — needs a key-value pair editor component */}
-      {/* TODO: config.expectedStatusCodes — needs a multi-number input or tag input */}
-      {/* TODO: config.saveResponseBody — needs a checkbox/switch component */}
-      {/* TODO: config.saveResponseHeaders — needs a checkbox/switch component */}
     </Flex>
   );
 }
