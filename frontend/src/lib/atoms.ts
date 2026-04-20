@@ -1,5 +1,5 @@
 import { atom, createStore } from "jotai";
-import type { Org, User } from "@/lib/types.ts";
+import type { Project, User } from "@/lib/types.ts";
 
 export const store = createStore();
 
@@ -9,5 +9,5 @@ usernameAtom.debugLabel = "usernameAtom";
 export const userAtom = atom<User | null>(null);
 userAtom.debugLabel = "userAtom";
 
-export const orgAtom = atom<Org | null>(null);
-orgAtom.debugLabel = "orgAtom";
+export const projectAtom = atom<Project | null>(null);
+projectAtom.debugLabel = "projectAtom";

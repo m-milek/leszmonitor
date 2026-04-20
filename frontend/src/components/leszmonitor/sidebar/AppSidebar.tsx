@@ -23,16 +23,16 @@ import {
 } from "lucide-react";
 import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx";
 import { useAtom, useAtomValue } from "jotai";
-import { orgAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
+import { projectAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
-import { OrgSelector } from "@/components/leszmonitor/sidebar/OrgSelector.tsx";
+import { ProjectSelector } from "@/components/leszmonitor/sidebar/OrgSelector.tsx";
 import { Link } from "@tanstack/react-router";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
 import { fetchUser } from "@/lib/data/userData.ts";
-import { fetchOrgs } from "@/lib/data/orgData.ts";
+import { getProjects } from "@/lib/data/projectData.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 
 interface SidebarButtonProps {
@@ -74,7 +74,7 @@ export const AppSidebar = () => {
   const [user, setUser] = useAtom(userAtom);
   const hasInitialized = useRef(false);
 
-  const org = useAtomValue(orgAtom);
+  const project = useAtomValue(projectAtom);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -100,9 +100,9 @@ export const AppSidebar = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: orgsData } = useQuery({
-    queryKey: ["orgs"],
-    queryFn: fetchOrgs,
+  const { data: projectsData } = useQuery({
+    queryKey: ["projects"],
+    queryFn: getProjects,
   });
 
   useEffect(() => {
@@ -121,8 +121,8 @@ export const AppSidebar = () => {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            {orgsData ? (
-              <OrgSelector orgs={orgsData} />
+            {projectsData ? (
+              <ProjectSelector projects={projectsData} />
             ) : (
               <Skeleton className="h-8 w-full" />
             )}
@@ -130,73 +130,80 @@ export const AppSidebar = () => {
         </SidebarMenu>
       </SidebarHeader>
 
-      {org ? (
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarButton
-                  icon={<LucidePlusCircle />}
-                  href={`/org/${org.displayId}/monitors/new`}
-                  label="New Monitor"
-                  variant="primary"
-                />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>This Organization</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarButton
-                  icon={<LayoutDashboardIcon />}
-                  href={`/org/${org.displayId}/dashboard`}
-                  label="Dashboard"
-                />
-                <SidebarButton
-                  icon={<LucideActivity />}
-                  href={`/org/${org.displayId}/monitors`}
-                  label="Monitors"
-                />
-                <SidebarButton
-                  icon={<LucideFolderOpen />}
-                  href={`/org/${org.displayId}/projects`}
-                  label="Projects"
-                />
-                <SidebarButton
-                  icon={<LucideUsers />}
-                  href={`/org/${org.displayId}/members`}
-                  label="Members"
-                />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>Help</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarButton
-                  icon={<LucideBookText />}
-                  href="/docs"
-                  label="Documentation"
-                />
-                <SidebarButton
-                  icon={<LucideSearch />}
-                  href="/search"
-                  label="Search"
-                />
-                <SidebarButton
-                  icon={<LucideSettings />}
-                  href={`/user/${user?.username}/settings`}
-                  label="Settings"
-                />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      ) : (
-        <Skeleton className="h-full w-full" />
-      )}
+      <SidebarContent>
+        {project && (
+          <>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarButton
+                    icon={<LucidePlusCircle />}
+                    href={`/projects/${project.displayId}/monitors/new`}
+                    label="New Monitor"
+                    variant="primary"
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>This Project</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarButton
+                    icon={<LayoutDashboardIcon />}
+                    href={`/projects/${project.displayId}/dashboard`}
+                    label="Dashboard"
+                  />
+                  <SidebarButton
+                    icon={<LucideActivity />}
+                    href={`/projects/${project.displayId}/monitors`}
+                    label="Monitors"
+                  />
+                  <SidebarButton
+                    icon={<LucideUsers />}
+                    href={`/projects/${project.displayId}/members`}
+                    label="Members"
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
+        <SidebarGroup>
+          <SidebarGroupLabel>Workspaces</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarButton
+                icon={<LucideFolderOpen />}
+                href="/projects"
+                label="All Projects"
+              />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Help</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarButton
+                icon={<LucideBookText />}
+                href="/docs"
+                label="Documentation"
+              />
+              <SidebarButton
+                icon={<LucideSearch />}
+                href="/search"
+                label="Search"
+              />
+              <SidebarButton
+                icon={<LucideSettings />}
+                href={`/user/${user?.username}/settings`}
+                label="Settings"
+              />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
       <SidebarFooter>{user && <AppSidebarFooter user={user} />}</SidebarFooter>
     </Sidebar>
