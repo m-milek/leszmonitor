@@ -94,9 +94,9 @@ export const httpMonitorConfigSchema = z.object({
   body: z.string().optional(),
   saveResponseBody: z.boolean().default(false),
   saveResponseHeaders: z.boolean().default(false),
-  expectedStatusCodes: z.array(z.number()).default([]),
+  expectedStatusCodes: z.array(z.number()).optional(),
   expectedBodyRegex: z.string().optional(),
-  expectedHeaders: z.record(z.string(), z.string()).default({}),
+  expectedHeaders: z.record(z.string(), z.string()).optional(),
   expectedResponseTimeMs: z
     .number()
     .min(1, "Expected response time must be at least 1 ms")
