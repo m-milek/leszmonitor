@@ -14,12 +14,12 @@ import (
 )
 
 // authorizationServiceT handles authorization-related operations.
-// It provides methods to authorize actions based on org membership and permissions.
+// It provides methods to authorize actions based on project membership and permissions.
 type authorizationServiceT struct {
 	baseService
 }
 
-// NewAuthorizationService creates a new instance of authorizationServiceT.
+// newAuthorizationService creates a new instance of authorizationServiceT.
 func newAuthorizationService() *authorizationServiceT {
 	return &authorizationServiceT{
 		baseService{
@@ -29,14 +29,14 @@ func newAuthorizationService() *authorizationServiceT {
 	}
 }
 
-// Checks if a given user has given permissions in the context of a specific org.
-func (s *authorizationServiceT) authorizeOrgAction(ctx context.Context, orgAuth *middleware.OrgAuth, permissions ...models.Permission) (*models.Org, *ServiceError) {
-	logger := s.getMethodLogger("authorizeOrgAction")
+// authorizeProjectAction checks if a given user has the given permissions within the context of a specific project.
+func (s *authorizationServiceT) authorizeProjectAction(ctx context.Context, projectAuth *middleware.ProjectAuth, permissions ...models.Permission) (*models.Project, *ServiceError) {
+	logger := s.getMethodLogger("authorizeProjectAction")
 
-	requestorUsername := orgAuth.Username
+	requestorUsername := projectAuth.Username
 
-	// Does that org exist?
-	org, err := s.internalGetOrgByID(ctx, orgAuth.OrgID)
+	// Does that project exist?
+	project, err := s.internalGetProjectByID(ctx, projectAuth.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,55 +47,55 @@ func (s *authorizationServiceT) authorizeOrgAction(ctx context.Context, orgAuth 
 		return nil, err
 	}
 
-	// Is the requestor a member of that org?
-	if !org.IsMember(user.ID) {
-		logger.Warn().Str("username", requestorUsername).Str("org", org.Name).Msg("User is not a member of the org")
+	// Is the requestor a member of that project?
+	if !project.IsMember(user.ID) {
+		logger.Warn().Str("username", requestorUsername).Str("project", project.Name).Msg("User is not a member of the project")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,
-			Err:  fmt.Errorf("user %s is not a member of org %s", requestorUsername, org.Name),
+			Err:  fmt.Errorf("user %s is not a member of project %s", requestorUsername, project.Name),
 		}
 	}
 
-	// What permissions does the requestor have in that org?
+	// What permissions does the requestor have in that project?
 	permissionIDs := make([]string, 0, len(permissions))
 	for _, perm := range permissions {
 		permissionIDs = append(permissionIDs, perm.ID)
 	}
 
 	// Does the requestor have the required permissions?
-	if !org.GetMember(user.ID).Role.HasPermissions(permissions...) {
-		logger.Warn().Str("username", requestorUsername).Str("org", org.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for org")
+	if !project.GetMember(user.ID).Role.HasPermissions(permissions...) {
+		logger.Warn().Str("username", requestorUsername).Str("project", project.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for project")
 		return nil, &ServiceError{
 			Code: http.StatusForbidden,
-			Err:  fmt.Errorf("user %s does not have required permissions for org %s", requestorUsername, org.Name),
+			Err:  fmt.Errorf("user %s does not have required permissions for project %s", requestorUsername, project.Name),
 		}
 	}
 
-	logger.Trace().Str("username", requestorUsername).Str("org", org.Name).Strs("permissions", permissionIDs).Msg("User has required permissions for org")
-	return org, nil
+	logger.Trace().Str("username", requestorUsername).Str("project", project.Name).Strs("permissions", permissionIDs).Msg("User has required permissions for project")
+	return project, nil
 }
 
-// internalGetOrgByID retrieves an org by its display ID without authorization checks.
-func (s *authorizationServiceT) internalGetOrgByID(ctx context.Context, orgID string) (*models.Org, *ServiceError) {
-	logger := s.getMethodLogger("internalGetOrgByID")
+// internalGetProjectByID retrieves a project by its display ID without authorization checks.
+func (s *authorizationServiceT) internalGetProjectByID(ctx context.Context, projectID string) (*models.Project, *ServiceError) {
+	logger := s.getMethodLogger("internalGetProjectByID")
 
-	org, err := db.Get().Orgs().GetOrgByDisplayID(ctx, orgID)
+	project, err := db.Get().Projects().GetProjectByDisplayID(ctx, projectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("orgID", orgID).Msg("Org not found")
+			logger.Warn().Str("projectID", projectID).Msg("Project not found")
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("org %s not found", orgID),
+				Err:  fmt.Errorf("project %s not found", projectID),
 			}
 		}
-		logger.Error().Err(err).Str("orgID", orgID).Msg("Error retrieving org")
+		logger.Error().Err(err).Str("projectID", projectID).Msg("Error retrieving project")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("error retrieving org %s: %w", orgID, err),
+			Err:  fmt.Errorf("error retrieving project %s: %w", projectID, err),
 		}
 	}
 
-	return org, nil
+	return project, nil
 }
 
 // internalGetUserByUsername retrieves a user by username without authorization checks.

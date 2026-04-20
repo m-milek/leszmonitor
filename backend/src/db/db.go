@@ -31,7 +31,6 @@ type DB interface {
 	Users() IUserRepository
 	Monitors() IMonitorRepository
 	Projects() IProjectRepository
-	Orgs() IOrgRepository
 	Close()
 }
 
@@ -42,7 +41,6 @@ type DBClient struct {
 	users    IUserRepository
 	monitors IMonitorRepository
 	projects IProjectRepository
-	orgs     IOrgRepository
 }
 
 type dbPool struct {
@@ -83,7 +81,6 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 	c.users = newUserRepository(newBaseRepository(pool))
 	c.monitors = newMonitorRepository(newBaseRepository(pool))
 	c.projects = newProjectRepository(newBaseRepository(pool))
-	c.orgs = newOrgRepository(newBaseRepository(pool))
 
 	return c, nil
 }
@@ -154,7 +151,6 @@ func dbWrap[T any](timeoutCtx context.Context, operationName string, operation f
 func (c *DBClient) Users() IUserRepository       { return c.users }
 func (c *DBClient) Monitors() IMonitorRepository { return c.monitors }
 func (c *DBClient) Projects() IProjectRepository { return c.projects }
-func (c *DBClient) Orgs() IOrgRepository         { return c.orgs }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)

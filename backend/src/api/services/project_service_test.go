@@ -9,6 +9,7 @@ import (
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func setupTestProjectService() (context.Context, *ProjectServiceT, *db.MockDB) {
@@ -18,61 +19,88 @@ func setupTestProjectService() (context.Context, *ProjectServiceT, *db.MockDB) {
 	db.Set(mockDB)
 
 	base := newBaseService(nil, "ProjectServiceTest")
-	orgService := newProjectService(base)
+	svc := newProjectService(base)
 
-	ctx := context.Background()
-
-	return ctx, orgService, mockDB
+	return context.Background(), svc, mockDB
 }
 
-func TestProjectServiceT_InternalGetProjectByID(t *testing.T) {
-	t.Run("Returns org successfully", func(t *testing.T) {
-		ctx, orgService, mockDB := setupTestProjectService()
+func TestProjectServiceT_InternalGetProjectByDisplayID(t *testing.T) {
+	t.Run("Returns project successfully", func(t *testing.T) {
+		ctx, svc, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		expectedProject := &models.Project{
-			Description: "Test Description",
-		}
-		expectedProject.DisplayIDFromName.Init("test-org")
+		expected := &models.Project{Description: "Test Description"}
+		expected.DisplayIDFromName.Init("test-project")
 
-		mockProjectRepo := mockDB.ProjectsRepo.(*db.MockProjectRepository)
-		mockProjectRepo.On("GetProjectByDisplayID", ctx, "test-org").Return(expectedProject, nil)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "test-project").Return(expected, nil)
 
-		org, err := orgService.internalGetProjectByDisplayID(ctx, "test-org")
+		project, err := svc.internalGetProjectByDisplayID(ctx, "test-project")
 
 		assert.Nil(t, err)
-		assert.NotNil(t, org)
-		assert.Equal(t, "test-org", org.DisplayID)
-		mockProjectRepo.AssertExpectations(t)
+		assert.NotNil(t, project)
+		assert.Equal(t, "test-project", project.DisplayID)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
 	})
 
 	t.Run("Fails when project not found", func(t *testing.T) {
-		ctx, orgService, mockDB := setupTestProjectService()
+		ctx, svc, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockProjectRepo := mockDB.ProjectsRepo.(*db.MockProjectRepository)
-		mockProjectRepo.On("GetProjectByDisplayID", ctx, "nonexistent").Return((*models.Project)(nil), db.ErrNotFound)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "nonexistent").Return((*models.Project)(nil), db.ErrNotFound)
 
-		org, err := orgService.internalGetProjectByDisplayID(ctx, "nonexistent")
+		project, err := svc.internalGetProjectByDisplayID(ctx, "nonexistent")
 
-		assert.Nil(t, org)
+		assert.Nil(t, project)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
-		mockProjectRepo.AssertExpectations(t)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
 	})
 
 	t.Run("Fails when database returns error", func(t *testing.T) {
-		ctx, orgService, mockDB := setupTestProjectService()
+		ctx, svc, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockProjectRepo := mockDB.ProjectsRepo.(*db.MockProjectRepository)
-		mockProjectRepo.On("GetProjectByDisplayID", ctx, "test-org").Return((*models.Project)(nil), errors.New("database error"))
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "test-project").Return((*models.Project)(nil), errors.New("database error"))
 
-		org, err := orgService.internalGetProjectByDisplayID(ctx, "test-org")
+		project, err := svc.internalGetProjectByDisplayID(ctx, "test-project")
 
-		assert.Nil(t, org)
+		assert.Nil(t, project)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, err.Code)
-		mockProjectRepo.AssertExpectations(t)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
+	})
+}
+
+func setupTestUserService2() (context.Context, *UserServiceT, *db.MockDB) {
+	authService := newAuthorizationService()
+	ctx := context.Background()
+	mockDB := &db.MockDB{
+		UsersRepo: new(db.MockUserRepository),
+	}
+	db.Set(mockDB)
+	base := newBaseService(authService, "UserServiceTest")
+	return ctx, newUserService(base), mockDB
+}
+
+func TestUserServiceT_RegisterUser_NoOrgCreated(t *testing.T) {
+	t.Run("Registers a new user successfully without creating an org", func(t *testing.T) {
+		ctx, userService, mockDB := setupTestUserService2()
+		defer db.Set(nil)
+
+		mockUser, _ := models.NewUser("testuser", "123")
+		mockUserRepo := mockDB.UsersRepo.(*db.MockUserRepository)
+		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(mockUser, nil)
+
+		payload := &UserRegisterPayload{
+			Username: "testuser",
+			Password: "password123",
+		}
+
+		err := userService.RegisterUser(ctx, payload)
+
+		assert.Nil(t, err)
+		// Ensure no org-related calls were made
+		mockUserRepo.AssertExpectations(t)
+		mockUserRepo.AssertNumberOfCalls(t, "InsertUser", 1)
 	})
 }
