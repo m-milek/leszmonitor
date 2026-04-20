@@ -6,21 +6,23 @@ import {
 import type { ReactNode } from "react";
 
 interface ErrorTooltipProps {
-  isOpen: boolean;
-  message: string;
-  children: ReactNode;
+  isOpen?: boolean;
+  message?: string;
   side?: "top" | "right" | "bottom" | "left";
+  children: ReactNode;
 }
 
 export function ErrorTooltip({
-  isOpen,
-  message,
-  children,
+  isOpen = false,
+  message = "",
   side = "top",
+  children,
 }: ErrorTooltipProps) {
   return (
     <Tooltip open={isOpen}>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipTrigger asChild>
+        <span>{children}</span>
+      </TooltipTrigger>
       {isOpen && (
         <TooltipContent
           side={side}
