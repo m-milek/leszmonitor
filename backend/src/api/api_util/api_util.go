@@ -59,14 +59,15 @@ func RespondError(w http.ResponseWriter, statusCode int, err error) {
 	}
 }
 
-func GetOrgAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.OrgAuth, bool) {
-	orgAuth, err := middleware.OrgAuthFromRequest(r)
+// GetProjectAuthOrRespond extracts project auth from the request or writes a 401 and returns nil, false.
+func GetProjectAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.ProjectAuth, bool) {
+	projectAuth, err := middleware.ProjectAuthFromRequest(r)
 	if err != nil {
 		logging.Api.Warn().Err(err).Msg("Failed to authenticate")
 		RespondError(w, http.StatusUnauthorized, err)
 		return nil, false
 	}
-	return orgAuth, true
+	return projectAuth, true
 }
 
 // ExtractUserOrRespond returns the user from context or writes a 401 response and returns nil, false.

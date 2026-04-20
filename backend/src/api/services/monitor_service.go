@@ -18,7 +18,6 @@ type MonitorServiceT struct {
 	baseService
 }
 
-// NewMonitorService creates a new instance of MonitorServiceT.
 func newMonitorService() *MonitorServiceT {
 	return &MonitorServiceT{
 		baseService{
@@ -35,24 +34,16 @@ type MonitorCreateResponse struct {
 }
 
 // CreateMonitor creates a new monitor in the specified project.
-func (s *MonitorServiceT) CreateMonitor(ctx context.Context, orgAuth *middleware.OrgAuth, projectID string, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
-	logger := s.getMethodLogger("InsertMonitor")
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
+	logger := s.getMethodLogger("CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
-	org, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorEditor)
+	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorEditor)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	if projectID != "" {
-		project, err := ProjectService.internalGetProjectByDisplayID(ctx, projectID)
-		if err != nil {
-			return nil, err
-		}
-		monitor.SetProjectID(project.ID)
-	}
-
-	monitor.SetOrgID(org.ID)
+	monitor.SetProjectID(project.ID)
 	monitor.GenerateDisplayID()
 
 	if err := monitor.Validate(); err != nil {
@@ -72,7 +63,6 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, orgAuth *middleware
 		}
 	}
 
-	// Broadcast that a monitor has been added
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
 		ID:      dbRes.GetID(),
 		Status:  monitors.Created,
@@ -80,17 +70,15 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, orgAuth *middleware
 	})
 
 	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor created")
-	return &MonitorCreateResponse{
-		MonitorID: monitor.GetID().String(),
-	}, nil
+	return &MonitorCreateResponse{MonitorID: dbRes.GetID().String()}, nil
 }
 
 // DeleteMonitor deletes a monitor by its DisplayID.
-func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, orgAuth *middleware.OrgAuth, id string) *ServiceError {
+func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
 
-	_, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorAdmin)
+	_, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorAdmin)
 	if authErr != nil {
 		return authErr
 	}
@@ -105,11 +93,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, orgAuth *middleware
 	}
 
 	if deletedID == nil {
-		logger.Warn().Str("id", id).Msg("Monitor not found or already deleted")
-		return &ServiceError{
-			Code: http.StatusNotFound,
-			Err:  fmt.Errorf("monitor not found or already deleted"),
-		}
+		return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor not found or already deleted")}
 	}
 
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
@@ -122,17 +106,16 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, orgAuth *middleware
 	return nil
 }
 
-// GetMonitorsByOrgID retrieves all monitors for the org in the provided OrgAuth.
-func (s *MonitorServiceT) GetMonitorsByOrgID(ctx context.Context, orgAuth *middleware.OrgAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
-	logger := s.getMethodLogger("GetMonitorsByOrgID")
-	logger.Trace().Msg("Retrieving all monitors")
+// GetMonitorsByProjectID retrieves all monitors for the project in the provided ProjectAuth.
+func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAuth *middleware.ProjectAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
+	logger := s.getMethodLogger("GetMonitorsByProjectID")
 
-	org, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorReader)
+	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	monitorsList, err := s.getDB().Monitors().GetMonitorsByOrgID(ctx, org.ID)
+	monitorsList, err := s.getDB().Monitors().GetMonitorsByProjectID(ctx, project.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
 		return nil, &ServiceError{
@@ -145,11 +128,11 @@ func (s *MonitorServiceT) GetMonitorsByOrgID(ctx context.Context, orgAuth *middl
 }
 
 // GetMonitorByID retrieves a specific monitor by its DisplayID.
-func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, orgAuth *middleware.OrgAuth, id string) (monitors.IMonitor, *ServiceError) {
+func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) (monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorByID")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by DisplayID")
 
-	_, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorReader)
+	_, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		return nil, authErr
 	}
@@ -157,36 +140,24 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, orgAuth *middlewar
 	monitor, err := s.getDB().Monitors().GetMonitorByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("id", id).Msg("Monitor not found")
-			return nil, &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor with DisplayID %s not found", id),
-			}
+			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with DisplayID %s not found", id)}
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor from database")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to retrieve monitor: %w", err),
-		}
+		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}
 	}
 
 	return monitor, nil
 }
 
 // UpdateMonitor updates an existing monitor's configuration.
-func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, orgAuth *middleware.OrgAuth, monitor monitors.IConcreteMonitor) *ServiceError {
+func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.IConcreteMonitor) *ServiceError {
 	logger := s.getMethodLogger("UpdateMonitor")
-	logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
 
 	if err := monitor.Validate(); err != nil {
-		logger.Warn().Err(err).Msg("Invalid monitor configuration for update")
-		return &ServiceError{
-			Code: http.StatusBadRequest,
-			Err:  fmt.Errorf("invalid monitor configuration for update: %w", err),
-		}
+		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor configuration: %w", err)}
 	}
 
-	_, authErr := s.authService.authorizeOrgAction(ctx, orgAuth, models.PermissionMonitorEditor)
+	_, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorEditor)
 	if authErr != nil {
 		return authErr
 	}
@@ -194,25 +165,14 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, orgAuth *middleware
 	updatedMonitor, err := s.getDB().Monitors().UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Interface("monitor", monitor).Msg("Monitor not found for update")
-			return &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("monitor with DisplayID %s not found", monitor.GetID()),
-			}
+			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with DisplayID %s not found", monitor.GetID())}
 		}
-		logger.Error().Err(err).Interface("monitor", monitor).Msg("Failed to update monitor in database")
-		return &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to update monitor in database: %w", err),
-		}
+		logger.Error().Err(err).Msg("Failed to update monitor in database")
+		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor: %w", err)}
 	}
 
 	if updatedMonitor == nil {
-		logger.Warn().Interface("monitor", monitor).Msg("Monitor was not updated, possibly not found")
-		return &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("monitor with DisplayID %s was not updated", monitor.GetID()),
-		}
+		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("monitor was not updated")}
 	}
 
 	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{

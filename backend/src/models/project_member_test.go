@@ -13,10 +13,10 @@ func makeMemberUUID(a byte) pgtype.UUID {
 	return pgtype.UUID{Bytes: b, Valid: true}
 }
 
-func TestNewOrgMember_Success(t *testing.T) {
+func TestNewProjectMember_Success(t *testing.T) {
 	id := makeMemberUUID(1)
 
-	member, err := NewOrgMember(id, RoleMember)
+	member, err := NewProjectMember(id, RoleMember)
 
 	assert.NoError(t, err)
 	if assert.NotNil(t, member) {
@@ -25,10 +25,10 @@ func TestNewOrgMember_Success(t *testing.T) {
 	}
 }
 
-func TestNewOrgMember_InvalidID_ReturnsError(t *testing.T) {
+func TestNewProjectMember_InvalidID_ReturnsError(t *testing.T) {
 	invalid := pgtype.UUID{} // Valid=false
 
-	member, err := NewOrgMember(invalid, RoleMember)
+	member, err := NewProjectMember(invalid, RoleMember)
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "is not valid UUID")
@@ -36,18 +36,18 @@ func TestNewOrgMember_InvalidID_ReturnsError(t *testing.T) {
 	assert.NotNil(t, member)
 }
 
-func TestNewOrgMember_InvalidRole_ReturnsError(t *testing.T) {
+func TestNewProjectMember_InvalidRole_ReturnsError(t *testing.T) {
 	id := makeMemberUUID(2)
 
-	member, err := NewOrgMember(id, "invalid")
+	member, err := NewProjectMember(id, "invalid")
 
 	if assert.Error(t, err) {
-		assert.Equal(t, "invalid org role: invalid", err.Error())
+		assert.Equal(t, "invalid project role: invalid", err.Error())
 	}
 	assert.NotNil(t, member)
 }
 
-func TestOrgMember_Validate_Success(t *testing.T) {
-	m := &OrgMember{ID: makeMemberUUID(3), Role: RoleAdmin}
+func TestProjectMember_Validate_Success(t *testing.T) {
+	m := &ProjectMember{ID: makeMemberUUID(3), Role: RoleAdmin}
 	assert.NoError(t, m.Validate())
 }

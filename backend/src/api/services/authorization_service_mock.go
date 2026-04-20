@@ -8,21 +8,21 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// IOrgActionAuthorizer defines the interface for authorization operations.
+// IProjectActionAuthorizer defines the interface for authorization operations.
 // This interface allows for easy mocking in tests.
-type IOrgActionAuthorizer interface {
-	authorizeOrgAction(ctx context.Context, orgAuth *middleware.OrgAuth, permissions ...models.Permission) (*models.Org, *ServiceError)
+type IProjectActionAuthorizer interface {
+	authorizeProjectAction(ctx context.Context, projectAuth *middleware.ProjectAuth, permissions ...models.Permission) (*models.Project, *ServiceError)
 }
 
-// MockAuthorizationService is a mock implementation of IOrgActionAuthorizer for testing.
+// MockAuthorizationService is a mock implementation of IProjectActionAuthorizer for testing.
 type MockAuthorizationService struct {
 	mock.Mock
 }
 
-func (m *MockAuthorizationService) authorizeOrgAction(ctx context.Context, orgAuth *middleware.OrgAuth, permissions ...models.Permission) (*models.Org, *ServiceError) {
-	args := m.Called(ctx, orgAuth, permissions)
+func (m *MockAuthorizationService) authorizeProjectAction(ctx context.Context, projectAuth *middleware.ProjectAuth, permissions ...models.Permission) (*models.Project, *ServiceError) {
+	args := m.Called(ctx, projectAuth, permissions)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(*ServiceError)
 	}
-	return args.Get(0).(*models.Org), nil
+	return args.Get(0).(*models.Project), nil
 }
