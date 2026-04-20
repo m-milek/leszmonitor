@@ -84,10 +84,13 @@ export function LMKeyValueInput(props: LMKeyValueInputProps) {
     })),
   );
 
-  const update = useCallback((updated: KeyValuePair[]) => {
-    setPairs(updated);
-    props.onChange(pairsToRecord(updated));
-  }, [props]);
+  const update = useCallback(
+    (updated: KeyValuePair[]) => {
+      setPairs(updated);
+      props.onChange(pairsToRecord(updated));
+    },
+    [props],
+  );
 
   const handleKeyChange = useCallback(
     (id: string, val: string) => {
@@ -111,10 +114,7 @@ export function LMKeyValueInput(props: LMKeyValueInputProps) {
   );
 
   const handleAdd = useCallback(() => {
-    setPairs((prev) => [
-      ...prev,
-      { id: `kv-${nextId++}`, key: "", value: "" },
-    ]);
+    setPairs((prev) => [...prev, { id: `kv-${nextId++}`, key: "", value: "" }]);
   }, []);
 
   return (
@@ -131,12 +131,7 @@ export function LMKeyValueInput(props: LMKeyValueInputProps) {
             onDelete={handleDelete}
           />
         ))}
-        <Button
-          type="button"
-          onClick={handleAdd}
-          variant="ghost"
-          size="sm"
-        >
+        <Button type="button" onClick={handleAdd} variant="ghost" size="sm">
           <Plus className="h-4 w-4" />
           {props.addButtonText ?? "Add"}
         </Button>

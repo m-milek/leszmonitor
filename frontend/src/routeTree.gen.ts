@@ -21,6 +21,7 @@ import { Route as AuthenticatedProjectsProjectIdIndexRouteImport } from './route
 import { Route as AuthenticatedUserUsernameSettingsIndexRouteImport } from './routes/_authenticated/user/$username/settings/index'
 import { Route as AuthenticatedProjectsProjectIdMonitorsIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/index'
 import { Route as AuthenticatedProjectsProjectIdMembersIndexRouteImport } from './routes/_authenticated/projects/$projectId/members/index'
+import { Route as AuthenticatedProjectsProjectIdDashboardIndexRouteImport } from './routes/_authenticated/projects/$projectId/dashboard/index'
 import { Route as AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/new/index'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -89,6 +90,12 @@ const AuthenticatedProjectsProjectIdMembersIndexRoute =
     path: '/members/',
     getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
+const AuthenticatedProjectsProjectIdDashboardIndexRoute =
+  AuthenticatedProjectsProjectIdDashboardIndexRouteImport.update({
+    id: '/dashboard/',
+    path: '/dashboard/',
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
+  } as any)
 const AuthenticatedProjectsProjectIdMonitorsNewIndexRoute =
   AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport.update({
     id: '/monitors/new/',
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
+  '/projects/$projectId/dashboard/': typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
   '/projects/$projectId/members/': typeof AuthenticatedProjectsProjectIdMembersIndexRoute
   '/projects/$projectId/monitors/': typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
   '/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
@@ -118,6 +126,7 @@ export interface FileRoutesByTo {
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/projects/$projectId': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/user/$username': typeof AuthenticatedUserUsernameIndexRoute
+  '/projects/$projectId/dashboard': typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
   '/projects/$projectId/members': typeof AuthenticatedProjectsProjectIdMembersIndexRoute
   '/projects/$projectId/monitors': typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
   '/user/$username/settings': typeof AuthenticatedUserUsernameSettingsIndexRoute
@@ -134,6 +143,7 @@ export interface FileRoutesById {
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/_authenticated/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
+  '/_authenticated/projects/$projectId/dashboard/': typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
   '/_authenticated/projects/$projectId/members/': typeof AuthenticatedProjectsProjectIdMembersIndexRoute
   '/_authenticated/projects/$projectId/monitors/': typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
   '/_authenticated/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/projects/$projectId/'
     | '/user/$username/'
+    | '/projects/$projectId/dashboard/'
     | '/projects/$projectId/members/'
     | '/projects/$projectId/monitors/'
     | '/user/$username/settings/'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/projects/$projectId'
     | '/user/$username'
+    | '/projects/$projectId/dashboard'
     | '/projects/$projectId/members'
     | '/projects/$projectId/monitors'
     | '/user/$username/settings'
@@ -178,6 +190,7 @@ export interface FileRouteTypes {
     | '/_authenticated/projects/'
     | '/_authenticated/projects/$projectId/'
     | '/_authenticated/user/$username/'
+    | '/_authenticated/projects/$projectId/dashboard/'
     | '/_authenticated/projects/$projectId/members/'
     | '/_authenticated/projects/$projectId/monitors/'
     | '/_authenticated/user/$username/settings/'
@@ -276,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsProjectIdMembersIndexRouteImport
       parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
+    '/_authenticated/projects/$projectId/dashboard/': {
+      id: '/_authenticated/projects/$projectId/dashboard/'
+      path: '/dashboard'
+      fullPath: '/projects/$projectId/dashboard/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
+    }
     '/_authenticated/projects/$projectId/monitors/new/': {
       id: '/_authenticated/projects/$projectId/monitors/new/'
       path: '/monitors/new'
@@ -288,6 +308,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedProjectsProjectIdRouteChildren {
   AuthenticatedProjectsProjectIdIndexRoute: typeof AuthenticatedProjectsProjectIdIndexRoute
+  AuthenticatedProjectsProjectIdDashboardIndexRoute: typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
   AuthenticatedProjectsProjectIdMembersIndexRoute: typeof AuthenticatedProjectsProjectIdMembersIndexRoute
   AuthenticatedProjectsProjectIdMonitorsIndexRoute: typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
   AuthenticatedProjectsProjectIdMonitorsNewIndexRoute: typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRoute
@@ -297,6 +318,8 @@ const AuthenticatedProjectsProjectIdRouteChildren: AuthenticatedProjectsProjectI
   {
     AuthenticatedProjectsProjectIdIndexRoute:
       AuthenticatedProjectsProjectIdIndexRoute,
+    AuthenticatedProjectsProjectIdDashboardIndexRoute:
+      AuthenticatedProjectsProjectIdDashboardIndexRoute,
     AuthenticatedProjectsProjectIdMembersIndexRoute:
       AuthenticatedProjectsProjectIdMembersIndexRoute,
     AuthenticatedProjectsProjectIdMonitorsIndexRoute:
