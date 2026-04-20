@@ -14,7 +14,6 @@ type MockDB struct {
 	UsersRepo    IUserRepository
 	MonitorsRepo IMonitorRepository
 	ProjectsRepo IProjectRepository
-	OrgsRepo     IOrgRepository
 	CloseFn      func()
 }
 
@@ -59,67 +58,34 @@ func (r *MockProjectRepository) GetProjectByDisplayID(ctx context.Context, displ
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) GetProjectsByOrgID(ctx context.Context, org *models.Org) ([]models.Project, error) {
-	args := r.Called(ctx, org)
+func (r *MockProjectRepository) GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error) {
+	args := r.Called(ctx, userID)
 	return args.Get(0).([]models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) UpdateProject(ctx context.Context, org *models.Org, oldProject, newProject *models.Project) (bool, error) {
-	args := r.Called(ctx, org, oldProject, newProject)
+func (r *MockProjectRepository) UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error) {
+	args := r.Called(ctx, oldProject, newProject)
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) DeleteProject(ctx context.Context, org *models.Org, projectID string) (bool, error) {
-	args := r.Called(ctx, org, projectID)
+func (r *MockProjectRepository) DeleteProject(ctx context.Context, projectDisplayID string) (bool, error) {
+	args := r.Called(ctx, projectDisplayID)
 	return args.Bool(0), args.Error(1)
 }
 
-type MockOrgRepository struct {
-	mock.Mock
-}
-
-func (r *MockOrgRepository) InsertOrg(ctx context.Context, org *models.Org) (*struct{}, error) {
-	args := r.Called(ctx, org)
-	return args.Get(0).(*struct{}), args.Error(1)
-}
-
-func (r *MockOrgRepository) GetOrgByDisplayID(ctx context.Context, displayID string) (*models.Org, error) {
-	args := r.Called(ctx, displayID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.Org), args.Error(1)
-}
-
-func (r *MockOrgRepository) GetAllOrgs(ctx context.Context) ([]models.Org, error) {
-	args := r.Called(ctx)
-	return args.Get(0).([]models.Org), args.Error(1)
-}
-
-func (r *MockOrgRepository) DeleteOrgByID(ctx context.Context, displayID string) (bool, error) {
-	args := r.Called(ctx, displayID)
+func (r *MockProjectRepository) AddMemberToProject(ctx context.Context, projectDisplayID string, member *models.ProjectMember) (bool, error) {
+	args := r.Called(ctx, projectDisplayID, member)
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockOrgRepository) UpdateOrg(ctx context.Context, org *models.Org) (bool, error) {
-	args := r.Called(ctx, org)
-	return args.Bool(0), args.Error(1)
-}
-
-func (r *MockOrgRepository) AddMemberToOrg(ctx context.Context, orgID string, member *models.OrgMember) (bool, error) {
-	args := r.Called(ctx, orgID, member)
-	return args.Bool(0), args.Error(1)
-}
-
-func (r *MockOrgRepository) RemoveMemberFromOrg(ctx context.Context, orgID string, userID pgtype.UUID) (bool, error) {
-	args := r.Called(ctx, orgID, userID)
+func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, projectDisplayID string, userID pgtype.UUID) (bool, error) {
+	args := r.Called(ctx, projectDisplayID, userID)
 	return args.Bool(0), args.Error(1)
 }
 
 func (m *MockDB) Users() IUserRepository       { return m.UsersRepo }
 func (m *MockDB) Monitors() IMonitorRepository { return m.MonitorsRepo }
 func (m *MockDB) Projects() IProjectRepository { return m.ProjectsRepo }
-func (m *MockDB) Orgs() IOrgRepository         { return m.OrgsRepo }
 func (m *MockDB) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()

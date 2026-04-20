@@ -11,18 +11,16 @@ import (
 
 func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	var payload services.CreateProjectPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		logging.Api.Trace().Err(err).Msg("Failed to decode project creation payload")
-		util.RespondError(w, http.StatusBadRequest, err)
+	if !util.DecodeJSONOrRespond(w, r, &payload) {
+		return
 	}
 
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	userClaims, ok := util.ExtractUserOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	project, err := services.ProjectService.CreateProject(r.Context(), orgAuth, payload)
-
+	project, err := services.ProjectService.CreateProject(r.Context(), userClaims.Username, payload)
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to create project")
 		util.RespondError(w, err.Code, err.Err)
@@ -32,13 +30,13 @@ func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(w, http.StatusCreated, project)
 }
 
-func GetProjectsOfOrgHandler(w http.ResponseWriter, r *http.Request) {
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
+	userClaims, ok := util.ExtractUserOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	projects, err := services.ProjectService.GetProjects(r.Context(), orgAuth)
+	projects, err := services.ProjectService.GetProjectsForUser(r.Context(), userClaims.Username)
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to get projects")
 		util.RespondError(w, err.Code, err.Err)
@@ -48,23 +46,14 @@ func GetProjectsOfOrgHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(w, http.StatusOK, projects)
 }
 
-func GetProjectsByOrgID(w http.ResponseWriter, r *http.Request) {
-	projectID := r.PathValue("projectId")
-
-	if projectID == "" {
-		logging.Api.Trace().Msg("Org's DisplayID is required")
-		util.RespondMessage(w, http.StatusBadRequest, "Org's DisplayID is required")
-		return
-	}
-
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+func GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	project, err := services.ProjectService.GetProjectsByOrgID(r.Context(), orgAuth, projectID)
+	project, err := services.ProjectService.GetProjectByID(r.Context(), projectAuth)
 	if err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to get projects by DisplayID")
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
@@ -73,22 +62,13 @@ func GetProjectsByOrgID(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	projectID := r.PathValue("projectId")
-
-	if projectID == "" {
-		logging.Api.Trace().Msg("Project's DisplayID is required for deletion")
-		util.RespondMessage(w, http.StatusBadRequest, "Project's DisplayID is required")
-		return
-	}
-
-	err := services.ProjectService.DeleteProject(r.Context(), orgAuth, projectID)
+	err := services.ProjectService.DeleteProject(r.Context(), projectAuth)
 	if err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to delete project")
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
@@ -97,27 +77,18 @@ func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
-		return
-	}
-
-	projectID := r.PathValue("projectId")
-
-	if projectID == "" {
-		logging.Api.Trace().Msg("Project's DisplayID is required for update")
-		util.RespondMessage(w, http.StatusBadRequest, "Project's DisplayID is required")
 		return
 	}
 
 	var payload services.UpdateProjectPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		logging.Api.Trace().Err(err).Msg("Failed to decode project update payload")
 		util.RespondError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	project, err := services.ProjectService.UpdateProject(r.Context(), orgAuth, projectID, &payload)
+	project, err := services.ProjectService.UpdateProject(r.Context(), projectAuth, &payload)
 	if err != nil {
 		logging.Api.Error().Err(err).Msg("Failed to update project")
 		util.RespondError(w, err.Code, err.Err)
@@ -125,4 +96,67 @@ func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	util.RespondJSON(w, http.StatusOK, project)
+}
+
+func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
+
+	var payload services.AddProjectMemberPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	err := services.ProjectService.AddUserToProject(r.Context(), projectAuth, &payload)
+	if err != nil {
+		util.RespondError(w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondMessage(w, http.StatusOK, "Member added to project successfully")
+}
+
+func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
+
+	var payload services.RemoveProjectMemberPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	err := services.ProjectService.RemoveUserFromProject(r.Context(), projectAuth, &payload)
+	if err != nil {
+		util.RespondError(w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondMessage(w, http.StatusOK, "Member removed from project successfully")
+}
+
+func ChangeProjectMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	if !ok {
+		return
+	}
+
+	var payload services.ChangeProjectMemberRolePayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		util.RespondMessage(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+		return
+	}
+
+	err := services.ProjectService.ChangeProjectMemberRole(r.Context(), projectAuth, payload)
+	if err != nil {
+		util.RespondError(w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondMessage(w, http.StatusOK, "Member role updated successfully")
 }

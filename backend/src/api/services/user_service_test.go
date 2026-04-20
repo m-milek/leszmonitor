@@ -27,11 +27,11 @@ func setupTestUserService() (context.Context, *UserServiceT, *db.MockDB) {
 func TestUserServiceT_RegisterUser(t *testing.T) {
 	t.Run("Registers a new user successfully", func(t *testing.T) {
 		ctx, userService, mockDB := setupTestUserService()
+		defer db.Set(nil)
 
 		mockUser, _ := models.NewUser("testuser", "123")
 		mockUserRepo := mockDB.UsersRepo.(*db.MockUserRepository)
 		mockUserRepo.On("InsertUser", ctx, mock.AnythingOfType("*models.User")).Return(mockUser, nil)
-		mockUserRepo.On("GetUserByUsername", ctx, "testuser").Return(mockUser, nil)
 
 		payload := &UserRegisterPayload{
 			Username: "testuser",
@@ -39,10 +39,8 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 		}
 
 		err := userService.RegisterUser(ctx, payload)
-		savedUser, err := userService.GetUserByUsername(ctx, "testuser")
 
 		assert.Nil(t, err)
-		assert.Equal(t, "testuser", savedUser.Username)
 		mockUserRepo.AssertExpectations(t)
 	})
 

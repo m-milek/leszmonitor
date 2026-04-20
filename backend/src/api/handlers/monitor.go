@@ -12,11 +12,6 @@ import (
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
-	projectID := r.URL.Query().Get("projectId")
-	if projectID == "" {
-		logging.Api.Debug().Msg("Received request to create monitor without projectId")
-	}
-
 	monitor, err := monitors.FromReader(r.Body)
 	if err != nil {
 		logging.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
@@ -24,13 +19,12 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(r.Context(), orgAuth, projectID, monitor)
-
+	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(r.Context(), projectAuth, monitor)
 	if serviceErr != nil {
 		util.RespondError(w, serviceErr.Code, serviceErr.Err)
 		return
@@ -41,20 +35,18 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
-
 	if monitorID == "" {
 		logging.Api.Trace().Msg("Monitor DisplayID is required for deletion")
-		util.RespondMessage(w, http.StatusBadRequest, "BaseMonitor DisplayID is required")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
 		return
 	}
 
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	err := services.MonitorService.DeleteMonitor(r.Context(), orgAuth, monitorID)
-
+	err := services.MonitorService.DeleteMonitor(r.Context(), projectAuth, monitorID)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -64,12 +56,12 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	monitorsList, err := services.MonitorService.GetMonitorsByOrgID(r.Context(), orgAuth)
+	monitorsList, err := services.MonitorService.GetMonitorsByProjectID(r.Context(), projectAuth)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -80,19 +72,18 @@ func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
-
 	if monitorID == "" {
 		logging.Api.Trace().Msg("Monitor DisplayID is required")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
 		return
 	}
 
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	monitor, err := services.MonitorService.GetMonitorByID(r.Context(), orgAuth, monitorID)
+	monitor, err := services.MonitorService.GetMonitorByID(r.Context(), projectAuth, monitorID)
 	if err != nil {
 		util.RespondError(w, err.Code, err.Err)
 		return
@@ -102,11 +93,9 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateMonitorHandler handles the update of an existing monitor.
-// // It expects a JSON payload with the updated monitor config of appropriate type.
 // TODO: Proper update mechanism, maybe custom payload so we can update only specific fields
 func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
-
 	if monitorID == "" {
 		logging.Api.Trace().Msg("Monitor DisplayID is required for update")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
@@ -120,12 +109,12 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orgAuth, ok := util.GetOrgAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
 	if !ok {
 		return
 	}
 
-	serviceErr := services.MonitorService.UpdateMonitor(r.Context(), orgAuth, monitor)
+	serviceErr := services.MonitorService.UpdateMonitor(r.Context(), projectAuth, monitor)
 	if serviceErr != nil {
 		util.RespondError(w, serviceErr.Code, serviceErr.Err)
 		return
