@@ -13,17 +13,15 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
-import { Route as AuthenticatedOrgOrgIdRouteImport } from './routes/_authenticated/org/$orgId'
+import { Route as AuthenticatedProjectsProjectIdRouteImport } from './routes/_authenticated/projects/$projectId'
 import { Route as AuthenticatedUserUsernameIndexRouteImport } from './routes/_authenticated/user/$username/index'
-import { Route as AuthenticatedOrgOrgIdIndexRouteImport } from './routes/_authenticated/org/$orgId/index'
+import { Route as AuthenticatedProjectsProjectIdIndexRouteImport } from './routes/_authenticated/projects/$projectId/index'
 import { Route as AuthenticatedUserUsernameSettingsIndexRouteImport } from './routes/_authenticated/user/$username/settings/index'
-import { Route as AuthenticatedOrgOrgIdProjectsIndexRouteImport } from './routes/_authenticated/org/$orgId/projects/index'
-import { Route as AuthenticatedOrgOrgIdMonitorsIndexRouteImport } from './routes/_authenticated/org/$orgId/monitors/index'
-import { Route as AuthenticatedOrgOrgIdMembersIndexRouteImport } from './routes/_authenticated/org/$orgId/members/index'
-import { Route as AuthenticatedOrgOrgIdDashboardIndexRouteImport } from './routes/_authenticated/org/$orgId/dashboard/index'
-import { Route as AuthenticatedOrgOrgIdProjectsProjectIdIndexRouteImport } from './routes/_authenticated/org/$orgId/projects/$projectId/index'
-import { Route as AuthenticatedOrgOrgIdMonitorsNewIndexRouteImport } from './routes/_authenticated/org/$orgId/monitors/new/index'
+import { Route as AuthenticatedProjectsProjectIdMonitorsIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/index'
+import { Route as AuthenticatedProjectsProjectIdMembersIndexRouteImport } from './routes/_authenticated/projects/$projectId/members/index'
+import { Route as AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/new/index'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -44,27 +42,34 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProjectsIndexRoute =
+  AuthenticatedProjectsIndexRouteImport.update({
+    id: '/projects/',
+    path: '/projects/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDocsIndexRoute = AuthenticatedDocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedOrgOrgIdRoute = AuthenticatedOrgOrgIdRouteImport.update({
-  id: '/org/$orgId',
-  path: '/org/$orgId',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+const AuthenticatedProjectsProjectIdRoute =
+  AuthenticatedProjectsProjectIdRouteImport.update({
+    id: '/projects/$projectId',
+    path: '/projects/$projectId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedUserUsernameIndexRoute =
   AuthenticatedUserUsernameIndexRouteImport.update({
     id: '/user/$username/',
     path: '/user/$username/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedOrgOrgIdIndexRoute =
-  AuthenticatedOrgOrgIdIndexRouteImport.update({
+const AuthenticatedProjectsProjectIdIndexRoute =
+  AuthenticatedProjectsProjectIdIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
 const AuthenticatedUserUsernameSettingsIndexRoute =
   AuthenticatedUserUsernameSettingsIndexRouteImport.update({
@@ -72,73 +77,51 @@ const AuthenticatedUserUsernameSettingsIndexRoute =
     path: '/user/$username/settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedOrgOrgIdProjectsIndexRoute =
-  AuthenticatedOrgOrgIdProjectsIndexRouteImport.update({
-    id: '/projects/',
-    path: '/projects/',
-    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
-  } as any)
-const AuthenticatedOrgOrgIdMonitorsIndexRoute =
-  AuthenticatedOrgOrgIdMonitorsIndexRouteImport.update({
+const AuthenticatedProjectsProjectIdMonitorsIndexRoute =
+  AuthenticatedProjectsProjectIdMonitorsIndexRouteImport.update({
     id: '/monitors/',
     path: '/monitors/',
-    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
-const AuthenticatedOrgOrgIdMembersIndexRoute =
-  AuthenticatedOrgOrgIdMembersIndexRouteImport.update({
+const AuthenticatedProjectsProjectIdMembersIndexRoute =
+  AuthenticatedProjectsProjectIdMembersIndexRouteImport.update({
     id: '/members/',
     path: '/members/',
-    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
-const AuthenticatedOrgOrgIdDashboardIndexRoute =
-  AuthenticatedOrgOrgIdDashboardIndexRouteImport.update({
-    id: '/dashboard/',
-    path: '/dashboard/',
-    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
-  } as any)
-const AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute =
-  AuthenticatedOrgOrgIdProjectsProjectIdIndexRouteImport.update({
-    id: '/projects/$projectId/',
-    path: '/projects/$projectId/',
-    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
-  } as any)
-const AuthenticatedOrgOrgIdMonitorsNewIndexRoute =
-  AuthenticatedOrgOrgIdMonitorsNewIndexRouteImport.update({
+const AuthenticatedProjectsProjectIdMonitorsNewIndexRoute =
+  AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport.update({
     id: '/monitors/new/',
     path: '/monitors/new/',
-    getParentRoute: () => AuthenticatedOrgOrgIdRoute,
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
-  '/org/$orgId': typeof AuthenticatedOrgOrgIdRouteWithChildren
+  '/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
   '/docs/': typeof AuthenticatedDocsIndexRoute
-  '/org/$orgId/': typeof AuthenticatedOrgOrgIdIndexRoute
+  '/projects/': typeof AuthenticatedProjectsIndexRoute
+  '/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
-  '/org/$orgId/dashboard/': typeof AuthenticatedOrgOrgIdDashboardIndexRoute
-  '/org/$orgId/members/': typeof AuthenticatedOrgOrgIdMembersIndexRoute
-  '/org/$orgId/monitors/': typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
-  '/org/$orgId/projects/': typeof AuthenticatedOrgOrgIdProjectsIndexRoute
+  '/projects/$projectId/members/': typeof AuthenticatedProjectsProjectIdMembersIndexRoute
+  '/projects/$projectId/monitors/': typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
   '/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
-  '/org/$orgId/monitors/new/': typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
-  '/org/$orgId/projects/$projectId/': typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
+  '/projects/$projectId/monitors/new/': typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
   '/register': typeof RegisterIndexRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
-  '/org/$orgId': typeof AuthenticatedOrgOrgIdIndexRoute
+  '/projects': typeof AuthenticatedProjectsIndexRoute
+  '/projects/$projectId': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/user/$username': typeof AuthenticatedUserUsernameIndexRoute
-  '/org/$orgId/dashboard': typeof AuthenticatedOrgOrgIdDashboardIndexRoute
-  '/org/$orgId/members': typeof AuthenticatedOrgOrgIdMembersIndexRoute
-  '/org/$orgId/monitors': typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
-  '/org/$orgId/projects': typeof AuthenticatedOrgOrgIdProjectsIndexRoute
+  '/projects/$projectId/members': typeof AuthenticatedProjectsProjectIdMembersIndexRoute
+  '/projects/$projectId/monitors': typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
   '/user/$username/settings': typeof AuthenticatedUserUsernameSettingsIndexRoute
-  '/org/$orgId/monitors/new': typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
-  '/org/$orgId/projects/$projectId': typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
+  '/projects/$projectId/monitors/new': typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -146,17 +129,15 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
-  '/_authenticated/org/$orgId': typeof AuthenticatedOrgOrgIdRouteWithChildren
+  '/_authenticated/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
-  '/_authenticated/org/$orgId/': typeof AuthenticatedOrgOrgIdIndexRoute
+  '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
+  '/_authenticated/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/_authenticated/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
-  '/_authenticated/org/$orgId/dashboard/': typeof AuthenticatedOrgOrgIdDashboardIndexRoute
-  '/_authenticated/org/$orgId/members/': typeof AuthenticatedOrgOrgIdMembersIndexRoute
-  '/_authenticated/org/$orgId/monitors/': typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
-  '/_authenticated/org/$orgId/projects/': typeof AuthenticatedOrgOrgIdProjectsIndexRoute
+  '/_authenticated/projects/$projectId/members/': typeof AuthenticatedProjectsProjectIdMembersIndexRoute
+  '/_authenticated/projects/$projectId/monitors/': typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
   '/_authenticated/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
-  '/_authenticated/org/$orgId/monitors/new/': typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
-  '/_authenticated/org/$orgId/projects/$projectId/': typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
+  '/_authenticated/projects/$projectId/monitors/new/': typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -164,49 +145,43 @@ export interface FileRouteTypes {
     | '/'
     | '/login/'
     | '/register/'
-    | '/org/$orgId'
+    | '/projects/$projectId'
     | '/docs/'
-    | '/org/$orgId/'
+    | '/projects/'
+    | '/projects/$projectId/'
     | '/user/$username/'
-    | '/org/$orgId/dashboard/'
-    | '/org/$orgId/members/'
-    | '/org/$orgId/monitors/'
-    | '/org/$orgId/projects/'
+    | '/projects/$projectId/members/'
+    | '/projects/$projectId/monitors/'
     | '/user/$username/settings/'
-    | '/org/$orgId/monitors/new/'
-    | '/org/$orgId/projects/$projectId/'
+    | '/projects/$projectId/monitors/new/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/register'
     | '/docs'
-    | '/org/$orgId'
+    | '/projects'
+    | '/projects/$projectId'
     | '/user/$username'
-    | '/org/$orgId/dashboard'
-    | '/org/$orgId/members'
-    | '/org/$orgId/monitors'
-    | '/org/$orgId/projects'
+    | '/projects/$projectId/members'
+    | '/projects/$projectId/monitors'
     | '/user/$username/settings'
-    | '/org/$orgId/monitors/new'
-    | '/org/$orgId/projects/$projectId'
+    | '/projects/$projectId/monitors/new'
   id:
     | '__root__'
     | '/_authenticated'
     | '/_authenticated/'
     | '/login/'
     | '/register/'
-    | '/_authenticated/org/$orgId'
+    | '/_authenticated/projects/$projectId'
     | '/_authenticated/docs/'
-    | '/_authenticated/org/$orgId/'
+    | '/_authenticated/projects/'
+    | '/_authenticated/projects/$projectId/'
     | '/_authenticated/user/$username/'
-    | '/_authenticated/org/$orgId/dashboard/'
-    | '/_authenticated/org/$orgId/members/'
-    | '/_authenticated/org/$orgId/monitors/'
-    | '/_authenticated/org/$orgId/projects/'
+    | '/_authenticated/projects/$projectId/members/'
+    | '/_authenticated/projects/$projectId/monitors/'
     | '/_authenticated/user/$username/settings/'
-    | '/_authenticated/org/$orgId/monitors/new/'
-    | '/_authenticated/org/$orgId/projects/$projectId/'
+    | '/_authenticated/projects/$projectId/monitors/new/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -245,6 +220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/projects/': {
+      id: '/_authenticated/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/docs/': {
       id: '/_authenticated/docs/'
       path: '/docs'
@@ -252,11 +234,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/org/$orgId': {
-      id: '/_authenticated/org/$orgId'
-      path: '/org/$orgId'
-      fullPath: '/org/$orgId'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdRouteImport
+    '/_authenticated/projects/$projectId': {
+      id: '/_authenticated/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/user/$username/': {
@@ -266,12 +248,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUserUsernameIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/org/$orgId/': {
-      id: '/_authenticated/org/$orgId/'
+    '/_authenticated/projects/$projectId/': {
+      id: '/_authenticated/projects/$projectId/'
       path: '/'
-      fullPath: '/org/$orgId/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgIdRoute
+      fullPath: '/projects/$projectId/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdIndexRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
     '/_authenticated/user/$username/settings/': {
       id: '/_authenticated/user/$username/settings/'
@@ -280,94 +262,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUserUsernameSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/org/$orgId/projects/': {
-      id: '/_authenticated/org/$orgId/projects/'
-      path: '/projects'
-      fullPath: '/org/$orgId/projects/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdProjectsIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgIdRoute
-    }
-    '/_authenticated/org/$orgId/monitors/': {
-      id: '/_authenticated/org/$orgId/monitors/'
+    '/_authenticated/projects/$projectId/monitors/': {
+      id: '/_authenticated/projects/$projectId/monitors/'
       path: '/monitors'
-      fullPath: '/org/$orgId/monitors/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdMonitorsIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgIdRoute
+      fullPath: '/projects/$projectId/monitors/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdMonitorsIndexRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/_authenticated/org/$orgId/members/': {
-      id: '/_authenticated/org/$orgId/members/'
+    '/_authenticated/projects/$projectId/members/': {
+      id: '/_authenticated/projects/$projectId/members/'
       path: '/members'
-      fullPath: '/org/$orgId/members/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdMembersIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgIdRoute
+      fullPath: '/projects/$projectId/members/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdMembersIndexRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/_authenticated/org/$orgId/dashboard/': {
-      id: '/_authenticated/org/$orgId/dashboard/'
-      path: '/dashboard'
-      fullPath: '/org/$orgId/dashboard/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdDashboardIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgIdRoute
-    }
-    '/_authenticated/org/$orgId/projects/$projectId/': {
-      id: '/_authenticated/org/$orgId/projects/$projectId/'
-      path: '/projects/$projectId'
-      fullPath: '/org/$orgId/projects/$projectId/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgIdRoute
-    }
-    '/_authenticated/org/$orgId/monitors/new/': {
-      id: '/_authenticated/org/$orgId/monitors/new/'
+    '/_authenticated/projects/$projectId/monitors/new/': {
+      id: '/_authenticated/projects/$projectId/monitors/new/'
       path: '/monitors/new'
-      fullPath: '/org/$orgId/monitors/new/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgIdMonitorsNewIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgIdRoute
+      fullPath: '/projects/$projectId/monitors/new/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
   }
 }
 
-interface AuthenticatedOrgOrgIdRouteChildren {
-  AuthenticatedOrgOrgIdIndexRoute: typeof AuthenticatedOrgOrgIdIndexRoute
-  AuthenticatedOrgOrgIdDashboardIndexRoute: typeof AuthenticatedOrgOrgIdDashboardIndexRoute
-  AuthenticatedOrgOrgIdMembersIndexRoute: typeof AuthenticatedOrgOrgIdMembersIndexRoute
-  AuthenticatedOrgOrgIdMonitorsIndexRoute: typeof AuthenticatedOrgOrgIdMonitorsIndexRoute
-  AuthenticatedOrgOrgIdProjectsIndexRoute: typeof AuthenticatedOrgOrgIdProjectsIndexRoute
-  AuthenticatedOrgOrgIdMonitorsNewIndexRoute: typeof AuthenticatedOrgOrgIdMonitorsNewIndexRoute
-  AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute: typeof AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute
+interface AuthenticatedProjectsProjectIdRouteChildren {
+  AuthenticatedProjectsProjectIdIndexRoute: typeof AuthenticatedProjectsProjectIdIndexRoute
+  AuthenticatedProjectsProjectIdMembersIndexRoute: typeof AuthenticatedProjectsProjectIdMembersIndexRoute
+  AuthenticatedProjectsProjectIdMonitorsIndexRoute: typeof AuthenticatedProjectsProjectIdMonitorsIndexRoute
+  AuthenticatedProjectsProjectIdMonitorsNewIndexRoute: typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRoute
 }
 
-const AuthenticatedOrgOrgIdRouteChildren: AuthenticatedOrgOrgIdRouteChildren = {
-  AuthenticatedOrgOrgIdIndexRoute: AuthenticatedOrgOrgIdIndexRoute,
-  AuthenticatedOrgOrgIdDashboardIndexRoute:
-    AuthenticatedOrgOrgIdDashboardIndexRoute,
-  AuthenticatedOrgOrgIdMembersIndexRoute:
-    AuthenticatedOrgOrgIdMembersIndexRoute,
-  AuthenticatedOrgOrgIdMonitorsIndexRoute:
-    AuthenticatedOrgOrgIdMonitorsIndexRoute,
-  AuthenticatedOrgOrgIdProjectsIndexRoute:
-    AuthenticatedOrgOrgIdProjectsIndexRoute,
-  AuthenticatedOrgOrgIdMonitorsNewIndexRoute:
-    AuthenticatedOrgOrgIdMonitorsNewIndexRoute,
-  AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute:
-    AuthenticatedOrgOrgIdProjectsProjectIdIndexRoute,
-}
+const AuthenticatedProjectsProjectIdRouteChildren: AuthenticatedProjectsProjectIdRouteChildren =
+  {
+    AuthenticatedProjectsProjectIdIndexRoute:
+      AuthenticatedProjectsProjectIdIndexRoute,
+    AuthenticatedProjectsProjectIdMembersIndexRoute:
+      AuthenticatedProjectsProjectIdMembersIndexRoute,
+    AuthenticatedProjectsProjectIdMonitorsIndexRoute:
+      AuthenticatedProjectsProjectIdMonitorsIndexRoute,
+    AuthenticatedProjectsProjectIdMonitorsNewIndexRoute:
+      AuthenticatedProjectsProjectIdMonitorsNewIndexRoute,
+  }
 
-const AuthenticatedOrgOrgIdRouteWithChildren =
-  AuthenticatedOrgOrgIdRoute._addFileChildren(
-    AuthenticatedOrgOrgIdRouteChildren,
+const AuthenticatedProjectsProjectIdRouteWithChildren =
+  AuthenticatedProjectsProjectIdRoute._addFileChildren(
+    AuthenticatedProjectsProjectIdRouteChildren,
   )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedOrgOrgIdRoute: typeof AuthenticatedOrgOrgIdRouteWithChildren
+  AuthenticatedProjectsProjectIdRoute: typeof AuthenticatedProjectsProjectIdRouteWithChildren
   AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
+  AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
   AuthenticatedUserUsernameIndexRoute: typeof AuthenticatedUserUsernameIndexRoute
   AuthenticatedUserUsernameSettingsIndexRoute: typeof AuthenticatedUserUsernameSettingsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedOrgOrgIdRoute: AuthenticatedOrgOrgIdRouteWithChildren,
+  AuthenticatedProjectsProjectIdRoute:
+    AuthenticatedProjectsProjectIdRouteWithChildren,
   AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
+  AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
   AuthenticatedUserUsernameIndexRoute: AuthenticatedUserUsernameIndexRoute,
   AuthenticatedUserUsernameSettingsIndexRoute:
     AuthenticatedUserUsernameSettingsIndexRoute,
