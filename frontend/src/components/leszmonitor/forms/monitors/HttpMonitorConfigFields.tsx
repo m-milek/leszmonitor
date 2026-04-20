@@ -8,6 +8,7 @@ import {
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
 import type { HttpMonitorFormApi } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
+import { LMSwitch } from "@/components/leszmonitor/forms/inputs/LMSwitch.tsx";
 
 const httpMethodItems = [
   { value: "GET", label: "GET" },
@@ -120,6 +121,40 @@ export function HttpMonitorConfigFields({
               isInvalid={isFieldInvalid(field)}
               errorMessage={getFirstError(field)}
             />
+          </Field>
+        )}
+      />
+      <form.Field
+        name="config.saveResponseBody"
+        children={(field) => (
+          <Field>
+            <Flex direction="row" className="justify-between">
+              <FieldLabel>Save Response Body</FieldLabel>
+              <LMSwitch
+                name={field.name}
+                checked={!!field.state.value}
+                onCheckedChange={(checked) =>
+                  field.handleChange(checked ? true : undefined)
+                }
+              />
+            </Flex>
+          </Field>
+        )}
+      />
+      <form.Field
+        name="config.saveResponseHeaders"
+        children={(field) => (
+          <Field>
+            <Flex direction="row" className="justify-between">
+              <FieldLabel>Save Response Headers</FieldLabel>
+              <LMSwitch
+                name={field.name}
+                checked={!!field.state.value}
+                onCheckedChange={(checked) =>
+                  field.handleChange(checked ? true : undefined)
+                }
+              />
+            </Flex>
           </Field>
         )}
       />
