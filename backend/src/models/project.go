@@ -52,9 +52,9 @@ func (p *Project) IsMember(userID pgtype.UUID) bool {
 
 // GetMember retrieves the ProjectMember with the given UUID.
 func (p *Project) GetMember(userID pgtype.UUID) *ProjectMember {
-	for _, member := range p.Members {
-		if member.ID == userID {
-			return &member
+	for i := range p.Members {
+		if p.Members[i].ID == userID {
+			return &p.Members[i]
 		}
 	}
 	return nil
@@ -89,6 +89,9 @@ func (p *Project) Validate() error {
 		return fmt.Errorf("project must have at least one member")
 	}
 	for i, member := range p.Members {
+		if err := member.Validate(); err != nil {
+			return fmt.Errorf("invalid member %d: %w", i, err)
+		}
 		if err := member.Role.Validate(); err != nil {
 			return fmt.Errorf("invalid role for member %d: %w", i, err)
 		}

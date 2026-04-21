@@ -79,7 +79,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 func (r *monitorRepository) GetMonitorByID(ctx context.Context, id string) (monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (monitors.IConcreteMonitor, error) {
 		row, err := r.pool.Query(ctx,
-			`SELECT * FROM monitors WHERE id = $1`,
+			`SELECT * FROM monitors WHERE display_id = $1`,
 			id)
 		if err != nil {
 			return nil, err
