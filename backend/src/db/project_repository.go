@@ -12,6 +12,7 @@ import (
 
 type IProjectRepository interface {
 	InsertProject(ctx context.Context, project *models.Project) error
+	GetProjectByID(ctx context.Context, id pgtype.UUID) (*models.Project, error)
 	GetProjectByDisplayID(ctx context.Context, displayID string) (*models.Project, error)
 	GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error)
 	UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error)
@@ -95,6 +96,31 @@ func (r *projectRepository) InsertProject(ctx context.Context, project *models.P
 		return ErrAlreadyExists
 	}
 	return err
+}
+
+func (r *projectRepository) GetProjectByID(ctx context.Context, id pgtype.UUID) (*models.Project, error) {
+	return dbWrap(ctx, "GetProjectByID", func() (*models.Project, error) {
+		rows, err := r.pool.Query(ctx,
+			`SELECT id, display_id, name, description, created_at, updated_at FROM projects WHERE id = $1`,
+			id)
+		if err != nil {
+			return nil, err
+		}
+
+		project, err := pgx.CollectExactlyOneRow(rows, projectFromCollectableRow)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+
+		if err = r.loadMembers(ctx, &project); err != nil {
+			return nil, err
+		}
+
+		return &project, nil
+	})
 }
 
 func (r *projectRepository) GetProjectByDisplayID(ctx context.Context, displayID string) (*models.Project, error) {
