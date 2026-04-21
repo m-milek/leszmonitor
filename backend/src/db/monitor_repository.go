@@ -16,7 +16,7 @@ type IMonitorRepository interface {
 	GetMonitorsByProjectID(ctx context.Context, projectID pgtype.UUID) ([]monitors.IConcreteMonitor, error)
 	GetMonitorByID(ctx context.Context, id string) (monitors.IConcreteMonitor, error)
 	GetAllMonitors(ctx context.Context) ([]monitors.IConcreteMonitor, error)
-	DeleteMonitorByDisplayID(ctx context.Context, displayID string) (*pgtype.UUID, error)
+	DeleteMonitorBySlug(ctx context.Context, slug string) (*pgtype.UUID, error)
 	InsertMonitor(ctx context.Context, monitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error)
 	UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error)
 }
@@ -36,7 +36,7 @@ func monitorFromCollectableRow(row pgx.CollectableRow) (monitors.IConcreteMonito
 	var config []byte
 	var b monitors.BaseMonitor
 
-	err := row.Scan(&b.ID, &b.DisplayID, &b.ProjectID, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
+	err := row.Scan(&b.ID, &b.Slug, &b.ProjectID, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 func (r *monitorRepository) GetMonitorByID(ctx context.Context, id string) (monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (monitors.IConcreteMonitor, error) {
 		row, err := r.pool.Query(ctx,
-			`SELECT * FROM monitors WHERE display_id = $1`,
+			`SELECT * FROM monitors WHERE slug = $1`,
 			id)
 		if err != nil {
 			return nil, err
@@ -107,9 +107,9 @@ func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.ICon
 	})
 }
 
-func (r *monitorRepository) DeleteMonitorByDisplayID(ctx context.Context, displayID string) (*pgtype.UUID, error) {
+func (r *monitorRepository) DeleteMonitorBySlug(ctx context.Context, slug string) (*pgtype.UUID, error) {
 	return dbWrap(ctx, "DeleteMonitor", func() (*pgtype.UUID, error) {
-		result := r.pool.QueryRow(ctx, `DELETE FROM monitors WHERE display_id = $1 RETURNING id`, displayID)
+		result := r.pool.QueryRow(ctx, `DELETE FROM monitors WHERE slug = $1 RETURNING id`, slug)
 
 		var id pgtype.UUID
 		err := result.Scan(&id)
@@ -128,9 +128,9 @@ func (r *monitorRepository) DeleteMonitorByDisplayID(ctx context.Context, displa
 func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "InsertMonitor", func() (monitors.IConcreteMonitor, error) {
 		rows, err := r.pool.Query(ctx,
-			`INSERT INTO monitors (display_id, project_id, name, description, interval, kind, config)
+			`INSERT INTO monitors (slug, project_id, name, description, interval, kind, config)
 			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-			monitor.GetDisplayID(),
+			monitor.GetSlug(),
 			monitor.GetProjectID(),
 			monitor.GetName(),
 			monitor.GetDescription(),
@@ -157,8 +157,8 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "UpdateMonitor", func() (monitors.IConcreteMonitor, error) {
 		result, err := r.pool.Query(ctx,
-			`UPDATE monitors SET display_id=$1, project_id=$2, name=$3, description=$4, interval=$5, kind=$6, config=$7 WHERE id=$8 RETURNING *`,
-			newMonitor.GetDisplayID(),
+			`UPDATE monitors SET slug=$1, project_id=$2, name=$3, description=$4, interval=$5, kind=$6, config=$7 WHERE id=$8 RETURNING *`,
+			newMonitor.GetSlug(),
 			newMonitor.GetProjectID(),
 			newMonitor.GetName(),
 			newMonitor.GetDescription(),

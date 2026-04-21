@@ -138,7 +138,7 @@ export const AppSidebar = () => {
                 <SidebarMenu>
                   <SidebarButton
                     icon={<LucidePlusCircle />}
-                    href={`/projects/${project.displayId}/monitors/new`}
+                    href={`/projects/${project.slug}/monitors/new`}
                     label="New Monitor"
                     variant="primary"
                   />
@@ -151,17 +151,17 @@ export const AppSidebar = () => {
                 <SidebarMenu>
                   <SidebarButton
                     icon={<LayoutDashboardIcon />}
-                    href={`/projects/${project.displayId}/dashboard`}
+                    href={`/projects/${project.slug}/dashboard`}
                     label="Dashboard"
                   />
                   <SidebarButton
                     icon={<LucideActivity />}
-                    href={`/projects/${project.displayId}/monitors`}
+                    href={`/projects/${project.slug}/monitors`}
                     label="Monitors"
                   />
                   <SidebarButton
                     icon={<LucideUsers />}
-                    href={`/projects/${project.displayId}/members`}
+                    href={`/projects/${project.slug}/members`}
                     label="Members"
                   />
                 </SidebarMenu>

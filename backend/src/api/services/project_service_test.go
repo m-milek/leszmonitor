@@ -23,21 +23,21 @@ func setupTestProjectService() (context.Context, *ProjectServiceT, *db.MockDB) {
 	return context.Background(), svc, mockDB
 }
 
-func TestProjectServiceT_InternalGetProjectByDisplayID(t *testing.T) {
+func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 	t.Run("Returns project successfully", func(t *testing.T) {
 		ctx, svc, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
 		expected := &models.Project{Description: "Test Description"}
-		expected.DisplayIDFromName.Init("test-project")
+		expected.SlugFromName.Init("test-project")
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "test-project").Return(expected, nil)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").Return(expected, nil)
 
-		project, err := svc.internalGetProjectByDisplayID(ctx, "test-project")
+		project, err := svc.internalGetProjectBySlug(ctx, "test-project")
 
 		assert.Nil(t, err)
 		assert.NotNil(t, project)
-		assert.Equal(t, "test-project", project.DisplayID)
+		assert.Equal(t, "test-project", project.Slug)
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
 	})
 
@@ -45,9 +45,9 @@ func TestProjectServiceT_InternalGetProjectByDisplayID(t *testing.T) {
 		ctx, svc, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "nonexistent").Return((*models.Project)(nil), db.ErrNotFound)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "nonexistent").Return((*models.Project)(nil), db.ErrNotFound)
 
-		project, err := svc.internalGetProjectByDisplayID(ctx, "nonexistent")
+		project, err := svc.internalGetProjectBySlug(ctx, "nonexistent")
 
 		assert.Nil(t, project)
 		assert.NotNil(t, err)
@@ -59,9 +59,9 @@ func TestProjectServiceT_InternalGetProjectByDisplayID(t *testing.T) {
 		ctx, svc, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByDisplayID", ctx, "test-project").Return((*models.Project)(nil), errors.New("database error"))
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").Return((*models.Project)(nil), errors.New("database error"))
 
-		project, err := svc.internalGetProjectByDisplayID(ctx, "test-project")
+		project, err := svc.internalGetProjectBySlug(ctx, "test-project")
 
 		assert.Nil(t, project)
 		assert.NotNil(t, err)

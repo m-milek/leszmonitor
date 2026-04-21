@@ -272,7 +272,7 @@ func TestProjectAuthFromRequest(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "valid request with project DisplayID and user claims",
+			name: "valid request with project slug and user claims",
 			setupRequest: func() *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
 				req.SetPathValue("projectId", "proj123")
@@ -287,7 +287,7 @@ func TestProjectAuthFromRequest(t *testing.T) {
 			},
 		},
 		{
-			name: "missing project DisplayID",
+			name: "missing project slug",
 			setupRequest: func() *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/projects/", nil)
 				// No projectId path value set

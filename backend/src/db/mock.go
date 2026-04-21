@@ -50,8 +50,8 @@ func (r *MockProjectRepository) InsertProject(ctx context.Context, project *mode
 	return args.Error(0)
 }
 
-func (r *MockProjectRepository) GetProjectByDisplayID(ctx context.Context, displayID string) (*models.Project, error) {
-	args := r.Called(ctx, displayID)
+func (r *MockProjectRepository) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
+	args := r.Called(ctx, slug)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -68,18 +68,18 @@ func (r *MockProjectRepository) UpdateProject(ctx context.Context, oldProject, n
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) DeleteProject(ctx context.Context, projectDisplayID string) (bool, error) {
-	args := r.Called(ctx, projectDisplayID)
+func (r *MockProjectRepository) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
+	args := r.Called(ctx, projectSlug)
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) AddMemberToProject(ctx context.Context, projectDisplayID string, member *models.ProjectMember) (bool, error) {
-	args := r.Called(ctx, projectDisplayID, member)
+func (r *MockProjectRepository) AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error) {
+	args := r.Called(ctx, projectSlug, member)
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, projectDisplayID string, userID pgtype.UUID) (bool, error) {
-	args := r.Called(ctx, projectDisplayID, userID)
+func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID pgtype.UUID) (bool, error) {
+	args := r.Called(ctx, projectSlug, userID)
 	return args.Bool(0), args.Error(1)
 }
 

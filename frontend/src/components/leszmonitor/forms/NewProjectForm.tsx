@@ -12,7 +12,7 @@ import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 
 const projectFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
-  displayId: z.string().min(1, "Display ID is required"),
+  slug: z.string().min(1, "Slug is required"),
   description: z.string(),
 });
 
@@ -28,7 +28,7 @@ export function NewProjectForm({
   const form = useForm({
     defaultValues: {
       name: "",
-      displayId: "",
+      slug: "",
       description: "",
     },
     validators: {
@@ -66,10 +66,10 @@ export function NewProjectForm({
           )}
         />
         <form.Field
-          name="displayId"
+          name="slug"
           children={(field) => (
             <Field>
-              <FieldLabel>Display ID</FieldLabel>
+              <FieldLabel>Slug</FieldLabel>
               <LMInputField
                 name={field.name}
                 value={field.state.value}

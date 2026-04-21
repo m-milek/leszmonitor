@@ -63,7 +63,7 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 	// Validate the monitor before starting
 	err := monitor.Validate()
 	if err != nil {
-		logging.Uptime.Error().Err(err).Str("id", monitor.GetDisplayID()).Str("name", monitor.GetName()).Msgf("Error validating monitor")
+		logging.Uptime.Error().Err(err).Str("id", monitor.GetSlug()).Str("name", monitor.GetName()).Msgf("Error validating monitor")
 		return
 	}
 

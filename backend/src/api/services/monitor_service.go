@@ -44,7 +44,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 	}
 
 	monitor.SetProjectID(project.ID)
-	monitor.GenerateDisplayID()
+	monitor.GenerateSlug()
 
 	if err := monitor.Validate(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid monitor configuration")
@@ -73,7 +73,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 	return &MonitorCreateResponse{MonitorID: dbRes.GetID().String()}, nil
 }
 
-// DeleteMonitor deletes a monitor by its DisplayID.
+// DeleteMonitor deletes a monitor by its slug.
 func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
@@ -83,7 +83,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *middle
 		return authErr
 	}
 
-	deletedID, err := s.getDB().Monitors().DeleteMonitorByDisplayID(ctx, id)
+	deletedID, err := s.getDB().Monitors().DeleteMonitorBySlug(ctx, id)
 	if err != nil {
 		logger.Error().Err(err).Str("id", id).Msg("Failed to delete monitor from database")
 		return &ServiceError{
@@ -127,10 +127,10 @@ func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAut
 	return monitorsList, nil
 }
 
-// GetMonitorByID retrieves a specific monitor by its DisplayID.
+// GetMonitorByID retrieves a specific monitor by its slug.
 func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) (monitors.IMonitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorByID")
-	logger.Trace().Str("id", id).Msg("Retrieving monitor by DisplayID")
+	logger.Trace().Str("id", id).Msg("Retrieving monitor by slug")
 
 	_, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
 	if authErr != nil {
@@ -141,7 +141,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found in database")
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with DisplayID %s not found", id)}
+			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found", id)}
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor from database")
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}
@@ -153,9 +153,9 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve project for monitor: %w", err)}
 	}
 
-	if project.DisplayID != projectAuth.ProjectID {
+	if project.Slug != projectAuth.ProjectID {
 		logger.Warn().Str("id", id).Msg("Monitor does not belong to the authorized project")
-		return nil, &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with DisplayID %s does not belong to the authorized project", id)}
+		return nil, &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with slug %s does not belong to the authorized project", id)}
 	}
 
 	return monitor, nil
@@ -177,7 +177,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middle
 	updatedMonitor, err := s.getDB().Monitors().UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with DisplayID %s not found", monitor.GetID())}
+			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found", monitor.GetID())}
 		}
 		logger.Error().Err(err).Msg("Failed to update monitor in database")
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor: %w", err)}

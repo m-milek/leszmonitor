@@ -42,17 +42,17 @@ function ProjectMembersRoute() {
 
   const addMemberMutation = useMutation({
     mutationFn: (value: AddProjectMemberPayload) =>
-      addMemberToProject(project!.displayId, value),
+      addMemberToProject(project!.slug, value),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["project", project!.displayId] });
+      queryClient.invalidateQueries({ queryKey: ["project", project!.slug] });
     },
   });
 
   const removeMemberMutation = useMutation({
     mutationFn: (username: string) =>
-      removeMemberFromProject(project!.displayId, { username }),
+      removeMemberFromProject(project!.slug, { username }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["project", project!.displayId] });
+      queryClient.invalidateQueries({ queryKey: ["project", project!.slug] });
     },
   });
 

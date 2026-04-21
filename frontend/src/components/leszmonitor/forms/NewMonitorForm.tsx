@@ -143,7 +143,7 @@ export function NewMonitorForm({
             )}
           />
           <form.Field
-            name="displayId"
+            name="slug"
             children={(field) => (
               <Field>
                 <FieldLabel>Slug</FieldLabel>

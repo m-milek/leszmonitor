@@ -59,7 +59,7 @@ func TestHttpConfig_ImplementsIMonitorConfig(t *testing.T) {
 
 func TestHttpMonitor_ImplementsIMonitor(t *testing.T) {
 	monitor := &httpMonitor{
-		BaseMonitor: BaseMonitor{DisplayID: "test-id"},
+		BaseMonitor: BaseMonitor{Slug: "test-id"},
 		Config:      *setupTestHttpMonitorConfig(),
 	}
 	var iMonitor IMonitor = monitor

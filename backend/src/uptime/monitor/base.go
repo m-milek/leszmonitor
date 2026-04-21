@@ -13,8 +13,8 @@ type IMonitor interface {
 	Run() IMonitorResponse
 	Validate() error
 	GetID() pgtype.UUID
-	GetDisplayID() string
-	GenerateDisplayID()
+	GetSlug() string
+	GenerateSlug()
 	GetProjectID() pgtype.UUID
 	SetProjectID(uuid pgtype.UUID)
 	GetName() string
@@ -55,7 +55,7 @@ func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonit
 
 type BaseMonitor struct {
 	ID          pgtype.UUID       `json:"id"`
-	DisplayID   string            `json:"displayId"`   // Unique identifier for the monitor
+	Slug        string            `json:"slug"`        // Unique identifier for the monitor
 	ProjectID   pgtype.UUID       `json:"projectID"`   // ID of the project this monitor belongs to
 	Name        string            `json:"name"`        // Name of the monitor
 	Description string            `json:"description"` // Description of the monitor
@@ -92,18 +92,18 @@ func (m *BaseMonitor) validateBase() error {
 	if m.GetType() == "" {
 		return fmt.Errorf("monitor type cannot be empty")
 	}
-	if m.GetDisplayID() == "" {
-		return fmt.Errorf("monitor DisplayID cannot be empty")
+	if m.GetSlug() == "" {
+		return fmt.Errorf("monitor slug cannot be empty")
 	}
 	return nil
 }
 
-func (m *BaseMonitor) GenerateDisplayID() {
-	m.DisplayID = util.IDFromString(m.GetName())
+func (m *BaseMonitor) GenerateSlug() {
+	m.Slug = util.IDFromString(m.GetName())
 }
 
-func (m *BaseMonitor) GetDisplayID() string {
-	return m.DisplayID
+func (m *BaseMonitor) GetSlug() string {
+	return m.Slug
 }
 
 func (m *BaseMonitor) GetID() pgtype.UUID {
