@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE (id, project_id),
+    UNIQUE (project_id, display_id),
 
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
