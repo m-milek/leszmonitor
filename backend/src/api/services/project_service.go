@@ -262,6 +262,12 @@ func (s *ProjectServiceT) ChangeProjectMemberRole(ctx context.Context, projectAu
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error changing role: %w", err)}
 	}
 
+	_, err := s.getDB().Projects().UpdateProject(ctx, project, project)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to update project with new role")
+		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update project with new role: %w", err)}
+	}
+
 	return nil
 }
 

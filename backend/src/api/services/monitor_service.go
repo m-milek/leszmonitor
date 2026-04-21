@@ -140,10 +140,22 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 	monitor, err := s.getDB().Monitors().GetMonitorByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
+			logger.Warn().Str("id", id).Msg("Monitor not found in database")
 			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with DisplayID %s not found", id)}
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor from database")
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}
+	}
+
+	project, err := s.getDB().Projects().GetProjectByID(ctx, monitor.GetProjectID())
+	if err != nil {
+		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve project for monitor")
+		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve project for monitor: %w", err)}
+	}
+
+	if project.DisplayID != projectAuth.ProjectID {
+		logger.Warn().Str("id", id).Msg("Monitor does not belong to the authorized project")
+		return nil, &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with DisplayID %s does not belong to the authorized project", id)}
 	}
 
 	return monitor, nil
