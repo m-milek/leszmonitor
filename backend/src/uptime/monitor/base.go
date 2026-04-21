@@ -99,7 +99,7 @@ func (m *BaseMonitor) validateBase() error {
 }
 
 func (m *BaseMonitor) GenerateSlug() {
-	m.Slug = util.IDFromString(m.GetName())
+	m.Slug = util.SlugFromString(m.GetName())
 }
 
 func (m *BaseMonitor) GetSlug() string {

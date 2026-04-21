@@ -1,4 +1,6 @@
 import { useForm, type FormValidateOrFn } from "@tanstack/react-form";
+import { useState } from "react";
+import { slugFromString } from "@/lib/slugFromString.ts";
 import {
   defaultConfigs,
   isValidMonitorType,
@@ -22,6 +24,7 @@ import type {
   PingMonitorFormValues,
   MonitorFormValues,
 } from "@/lib/types.ts";
+import { Switch } from "@/components/ui/switch.tsx";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function __monitorFormHelper() {
@@ -62,6 +65,7 @@ export function NewMonitorForm({
   projectId,
   formId = "new-monitor-form",
 }: NewMonitorFormProps) {
+  const [isSlugModified, setIsSlugModified] = useState(false);
   const form = useForm({
     defaultValues: {
       ...newMonitorSchemaDefaultValues,
@@ -79,6 +83,16 @@ export function NewMonitorForm({
       console.log("Values:", value);
     },
   });
+
+  const [useCustomSlug, setUseCustomSlug] = useState(false);
+
+  const onUseCustomSlugChanged = (checked: boolean) => {
+    setUseCustomSlug(checked);
+    if (!checked) {
+      const name = form.state.values.name;
+      form.setFieldValue("slug", slugFromString(name));
+    }
+  };
 
   const monitorTypeSelectItems: { value: MonitorType; label: string }[] = [
     { value: "http", label: "HTTP" },
@@ -128,6 +142,13 @@ export function NewMonitorForm({
           />
           <form.Field
             name="name"
+            listeners={{
+              onChange: ({ value }) => {
+                if (!useCustomSlug) {
+                  form.setFieldValue("slug", slugFromString(value));
+                }
+              },
+            }}
             children={(field) => (
               <Field>
                 <FieldLabel>Name</FieldLabel>
@@ -142,8 +163,23 @@ export function NewMonitorForm({
               </Field>
             )}
           />
+          <Flex direction="row" className="gap-2 items-center">
+            <FieldLabel>Use Custom Slug</FieldLabel>
+            <Switch
+              checked={useCustomSlug}
+              onCheckedChange={onUseCustomSlugChanged}
+              name="useCustomSlug"
+            />
+          </Flex>
           <form.Field
             name="slug"
+            listeners={{
+              onChange: () => {
+                if (!isSlugModified) {
+                  setIsSlugModified(true);
+                }
+              },
+            }}
             children={(field) => (
               <Field>
                 <FieldLabel>Slug</FieldLabel>
@@ -151,6 +187,7 @@ export function NewMonitorForm({
                   name={field.name}
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  disabled={!useCustomSlug}
                   isInvalid={isFieldInvalid(field)}
                   errorMessage={getFirstError(field)}
                 />

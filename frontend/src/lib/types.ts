@@ -1,4 +1,5 @@
 import z from "zod";
+import { isSlugValid } from "@/lib/slugFromString.ts";
 
 export interface Timestamps {
   createdAt: Date;
@@ -110,7 +111,11 @@ const baseMonitorFields = {
   name: z.string({ message: "Name is required" }).min(1, "Name is required"),
   slug: z
     .string({ message: "Slug is required" })
-    .min(1, "Slug is required"),
+    .min(1, "Slug is required")
+    .refine(
+      isSlugValid,
+      "Invalid slug format. Must be lowercase, alphanumeric, and can include hyphens.",
+    ),
   description: z.string().optional(),
   projectId: z.string(),
   interval: z
