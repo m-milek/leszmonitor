@@ -32,7 +32,7 @@ export interface ProjectMember extends Timestamps {
 
 export interface Project extends Timestamps {
   id: string;
-  displayId: string;
+  slug: string;
   name: string;
   description: string;
   members: ProjectMember[];
@@ -41,7 +41,7 @@ export interface Project extends Timestamps {
 export interface Monitor extends Timestamps {
   id: string;
   name: string;
-  displayId: string;
+  slug: string;
   description?: string;
   projectId: string;
   interval: number;
@@ -108,9 +108,9 @@ export const pingMonitorConfigSchema = z.object({
 
 const baseMonitorFields = {
   name: z.string({ message: "Name is required" }).min(1, "Name is required"),
-  displayId: z
-    .string({ message: "Display ID is required" })
-    .min(1, "Display ID is required"),
+  slug: z
+    .string({ message: "Slug is required" })
+    .min(1, "Slug is required"),
   description: z.string().optional(),
   projectId: z.string(),
   interval: z
@@ -141,7 +141,7 @@ export type PingMonitorFormValues = z.infer<typeof pingMonitorSchema>;
 
 export const newMonitorSchemaDefaultValues = {
   name: "",
-  displayId: "",
+  slug: "",
   description: "",
   projectId: "",
   interval: 60,

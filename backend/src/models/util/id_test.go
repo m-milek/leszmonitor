@@ -49,12 +49,12 @@ func TestIDFromString(t *testing.T) {
 	}
 }
 
-func TestDisplayIDFromName_Init(t *testing.T) {
+func TestSlugFromName_Init(t *testing.T) {
 	name := "Sample Name"
-	var displayID DisplayIDFromName
-	displayID.Init(name)
+	var slug SlugFromName
+	slug.Init(name)
 
 	expectedID := "sample-name"
-	assert.Equal(t, expectedID, displayID.DisplayID)
-	assert.Equal(t, name, displayID.Name)
+	assert.Equal(t, expectedID, slug.Slug)
+	assert.Equal(t, name, slug.Name)
 }

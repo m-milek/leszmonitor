@@ -9,7 +9,7 @@ import (
 type TestMonitor struct {
 	// Base fields
 	ID          pgtype.UUID
-	DisplayID   string
+	Slug        string
 	Name        string
 	Description string
 	Interval    int
@@ -26,7 +26,7 @@ func NewTestMonitor() *TestMonitor {
 	name := "Test Monitor"
 	return &TestMonitor{
 		ID:          pgtype.UUID{Valid: false},
-		DisplayID:   util.IDFromString(name),
+		Slug:        util.IDFromString(name),
 		Name:        name,
 		Description: "Test monitor description",
 		Interval:    60,
@@ -74,7 +74,7 @@ func (t *TestMonitor) AsPing() *TestMonitor {
 func (t *TestMonitor) Build() IMonitor {
 	base := BaseMonitor{
 		ID:          t.ID,
-		DisplayID:   t.DisplayID,
+		Slug:        t.Slug,
 		Name:        t.Name,
 		Description: t.Description,
 		Interval:    t.Interval,

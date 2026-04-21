@@ -68,22 +68,22 @@ func (s *ProjectServiceT) CreateProject(ctx context.Context, ownerUsername strin
 
 	if err = s.getDB().Projects().InsertProject(ctx, project); err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			return nil, &ServiceError{Code: http.StatusConflict, Err: fmt.Errorf("project with DisplayID %s already exists", project.DisplayID)}
+			return nil, &ServiceError{Code: http.StatusConflict, Err: fmt.Errorf("project with slug %s already exists", project.Slug)}
 		}
 		logger.Error().Err(err).Msg("Failed to insert project")
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to create project: %w", err)}
 	}
 
-	created, err := s.getDB().Projects().GetProjectByDisplayID(ctx, project.DisplayID)
+	created, err := s.getDB().Projects().GetProjectBySlug(ctx, project.Slug)
 	if err != nil {
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to fetch created project: %w", err)}
 	}
 
-	logger.Info().Str("projectId", project.DisplayID).Msg("Project created successfully")
+	logger.Info().Str("projectId", project.Slug).Msg("Project created successfully")
 	return created, nil
 }
 
-// GetProjectByID retrieves a project by its DisplayID, authorizing the requesting user.
+// GetProjectByID retrieves a project by its slug, authorizing the requesting user.
 func (s *ProjectServiceT) GetProjectByID(ctx context.Context, projectAuth *middleware.ProjectAuth) (*models.Project, *ServiceError) {
 	logger := s.getMethodLogger("GetProjectByID")
 
@@ -92,7 +92,7 @@ func (s *ProjectServiceT) GetProjectByID(ctx context.Context, projectAuth *middl
 		return nil, authErr
 	}
 
-	logger.Trace().Str("projectID", project.DisplayID).Msg("Retrieved project successfully")
+	logger.Trace().Str("projectID", project.Slug).Msg("Retrieved project successfully")
 	return project, nil
 }
 
@@ -127,16 +127,16 @@ func (s *ProjectServiceT) DeleteProject(ctx context.Context, projectAuth *middle
 		return authErr
 	}
 
-	deleted, err := s.getDB().Projects().DeleteProject(ctx, project.DisplayID)
+	deleted, err := s.getDB().Projects().DeleteProject(ctx, project.Slug)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to delete project")
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to delete project: %w", err)}
 	}
 	if !deleted {
-		return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("project %s not found", project.DisplayID)}
+		return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("project %s not found", project.Slug)}
 	}
 
-	logger.Info().Str("projectID", project.DisplayID).Msg("Project deleted successfully")
+	logger.Info().Str("projectID", project.Slug).Msg("Project deleted successfully")
 	return nil
 }
 
@@ -152,14 +152,14 @@ func (s *ProjectServiceT) UpdateProject(ctx context.Context, projectAuth *middle
 	newProject := *oldProject
 	newProject.Name = payload.Name
 	newProject.Description = payload.Description
-	newProject.DisplayIDFromName.Init(newProject.Name)
+	newProject.SlugFromName.Init(newProject.Name)
 
 	if _, err := s.getDB().Projects().UpdateProject(ctx, oldProject, &newProject); err != nil {
 		logger.Error().Err(err).Msg("Failed to update project")
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update project: %w", err)}
 	}
 
-	logger.Info().Str("projectID", oldProject.DisplayID).Msg("Project updated successfully")
+	logger.Info().Str("projectID", oldProject.Slug).Msg("Project updated successfully")
 	return &newProject, nil
 }
 
@@ -189,10 +189,10 @@ func (s *ProjectServiceT) AddUserToProject(ctx context.Context, projectAuth *mid
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to create member: %w", err)}
 	}
 
-	_, err = s.getDB().Projects().AddMemberToProject(ctx, project.DisplayID, member)
+	_, err = s.getDB().Projects().AddMemberToProject(ctx, project.Slug, member)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			return &ServiceError{Code: http.StatusConflict, Err: fmt.Errorf("user %s is already a member of project %s", payload.Username, project.DisplayID)}
+			return &ServiceError{Code: http.StatusConflict, Err: fmt.Errorf("user %s is already a member of project %s", payload.Username, project.Slug)}
 		}
 		logger.Error().Err(err).Msg("Failed to add user to project")
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to add user to project: %w", err)}
@@ -217,19 +217,19 @@ func (s *ProjectServiceT) RemoveUserFromProject(ctx context.Context, projectAuth
 
 	member := project.GetMember(user.ID)
 	if member == nil {
-		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("user %s is not a member of project %s", payload.Username, project.DisplayID)}
+		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("user %s is not a member of project %s", payload.Username, project.Slug)}
 	}
 	if member.Role == models.RoleOwner {
 		logger.Warn().Str("username", payload.Username).Msg("Cannot remove project owner")
 		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("cannot remove the project owner")}
 	}
 
-	removed, err := s.getDB().Projects().RemoveMemberFromProject(ctx, project.DisplayID, user.ID)
+	removed, err := s.getDB().Projects().RemoveMemberFromProject(ctx, project.Slug, user.ID)
 	if err != nil {
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to remove user from project: %w", err)}
 	}
 	if !removed {
-		return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s is not a member of project %s", payload.Username, project.DisplayID)}
+		return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s is not a member of project %s", payload.Username, project.Slug)}
 	}
 
 	return nil
@@ -250,7 +250,7 @@ func (s *ProjectServiceT) ChangeProjectMemberRole(ctx context.Context, projectAu
 	}
 
 	if !project.IsMember(user.ID) {
-		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("user %s is not a member of project %s", payload.Username, project.DisplayID)}
+		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("user %s is not a member of project %s", payload.Username, project.Slug)}
 	}
 
 	if err := payload.Role.Validate(); err != nil {
@@ -271,10 +271,10 @@ func (s *ProjectServiceT) ChangeProjectMemberRole(ctx context.Context, projectAu
 	return nil
 }
 
-func (s *ProjectServiceT) internalGetProjectByDisplayID(ctx context.Context, projectID string) (*models.Project, *ServiceError) {
-	logger := s.getMethodLogger("internalGetProjectByDisplayID")
+func (s *ProjectServiceT) internalGetProjectBySlug(ctx context.Context, projectID string) (*models.Project, *ServiceError) {
+	logger := s.getMethodLogger("internalGetProjectBySlug")
 
-	project, err := s.getDB().Projects().GetProjectByDisplayID(ctx, projectID)
+	project, err := s.getDB().Projects().GetProjectBySlug(ctx, projectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("projectID", projectID).Msg("Project not found")

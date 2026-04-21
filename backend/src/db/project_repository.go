@@ -13,12 +13,12 @@ import (
 type IProjectRepository interface {
 	InsertProject(ctx context.Context, project *models.Project) error
 	GetProjectByID(ctx context.Context, id pgtype.UUID) (*models.Project, error)
-	GetProjectByDisplayID(ctx context.Context, displayID string) (*models.Project, error)
+	GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error)
 	GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error)
 	UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error)
-	DeleteProject(ctx context.Context, projectDisplayID string) (bool, error)
-	AddMemberToProject(ctx context.Context, projectDisplayID string, member *models.ProjectMember) (bool, error)
-	RemoveMemberFromProject(ctx context.Context, projectDisplayID string, userID pgtype.UUID) (bool, error)
+	DeleteProject(ctx context.Context, projectSlug string) (bool, error)
+	AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error)
+	RemoveMemberFromProject(ctx context.Context, projectSlug string, userID pgtype.UUID) (bool, error)
 }
 
 type projectRepository struct {
@@ -35,7 +35,7 @@ func projectMemberFromCollectableRow(row pgx.CollectableRow) (models.ProjectMemb
 // projectFromCollectableRow maps a pgx.CollectableRow to a models.Project struct (without members).
 func projectFromCollectableRow(row pgx.CollectableRow) (models.Project, error) {
 	project := models.Project{}
-	err := row.Scan(&project.ID, &project.DisplayID, &project.Name, &project.Description, &project.CreatedAt, &project.UpdatedAt)
+	err := row.Scan(&project.ID, &project.Slug, &project.Name, &project.Description, &project.CreatedAt, &project.UpdatedAt)
 	return project, err
 }
 
@@ -73,8 +73,8 @@ func (r *projectRepository) InsertProject(ctx context.Context, project *models.P
 
 		var projectID pgtype.UUID
 		row := tx.QueryRow(ctx,
-			`INSERT INTO projects (display_id, name, description) VALUES ($1, $2, $3) RETURNING id`,
-			project.DisplayID, project.Name, project.Description)
+			`INSERT INTO projects (slug, name, description) VALUES ($1, $2, $3) RETURNING id`,
+			project.Slug, project.Name, project.Description)
 		if err = row.Scan(&projectID); err != nil {
 			if pgErrIs(err, pgerrcode.UniqueViolation) {
 				return nil, ErrAlreadyExists
@@ -101,7 +101,7 @@ func (r *projectRepository) InsertProject(ctx context.Context, project *models.P
 func (r *projectRepository) GetProjectByID(ctx context.Context, id pgtype.UUID) (*models.Project, error) {
 	return dbWrap(ctx, "GetProjectByID", func() (*models.Project, error) {
 		rows, err := r.pool.Query(ctx,
-			`SELECT id, display_id, name, description, created_at, updated_at FROM projects WHERE id = $1`,
+			`SELECT id, slug, name, description, created_at, updated_at FROM projects WHERE id = $1`,
 			id)
 		if err != nil {
 			return nil, err
@@ -123,11 +123,11 @@ func (r *projectRepository) GetProjectByID(ctx context.Context, id pgtype.UUID) 
 	})
 }
 
-func (r *projectRepository) GetProjectByDisplayID(ctx context.Context, displayID string) (*models.Project, error) {
-	return dbWrap(ctx, "GetProjectByDisplayID", func() (*models.Project, error) {
+func (r *projectRepository) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
+	return dbWrap(ctx, "GetProjectBySlug", func() (*models.Project, error) {
 		rows, err := r.pool.Query(ctx,
-			`SELECT id, display_id, name, description, created_at, updated_at FROM projects WHERE display_id = $1`,
-			displayID)
+			`SELECT id, slug, name, description, created_at, updated_at FROM projects WHERE slug = $1`,
+			slug)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +151,7 @@ func (r *projectRepository) GetProjectByDisplayID(ctx context.Context, displayID
 func (r *projectRepository) GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error) {
 	return dbWrap(ctx, "GetProjectsByUserID", func() ([]models.Project, error) {
 		rows, err := r.pool.Query(ctx,
-			`SELECT p.id, p.display_id, p.name, p.description, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.name, p.description, p.created_at, p.updated_at
 			 FROM projects p
 			 JOIN user_projects up ON up.project_id = p.id
 			 WHERE up.user_id = $1`,
@@ -178,8 +178,8 @@ func (r *projectRepository) GetProjectsByUserID(ctx context.Context, userID pgty
 func (r *projectRepository) UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error) {
 	return dbWrap(ctx, "UpdateProject", func() (bool, error) {
 		result, err := r.pool.Exec(ctx,
-			`UPDATE projects SET display_id = $1, name = $2, description = $3 WHERE id = $4`,
-			newProject.DisplayID, newProject.Name, newProject.Description, oldProject.ID)
+			`UPDATE projects SET slug = $1, name = $2, description = $3 WHERE id = $4`,
+			newProject.Slug, newProject.Name, newProject.Description, oldProject.ID)
 		if err != nil {
 			return false, err
 		}
@@ -190,11 +190,11 @@ func (r *projectRepository) UpdateProject(ctx context.Context, oldProject, newPr
 	})
 }
 
-func (r *projectRepository) DeleteProject(ctx context.Context, projectDisplayID string) (bool, error) {
+func (r *projectRepository) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
 	return dbWrap(ctx, "DeleteProject", func() (bool, error) {
 		result, err := r.pool.Exec(ctx,
-			`DELETE FROM projects WHERE display_id = $1`,
-			projectDisplayID)
+			`DELETE FROM projects WHERE slug = $1`,
+			projectSlug)
 		if err != nil {
 			return false, err
 		}
@@ -202,11 +202,11 @@ func (r *projectRepository) DeleteProject(ctx context.Context, projectDisplayID 
 	})
 }
 
-func (r *projectRepository) AddMemberToProject(ctx context.Context, projectDisplayID string, member *models.ProjectMember) (bool, error) {
+func (r *projectRepository) AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error) {
 	return dbWrap(ctx, "AddMemberToProject", func() (bool, error) {
 		var projectID pgtype.UUID
 		err := r.pool.QueryRow(ctx,
-			`SELECT id FROM projects WHERE display_id = $1`, projectDisplayID).Scan(&projectID)
+			`SELECT id FROM projects WHERE slug = $1`, projectSlug).Scan(&projectID)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return false, ErrNotFound
@@ -227,11 +227,11 @@ func (r *projectRepository) AddMemberToProject(ctx context.Context, projectDispl
 	})
 }
 
-func (r *projectRepository) RemoveMemberFromProject(ctx context.Context, projectDisplayID string, userID pgtype.UUID) (bool, error) {
+func (r *projectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID pgtype.UUID) (bool, error) {
 	return dbWrap(ctx, "RemoveMemberFromProject", func() (bool, error) {
 		var projectID pgtype.UUID
 		err := r.pool.QueryRow(ctx,
-			`SELECT id FROM projects WHERE display_id = $1`, projectDisplayID).Scan(&projectID)
+			`SELECT id FROM projects WHERE slug = $1`, projectSlug).Scan(&projectID)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return false, ErrNotFound

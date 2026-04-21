@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-type DisplayIDFromName struct {
-	DisplayID string `json:"displayId"`
-	Name      string `json:"name"`
+type SlugFromName struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
 }
 
-func (d *DisplayIDFromName) Init(name string) {
+func (d *SlugFromName) Init(name string) {
 	d.Name = name
-	d.DisplayID = idFromString(d.Name)
+	d.Slug = idFromString(d.Name)
 }
 
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9\-\s]+`)
@@ -30,6 +30,6 @@ func idFromString(s string) string {
 	id = multipleHyphensRegex.ReplaceAllString(id, "-") // Collapse multiple hyphens
 	id = strings.Trim(id, "-")
 
-	logging.Init.Trace().Str("id", id).Str("source", s).Msg("Generated DisplayID from string")
+	logging.Init.Trace().Str("id", id).Str("source", s).Msg("Generated slug from string")
 	return id
 }

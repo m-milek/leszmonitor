@@ -38,7 +38,7 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 		mockUserRepo.On("GetUserByUsername", ctx, "testuser").Return(mockUser, nil).Once()
 		mockProjectRepo := mockDB.ProjectsRepo.(*db.MockProjectRepository)
 		mockProjectRepo.On("InsertProject", ctx, mock.AnythingOfType("*models.Project")).Return(nil).Once()
-		mockProjectRepo.On("GetProjectByDisplayID", ctx, mock.AnythingOfType("string")).Return(&models.Project{}, nil).Once()
+		mockProjectRepo.On("GetProjectBySlug", ctx, mock.AnythingOfType("string")).Return(&models.Project{}, nil).Once()
 
 		payload := &UserRegisterPayload{
 			Username: "testuser",

@@ -36,8 +36,8 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		logging.Api.Trace().Msg("Monitor DisplayID is required for deletion")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
+		logging.Api.Trace().Msg("Monitor slug is required for deletion")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor slug is required")
 		return
 	}
 
@@ -73,8 +73,8 @@ func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		logging.Api.Trace().Msg("Monitor DisplayID is required")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
+		logging.Api.Trace().Msg("Monitor slug is required")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor slug is required")
 		return
 	}
 
@@ -97,8 +97,8 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		logging.Api.Trace().Msg("Monitor DisplayID is required for update")
-		util.RespondMessage(w, http.StatusBadRequest, "Monitor DisplayID is required")
+		logging.Api.Trace().Msg("Monitor slug is required for update")
+		util.RespondMessage(w, http.StatusBadRequest, "Monitor slug is required")
 		return
 	}
 

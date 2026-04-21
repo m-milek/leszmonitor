@@ -27,7 +27,7 @@ CREATE OR REPLACE TRIGGER set_timestamp
 
 CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    display_id VARCHAR(50) UNIQUE NOT NULL,
+    slug VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(1000) NOT NULL,
 
@@ -60,7 +60,7 @@ CREATE OR REPLACE TRIGGER set_timestamp
 
 CREATE TABLE IF NOT EXISTS permissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    display_id VARCHAR(50) NOT NULL,
+    slug VARCHAR(50) NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(1000) NOT NULL,
 
@@ -74,7 +74,7 @@ EXECUTE PROCEDURE update_timestamp();
 
 CREATE TABLE IF NOT EXISTS monitors (
     id          UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
-    display_id  VARCHAR(50)  NOT NULL,
+    slug  VARCHAR(50)  NOT NULL,
     project_id  UUID         NOT NULL,
     name        VARCHAR(100) NOT NULL,
     description VARCHAR(1000) NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE (project_id, display_id),
+    UNIQUE (project_id, slug),
 
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
