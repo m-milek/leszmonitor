@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIDFromString(t *testing.T) {
@@ -43,7 +44,7 @@ func TestIDFromString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := IDFromString(tt.input)
+			result := SlugFromString(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

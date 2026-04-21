@@ -15,14 +15,12 @@ interface LMInputFieldProps {
   name: string;
   value?: string | number;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
 export const LMInputField = (props: LMInputFieldProps) => {
   return (
-    <ErrorTooltip
-      isOpen={props.isInvalid ?? false}
-      message={props.errorMessage ?? ""}
-    >
+    <ErrorTooltip isOpen={props.isInvalid} message={props.errorMessage}>
       <Input
         id={props.name}
         name={props.name}
@@ -32,6 +30,7 @@ export const LMInputField = (props: LMInputFieldProps) => {
         autoComplete={props.autoComplete}
         placeholder={props.placeholder}
         inputMode={props.inputMode}
+        disabled={props.disabled}
         className={cn(
           props.isInvalid && "border-destructive focus:ring-destructive",
         )}

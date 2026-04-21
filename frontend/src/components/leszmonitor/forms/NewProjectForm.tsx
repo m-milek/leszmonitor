@@ -1,5 +1,7 @@
 import z from "zod";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { useState } from "react";
+import { isSlugValid, slugFromString } from "@/lib/slugFromString.ts";
 import { useForm } from "@tanstack/react-form";
 import type { ProjectInput } from "@/lib/data/projectData.ts";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
@@ -9,10 +11,17 @@ import {
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 
 const projectFormSchema = z.object({
   name: z.string().min(1, "Project name is required"),
-  slug: z.string().min(1, "Slug is required"),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .refine(
+      isSlugValid,
+      "Invalid slug format. Must be lowercase, alphanumeric, and can include hyphens.",
+    ),
   description: z.string(),
 });
 
@@ -40,6 +49,16 @@ export function NewProjectForm({
     },
   });
 
+  const [useCustomSlug, setUseCustomSlug] = useState(false);
+
+  const onUseCustomSlugChanged = (checked: boolean) => {
+    setUseCustomSlug(checked);
+    if (!checked) {
+      const name = form.state.values.name;
+      form.setFieldValue("slug", slugFromString(name));
+    }
+  };
+
   return (
     <form
       id={formId}
@@ -51,6 +70,13 @@ export function NewProjectForm({
       <Flex direction="column" className="gap-2">
         <form.Field
           name="name"
+          listeners={{
+            onChange: ({ value }) => {
+              if (!useCustomSlug) {
+                form.setFieldValue("slug", slugFromString(value));
+              }
+            },
+          }}
           children={(field) => (
             <Field>
               <FieldLabel>Project Name</FieldLabel>
@@ -65,6 +91,14 @@ export function NewProjectForm({
             </Field>
           )}
         />
+        <Flex direction="row" className="gap-2 items-center">
+          <FieldLabel>Use Custom Slug</FieldLabel>
+          <Switch
+            checked={useCustomSlug}
+            onCheckedChange={onUseCustomSlugChanged}
+            name="useCustomSlug"
+          />
+        </Flex>
         <form.Field
           name="slug"
           children={(field) => (
@@ -74,6 +108,7 @@ export function NewProjectForm({
                 name={field.name}
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
+                disabled={!useCustomSlug}
                 type="text"
                 isInvalid={isFieldInvalid(field)}
                 errorMessage={getFirstError(field)}

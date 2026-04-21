@@ -1,15 +1,16 @@
 package monitors
 
 import (
+	"testing"
+
 	"github.com/m-milek/leszmonitor/util"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func createTestBaseMonitor() BaseMonitor {
 	name := "Test BaseMonitor"
 	return BaseMonitor{
-		Slug:        util.IDFromString(name),
+		Slug:        util.SlugFromString(name),
 		Name:        name,
 		Description: "Test Description",
 		Interval:    60,

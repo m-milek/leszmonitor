@@ -1,25 +1,27 @@
 package util
 
 import (
-	"github.com/m-milek/leszmonitor/logging"
 	"regexp"
 	"strings"
+
+	"github.com/m-milek/leszmonitor/logging"
 )
 
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9\-\s]+`)
 var whitespaceRegex = regexp.MustCompile(`\s+`)
 var multipleHyphensRegex = regexp.MustCompile(`-+`)
 
-func IDFromString(s string) string {
-	var id string
+func SlugFromString(s string) string {
+	var slug string
 
-	id = strings.ToLower(s)
+	slug = strings.ToLower(s)
 
-	id = whitespaceRegex.ReplaceAllString(id, "-")
-	id = nonAlphanumericRegex.ReplaceAllString(id, "")
-	id = multipleHyphensRegex.ReplaceAllString(id, "-") // Collapse multiple hyphens
-	id = strings.Trim(id, "-")
+	slug = whitespaceRegex.ReplaceAllString(slug, "-")
+	slug = nonAlphanumericRegex.ReplaceAllString(slug, "")
+	slug = multipleHyphensRegex.ReplaceAllString(slug, "-")
+	slug = strings.Trim(slug, "-")
 
-	logging.Init.Trace().Str("id", id).Str("source", s).Msg("Generated slug from string")
-	return id
+	logging.Init.Trace().Str("slug", slug).Str("source", s).Msg("Generated slug from string")
+
+	return slug
 }
