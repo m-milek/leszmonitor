@@ -21,7 +21,7 @@ func TestNewProject_CreatesProjectWithOwner(t *testing.T) {
 	assert.NoError(t, err)
 	if assert.NotNil(t, project) {
 		assert.Equal(t, "Alpha Project", project.Name)
-		assert.Equal(t, "alpha-project", project.DisplayID)
+		assert.Equal(t, "alpha-project", project.Slug)
 		assert.Equal(t, "desc", project.Description)
 		if assert.Len(t, project.Members, 1) {
 			assert.Equal(t, owner, project.Members[0].ID)
@@ -103,7 +103,7 @@ func TestProject_Validate_EmptyName_Error(t *testing.T) {
 	owner := makeUUID(50)
 	project, err := NewProject("Proj", "", owner)
 	assert.NoError(t, err)
-	project.DisplayIDFromName.Name = ""
+	project.SlugFromName.Name = ""
 
 	err = project.Validate()
 

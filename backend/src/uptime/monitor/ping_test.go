@@ -83,7 +83,7 @@ func TestPingConfig_ImplementsIMonitorConfig(t *testing.T) {
 
 func TestPingMonitor_ImplementsIMonitor(t *testing.T) {
 	monitor := &PingMonitor{
-		BaseMonitor: BaseMonitor{DisplayID: "test-id"},
+		BaseMonitor: BaseMonitor{Slug: "test-id"},
 		Config:      *setupPingMonitorConfig(),
 	}
 	var iMonitor IMonitor = monitor

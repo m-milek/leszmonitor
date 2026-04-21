@@ -79,7 +79,7 @@ func (s *authorizationServiceT) authorizeProjectAction(ctx context.Context, proj
 func (s *authorizationServiceT) internalGetProjectByID(ctx context.Context, projectID string) (*models.Project, *ServiceError) {
 	logger := s.getMethodLogger("internalGetProjectByID")
 
-	project, err := db.Get().Projects().GetProjectByDisplayID(ctx, projectID)
+	project, err := db.Get().Projects().GetProjectBySlug(ctx, projectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("projectID", projectID).Msg("Project not found")

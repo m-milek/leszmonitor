@@ -11,7 +11,7 @@ import (
 // different roles and own all monitors directly.
 type Project struct {
 	ID pgtype.UUID `json:"id"` // ID is the UUID of the project - database primary key
-	util.DisplayIDFromName
+	util.SlugFromName
 	Description string          `json:"description"` // Description of the project
 	Members     []ProjectMember `json:"members"`     // Members of the project
 	util.Timestamps
@@ -31,7 +31,7 @@ func NewProject(name string, description string, ownerID pgtype.UUID) (*Project,
 		Description: description,
 		Members:     initialMembers,
 	}
-	project.DisplayIDFromName.Init(name)
+	project.SlugFromName.Init(name)
 
 	err := project.Validate()
 	if err != nil {
@@ -82,8 +82,8 @@ func (p *Project) Validate() error {
 	if p.Name == "" {
 		return fmt.Errorf("project name cannot be empty")
 	}
-	if p.DisplayID == "" {
-		return fmt.Errorf("project DisplayID cannot be empty")
+	if p.Slug == "" {
+		return fmt.Errorf("project slug cannot be empty")
 	}
 	if len(p.Members) == 0 {
 		return fmt.Errorf("project must have at least one member")

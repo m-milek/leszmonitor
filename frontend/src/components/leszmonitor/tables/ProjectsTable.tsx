@@ -32,7 +32,7 @@ export const ProjectsTable = ({
         return (
           <StyledLink
             to="/projects/$projectId"
-            params={{ projectId: row.original.displayId }}
+            params={{ projectId: row.original.slug }}
           >
             {name}
           </StyledLink>
@@ -40,8 +40,8 @@ export const ProjectsTable = ({
       },
     },
     {
-      accessorKey: "displayId",
-      header: "Display ID",
+      accessorKey: "slug",
+      header: "Slug",
     },
     {
       accessorKey: "createdAt",
@@ -64,7 +64,7 @@ export const ProjectsTable = ({
     {
       header: "Actions",
       cell: ({ row }) => {
-        const projectId = row.original.displayId;
+        const projectId = row.original.slug;
         return (
           <Button
             variant="ghost"
