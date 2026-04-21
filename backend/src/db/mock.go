@@ -58,6 +58,14 @@ func (r *MockProjectRepository) GetProjectBySlug(ctx context.Context, slug strin
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
+func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug pgtype.UUID) (*models.Project, error) {
+	args := r.Called(ctx, slug)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Project), args.Error(1)
+}
+
 func (r *MockProjectRepository) GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error) {
 	args := r.Called(ctx, userID)
 	return args.Get(0).([]models.Project), args.Error(1)
