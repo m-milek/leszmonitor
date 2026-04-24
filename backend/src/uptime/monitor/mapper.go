@@ -15,7 +15,7 @@ var monitorTypeMap = map[MonitorConfigType]func() IConcreteMonitor{
 	},
 }
 
-func MapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
+func mapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
 	if typeTag == "" {
 		return nil
 	}
@@ -25,7 +25,7 @@ func MapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
 	return nil
 }
 
-func MapMonitorConfigType(kind MonitorConfigType) IMonitorConfig {
+func mapMonitorConfigType(kind MonitorConfigType) IMonitorConfig {
 	switch kind {
 	case httpType:
 		return &httpConfig{}
@@ -48,7 +48,7 @@ func FromReader(reader io.Reader) (IConcreteMonitor, error) {
 	}
 
 	// Map the monitor type to the appropriate config type
-	monitor := MapMonitorType(monitorTypeExtractor.Type)
+	monitor := mapMonitorType(monitorTypeExtractor.Type)
 	if monitorTypeExtractor.Type == "" {
 		return nil, fmt.Errorf("monitor type cannot be empty")
 	}
@@ -58,14 +58,14 @@ func FromReader(reader io.Reader) (IConcreteMonitor, error) {
 
 	// unmarshal the raw data into a monitor instance
 	if err := json.Unmarshal(rawData, &monitor); err != nil {
-		return nil, fmt.Errorf("failed to parse monitor config: %w", err)
+		return nil, fmt.Errorf("failed to parse monitor config: %w: %s", err, rawData)
 	}
 
 	return monitor, nil
 }
 
 func UnmarshalConfigFromBytes(kind MonitorConfigType, data []byte) (IMonitorConfig, error) {
-	config := MapMonitorConfigType(kind)
+	config := mapMonitorConfigType(kind)
 	if config == nil {
 		return nil, fmt.Errorf("unknown monitor config type: %s", kind)
 	}

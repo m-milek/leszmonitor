@@ -3,18 +3,19 @@ package monitors
 import (
 	"bytes"
 	"fmt"
-	"github.com/m-milek/leszmonitor/logging"
-	"github.com/m-milek/leszmonitor/util"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/util"
 )
 
 type httpConfig struct {
-	Method               string            `json:"httpMethod" bson:"httpMethod"`
+	Method               string            `json:"method" bson:"method"`
 	URL                  string            `json:"url" bson:"url"`
 	Headers              map[string]string `json:"headers" bson:"headers"`
 	Body                 string            `json:"body" bson:"body"`

@@ -76,7 +76,7 @@ export interface PingMonitorConfig {
   host: string;
   port: number;
   protocol: "tcp" | "udp" | "tcp4" | "tcp6" | "udp4" | "udp6";
-  timeoutMs: number;
+  timeout: number;
   retryCount: number;
 }
 
@@ -103,7 +103,7 @@ export const pingMonitorConfigSchema = z.object({
     .min(1, "Port must be at least 1")
     .max(65535, "Port must be at most 65535"),
   protocol: z.enum(["tcp", "udp", "tcp4", "tcp6", "udp4", "udp6"]),
-  timeoutMs: z.number().min(1, "Timeout must be at least 1 ms"),
+  timeout: z.number().min(1, "Timeout must be at least 1 ms"),
   retryCount: z.number().min(0, "Retry count cannot be negative"),
 });
 
@@ -168,7 +168,7 @@ export const defaultConfigs: Record<MonitorType, MonitorFormValues["config"]> =
       host: "",
       port: 443,
       protocol: "tcp",
-      timeoutMs: 5000,
+      timeout: 5000,
       retryCount: 3,
     },
   };

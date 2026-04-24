@@ -43,7 +43,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 		return nil, authErr
 	}
 
-	monitor.SetProjectID(project.ID)
+	monitor.SetProjectSlug(project.Slug)
 	monitor.GenerateSlug()
 
 	if err := monitor.Validate(); err != nil {
@@ -147,13 +147,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}
 	}
 
-	project, err := s.getDB().Projects().GetProjectByID(ctx, monitor.GetProjectID())
-	if err != nil {
-		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve project for monitor")
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve project for monitor: %w", err)}
-	}
-
-	if project.Slug != projectAuth.ProjectID {
+	if monitor.GetProjectSlug() != projectAuth.ProjectID {
 		logger.Warn().Str("id", id).Msg("Monitor does not belong to the authorized project")
 		return nil, &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with slug %s does not belong to the authorized project", id)}
 	}
