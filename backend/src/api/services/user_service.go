@@ -10,7 +10,7 @@ import (
 	"time"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"
@@ -139,7 +139,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 		return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid password for user %s", payload.Username)}
 	}
 
-	expiryHours, err := strconv.Atoi(os.Getenv(common.JwtExpiryHours))
+	expiryHours, err := strconv.Atoi(os.Getenv(config.JwtExpiryHours))
 	if err != nil {
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("invalid JwtExpiryHours value: %w", err)}
 	}
@@ -154,7 +154,7 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 			"iat":      jwt2.NewNumericDate(time.Now()),
 		},
 	)
-	token, err := jwt.SignedString([]byte(os.Getenv(common.JwtSecret)))
+	token, err := jwt.SignedString([]byte(os.Getenv(config.JwtSecret)))
 	if err != nil {
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to create JWT token: %w", err)}
 	}
