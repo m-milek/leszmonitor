@@ -60,9 +60,9 @@ func (t *TestMonitor) AsPing() *TestMonitor {
 	if t.PingConfig == nil {
 		t.PingConfig = &PingConfig{
 			Host:        "example.com",
-			Port:        "80",
+			Port:        80,
 			Protocol:    "tcp",
-			PingTimeout: 5,
+			PingTimeout: 5000,
 			RetryCount:  3,
 		}
 	}

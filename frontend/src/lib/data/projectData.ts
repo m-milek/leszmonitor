@@ -1,5 +1,10 @@
 import { BACKEND_URL } from "@/lib/consts.ts";
-import type { Project, ProjectMember, ProjectRole, Timestamps } from "@/lib/types.ts";
+import type {
+  Project,
+  ProjectMember,
+  ProjectRole,
+  Timestamps,
+} from "@/lib/types.ts";
 import { authFetch } from "@/lib/data/utils.ts";
 
 export type ProjectInput = Omit<Project, "id" | "members" | keyof Timestamps>;
@@ -8,19 +13,16 @@ const parseProject = (project: Project): Project => ({
   ...project,
   createdAt: new Date(project.createdAt),
   updatedAt: new Date(project.updatedAt),
-  members: project.members?.map((m) => ({
-    ...m,
-    createdAt: new Date(m.createdAt),
-    updatedAt: new Date(m.updatedAt),
-  })) ?? [],
+  members:
+    project.members?.map((m) => ({
+      ...m,
+      createdAt: new Date(m.createdAt),
+      updatedAt: new Date(m.updatedAt),
+    })) ?? [],
 });
 
 export const getProjects = async (): Promise<Project[]> => {
   const res = await authFetch(`${BACKEND_URL}/projects`);
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch projects");
-  }
 
   const projects = (await res.json()) as Project[];
   return projects.map(parseProject);
@@ -28,10 +30,6 @@ export const getProjects = async (): Promise<Project[]> => {
 
 export const getProject = async (projectId: string): Promise<Project> => {
   const res = await authFetch(`${BACKEND_URL}/projects/${projectId}`);
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch project");
-  }
 
   return parseProject((await res.json()) as Project);
 };
@@ -42,10 +40,6 @@ export const addProject = async (project: ProjectInput): Promise<Project> => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(project),
   });
-
-  if (!res.ok) {
-    throw new Error("Failed to add project");
-  }
 
   return parseProject((await res.json()) as Project);
 };
