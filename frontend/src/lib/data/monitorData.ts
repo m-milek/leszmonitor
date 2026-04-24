@@ -12,6 +12,21 @@ export const getMonitors = async (projectId: string): Promise<Monitor[]> => {
   return res.json();
 };
 
+export const getMonitorBySlug = async (
+  projectId: string,
+  monitorSlug: string,
+): Promise<Monitor> => {
+  const res = await authFetch(
+    `${BACKEND_URL}/projects/${projectId}/monitors/${monitorSlug}`,
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch monitor");
+  }
+
+  return res.json();
+};
+
 export const createMonitor = async (monitorData: Omit<Monitor, "id">) => {
   const res = await authFetch(
     `${BACKEND_URL}/projects/${monitorData.projectId}/monitors`,
