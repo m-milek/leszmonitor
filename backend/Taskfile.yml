@@ -1,0 +1,55 @@
+version: '3'
+
+vars:
+  APP_NAME: 'leszmonitor'
+  BACKEND_SRC_DIR: '{{.USER_WORKING_DIR}}/src'
+  BACKEND_BIN_DIR: '{{.USER_WORKING_DIR}}/bin'
+
+env:
+  LOG_FILE_PATH: '{{.USER_WORKING_DIR}}/.dev-logs/backend.log'
+  LOG_LEVEL: 'TRACE'
+
+tasks:
+  build:
+    desc: Build the back-end binary
+    cmds:
+      - echo "Building {{.APP_NAME}}..."
+      - mkdir -p {{.BACKEND_BIN_DIR}}
+      - cd src && go build -v -o "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}" main.go
+      - echo "Build complete. Binary at {{.BACKEND_BIN_DIR}}/{{.APP_NAME}}."
+    sources:
+      - '**/*.go'
+    generates:
+      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
+
+  run:
+    desc: Run the back-end binary
+    cmds:
+      - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
+
+  dev:
+    desc: Run the back-end dev server with air for live reload
+    dir: '{{.BACKEND_SRC_DIR}}'
+    cmds:
+      - air -build.stop_on_error true
+
+  clean:
+    desc: Clean the back-end build artifacts
+    cmds:
+      - rm -r {{.BACKEND_BIN_DIR}}/{{.APP_NAME}} || true
+
+  test:
+    desc: Run the back-end tests
+    dir: '{{.BACKEND_SRC_DIR}}'
+    cmds:
+      - go test -v ./...
+
+  coverage:
+    desc: Run the back-end tests with coverage
+    dir: '{{.BACKEND_SRC_DIR}}'
+    cmds:
+      - go test -coverprofile=coverage.out -v ./...
+    generates:
+      - 'coverage.out'
+
+
