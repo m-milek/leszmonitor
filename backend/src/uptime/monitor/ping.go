@@ -2,9 +2,11 @@ package monitors
 
 import (
 	"fmt"
-	"github.com/m-milek/leszmonitor/util"
 	"net"
+	"strconv"
 	"time"
+
+	"github.com/m-milek/leszmonitor/util"
 )
 
 var (
@@ -21,7 +23,7 @@ var (
 
 type PingConfig struct {
 	Host            string `json:"host" bson:"host"`             // Host to pingType
-	Port            string `json:"port" bson:"port"`             // Port to pingType
+	Port            int    `json:"port" bson:"port"`             // Port to pingType
 	Protocol        string `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
 	PingTimeout     int    `json:"timeout" bson:"timeout"`       // PingTimeout in seconds for each pingType
 	RetryCount      int    `json:"retryCount" bson:"retryCount"` // RetryCount is the number of retries until
@@ -55,7 +57,7 @@ func (m *PingMonitor) Validate() error {
 	return nil
 }
 
-func NewPingConfig(host, port, protocol string, timeout, retryCount int) (*PingConfig, error) {
+func NewPingConfig(host string, port int, protocol string, timeout, retryCount int) (*PingConfig, error) {
 	monitor := &PingConfig{
 		Host:            host,
 		Port:            port,
@@ -75,12 +77,13 @@ func NewPingConfig(host, port, protocol string, timeout, retryCount int) (*PingC
 func (m *PingConfig) run() IMonitorResponse {
 	monitorResponse := NewPingMonitorResponse()
 
+	portString := strconv.Itoa(m.Port)
 	// Handles IPv6 as well
-	address := net.JoinHostPort(m.Host, m.Port)
+	address := net.JoinHostPort(m.Host, portString)
 
 	monitorResponse.Tries++
 	for i := 0; i < m.RetryCount; i++ {
-		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.PingTimeout)*time.Second)
+		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.PingTimeout)*time.Millisecond)
 		if success {
 			monitorResponse.Duration = duration.Milliseconds()
 			return monitorResponse
@@ -102,10 +105,6 @@ func (m *PingConfig) validate() error {
 		return fmt.Errorf("host cannot be empty")
 	}
 
-	if m.Port == "" {
-		return fmt.Errorf("port cannot be empty")
-	}
-
 	if m.RetryCount <= 0 {
 		return fmt.Errorf("count must be greater than zero")
 	}
@@ -114,7 +113,7 @@ func (m *PingConfig) validate() error {
 		return fmt.Errorf("timeout must be greater than zero")
 	}
 
-	if m.PingTimeout > 60 {
+	if m.PingTimeout > 60_000 {
 		return fmt.Errorf("timeout must not exceed 60 seconds")
 	}
 

@@ -3,11 +3,12 @@ package monitors
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMapMonitorType(t *testing.T) {
@@ -42,7 +43,7 @@ func TestMapMonitorType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, MapMonitorType(tt.args.typeTag), "MapMonitorType(%v)", tt.args.typeTag)
+			assert.Equalf(t, tt.want, mapMonitorType(tt.args.typeTag), "MapMonitorType(%v)", tt.args.typeTag)
 		})
 	}
 }

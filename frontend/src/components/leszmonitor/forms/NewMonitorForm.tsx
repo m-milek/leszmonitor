@@ -4,6 +4,7 @@ import { slugFromString } from "@/lib/slugFromString.ts";
 import {
   defaultConfigs,
   isValidMonitorType,
+  type Monitor,
   type MonitorType,
   newMonitorSchema,
   newMonitorSchemaDefaultValues,
@@ -25,6 +26,9 @@ import type {
   MonitorFormValues,
 } from "@/lib/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createMonitor } from "@/lib/data/monitorData.ts";
+import { QUERY_KEYS } from "@/lib/consts.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function __monitorFormHelper() {
@@ -55,17 +59,25 @@ function __pingMonitorFormHelper() {
 export type PingMonitorFormApi = ReturnType<typeof __pingMonitorFormHelper>;
 
 export interface NewMonitorFormProps {
-  onSubmitMonitor: (value: MonitorFormValues) => Promise<unknown>;
   projectId: string;
   formId?: string;
 }
 
 export function NewMonitorForm({
-  onSubmitMonitor,
   projectId,
   formId = "new-monitor-form",
 }: NewMonitorFormProps) {
-  const [isSlugModified, setIsSlugModified] = useState(false);
+  const queryClient = useQueryClient();
+  const createMonitorMutation = useMutation({
+    mutationFn: (monitor: MonitorFormValues) => {
+      console.log("Creating monitor with values:", monitor);
+      return createMonitor(monitor as unknown as Monitor);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
+    },
+  });
+
   const form = useForm({
     defaultValues: {
       ...newMonitorSchemaDefaultValues,
@@ -76,7 +88,8 @@ export function NewMonitorForm({
         newMonitorSchema as unknown as FormValidateOrFn<MonitorFormValues>,
     },
     onSubmit: async ({ value }) => {
-      await onSubmitMonitor(value as MonitorFormValues);
+      await createMonitorMutation.mutateAsync(value);
+      form.reset();
     },
     onSubmitInvalid: ({ value }) => {
       console.log("Invalid form submission");
@@ -173,13 +186,6 @@ export function NewMonitorForm({
           </Flex>
           <form.Field
             name="slug"
-            listeners={{
-              onChange: () => {
-                if (!isSlugModified) {
-                  setIsSlugModified(true);
-                }
-              },
-            }}
             children={(field) => (
               <Field>
                 <FieldLabel>Slug</FieldLabel>

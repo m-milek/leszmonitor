@@ -86,7 +86,7 @@ export function PingMonitorConfigFields({
       />
 
       <form.Field
-        name="config.timeoutMs"
+        name="config.timeout"
         children={(field) => (
           <Field>
             <FieldLabel>Timeout (ms)</FieldLabel>
