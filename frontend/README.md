@@ -219,7 +219,7 @@ You can find out everything you need to know on how to use React-Query in the [R
 
 ## State Management
 
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
+Another events requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
 
 First you need to add TanStack Store as a dependency:
 

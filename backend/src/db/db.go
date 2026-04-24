@@ -10,7 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/log"
 )
 
@@ -185,7 +185,7 @@ func InitFromEnv(ctx context.Context) error {
 
 	log.Db.Info().Msg("Connecting to PostgreSQL...")
 
-	uri := os.Getenv(common.PostgresURI)
+	uri := os.Getenv(config.PostgresURI)
 	c, err := New(ctx, uri)
 	if err != nil {
 		return err

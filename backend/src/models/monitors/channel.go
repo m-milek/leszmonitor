@@ -2,7 +2,7 @@ package monitors
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/events"
 )
 
 type monitorMessageStatus string

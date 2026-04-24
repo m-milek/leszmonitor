@@ -9,17 +9,17 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/api"
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
-	"github.com/m-milek/leszmonitor/uptime"
+	"github.com/m-milek/leszmonitor/services"
 )
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		uptime.StartUptimeWorker(ctx)
+		services.StartUptimeWorker(ctx)
 	}()
 }
 
@@ -29,7 +29,7 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	err := common.Validate()
+	err := config.Validate()
 	if err != nil {
 		log.Init.Fatal().Err(err).Msg("Environment variable validation failed")
 	}
