@@ -8,7 +8,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
 )
 
@@ -18,7 +18,7 @@ type ProjectServiceT struct {
 }
 
 func newProjectService(service baseService) *ProjectServiceT {
-	service.serviceLogger = logging.NewServiceLogger("ProjectService")
+	service.serviceLogger = log.NewServiceLogger("ProjectService")
 	return &ProjectServiceT{baseService: service}
 }
 
