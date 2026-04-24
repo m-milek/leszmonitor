@@ -90,7 +90,7 @@ func TestFromReader(t *testing.T) {
 		testMonitor.ID = pgtype.UUID{}
 		testMonitor.Interval = 10
 		testMonitor.PingConfig.Host = "pingType.example.com"
-		testMonitor.PingConfig.Port = "443"
+		testMonitor.PingConfig.Port = 443
 		testMonitor.PingConfig.Protocol = "tcp"
 
 		// Convert to JSON
@@ -114,7 +114,7 @@ func TestFromReader(t *testing.T) {
 		pingMonitor, ok := monitor.(*PingMonitor)
 		assert.True(t, ok)
 		assert.Equal(t, "pingType.example.com", pingMonitor.Config.Host)
-		assert.Equal(t, "443", pingMonitor.Config.Port)
+		assert.Equal(t, 443, pingMonitor.Config.Port)
 		assert.Equal(t, "tcp", pingMonitor.Config.Protocol)
 	})
 
