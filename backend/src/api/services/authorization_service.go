@@ -8,7 +8,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/rs/zerolog"
 )
@@ -23,7 +23,7 @@ type authorizationServiceT struct {
 func newAuthorizationService() *authorizationServiceT {
 	return &authorizationServiceT{
 		baseService{
-			serviceLogger: logging.NewServiceLogger("AuthorizationService"),
+			serviceLogger: log.NewServiceLogger("AuthorizationService"),
 			methodLoggers: make(map[string]zerolog.Logger),
 		},
 	}

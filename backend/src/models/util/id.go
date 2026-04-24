@@ -1,9 +1,10 @@
 package util
 
 import (
-	"github.com/m-milek/leszmonitor/logging"
 	"regexp"
 	"strings"
+
+	"github.com/m-milek/leszmonitor/log"
 )
 
 type SlugFromName struct {
@@ -30,6 +31,6 @@ func idFromString(s string) string {
 	id = multipleHyphensRegex.ReplaceAllString(id, "-") // Collapse multiple hyphens
 	id = strings.Trim(id, "-")
 
-	logging.Init.Trace().Str("id", id).Str("source", s).Msg("Generated slug from string")
+	log.Init.Trace().Str("id", id).Str("source", s).Msg("Generated slug from string")
 	return id
 }

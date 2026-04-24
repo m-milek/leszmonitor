@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	util "github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/services"
-	"github.com/m-milek/leszmonitor/logging"
-	"net/http"
+	"github.com/m-milek/leszmonitor/log"
 )
 
 func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +54,7 @@ func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.PathValue("username")
 	if username == "" {
-		logging.Api.Trace().Msg("Username is required")
+		log.Api.Trace().Msg("Username is required")
 		util.RespondError(w, http.StatusBadRequest, fmt.Errorf("username is required"))
 		return
 	}

@@ -5,8 +5,8 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/services"
-	"github.com/m-milek/leszmonitor/logging"
-	"github.com/m-milek/leszmonitor/uptime/monitor"
+	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/models/monitors"
 )
 
 // CreateMonitorHandler handles the addition of a new monitor.
@@ -14,7 +14,7 @@ import (
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitor, err := monitors.FromReader(r.Body)
 	if err != nil {
-		logging.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
+		log.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
 	}
@@ -36,7 +36,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		logging.Api.Trace().Msg("Monitor slug is required for deletion")
+		log.Api.Trace().Msg("Monitor slug is required for deletion")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor slug is required")
 		return
 	}
@@ -73,7 +73,7 @@ func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		logging.Api.Trace().Msg("Monitor slug is required")
+		log.Api.Trace().Msg("Monitor slug is required")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor slug is required")
 		return
 	}
@@ -97,14 +97,14 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		logging.Api.Trace().Msg("Monitor slug is required for update")
+		log.Api.Trace().Msg("Monitor slug is required for update")
 		util.RespondMessage(w, http.StatusBadRequest, "Monitor slug is required")
 		return
 	}
 
 	monitor, err := monitors.FromReader(r.Body)
 	if err != nil {
-		logging.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
+		log.Api.Trace().Err(err).Msg("Failed to parse monitor configuration")
 		util.RespondMessage(w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
 	}
