@@ -8,9 +8,9 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
-	monitors "github.com/m-milek/leszmonitor/uptime/monitor"
+	monitors "github.com/m-milek/leszmonitor/models/monitors"
 )
 
 // MonitorServiceT handles monitor-related CRUD operations.
@@ -22,7 +22,7 @@ func newMonitorService() *MonitorServiceT {
 	return &MonitorServiceT{
 		baseService{
 			authService:   newAuthorizationService(),
-			serviceLogger: logging.NewServiceLogger("MonitorService"),
+			serviceLogger: log.NewServiceLogger("MonitorService"),
 		},
 	}
 }

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/log"
 )
 
 // UserClaims extends standard JWT claims with custom fields.
@@ -37,7 +37,7 @@ func JwtAuth(next http.Handler) http.Handler {
 		}
 
 		// Get JWT secret from environment
-		jwtSecret := os.Getenv(env.JwtSecret)
+		jwtSecret := os.Getenv(common.JwtSecret)
 		if jwtSecret == "" {
 			http.Error(rw, "Server configuration error", http.StatusInternalServerError)
 			return
@@ -91,14 +91,14 @@ const userClaimsKey contextKey = "userClaims"
 
 // SetUserContext stores user claims in the request context.
 func SetUserContext(ctx context.Context, claims *UserClaims) context.Context {
-	logging.Api.Debug().Msg("Setting user claims in context: " + claims.Username)
+	log.Api.Debug().Msg("Setting user claims in context: " + claims.Username)
 	return context.WithValue(ctx, userClaimsKey, claims)
 }
 
 // GetUserFromContext retrieves user claims from the request context.
 func GetUserFromContext(ctx context.Context) (*UserClaims, bool) {
 	claims, ok := ctx.Value(userClaimsKey).(*UserClaims)
-	logging.Api.Debug().Msgf("Retrieving user claims from context: %v, ok: %v", claims, ok)
+	log.Api.Debug().Msgf("Retrieving user claims from context: %v, ok: %v", claims, ok)
 	return claims, ok
 }
 

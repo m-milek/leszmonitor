@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/m-milek/leszmonitor/logging"
 	"sync"
+
+	"github.com/m-milek/leszmonitor/log"
 )
 
 type Broadcaster[T any] struct {
@@ -42,7 +43,7 @@ func (b *Broadcaster[T]) Broadcast(message T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	logging.Main.Trace().Msgf("Broadcasting message: %v", message)
+	log.Main.Trace().Msgf("Broadcasting message: %v", message)
 
 	for _, subscriber := range b.subscribers {
 		select {

@@ -10,8 +10,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/log"
 )
 
 var ErrNotFound = errors.New("document not found")
@@ -98,7 +98,7 @@ func (c *DBClient) initSchema(ctx context.Context, pool *pgxpool.Pool) error {
 		return err
 	}
 
-	logging.Db.Info().Msgf("Database schema initialized: %s", status.String())
+	log.Db.Info().Msgf("Database schema initialized: %s", status.String())
 	return nil
 }
 
@@ -139,9 +139,9 @@ func dbWrap[T any](timeoutCtx context.Context, operationName string, operation f
 	result, err := fun()
 
 	if err != nil {
-		logging.Db.Error().Err(err).Msgf("DB operation %s failed", operationName)
+		log.Db.Error().Err(err).Msgf("DB operation %s failed", operationName)
 	} else {
-		logging.Db.Trace().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
+		log.Db.Trace().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
 	}
 
 	return result.Result, err
@@ -183,15 +183,15 @@ func InitFromEnv(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	logging.Db.Info().Msg("Connecting to PostgreSQL...")
+	log.Db.Info().Msg("Connecting to PostgreSQL...")
 
-	uri := os.Getenv(env.PostgresURI)
+	uri := os.Getenv(common.PostgresURI)
 	c, err := New(ctx, uri)
 	if err != nil {
 		return err
 	}
 
 	Set(c)
-	logging.Db.Info().Msg("PostgreSQL connection established.")
+	log.Db.Info().Msg("PostgreSQL connection established.")
 	return nil
 }

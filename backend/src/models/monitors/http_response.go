@@ -1,9 +1,10 @@
 package monitors
 
 import (
-	"github.com/m-milek/leszmonitor/logging"
-	"github.com/m-milek/leszmonitor/util"
 	"net/http"
+
+	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/util"
 )
 
 type httpCheckAspect string
@@ -49,7 +50,7 @@ func NewRawHttpResponse(resp *http.Response, saveBody bool, saveHeaders bool) *R
 		readBody, err := readResponseBody(resp)
 
 		if err != nil {
-			logging.Uptime.Warn().Err(err).Msg("Failed to read HTTP response body")
+			log.Uptime.Warn().Err(err).Msg("Failed to read HTTP response body")
 			body = ""
 		}
 		body = readBody

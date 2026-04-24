@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/m-milek/leszmonitor/logging"
-	monitors "github.com/m-milek/leszmonitor/uptime/monitor"
+	"github.com/m-milek/leszmonitor/log"
+	monitors "github.com/m-milek/leszmonitor/models/monitors"
 )
 
 type IMonitorRepository interface {
@@ -71,7 +71,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 			return nil, err
 		}
 		if err := rows.Err(); err != nil {
-			logging.Db.Error().Err(err).Msg("Error occurred while iterating over monitor rows")
+			log.Db.Error().Err(err).Msg("Error occurred while iterating over monitor rows")
 			return nil, err
 		}
 
@@ -142,7 +142,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			FROM projects p WHERE p.slug = $2
 			RETURNING
 				id, slug, name, description, interval, kind, config, created_at, updated_at,
-				$2::text AS project_slug`,
+				$2::TEXT AS project_slug`,
 			monitor.GetSlug(),
 			monitor.GetProjectSlug(),
 			monitor.GetName(),
@@ -175,7 +175,7 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 			WHERE id=$8
 			RETURNING
 				m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at,
-				$2::text AS project_slug`,
+				$2::TEXT AS project_slug`,
 			newMonitor.GetSlug(),
 			newMonitor.GetProjectSlug(),
 			newMonitor.GetName(),

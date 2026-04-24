@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/log"
 )
 
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9\-\s]+`)
@@ -21,7 +21,7 @@ func SlugFromString(s string) string {
 	slug = multipleHyphensRegex.ReplaceAllString(slug, "-")
 	slug = strings.Trim(slug, "-")
 
-	logging.Init.Trace().Str("slug", slug).Str("source", s).Msg("Generated slug from string")
+	log.Init.Trace().Str("slug", slug).Str("source", s).Msg("Generated slug from string")
 
 	return slug
 }
