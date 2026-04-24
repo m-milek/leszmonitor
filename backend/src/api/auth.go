@@ -2,11 +2,12 @@ package api
 
 import (
 	"fmt"
-	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/env"
-	"github.com/m-milek/leszmonitor/logging"
 	"net/http"
 	"os"
+
+	jwt2 "github.com/golang-jwt/jwt/v5"
+	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/log"
 )
 
 // jwtClaims represents the claims stored in a Leszmonitor JWT token.
@@ -35,16 +36,16 @@ func jwtFromRequest(r *http.Request) (string, error) {
 func decodeJwtClaims(jwtString string) (jwtClaims, error) {
 	claims := jwtClaims{}
 	token, err := jwt2.ParseWithClaims(jwtString, &claims, func(_ *jwt2.Token) (interface{}, error) {
-		return []byte(os.Getenv(env.JwtSecret)), nil
+		return []byte(os.Getenv(common.JwtSecret)), nil
 	})
 
 	if err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to parse JWT token")
+		log.Api.Error().Err(err).Msg("Failed to parse JWT token")
 		return jwtClaims{}, err
 	}
 
 	if !token.Valid {
-		logging.Api.Warn().Msg("Invalid JWT token")
+		log.Api.Warn().Msg("Invalid JWT token")
 		return jwtClaims{}, fmt.Errorf("invalid JWT token")
 	}
 

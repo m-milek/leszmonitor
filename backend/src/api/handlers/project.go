@@ -6,7 +6,7 @@ import (
 
 	util "github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/services"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/log"
 )
 
 func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +22,7 @@ func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	project, err := services.ProjectService.CreateProject(r.Context(), userClaims.Username, payload)
 	if err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to create project")
+		log.Api.Error().Err(err).Msg("Failed to create project")
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
@@ -38,7 +38,7 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
 
 	projects, err := services.ProjectService.GetProjectsForUser(r.Context(), userClaims.Username)
 	if err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to get projects")
+		log.Api.Error().Err(err).Msg("Failed to get projects")
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}
@@ -90,7 +90,7 @@ func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 
 	project, err := services.ProjectService.UpdateProject(r.Context(), projectAuth, &payload)
 	if err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to update project")
+		log.Api.Error().Err(err).Msg("Failed to update project")
 		util.RespondError(w, err.Code, err.Err)
 		return
 	}

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/log"
 )
 
 func RespondJSON(w http.ResponseWriter, statusCode int, data any) {
@@ -13,7 +13,7 @@ func RespondJSON(w http.ResponseWriter, statusCode int, data any) {
 	w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to encode JSON response")
+		log.Api.Error().Err(err).Msg("Failed to encode JSON response")
 	}
 }
 
@@ -32,12 +32,12 @@ func RespondMessage(w http.ResponseWriter, statusCode int, message string) {
 	response := simpleResponse{Message: message}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logging.Api.Error().Err(err).Msg("Failed to encode JSON response")
+		log.Api.Error().Err(err).Msg("Failed to encode JSON response")
 	}
 }
 
 func RespondError(w http.ResponseWriter, statusCode int, err error) {
-	logging.Api.Error().Err(err).Msg("Responding with error")
+	log.Api.Error().Err(err).Msg("Responding with error")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -55,7 +55,7 @@ func RespondError(w http.ResponseWriter, statusCode int, err error) {
 	}
 
 	if encodeErr := json.NewEncoder(w).Encode(response); encodeErr != nil {
-		logging.Api.Error().Err(encodeErr).Msg("Failed to encode JSON error response")
+		log.Api.Error().Err(encodeErr).Msg("Failed to encode JSON error response")
 	}
 }
 
@@ -63,7 +63,7 @@ func RespondError(w http.ResponseWriter, statusCode int, err error) {
 func GetProjectAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.ProjectAuth, bool) {
 	projectAuth, err := middleware.ProjectAuthFromRequest(r)
 	if err != nil {
-		logging.Api.Warn().Err(err).Msg("Failed to authenticate")
+		log.Api.Warn().Err(err).Msg("Failed to authenticate")
 		RespondError(w, http.StatusUnauthorized, err)
 		return nil, false
 	}

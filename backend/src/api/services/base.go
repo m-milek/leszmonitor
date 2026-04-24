@@ -2,7 +2,7 @@ package services
 
 import (
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/logging"
+	"github.com/m-milek/leszmonitor/log"
 	"github.com/rs/zerolog"
 )
 
@@ -15,7 +15,7 @@ type baseService struct {
 func newBaseService(authService IProjectActionAuthorizer, serviceName string) baseService {
 	return baseService{
 		authService:   authService,
-		serviceLogger: logging.NewServiceLogger(serviceName),
+		serviceLogger: log.NewServiceLogger(serviceName),
 		methodLoggers: make(map[string]zerolog.Logger),
 	}
 }

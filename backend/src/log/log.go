@@ -13,17 +13,18 @@
 //	// Create custom service logger
 //	myLogger := logger.NewServiceLogger("myservice")
 //	myLogger.Info().Msg("Custom service started")
-package logging
+package log
 
 import (
 	"fmt"
-	"github.com/m-milek/leszmonitor/env"
-	"github.com/rs/zerolog"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/m-milek/leszmonitor/common"
+	"github.com/rs/zerolog"
 )
 
 type Config struct {
@@ -156,7 +157,7 @@ func InitLogging(cfg Config) error {
 	consoleWriter = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	consoleWriter.FormatLevel = formatLogLevel
 
-	if os.Getenv(env.LogFilePath) == "" {
+	if os.Getenv(common.LogFilePath) == "" {
 		Init.Warn().Msg("No log file path specified, defaulting to stdout")
 	}
 
@@ -192,7 +193,7 @@ func InitLogging(cfg Config) error {
 }
 
 func GetLoggerConfig() Config {
-	envLevel := os.Getenv(env.LogLevel)
+	envLevel := os.Getenv(common.LogLevel)
 	var logLevel zerolog.Level
 
 	switch envLevel {
@@ -211,7 +212,7 @@ func GetLoggerConfig() Config {
 		Init.Warn().Msg("Invalid log level, defaulting to 'INFO'")
 	}
 
-	envFilePath := os.Getenv(env.LogFilePath)
+	envFilePath := os.Getenv(common.LogFilePath)
 	var filePath string
 
 	if envFilePath != "" {

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/env"
+	"github.com/m-milek/leszmonitor/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,10 +17,10 @@ const testJwtSecret = "test-secret-key-for-testing"
 
 func TestMain(m *testing.M) {
 	// Set up test environment
-	os.Setenv(env.JwtSecret, testJwtSecret)
+	os.Setenv(common.JwtSecret, testJwtSecret)
 	code := m.Run()
 	// Clean up
-	os.Unsetenv(env.JwtSecret)
+	os.Unsetenv(common.JwtSecret)
 	os.Exit(code)
 }
 
@@ -220,9 +220,9 @@ func TestDecodeJwtClaims(t *testing.T) {
 
 	t.Run("Empty JWT Secret", func(t *testing.T) {
 		// Temporarily unset the JWT secret
-		originalSecret := os.Getenv(env.JwtSecret)
-		os.Unsetenv(env.JwtSecret)
-		defer os.Setenv(env.JwtSecret, originalSecret)
+		originalSecret := os.Getenv(common.JwtSecret)
+		os.Unsetenv(common.JwtSecret)
+		defer os.Setenv(common.JwtSecret, originalSecret)
 
 		claims := jwtClaims{
 			Username: "testuser",
