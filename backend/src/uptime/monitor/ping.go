@@ -25,7 +25,7 @@ type PingConfig struct {
 	Host            string `json:"host" bson:"host"`             // Host to pingType
 	Port            int    `json:"port" bson:"port"`             // Port to pingType
 	Protocol        string `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
-	PingTimeout     int    `json:"timeout" bson:"timeout"`       // PingTimeout in seconds for each pingType
+	PingTimeout     int    `json:"timeout" bson:"timeout"`       // PingTimeout in milliseconds for each pingType
 	RetryCount      int    `json:"retryCount" bson:"retryCount"` // RetryCount is the number of retries until
 	pingAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
@@ -83,6 +83,7 @@ func (m *PingConfig) run() IMonitorResponse {
 
 	monitorResponse.Tries++
 	for i := 0; i < m.RetryCount; i++ {
+		// PingTimeout is expressed in milliseconds, convert to time.Duration
 		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.PingTimeout)*time.Millisecond)
 		if success {
 			monitorResponse.Duration = duration.Milliseconds()
@@ -113,7 +114,8 @@ func (m *PingConfig) validate() error {
 		return fmt.Errorf("timeout must be greater than zero")
 	}
 
-	if m.PingTimeout > 60_000 {
+	// PingTimeout is in milliseconds; enforce a 60-second maximum
+	if m.PingTimeout > 60000 {
 		return fmt.Errorf("timeout must not exceed 60 seconds")
 	}
 

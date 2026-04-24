@@ -66,7 +66,7 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 
 // Setup function for tests
 func setupPingMonitorConfig() *PingConfig {
-	monitor, err := NewPingConfig("example.com", "80", "tcp", 5, 3)
+	monitor, err := NewPingConfig("example.com", 80, "tcp", 5000, 3)
 	monitor.pingAddressFunc = pingAddressFunc // Use the global function for testing
 
 	if err != nil {
@@ -105,14 +105,6 @@ func TestPingMonitor_Validate(t *testing.T) {
 		assert.Contains(t, err.Error(), "host cannot be empty")
 	})
 
-	t.Run("Empty Port", func(t *testing.T) {
-		monitor := setupPingMonitorConfig()
-		monitor.Port = ""
-		err := monitor.validate()
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "port cannot be empty")
-	})
-
 	t.Run("Invalid RetryCount", func(t *testing.T) {
 		monitor := setupPingMonitorConfig()
 		monitor.RetryCount = 0
@@ -147,9 +139,13 @@ func TestPingMonitor_Validate(t *testing.T) {
 	})
 
 	t.Run("Timeout Exceeds Limit", func(t *testing.T) {
-		monitor := setupPingMonitorConfig()
-		monitor.PingTimeout = 61 // Exceeds the limit of 60 seconds
-		err := monitor.validate()
+		pConfig := setupPingMonitorConfig()
+		pConfig.PingTimeout = 60001 // Exceeds the limit of 60 seconds (60000ms)
+		monitor := &PingMonitor{
+			BaseMonitor: BaseMonitor{Slug: "test-slug", Name: "Test Name", Interval: 60, Type: pingType},
+			Config:      *pConfig,
+		}
+		err := monitor.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "timeout must not exceed 60 seconds")
 	})
@@ -205,7 +201,7 @@ func TestPingMonitor_Run(t *testing.T) {
 		pingAddressFunc = func(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
 			assert.Equal(t, "tcp", protocol)
 			assert.Equal(t, "example.com:80", address)
-			assert.Equal(t, 5*time.Second, timeout)
+			assert.Equal(t, 5000*time.Millisecond, timeout)
 			return true, 100 * time.Millisecond
 		}
 
