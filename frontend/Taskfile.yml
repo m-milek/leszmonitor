@@ -1,0 +1,58 @@
+version: '3'
+tasks:
+  install:
+    desc: Install front-end dependencies
+    cmds:
+      - npm ci
+    sources:
+      - 'package.json'
+      - 'package-lock.json'
+    generates:
+      - 'node_modules/**/*'
+  dev:
+    desc: Run the front-end development server
+    deps: [install]
+    cmds:
+      - npm run dev
+    sources:
+      - 'src/**/*'
+      - 'public/**/*'
+      - 'index.html'
+      - 'vite.config.ts'
+  build:
+    desc: Build the front-end for production
+    deps: [install]
+    cmds:
+      - npm run build
+    sources:
+      - 'src/**/*'
+      - 'public/**/*'
+      - 'index.html'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'tsconfig.json'
+    generates:
+      - 'dist/**/*'
+  start:
+    desc: Start the front-end production server
+    deps: [build]
+    cmds:
+      - npm run serve
+  test:
+    desc: Run the front-end tests
+    deps: [install]
+    cmds:
+      - npm run test
+  lint:
+    desc: Lint the front-end code
+    deps: [install]
+    cmds:
+      - npx eslint .
+    sources:
+      - 'src/**/*.{js,ts,jsx,tsx}'
+      - 'eslint.config.js'
+  clean:
+    desc: Clean front-end build artifacts
+    cmds:
+      - rm -rf dist || true
+      - rm -rf node_modules/.vite || true
