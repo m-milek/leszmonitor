@@ -1,203 +1,69 @@
 version: '3'
 
+includes:
+  backend:
+    taskfile: ./backend
+    dir: ./backend
+  frontend:
+    taskfile: ./frontend
+    dir: ./frontend
+
 vars:
-  APP_NAME: 'leszmonitor'
-  ROOT_DIR: '{{if .TASKFILE_DIR}}{{.TASKFILE_DIR}}{{else}}{{.USER_WORKING_DIR}}{{end}}'
-  BACKEND_DIR: '{{.ROOT_DIR}}/backend'
-  BACKEND_SRC_DIR: '{{.BACKEND_DIR}}/src'
-  BACKEND_BIN_DIR: '{{.BACKEND_DIR}}/bin'
-  FRONTEND_DIR: '{{.ROOT_DIR}}/frontend'
-  DB_DIR: '{{.ROOT_DIR}}/db'
   LOCAL_POSTGRES_URI: 'postgres://leszmonitor-dev:dev-password@localhost:5432/leszmonitor?sslmode=disable'
 
 env:
-  "LOG_FILE_PATH": '{{.BACKEND_DIR}}/.dev-logs/backend.log'
-  "LOG_LEVEL": 'TRACE'
-
-dotenv: ['./backend/.env', './frontend/.env']
+  POSTGRES_URI: '{{.LOCAL_POSTGRES_URI}}'
 
 tasks:
-  backend:build:
-    desc: Build the back-end binary
-    dir: '{{.BACKEND_DIR}}'
-    cmds:
-      - echo "Building {{.APP_NAME}}..."
-      - mkdir -p {{.BACKEND_BIN_DIR}}
-      - cd src && go build -v -o "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}" main.go
-      - echo "Build complete. Binary at {{.BACKEND_BIN_DIR}}/{{.APP_NAME}}."
-    sources:
-      - '**/*.go'
-    generates:
-      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
-
-  backend:run:
-    desc: Run the back-end binary
-    deps: [backend:build, db:start]
-    dir: '{{.BACKEND_DIR}}'
-    env:
-      POSTGRES_URI: '{{.LOCAL_POSTGRES_URI}}'
-    cmds:
-      - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
-
-  backend:dev:
-    desc: Run the back-end dev server with air for live reload
-    deps: [db:start]
-    dir: '{{.BACKEND_SRC_DIR}}'
-    env:
-      POSTGRES_URI: '{{.LOCAL_POSTGRES_URI}}'
-    cmds:
-      - $GOPATH/bin/air -build.stop_on_error true
-
-  backend:clean:
-    desc: Clean the back-end build artifacts
-    dir: '{{.BACKEND_DIR}}'
-    cmds:
-      - rm -r {{.BACKEND_BIN_DIR}}/{{.APP_NAME}} || true
-    sources:
-      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
-
-  backend:test:
-    desc: Run the back-end tests
-    dir: '{{.BACKEND_SRC_DIR}}'
-    cmds:
-      - go test -v ./...
-    generates:
-      - '{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}'
-
-  backend:coverage:
-    desc: Run the back-end tests with coverage
-    dir: '{{.BACKEND_SRC_DIR}}'
-    cmds:
-      - go test -coverprofile=coverage.out -v ./...
-    generates:
-      - '{{.BACKEND_SRC_DIR}}/coverage.out'
-
-  frontend:install:
-    desc: Install front-end dependencies
-    dir: '{{.FRONTEND_DIR}}'
-    cmds:
-      - npm ci
-    sources:
-      - 'package.json'
-      - 'package-lock.json'
-    generates:
-      - 'node_modules/**/*'
-
-  frontend:dev:
-    desc: Run the front-end development server
-    dir: '{{.FRONTEND_DIR}}'
-    deps: [frontend:install]
-    cmds:
-      - npm run dev
-    sources:
-      - 'src/**/**'
-      - 'public/**/**'
-
-  frontend:build:
-    desc: Build the front-end for production
-    dir: '{{.FRONTEND_DIR}}'
-    deps: [frontend:install]
-    cmds:
-      - npm run build
-    sources:
-      - 'app/**/*'
-      - 'public/**/*'
-      - 'next.config.ts'
-      - 'package.json'
-    generates:
-      - '.next/**/*'
-
-  frontend:start:
-    desc: Start the front-end production server
-    dir: '{{.FRONTEND_DIR}}'
-    deps: [frontend:build]
-    cmds:
-      - npm run start
-
-  frontend:lint:
-    desc: Lint the front-end code
-    dir: '{{.FRONTEND_DIR}}'
-    deps: [frontend:install]
-    cmds:
-      - npm run lint
-    sources:
-      - 'app/**/*.{js,ts,jsx,tsx}'
-      - '.eslintrc.json'
-
-  frontend:clean:
-    desc: Clean front-end build artifacts
-    dir: '{{.FRONTEND_DIR}}'
-    cmds:
-      - rm -rf .next || true
-      - rm -rf node_modules/.cache || true
-
-  frontend:docker:build:
-    desc: Build the front-end Docker image
-    dir: '{{.FRONTEND_DIR}}'
-    cmds:
-      - docker build -t {{.APP_NAME}}-frontend:latest .
-    sources:
-      - 'app/**/*'
-      - 'public/**/*'
-      - 'Dockerfile'
-      - 'next.config.ts'
-      - 'package.json'
-
-  frontend:docker:run:
-    desc: Run the front-end Docker container
-    deps: [frontend:docker:build]
-    cmds:
-      - docker run -p 3000:3000 --name {{.APP_NAME}}-frontend {{.APP_NAME}}-frontend:latest
-
-  frontend:docker:stop:
-    desc: Stop the front-end Docker container
-    cmds:
-      - docker stop {{.APP_NAME}}-frontend || true
-      - docker rm {{.APP_NAME}}-frontend || true
-
   db:start:
     desc: Run the TimescaleDB Docker container
     cmds:
-      - task: db:stop
       - docker compose up -d db
       - echo "TimescaleDB container started on port 5432"
 
   db:stop:
     desc: Stop the TimescaleDB Docker container
     cmds:
-      - docker compose down db
+      - docker compose stop db
       - echo "TimescaleDB container stopped"
+
+  # Docker compose tasks
+  docker:up:
+    desc: Start all services using Docker Compose
+    cmds:
+      - docker compose up -d
+
+  docker:down:
+    desc: Stop and remove all Docker Compose containers
+    cmds:
+      - docker compose down
+
+  docker:build:
+    desc: Build all Docker Compose images
+    cmds:
+      - docker compose build
 
   # Combined tasks
   dev:
     desc: Run both frontend and backend in development mode
-    cmds:
-      - task: backend:dev
-      - task: frontend:dev
+    deps: [backend:dev, frontend:dev]
 
   build:
     desc: Build both frontend and backend
-    cmds:
-      - task: backend:build
-      - task: frontend:build
+    deps: [backend:build, frontend:build]
 
-  docker:build:
-    desc: Build Docker images for frontend and backend
-    cmds:
-      - task: backend:docker:build
-      - task: frontend:docker:build
+  test:
+    desc: Run tests for both frontend and backend
+    deps: [backend:test, frontend:test]
 
   clean:
     desc: Clean all build artifacts
-    cmds:
-      - task: frontend:clean
-      - task: backend:clean
+    deps: [frontend:clean, backend:clean, logs:clean]
 
   logs:clean:
     desc: Remove logs
     cmds:
-      - rm ${LOG_FILE_PATH} || true
-      - rm ./.logs/* || true
-    sources:
-      - './.logs/*'
-      - './backend/logs/*'
+      - rm -rf ./.dev-logs/* || true
+      - rm -rf ./backend/.dev-logs/* || true
+      - rm -rf ./.logs/* || true
+      - rm -rf ./backend/logs/* || true
