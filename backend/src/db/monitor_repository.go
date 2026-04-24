@@ -36,7 +36,7 @@ func monitorFromCollectableRow(row pgx.CollectableRow) (monitors.IConcreteMonito
 	var config []byte
 	var b monitors.BaseMonitor
 
-	err := row.Scan(&b.ID, &b.Slug, &b.ProjectID, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt)
+	err := row.Scan(&b.ID, &b.Slug, &b.Name, &b.Description, &b.Interval, &b.Type, &config, &b.CreatedAt, &b.UpdatedAt, &b.ProjectSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,10 @@ func monitorFromCollectableRow(row pgx.CollectableRow) (monitors.IConcreteMonito
 func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectID pgtype.UUID) ([]monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "GetMonitorsByProjectID", func() ([]monitors.IConcreteMonitor, error) {
 		rows, err := r.pool.Query(ctx,
-			`SELECT * FROM monitors WHERE project_id = $1`,
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			 FROM monitors m
+			 JOIN projects p ON p.id = m.project_id
+			 WHERE m.project_id = $1`,
 			projectID)
 		if err != nil {
 			return nil, err
@@ -79,7 +82,10 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 func (r *monitorRepository) GetMonitorByID(ctx context.Context, id string) (monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (monitors.IConcreteMonitor, error) {
 		row, err := r.pool.Query(ctx,
-			`SELECT * FROM monitors WHERE slug = $1`,
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			 FROM monitors m
+			 JOIN projects p ON p.id = m.project_id
+			 WHERE m.slug = $1`,
 			id)
 		if err != nil {
 			return nil, err
@@ -99,7 +105,10 @@ func (r *monitorRepository) GetMonitorByID(ctx context.Context, id string) (moni
 
 func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "GetAllMonitors", func() ([]monitors.IConcreteMonitor, error) {
-		rows, err := r.pool.Query(ctx, `SELECT * FROM monitors`)
+		rows, err := r.pool.Query(ctx,
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			 FROM monitors m
+			 JOIN projects p ON p.id = m.project_id`)
 		if err != nil {
 			return nil, err
 		}
@@ -129,9 +138,13 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 	return dbWrap(ctx, "InsertMonitor", func() (monitors.IConcreteMonitor, error) {
 		rows, err := r.pool.Query(ctx,
 			`INSERT INTO monitors (slug, project_id, name, description, interval, kind, config)
-			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+			SELECT $1, p.id, $3, $4, $5, $6, $7
+			FROM projects p WHERE p.slug = $2
+			RETURNING
+				id, slug, name, description, interval, kind, config, created_at, updated_at,
+				$2::text AS project_slug`,
 			monitor.GetSlug(),
-			monitor.GetProjectID(),
+			monitor.GetProjectSlug(),
 			monitor.GetName(),
 			monitor.GetDescription(),
 			int(monitor.GetInterval().Seconds()),
@@ -157,9 +170,14 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "UpdateMonitor", func() (monitors.IConcreteMonitor, error) {
 		result, err := r.pool.Query(ctx,
-			`UPDATE monitors SET slug=$1, project_id=$2, name=$3, description=$4, interval=$5, kind=$6, config=$7 WHERE id=$8 RETURNING *`,
+			`UPDATE monitors m
+			SET slug=$1, project_id=(SELECT p.id FROM projects p WHERE p.slug=$2), name=$3, description=$4, interval=$5, kind=$6, config=$7
+			WHERE id=$8
+			RETURNING
+				m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at,
+				$2::text AS project_slug`,
 			newMonitor.GetSlug(),
-			newMonitor.GetProjectID(),
+			newMonitor.GetProjectSlug(),
 			newMonitor.GetName(),
 			newMonitor.GetDescription(),
 			int(newMonitor.GetInterval().Seconds()),

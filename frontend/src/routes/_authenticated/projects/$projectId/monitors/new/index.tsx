@@ -14,20 +14,12 @@ export const Route = createFileRoute(
 function NewMonitorComponent() {
   const { projectId } = Route.useParams();
 
-  const onSubmit = async (value: unknown) => {
-    console.log(value);
-  };
-
   return (
     <MainPanelContainer>
       <TypographyH1>New Monitor Wizard</TypographyH1>
       <Card>
         <CardContent>
-          <NewMonitorForm
-            formId="new-monitor-form"
-            onSubmitMonitor={onSubmit}
-            projectId={projectId}
-          />
+          <NewMonitorForm formId="new-monitor-form" projectId={projectId} />
         </CardContent>
         <CardFooter>
           <Button type="submit" form="new-monitor-form">
