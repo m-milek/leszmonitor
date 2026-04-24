@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,8 +41,8 @@ func createTestHandler(t *testing.T) (http.Handler, **UserClaims) {
 func TestJwtAuth(t *testing.T) {
 	// Set up test JWT secret
 	testSecret := "test-secret-key"
-	os.Setenv(common.JwtSecret, testSecret)
-	defer os.Unsetenv(common.JwtSecret)
+	os.Setenv(config.JwtSecret, testSecret)
+	defer os.Unsetenv(config.JwtSecret)
 
 	tests := []struct {
 		name           string
@@ -157,7 +157,7 @@ func TestJwtAuth(t *testing.T) {
 				return "Bearer some.token.here"
 			},
 			setupEnv: func() {
-				os.Unsetenv(common.JwtSecret)
+				os.Unsetenv(config.JwtSecret)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "Server configuration error",
@@ -167,7 +167,7 @@ func TestJwtAuth(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset environment
-			os.Setenv(common.JwtSecret, testSecret)
+			os.Setenv(config.JwtSecret, testSecret)
 
 			if tt.setupEnv != nil {
 				tt.setupEnv()

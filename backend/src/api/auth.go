@@ -6,7 +6,7 @@ import (
 	"os"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/log"
 )
 
@@ -36,7 +36,7 @@ func jwtFromRequest(r *http.Request) (string, error) {
 func decodeJwtClaims(jwtString string) (jwtClaims, error) {
 	claims := jwtClaims{}
 	token, err := jwt2.ParseWithClaims(jwtString, &claims, func(_ *jwt2.Token) (interface{}, error) {
-		return []byte(os.Getenv(common.JwtSecret)), nil
+		return []byte(os.Getenv(config.JwtSecret)), nil
 	})
 
 	if err != nil {

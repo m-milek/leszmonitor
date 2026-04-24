@@ -1,4 +1,4 @@
-package uptime
+package services
 
 import (
 	"context"

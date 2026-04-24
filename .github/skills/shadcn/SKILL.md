@@ -81,7 +81,7 @@ These rules are **always enforced**. Each links to a file with Incorrect/Correct
 
 ## Key Patterns
 
-These are the most common patterns that differentiate correct shadcn/ui code. For edge cases, see the linked rule files above.
+These are the most events patterns that differentiate correct shadcn/ui code. For edge cases, see the linked rule files above.
 
 ```tsx
 // Form layout: FieldGroup + Field, not div + Label.

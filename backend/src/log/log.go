@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/config"
 	"github.com/rs/zerolog"
 )
 
@@ -157,7 +157,7 @@ func InitLogging(cfg Config) error {
 	consoleWriter = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	consoleWriter.FormatLevel = formatLogLevel
 
-	if os.Getenv(common.LogFilePath) == "" {
+	if os.Getenv(config.LogFilePath) == "" {
 		Init.Warn().Msg("No log file path specified, defaulting to stdout")
 	}
 
@@ -193,7 +193,7 @@ func InitLogging(cfg Config) error {
 }
 
 func GetLoggerConfig() Config {
-	envLevel := os.Getenv(common.LogLevel)
+	envLevel := os.Getenv(config.LogLevel)
 	var logLevel zerolog.Level
 
 	switch envLevel {
@@ -212,7 +212,7 @@ func GetLoggerConfig() Config {
 		Init.Warn().Msg("Invalid log level, defaulting to 'INFO'")
 	}
 
-	envFilePath := os.Getenv(common.LogFilePath)
+	envFilePath := os.Getenv(config.LogFilePath)
 	var filePath string
 
 	if envFilePath != "" {
