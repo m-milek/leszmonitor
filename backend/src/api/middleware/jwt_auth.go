@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/common"
+	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/log"
 )
 
@@ -37,7 +37,7 @@ func JwtAuth(next http.Handler) http.Handler {
 		}
 
 		// Get JWT secret from environment
-		jwtSecret := os.Getenv(common.JwtSecret)
+		jwtSecret := os.Getenv(config.JwtSecret)
 		if jwtSecret == "" {
 			http.Error(rw, "Server configuration error", http.StatusInternalServerError)
 			return

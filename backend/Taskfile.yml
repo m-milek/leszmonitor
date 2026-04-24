@@ -2,11 +2,11 @@ version: '3'
 
 vars:
   APP_NAME: 'leszmonitor'
-  BACKEND_SRC_DIR: '{{.USER_WORKING_DIR}}/src'
-  BACKEND_BIN_DIR: '{{.USER_WORKING_DIR}}/bin'
+  BACKEND_SRC_DIR: '{{.TASKFILE_DIR}}/src'
+  BACKEND_BIN_DIR: '{{.TASKFILE_DIR}}/bin'
 
 env:
-  LOG_FILE_PATH: '{{.USER_WORKING_DIR}}/.dev-logs/backend.log'
+  LOG_FILE_PATH: '{{.TASKFILE_DIR}}/.dev-logs/backend.log'
   LOG_LEVEL: 'TRACE'
 
 tasks:
@@ -29,9 +29,12 @@ tasks:
 
   dev:
     desc: Run the back-end dev server with air for live reload
-    dir: '{{.BACKEND_SRC_DIR}}'
+    env:
+      API_PORT: '7001'
+      JWT_SECRET: 'your_jwt_secret'
+      JWT_EXPIRY_HOURS: '24'
     cmds:
-      - air -build.stop_on_error true
+      - cd {{.BACKEND_SRC_DIR}} && air -build.stop_on_error true
 
   clean:
     desc: Clean the back-end build artifacts
@@ -51,5 +54,3 @@ tasks:
       - go test -coverprofile=coverage.out -v ./...
     generates:
       - 'coverage.out'
-
-
