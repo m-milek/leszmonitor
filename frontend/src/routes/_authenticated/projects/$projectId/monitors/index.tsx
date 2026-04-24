@@ -11,6 +11,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getMonitors } from "@/lib/data/monitorData.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
+import { MonitorListItem } from "@/components/leszmonitor/MonitorListItem.tsx";
+import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 
 export const Route = createFileRoute(
   "/_authenticated/projects/$projectId/monitors/",
@@ -42,7 +44,17 @@ function MonitorsComponent() {
             <Button>New Monitor</Button>
           </StyledLink>
         </CardHeader>
-        <CardContent>{JSON.stringify(data)}</CardContent>
+        <CardContent>
+          <Flex direction="column" className="gap-4">
+            {data.map((monitor) => (
+              <MonitorListItem
+                monitor={monitor}
+                projectId={projectId}
+                key={monitor.id}
+              />
+            ))}
+          </Flex>
+        </CardContent>
         <CardFooter>Footer</CardFooter>
       </Card>
     </MainPanelContainer>
