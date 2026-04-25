@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WEBSOCKET_ENDPOINT } from "@/lib/data/webSocket.ts";
 import { webSocketConnectionStatusAtom } from "@/lib/atoms.ts";
@@ -10,6 +10,7 @@ type WebSocketProviderProps = {
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const setConnectionStatus = useSetAtom(webSocketConnectionStatusAtom);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const onMessage = useCallback((event: MessageEvent) => {
     const data = JSON.parse(event.data);
@@ -42,7 +43,10 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   });
 
   useEffect(() => {
-    setConnectionStatus(readyState);
+    setConnectionStatus({
+      status: readyState,
+      isAuthenticated,
+    });
   }, [readyState, setConnectionStatus]);
 
   return <>{children}</>;
