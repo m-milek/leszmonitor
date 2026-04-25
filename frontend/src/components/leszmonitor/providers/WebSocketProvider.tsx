@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect } from "react";
 import useWebSocket from "react-use-websocket";
 import { WEBSOCKET_ENDPOINT } from "@/lib/data/webSocket.ts";
 import { webSocketConnectionStatusAtom } from "@/lib/atoms.ts";
@@ -10,17 +10,24 @@ type WebSocketProviderProps = {
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const setConnectionStatus = useSetAtom(webSocketConnectionStatusAtom);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = false;
 
   const onMessage = useCallback((event: MessageEvent) => {
-    const data = JSON.parse(event.data);
-    console.log("Received WebSocket message:", data);
+    if (event.data === "pong") {
+      return;
+    }
+
+    try {
+      const data = JSON.parse(event.data);
+      console.log("Received WebSocket message:", data);
+    } catch {
+      console.log("Received WebSocket message:", event.data);
+    }
   }, []);
 
   const { readyState } = useWebSocket(WEBSOCKET_ENDPOINT, {
     share: true,
     onMessage,
-    filter: () => false,
     shouldReconnect: () => true,
     reconnectAttempts: 10,
     reconnectInterval: (attempt) =>
@@ -28,8 +35,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     heartbeat: {
       message: "ping",
       returnMessage: "pong",
-      timeout: 5000,
-      interval: 10000,
+      interval: 5000,
+      timeout: 15000,
     },
     onOpen: () => {
       console.log("WebSocket connection opened");
@@ -47,7 +54,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       status: readyState,
       isAuthenticated,
     });
-  }, [readyState, setConnectionStatus]);
+  }, [readyState, isAuthenticated, setConnectionStatus]);
 
   return <>{children}</>;
 }
