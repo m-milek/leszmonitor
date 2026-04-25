@@ -49,7 +49,7 @@ export const WebSocketStatusIndicator = () => {
   return (
     <Tooltip delayDuration={500}>
       <TooltipTrigger>
-        <div className={cn("h-4 w-4 rounded-full", colorClass)} />
+        <div className={cn("h-3 w-3 rounded-full", colorClass)} />
       </TooltipTrigger>
       <TooltipContent side="top">WebSocket Status: {label}</TooltipContent>
     </Tooltip>
