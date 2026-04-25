@@ -1,4 +1,5 @@
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+export const BACKEND_WS_URL = BACKEND_URL.replace(/^http/, "ws");
 
 export const QUERY_KEYS = {
   ORGS: "orgs",
