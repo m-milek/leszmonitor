@@ -14,11 +14,7 @@ tasks:
     deps: [install]
     cmds:
       - npm run dev
-    sources:
-      - 'src/**/*'
-      - 'public/**/*'
-      - 'index.html'
-      - 'vite.config.ts'
+
   build:
     desc: Build the front-end for production
     deps: [install]
