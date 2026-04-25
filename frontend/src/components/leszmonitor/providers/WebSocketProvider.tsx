@@ -1,8 +1,9 @@
-import { type ReactNode, useCallback, useEffect } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WEBSOCKET_ENDPOINT } from "@/lib/data/webSocket.ts";
 import { webSocketConnectionStatusAtom } from "@/lib/atoms.ts";
 import { useSetAtom } from "jotai";
+import { getLoginToken } from "@/lib/utils.ts";
 
 type WebSocketProviderProps = {
   children: ReactNode;
@@ -10,7 +11,7 @@ type WebSocketProviderProps = {
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const setConnectionStatus = useSetAtom(webSocketConnectionStatusAtom);
-  const isAuthenticated = false;
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const onMessage = useCallback((event: MessageEvent) => {
     if (event.data === "pong") {
@@ -19,13 +20,17 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
     try {
       const data = JSON.parse(event.data);
+      if (data?.type === "auth" && data?.status === "ok") {
+        setIsAuthenticated(true);
+        return;
+      }
       console.log("Received WebSocket message:", data);
     } catch {
       console.log("Received WebSocket message:", event.data);
     }
   }, []);
 
-  const { readyState } = useWebSocket(WEBSOCKET_ENDPOINT, {
+  const { readyState, sendMessage, getWebSocket } = useWebSocket(WEBSOCKET_ENDPOINT, {
     share: true,
     onMessage,
     shouldReconnect: () => true,
@@ -40,11 +45,32 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     },
     onOpen: () => {
       console.log("WebSocket connection opened");
+      setIsAuthenticated(false);
+
+      void (async () => {
+        const token = await getLoginToken();
+        if (!token) {
+          const ws = getWebSocket();
+          if (ws instanceof WebSocket) {
+            ws.close(1008, "Missing auth token");
+          }
+          return;
+        }
+
+        sendMessage(
+          JSON.stringify({
+            type: "auth",
+            token,
+          }),
+        );
+      })();
     },
     onClose: () => {
+      setIsAuthenticated(false);
       console.log("WebSocket connection closed");
     },
     onError: (event) => {
+      setIsAuthenticated(false);
       console.error("WebSocket error:", event);
     },
   });
