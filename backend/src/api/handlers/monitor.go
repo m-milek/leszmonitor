@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/services"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/services"
 )
 
 // CreateMonitorHandler handles the addition of a new monitor.
