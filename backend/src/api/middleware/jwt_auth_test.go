@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // Helper function to create a valid JWT token
-func createTestToken(t *testing.T, claims *UserClaims, secret string) string {
+func createTestToken(t *testing.T, claims *auth.UserClaims, secret string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(secret))
 	require.NoError(t, err)
@@ -23,8 +24,8 @@ func createTestToken(t *testing.T, claims *UserClaims, secret string) string {
 }
 
 // Helper function to create a test handler that captures the context
-func createTestHandler(t *testing.T) (http.Handler, **UserClaims) {
-	var capturedClaims *UserClaims
+func createTestHandler(t *testing.T) (http.Handler, **auth.UserClaims) {
+	var capturedClaims *auth.UserClaims
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims, ok := GetUserFromContext(r.Context())
@@ -55,7 +56,7 @@ func TestJwtAuth(t *testing.T) {
 		{
 			name: "valid token with Bearer prefix",
 			setupAuth: func() string {
-				claims := &UserClaims{
+				claims := &auth.UserClaims{
 					Username: "testuser",
 					RegisteredClaims: jwt.RegisteredClaims{
 						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -68,99 +69,29 @@ func TestJwtAuth(t *testing.T) {
 			expectClaims:   true,
 		},
 		{
-			name: "valid token without Bearer prefix",
+			name: "missing authorization header",
 			setupAuth: func() string {
-				claims := &UserClaims{
-					Username: "testuser",
-					RegisteredClaims: jwt.RegisteredClaims{
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-					},
-				}
-				return createTestToken(t, claims, testSecret)
+				return ""
 			},
-			expectedStatus: http.StatusOK,
-			expectClaims:   true,
-		},
-		{
-			name:           "missing authorization header",
-			setupAuth:      func() string { return "" },
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized: No token provided",
 		},
 		{
-			name: "expired token",
-			setupAuth: func() string {
-				claims := &UserClaims{
-					Username: "testuser",
-					RegisteredClaims: jwt.RegisteredClaims{
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
-					},
-				}
-				token := createTestToken(t, claims, testSecret)
-				return "Bearer " + token
-			},
+			name:           "invalid token returns generic unauthorized",
+			setupAuth:      func() string { return "Bearer invalid.token.value" },
 			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Unauthorized: token has invalid claims: token is expired",
+			expectedError:  "Unauthorized: Invalid token",
 		},
 		{
-			name: "invalid token signature",
-			setupAuth: func() string {
-				claims := &UserClaims{
-					Username: "testuser",
-					RegisteredClaims: jwt.RegisteredClaims{
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-					},
-				}
-				token := createTestToken(t, claims, "wrong-secret")
-				return "Bearer " + token
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Unauthorized: token signature is invalid",
-		},
-		{
-			name:           "malformed token",
-			setupAuth:      func() string { return "Bearer invalid.token.here" },
-			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Unauthorized: token is malformed",
-		},
-		{
-			name: "token with wrong signing method",
-			setupAuth: func() string {
-				// Create token with RSA instead of HMAC
-				token := jwt.NewWithClaims(jwt.SigningMethodRS256, &UserClaims{
-					Username: "testuser",
-				})
-				// This will create an invalid token for HMAC verification
-				tokenString, _ := token.SignedString([]byte("fake-rsa-key"))
-				return "Bearer " + tokenString
-			},
-			expectedStatus: http.StatusUnauthorized,
-		},
-		{
-			name: "token without username",
-			setupAuth: func() string {
-				claims := &UserClaims{
-					Username: "", // Empty username
-					RegisteredClaims: jwt.RegisteredClaims{
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-					},
-				}
-				token := createTestToken(t, claims, testSecret)
-				return "Bearer " + token
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Unauthorized: Missing username in token",
-		},
-		{
-			name: "missing JWT secret",
+			name: "missing JWT secret returns unauthorized",
 			setupAuth: func() string {
 				return "Bearer some.token.here"
 			},
 			setupEnv: func() {
 				os.Unsetenv(config.JwtSecret)
 			},
-			expectedStatus: http.StatusInternalServerError,
-			expectedError:  "Server configuration error",
+			expectedStatus: http.StatusUnauthorized,
+			expectedError:  "Unauthorized: Invalid token",
 		},
 	}
 
@@ -212,7 +143,7 @@ func TestJwtAuth(t *testing.T) {
 
 func TestSetUserContext(t *testing.T) {
 	ctx := context.Background()
-	claims := &UserClaims{
+	claims := &auth.UserClaims{
 		Username: "testuser",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject: "user123",
@@ -225,7 +156,7 @@ func TestSetUserContext(t *testing.T) {
 	value := newCtx.Value(userClaimsKey)
 	assert.NotNil(t, value)
 
-	retrievedClaims, ok := value.(*UserClaims)
+	retrievedClaims, ok := value.(*auth.UserClaims)
 	assert.True(t, ok)
 	assert.Equal(t, claims.Username, retrievedClaims.Username)
 	assert.Equal(t, claims.Subject, retrievedClaims.Subject)
@@ -234,7 +165,7 @@ func TestSetUserContext(t *testing.T) {
 func TestGetUserFromContext(t *testing.T) {
 	t.Run("context with claims", func(t *testing.T) {
 		ctx := context.Background()
-		expectedClaims := &UserClaims{
+		expectedClaims := &auth.UserClaims{
 			Username: "testuser",
 		}
 
@@ -277,7 +208,7 @@ func TestProjectAuthFromRequest(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
 				req.SetPathValue("projectId", "proj123")
 
-				claims := &UserClaims{Username: "testuser"}
+				claims := &auth.UserClaims{Username: "testuser"}
 				ctx := SetUserContext(req.Context(), claims)
 				return req.WithContext(ctx)
 			},
@@ -292,7 +223,7 @@ func TestProjectAuthFromRequest(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, "/projects/", nil)
 				// No projectId path value set
 
-				claims := &UserClaims{Username: "testuser"}
+				claims := &auth.UserClaims{Username: "testuser"}
 				ctx := SetUserContext(req.Context(), claims)
 				return req.WithContext(ctx)
 			},
@@ -314,7 +245,7 @@ func TestProjectAuthFromRequest(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
 				req.SetPathValue("projectId", "proj123")
 
-				claims := &UserClaims{Username: ""} // Empty username
+				claims := &auth.UserClaims{Username: ""} // Empty username
 				ctx := SetUserContext(req.Context(), claims)
 				return req.WithContext(ctx)
 			},

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/log"
 )
 
@@ -71,7 +72,7 @@ func GetProjectAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middlewar
 }
 
 // ExtractUserOrRespond returns the user from context or writes a 401 response and returns nil, false.
-func ExtractUserOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.UserClaims, bool) {
+func ExtractUserOrRespond(w http.ResponseWriter, r *http.Request) (*auth.UserClaims, bool) {
 	user, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
 		RespondMessage(w, http.StatusUnauthorized, "Unauthorized")

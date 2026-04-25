@@ -8,6 +8,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/util"
 	"github.com/rs/cors"
 )
 
@@ -37,8 +38,12 @@ func createServer(config ServerConfig) (*http.Server, error) {
 	combinedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
-		// Check if this is a public path
-		if path == "/auth/register" || path == "/auth/login" {
+		publicPaths := []string{
+			"/auth/register",
+			"/auth/login",
+			"/ws",
+		}
+		if util.SliceContains(publicPaths, path) {
 			publicRouter.ServeHTTP(w, r)
 			return
 		}

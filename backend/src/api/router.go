@@ -36,4 +36,6 @@ func SetupRouters(
 	protectedRouter.HandleFunc("POST /projects/{projectId}/monitors", handlers.CreateMonitorHandler)
 	protectedRouter.HandleFunc("DELETE /projects/{projectId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
 	protectedRouter.HandleFunc("PATCH /projects/{projectId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
+
+	publicRouter.HandleFunc("GET /ws", handlers.WebSocketConnectionHandler)
 }

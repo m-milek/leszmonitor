@@ -20,7 +20,6 @@ func Logger(next http.Handler) http.Handler {
 
 		rw := newResponseWriter(w)
 
-		// Call the next handler in the chain
 		next.ServeHTTP(rw, r)
 
 		duration := time.Since(start).Truncate(1 * time.Microsecond)
