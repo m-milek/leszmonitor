@@ -64,11 +64,9 @@ func ValidateJwt(token string) (*UserClaims, error) {
 		return nil, fmt.Errorf("JWT secret is not configured")
 	}
 
-	// Parse and validate the token with custom claims
 	claims := &UserClaims{}
 
 	parsedJwt, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		// Verify signing algorithm
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			log.Api.Warn().Msgf("Unexpected signing method: %v", token.Header["alg"])
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -86,14 +84,12 @@ func ValidateJwt(token string) (*UserClaims, error) {
 		return nil, fmt.Errorf("invalid JWT token")
 	}
 
-	// Verify we have the expected claims type
 	userClaims, ok := parsedJwt.Claims.(*UserClaims)
 	if !ok {
 		log.Api.Warn().Msg("Unexpected JWT claims type")
 		return nil, fmt.Errorf("unexpected JWT claims type")
 	}
 
-	// Ensure username is present
 	if userClaims.Username == "" {
 		log.Api.Warn().Msg("JWT token is missing username claim")
 		return nil, fmt.Errorf("JWT token is missing username claim")
