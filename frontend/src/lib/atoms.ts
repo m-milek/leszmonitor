@@ -1,5 +1,6 @@
 import { atom, createStore } from "jotai";
 import type { Project, User } from "@/lib/types.ts";
+import { ReadyState } from "react-use-websocket";
 
 export const store = createStore();
 
@@ -11,3 +12,8 @@ userAtom.debugLabel = "userAtom";
 
 export const projectAtom = atom<Project | null>(null);
 projectAtom.debugLabel = "projectAtom";
+
+export const webSocketConnectionStatusAtom = atom<ReadyState>(
+  ReadyState.CLOSED,
+);
+webSocketConnectionStatusAtom.debugLabel = "webSocketAtom";
