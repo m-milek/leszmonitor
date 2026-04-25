@@ -17,7 +17,7 @@ type TestMonitor struct {
 	Type        MonitorConfigType
 
 	// Config fields
-	HttpConfig *httpConfig
+	HttpConfig *HttpConfig
 	PingConfig *PingConfig
 }
 
@@ -32,7 +32,7 @@ func NewTestMonitor() *TestMonitor {
 		Interval:    60,
 		ProjectID:   "test_owner",
 		Type:        httpType,
-		HttpConfig: &httpConfig{
+		HttpConfig: &HttpConfig{
 			Method:              "GET",
 			URL:                 "https://example.com",
 			ExpectedStatusCodes: []int{200},
@@ -44,7 +44,7 @@ func NewTestMonitor() *TestMonitor {
 func (t *TestMonitor) AsHttp() *TestMonitor {
 	t.Type = httpType
 	if t.HttpConfig == nil {
-		t.HttpConfig = &httpConfig{
+		t.HttpConfig = &HttpConfig{
 			Method:              "GET",
 			URL:                 "https://example.com",
 			ExpectedStatusCodes: []int{200},
@@ -83,7 +83,7 @@ func (t *TestMonitor) Build() IMonitor {
 
 	switch t.Type {
 	case httpType:
-		return &httpMonitor{
+		return &HttpMonitor{
 			BaseMonitor: base,
 			Config:      *t.HttpConfig,
 		}
