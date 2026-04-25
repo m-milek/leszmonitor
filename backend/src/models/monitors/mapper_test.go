@@ -23,7 +23,7 @@ func TestMapMonitorType(t *testing.T) {
 		{
 			name: "Valid httpType Monitor Type",
 			args: args{typeTag: httpType},
-			want: &httpMonitor{},
+			want: &HttpMonitor{},
 		},
 		{
 			name: "Valid pingType Monitor Type",
@@ -76,10 +76,10 @@ func TestFromReader(t *testing.T) {
 		assert.Equal(t, httpType, monitor.GetType())
 
 		// Type assertion to check specific config
-		httpMonitor, ok := monitor.(*httpMonitor)
+		HttpMonitor, ok := monitor.(*HttpMonitor)
 		assert.True(t, ok)
-		assert.Equal(t, "https://example.com/api", httpMonitor.Config.URL)
-		assert.Equal(t, []int{200, 201}, httpMonitor.Config.ExpectedStatusCodes)
+		assert.Equal(t, "https://example.com/api", HttpMonitor.Config.URL)
+		assert.Equal(t, []int{200, 201}, HttpMonitor.Config.ExpectedStatusCodes)
 	})
 
 	t.Run("Successfully parse pingType monitor", func(t *testing.T) {

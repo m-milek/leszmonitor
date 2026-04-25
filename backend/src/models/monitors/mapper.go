@@ -8,7 +8,7 @@ import (
 
 var monitorTypeMap = map[MonitorConfigType]func() IConcreteMonitor{
 	httpType: func() IConcreteMonitor {
-		return &httpMonitor{}
+		return &HttpMonitor{}
 	},
 	pingType: func() IConcreteMonitor {
 		return &PingMonitor{}
@@ -28,7 +28,7 @@ func mapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
 func mapMonitorConfigType(kind MonitorConfigType) IMonitorConfig {
 	switch kind {
 	case httpType:
-		return &httpConfig{}
+		return &HttpConfig{}
 	case pingType:
 		return &PingConfig{}
 	default:

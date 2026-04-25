@@ -37,9 +37,9 @@ type IMonitorConfig interface {
 func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonitor, error) {
 	switch base.Type {
 	case httpType:
-		monitor := &httpMonitor{
+		monitor := &HttpMonitor{
 			BaseMonitor: base,
-			Config:      *config.(*httpConfig),
+			Config:      *config.(*HttpConfig),
 		}
 		return monitor, nil
 	case pingType:
