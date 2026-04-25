@@ -5,10 +5,9 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from "@/components/ui/sidebar.tsx";
 
 import {
@@ -19,21 +18,19 @@ import {
   LucidePlusCircle,
   LucideSearch,
   LucideSettings,
-  LucideUsers,
+  LucideUsers
 } from "lucide-react";
-import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx";
 import { useAtom, useAtomValue } from "jotai";
 import { projectAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
-import { ProjectSelector } from "@/components/leszmonitor/sidebar/OrgSelector.tsx";
 import { Link } from "@tanstack/react-router";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
 import { fetchUser } from "@/lib/data/userData.ts";
 import { getProjects } from "@/lib/data/projectData.ts";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { AppSidebarHeader } from "@/components/leszmonitor/sidebar/AppSidebarHeader.tsx";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -43,11 +40,11 @@ interface SidebarButtonProps {
 }
 
 const SidebarButton = ({
-  icon,
-  href,
-  label,
-  variant = "default",
-}: SidebarButtonProps) => {
+                         icon,
+                         href,
+                         label,
+                         variant = "default"
+                       }: SidebarButtonProps) => {
   const onClick = () => {
     console.log("navigating to", href);
   };
@@ -97,12 +94,12 @@ export const AppSidebar = () => {
     queryKey: ["user", username],
     queryFn: () => fetchUser(username!),
     enabled: !!username,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 
   const { data: projectsData } = useQuery({
     queryKey: ["projects"],
-    queryFn: getProjects,
+    queryFn: getProjects
   });
 
   useEffect(() => {
@@ -113,22 +110,7 @@ export const AppSidebar = () => {
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader>
-        <div className="p-2">
-          <Link to={"/"}>
-            <LeszmonitorLogo />
-          </Link>
-        </div>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            {projectsData ? (
-              <ProjectSelector projects={projectsData} />
-            ) : (
-              <Skeleton className="h-8 w-full" />
-            )}
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      <AppSidebarHeader projects={projectsData || []} />
 
       <SidebarContent>
         {project && (
