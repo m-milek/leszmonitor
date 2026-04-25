@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/services"
 	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/services"
 )
 
 func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {

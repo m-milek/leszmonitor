@@ -12,14 +12,14 @@ import (
 	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
-	"github.com/m-milek/leszmonitor/services"
+	"github.com/m-milek/leszmonitor/workers"
 )
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		services.StartUptimeWorker(ctx)
+		workers.StartUptimeWorker(ctx)
 	}()
 }
 
