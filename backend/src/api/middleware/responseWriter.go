@@ -1,6 +1,10 @@
 package middleware
 
-import "net/http"
+import (
+	"bufio"
+	"net"
+	"net/http"
+)
 
 // responseWriter is a custom ResponseWriter that captures the status code
 type responseWriter struct {
@@ -8,7 +12,6 @@ type responseWriter struct {
 	statusCode int
 }
 
-// newResponseWriter creates a new responseWriter
 func newResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{w, http.StatusOK}
 }
@@ -17,4 +20,12 @@ func newResponseWriter(w http.ResponseWriter) *responseWriter {
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
+}
+
+// Hijack implements the http.Hijacker interface for websocket compatibility
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if h, ok := rw.ResponseWriter.(http.Hijacker); ok {
+		return h.Hijack()
+	}
+	return nil, nil, http.ErrNotSupported
 }
