@@ -3,11 +3,10 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useAtomValue } from "jotai";
-import { projectAtom } from "@/lib/atoms.ts";
+import { useAppStore } from "@/lib/store.ts";
 import type { Project } from "@/lib/types.ts";
 
 interface ProjectEntryProps {
@@ -27,7 +26,7 @@ export interface ProjectSelectorProps {
 }
 
 export const ProjectSelector = ({ projects }: ProjectSelectorProps) => {
-  const project = useAtomValue(projectAtom);
+  const { project } = useAppStore();
 
   return (
     <DropdownMenu>

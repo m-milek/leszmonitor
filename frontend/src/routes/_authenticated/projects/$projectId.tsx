@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useSetAtom } from "jotai";
-import { projectAtom } from "@/lib/atoms.ts";
+import { useAppStore } from "@/lib/store.ts";
 import { useEffect } from "react";
 import { getProject } from "@/lib/data/projectData.ts";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/projects/$projectId")({
 
 function ProjectLayout() {
   const { projectId } = Route.useParams();
-  const setProjectAtom = useSetAtom(projectAtom);
+  const { setProject: setProjectAtom } = useAppStore();
 
   const { data: project } = useQuery({
     queryKey: ["project", projectId],
