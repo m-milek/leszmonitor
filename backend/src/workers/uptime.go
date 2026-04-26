@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
 )
@@ -30,8 +31,8 @@ func StartUptimeWorker(ctx context.Context) {
 		go runMonitor(childContext, cancel, monitor)
 	}
 
-	monitorMsgChannel := monitors.MessageBroadcaster.Subscribe()
-	defer monitors.MessageBroadcaster.Unsubscribe(monitorMsgChannel)
+	monitorMsgChannel := events.MonitorLifecycleChannel.Subscribe()
+	defer events.MonitorLifecycleChannel.Unsubscribe(monitorMsgChannel)
 
 	for {
 		select {
@@ -51,8 +52,8 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 	defer cancelSelf()
 	log.Uptime.Debug().Dur("interval", monitor.GetInterval()).Msgf("Starting monitor runner: %s", monitor.GetName())
 
-	monitorMsgChannel := monitors.MessageBroadcaster.Subscribe()
-	defer monitors.MessageBroadcaster.Unsubscribe(monitorMsgChannel)
+	monitorMsgChannel := events.MonitorLifecycleChannel.Subscribe()
+	defer events.MonitorLifecycleChannel.Unsubscribe(monitorMsgChannel)
 
 	tickerChangedChannel := make(chan struct{}, 1)
 	monitorMutex := sync.Mutex{}
@@ -133,6 +134,11 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 				log.Uptime.Trace().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Running monitor")
 				response := monitor.Run()
 				log.Uptime.Debug().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Any("monitor_response", response).Msg("Monitor response")
+
+				events.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
+					Result:  &response,
+					Monitor: &monitor,
+				})
 
 				if response.IsError() {
 					log.Uptime.Error().Errs("errors", response.GetErrors()).Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Monitor check failed")

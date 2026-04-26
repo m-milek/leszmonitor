@@ -1,4 +1,4 @@
-package common
+package events
 
 import (
 	"sync"
@@ -6,18 +6,18 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 )
 
-type Broadcaster[T any] struct {
+type broadcaster[T any] struct {
 	mu          sync.Mutex
 	subscribers []chan T
 }
 
-func NewBroadcaster[T any]() *Broadcaster[T] {
-	return &Broadcaster[T]{
+func newBroadcaster[T any]() *broadcaster[T] {
+	return &broadcaster[T]{
 		subscribers: make([]chan T, 0),
 	}
 }
 
-func (b *Broadcaster[T]) Subscribe() <-chan T {
+func (b *broadcaster[T]) Subscribe() <-chan T {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -26,20 +26,20 @@ func (b *Broadcaster[T]) Subscribe() <-chan T {
 	return ch
 }
 
-func (b *Broadcaster[T]) Unsubscribe(ch <-chan T) {
+func (b *broadcaster[T]) Unsubscribe(ch <-chan T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	for i, subscriber := range b.subscribers {
 		if subscriber == ch {
 			b.subscribers = append(b.subscribers[:i], b.subscribers[i+1:]...)
-			close(subscriber) // Close the channel to signal no more messages
+			close(subscriber)
 			return
 		}
 	}
 }
 
-func (b *Broadcaster[T]) Broadcast(message T) {
+func (b *broadcaster[T]) Broadcast(message T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

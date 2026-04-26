@@ -34,6 +34,12 @@ const displayWebSocketStatus = (
   wsStatus: WebSocketStatus,
 ): WebSocketStatusDisplayConfig => {
   const label = connectionStatusLabel[wsStatus.status];
+  if (wsStatus.status === ReadyState.CLOSED) {
+    return {
+      label,
+      colorClass: "bg-red-700",
+    };
+  }
   if (!wsStatus.isAuthenticated) {
     return { label: `${label} (Unauthenticated)`, colorClass: "bg-yellow-500" };
   }

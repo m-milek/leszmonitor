@@ -1,25 +1,24 @@
 package monitors
 
-import (
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/m-milek/leszmonitor/events"
-)
+import "github.com/jackc/pgx/v5/pgtype"
 
-type monitorMessageStatus string
+type monitorLifecycleState string
 
 const (
-	Created monitorMessageStatus = "created"
-	Edited  monitorMessageStatus = "edited"
-	Deleted monitorMessageStatus = "deleted"
-	Stopped monitorMessageStatus = "stopped"
-	Started monitorMessageStatus = "started"
+	Created monitorLifecycleState = "created"
+	Edited  monitorLifecycleState = "edited"
+	Deleted monitorLifecycleState = "deleted"
+	Stopped monitorLifecycleState = "stopped"
+	Started monitorLifecycleState = "started"
 )
 
-type MonitorMessage struct {
+type MonitorLifecycleMessage struct {
 	ID      pgtype.UUID
-	Status  monitorMessageStatus
+	Status  monitorLifecycleState
 	Monitor *IConcreteMonitor
 }
 
-// MessageBroadcaster is a global channel for sending monitor messages.
-var MessageBroadcaster = common.NewBroadcaster[MonitorMessage]()
+type MonitorRunMessage struct {
+	Result  *IMonitorResponse
+	Monitor *IMonitor
+}

@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/auth"
+	common "github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/log"
 )
 
@@ -22,6 +25,10 @@ type wsAuthResponse struct {
 	Type   string `json:"type"`
 	Status string `json:"status"`
 }
+
+var (
+	WebSocketConnectionCount atomic.Int64 = atomic.Int64{}
+)
 
 func closeUnauthorized(conn *websocket.Conn, reason string) {
 	_ = conn.WriteControl(
@@ -85,37 +92,72 @@ func authenticateConnection(ctx context.Context, conn *websocket.Conn) (context.
 }
 
 func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
+	WebSocketConnectionCount.Add(1)
 	defer func() {
+		WebSocketConnectionCount.Add(-1)
 		_ = conn.Close()
 	}()
 
 	log.Api.Info().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection established")
+
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 
 	authCtx, ok := authenticateConnection(ctx, conn)
 	if !ok {
 		return
 	}
 
-	for {
-		select {
-		case <-authCtx.Done():
-			return
-		default:
-			messageType, message, err := conn.ReadMessage()
+	conn.SetReadDeadline(time.Time{})
+	conn.SetWriteDeadline(time.Time{})
+
+	monitorRunChannel := common.MonitorRunChannel.Subscribe()
+	defer common.MonitorRunChannel.Unsubscribe(monitorRunChannel)
+
+	var writeMu sync.Mutex
+
+	disconnected := make(chan struct{})
+	go func() {
+		defer close(disconnected)
+		for {
+			_, msg, err := conn.ReadMessage()
 			if err != nil {
 				return
 			}
+			if string(msg) == "ping" {
+				writeMu.Lock()
+				conn.WriteMessage(websocket.TextMessage, []byte("pong"))
+				writeMu.Unlock()
+			}
+		}
+	}()
 
-			if messageType == websocket.TextMessage && string(message) == "ping" {
-				if err := conn.WriteMessage(websocket.TextMessage, []byte("pong")); err != nil {
-					return
-				}
+	for {
+		select {
+		case <-authCtx.Done():
+			log.Api.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed due to context cancellation")
+			return
+		case <-disconnected:
+			log.Api.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed by client")
+			return
+		case runMsg := <-monitorRunChannel:
+			log.Uptime.Trace().Msg("Received monitor run event, sending notification to WebSocket client")
+			notification := map[string]interface{}{
+				"type": "monitor_run",
+				"data": runMsg,
+			}
+			notificationBytes, err := json.Marshal(notification)
+			if err != nil {
+				log.Api.Error().Err(err).Msg("Failed to marshal monitor run notification")
 				continue
 			}
-
-			if err := conn.WriteMessage(messageType, message); err != nil {
+			writeMu.Lock()
+			if err := conn.WriteMessage(websocket.TextMessage, notificationBytes); err != nil {
+				log.Api.Error().Err(err).Msg("Failed to write monitor run notification to WebSocket connection")
+				writeMu.Unlock()
 				return
 			}
+			writeMu.Unlock()
 		}
 	}
 }

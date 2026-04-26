@@ -8,9 +8,10 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
-	monitors "github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/models/monitors"
 )
 
 // MonitorServiceT handles monitor-related CRUD operations.
@@ -63,7 +64,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 		}
 	}
 
-	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		ID:      dbRes.GetID(),
 		Status:  monitors.Created,
 		Monitor: &dbRes,
@@ -96,7 +97,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *middle
 		return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor not found or already deleted")}
 	}
 
-	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		ID:      *deletedID,
 		Status:  monitors.Deleted,
 		Monitor: nil,
@@ -181,7 +182,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middle
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("monitor was not updated")}
 	}
 
-	monitors.MessageBroadcaster.Broadcast(monitors.MonitorMessage{
+	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		ID:      updatedMonitor.GetID(),
 		Status:  monitors.Edited,
 		Monitor: &updatedMonitor,
