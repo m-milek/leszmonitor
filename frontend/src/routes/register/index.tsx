@@ -19,8 +19,7 @@ import {
 } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
-import { userAtom, usernameAtom } from "@/lib/atoms.ts";
-import { useSetAtom } from "jotai";
+import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
 import { fetchUser, registerUser } from "@/lib/data/userData.ts";
@@ -48,8 +47,7 @@ const registerFormSchema = z
 function RegisterComponent() {
   const navigate = useNavigate();
 
-  const setUsername = useSetAtom(usernameAtom);
-  const setUser = useSetAtom(userAtom);
+  const { setUsername, setUser } = useAppStore();
 
   const form = useForm({
     defaultValues: {

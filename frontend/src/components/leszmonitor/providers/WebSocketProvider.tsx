@@ -1,8 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { WEBSOCKET_ENDPOINT } from "@/lib/data/webSocket.ts";
-import { webSocketConnectionStatusAtom } from "@/lib/atoms.ts";
-import { useSetAtom } from "jotai";
+import { useAppStore } from "@/lib/store.ts";
 import { getLoginToken } from "@/lib/utils.ts";
 import { toast } from "sonner";
 
@@ -11,7 +10,7 @@ type WebSocketProviderProps = {
 };
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
-  const setConnectionStatus = useSetAtom(webSocketConnectionStatusAtom);
+  const { setWebSocketConnectionStatus: setConnectionStatus } = useAppStore();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const onMessage = useCallback((event: MessageEvent) => {
