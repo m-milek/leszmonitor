@@ -43,7 +43,7 @@ func (m *PingMonitor) SetConfig(config IMonitorConfig) {
 	m.Config = *config.(*PingConfig)
 }
 
-func (m *PingMonitor) Run() IMonitorResponse {
+func (m *PingMonitor) Run() IMonitorResult {
 	return m.Config.run()
 }
 
@@ -74,7 +74,7 @@ func NewPingConfig(host string, port int, protocol string, timeout, retryCount i
 	return monitor, nil
 }
 
-func (m *PingConfig) run() IMonitorResponse {
+func (m *PingConfig) run() IMonitorResult {
 	monitorResponse := NewPingMonitorResponse()
 
 	portString := strconv.Itoa(m.Port)

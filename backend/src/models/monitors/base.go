@@ -10,7 +10,7 @@ import (
 )
 
 type IMonitor interface {
-	Run() IMonitorResponse
+	Run() IMonitorResult
 	Validate() error
 	GetID() pgtype.UUID
 	GetSlug() string
@@ -30,7 +30,7 @@ type IConcreteMonitor interface {
 }
 
 type IMonitorConfig interface {
-	run() IMonitorResponse
+	run() IMonitorResult
 	validate() error
 }
 
