@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/workers"
+	websocket2 "github.com/m-milek/leszmonitor/workers/websocket"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,5 +26,5 @@ func WebSocketConnectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	workers.RunWebSocketWorker(r.Context(), conn)
+	websocket2.RunWebSocketWorker(r.Context(), conn)
 }
