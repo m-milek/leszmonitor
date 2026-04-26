@@ -19,6 +19,6 @@ type MonitorLifecycleMessage struct {
 }
 
 type MonitorRunMessage struct {
-	Result  *IMonitorResponse
+	Result  *IMonitorResult
 	Monitor *IMonitor
 }

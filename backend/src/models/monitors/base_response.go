@@ -2,7 +2,7 @@ package monitors
 
 import "fmt"
 
-type IMonitorResponse interface {
+type IMonitorResult interface {
 	GetStatus() monitorResponseStatus
 	GetDuration() int64
 	GetTimestamp() int64
