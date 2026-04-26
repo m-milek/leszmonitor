@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { useAtomValue } from "jotai";
-import { projectAtom } from "@/lib/atoms.ts";
+import { useAppStore } from "@/lib/store.ts";
 
 export const Route = createFileRoute(
   "/_authenticated/projects/$projectId/",
@@ -12,7 +11,7 @@ export const Route = createFileRoute(
 
 function ProjectDashboard() {
   const { projectId } = Route.useParams();
-  const project = useAtomValue(projectAtom);
+  const { project } = useAppStore();
 
   return (
     <MainPanelContainer>

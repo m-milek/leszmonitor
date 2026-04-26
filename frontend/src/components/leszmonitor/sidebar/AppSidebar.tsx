@@ -20,8 +20,7 @@ import {
   LucideSettings,
   LucideUsers
 } from "lucide-react";
-import { useAtom, useAtomValue } from "jotai";
-import { projectAtom, userAtom, usernameAtom } from "@/lib/atoms.ts";
+import { useAppStore } from "@/lib/store.ts";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
@@ -67,11 +66,10 @@ const SidebarButton = ({
 };
 
 export const AppSidebar = () => {
-  const [username, setUsername] = useAtom(usernameAtom);
-  const [user, setUser] = useAtom(userAtom);
+  const { username, setUsername, user, setUser } = useAppStore();
   const hasInitialized = useRef(false);
 
-  const project = useAtomValue(projectAtom);
+  const { project } = useAppStore();
 
   useEffect(() => {
     if (hasInitialized.current) return;

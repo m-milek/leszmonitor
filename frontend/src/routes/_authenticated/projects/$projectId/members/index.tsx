@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
-import { useAtomValue } from "jotai";
-import { projectAtom } from "@/lib/atoms.ts";
+import { useAppStore } from "@/lib/store.ts";
 import {
   TypographyH1,
   TypographyH2,
@@ -32,7 +31,7 @@ export const Route = createFileRoute(
 });
 
 function ProjectMembersRoute() {
-  const project = useAtomValue(projectAtom);
+  const { project } = useAppStore();
   const queryClient = useQueryClient();
 
   const { data: users } = useQuery({
