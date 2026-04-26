@@ -1,5 +1,4 @@
-import { useAtomValue } from "jotai";
-import { webSocketConnectionStatusAtom } from "@/lib/atoms.ts";
+import { useAppStore } from "@/lib/store.ts";
 import { ReadyState } from "react-use-websocket";
 import { cn } from "@/lib/utils.ts";
 import {
@@ -50,7 +49,7 @@ const displayWebSocketStatus = (
 };
 
 export const WebSocketStatusIndicator = () => {
-  const wsStatus = useAtomValue(webSocketConnectionStatusAtom);
+  const { webSocketConnectionStatus: wsStatus } = useAppStore();
   const { label, colorClass } = displayWebSocketStatus(wsStatus);
   return (
     <Tooltip delayDuration={500}>
