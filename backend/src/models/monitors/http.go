@@ -32,7 +32,7 @@ type HttpMonitor struct {
 	Config      HttpConfig `json:"config" bson:"config"`
 }
 
-func (m *HttpMonitor) Run() IMonitorResponse {
+func (m *HttpMonitor) Run() IMonitorResult {
 	return m.Config.run()
 }
 
@@ -78,7 +78,7 @@ func newHttpClient() httpClient {
 
 var httpClientOrMock = newHttpClient()
 
-func (m *HttpConfig) run() IMonitorResponse {
+func (m *HttpConfig) run() IMonitorResult {
 	monitorResponse := NewHttpMonitorResponse()
 
 	httpResponse, elapsed, err := m.executeRequest(&httpClientOrMock)

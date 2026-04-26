@@ -1,4 +1,4 @@
-package workers
+package websocket
 
 import (
 	"context"
@@ -27,7 +27,7 @@ type wsAuthResponse struct {
 }
 
 var (
-	WebSocketConnectionCount atomic.Int64 = atomic.Int64{}
+	webSocketConnectionCount = atomic.Int64{}
 )
 
 func closeUnauthorized(conn *websocket.Conn, reason string) {
@@ -92,9 +92,9 @@ func authenticateConnection(ctx context.Context, conn *websocket.Conn) (context.
 }
 
 func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
-	WebSocketConnectionCount.Add(1)
+	webSocketConnectionCount.Add(1)
 	defer func() {
-		WebSocketConnectionCount.Add(-1)
+		webSocketConnectionCount.Add(-1)
 		_ = conn.Close()
 	}()
 
@@ -142,10 +142,7 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 			return
 		case runMsg := <-monitorRunChannel:
 			log.Uptime.Trace().Msg("Received monitor run event, sending notification to WebSocket client")
-			notification := map[string]interface{}{
-				"type": "monitor_run",
-				"data": runMsg,
-			}
+			notification := newMonitorRunNotification(*runMsg.Result, *runMsg.Monitor)
 			notificationBytes, err := json.Marshal(notification)
 			if err != nil {
 				log.Api.Error().Err(err).Msg("Failed to marshal monitor run notification")
