@@ -11,7 +11,7 @@ import type { WebSocketStatus } from "@/lib/data/webSocket.ts";
 
 const connectionStatusLabel = {
   [ReadyState.CONNECTING]: "Connecting",
-  [ReadyState.OPEN]: "Open",
+  [ReadyState.OPEN]: "OK",
   [ReadyState.CLOSING]: "Closing",
   [ReadyState.CLOSED]: "Closed",
   [ReadyState.UNINSTANTIATED]: "Uninstantiated",
@@ -57,7 +57,7 @@ export const WebSocketStatusIndicator = () => {
       <TooltipTrigger>
         <div className={cn("h-3 w-3 rounded-full", colorClass)} />
       </TooltipTrigger>
-      <TooltipContent side="top">WebSocket Status: {label}</TooltipContent>
+      <TooltipContent side="top">Connection Status: {label}</TooltipContent>
     </Tooltip>
   );
 };
