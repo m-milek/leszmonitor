@@ -14,9 +14,6 @@ describe("Center", () => {
     const content = screen.getByText("Centered content");
     const container = content.parentElement;
 
-    expect(content).not.toBeNull();
-    expect(container).not.toBeNull();
-
     if (!container) {
       throw new Error("Expected container element.");
     }
