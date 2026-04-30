@@ -33,6 +33,7 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
+      SQLITE_DB_PATH: ./leszmonitor.db
     cmds:
       - cd {{.BACKEND_SRC_DIR}} && air -build.stop_on_error true
 

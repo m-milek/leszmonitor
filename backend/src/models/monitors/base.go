@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	util2 "github.com/m-milek/leszmonitor/models/util"
 	"github.com/m-milek/leszmonitor/util"
 )
@@ -12,7 +12,7 @@ import (
 type IMonitor interface {
 	Run() IMonitorResult
 	Validate() error
-	GetID() pgtype.UUID
+	GetID() uuid.UUID
 	GetSlug() string
 	GenerateSlug()
 	GetProjectSlug() string
@@ -54,13 +54,13 @@ func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonit
 }
 
 type BaseMonitor struct {
-	ID          pgtype.UUID       `json:"id"`
-	Slug        string            `json:"slug"`        // Unique identifier for the monitor
-	ProjectSlug string            `json:"projectSlug"` // Slug of the project this monitor belongs to
-	Name        string            `json:"name"`        // Name of the monitor
-	Description string            `json:"description"` // Description of the monitor
-	Interval    int               `json:"interval"`    // How often to run the monitor in seconds
-	Type        MonitorConfigType `json:"type"`        // Type of the monitor (httpType, pingType, etc.)
+	ID          uuid.UUID         `json:"id" db:"id"`
+	Slug        string            `json:"slug" db:"slug"` // Unique identifier for the monitor
+	ProjectSlug string            `json:"projectSlug"`    // Slug of the project this monitor belongs to
+	Name        string            `json:"name"`           // Name of the monitor
+	Description string            `json:"description"`    // Description of the monitor
+	Interval    int               `json:"interval"`       // How often to run the monitor in seconds
+	Type        MonitorConfigType `json:"type"`           // Type of the monitor (httpType, pingType, etc.)
 	util2.Timestamps
 }
 
@@ -106,7 +106,7 @@ func (m *BaseMonitor) GetSlug() string {
 	return m.Slug
 }
 
-func (m *BaseMonitor) GetID() pgtype.UUID {
+func (m *BaseMonitor) GetID() uuid.UUID {
 	return m.ID
 }
 

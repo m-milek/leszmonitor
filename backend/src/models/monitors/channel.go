@@ -1,6 +1,6 @@
 package monitors
 
-import "github.com/jackc/pgx/v5/pgtype"
+import "github.com/google/uuid"
 
 type monitorLifecycleState string
 
@@ -13,7 +13,7 @@ const (
 )
 
 type MonitorLifecycleMessage struct {
-	ID      pgtype.UUID
+	ID      uuid.UUID
 	Status  monitorLifecycleState
 	Monitor *IConcreteMonitor
 }

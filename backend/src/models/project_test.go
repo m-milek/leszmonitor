@@ -3,14 +3,14 @@ package models
 import (
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
-func makeUUID(a byte) pgtype.UUID {
+func makeUUID(a byte) uuid.UUID {
 	var b [16]byte
 	b[0] = a
-	return pgtype.UUID{Bytes: b, Valid: true}
+	return uuid.UUID(b)
 }
 
 func TestNewProject_CreatesProjectWithOwner(t *testing.T) {
