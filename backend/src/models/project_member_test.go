@@ -3,14 +3,14 @@ package models
 import (
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
-func makeMemberUUID(a byte) pgtype.UUID {
+func makeMemberUUID(a byte) uuid.UUID {
 	var b [16]byte
 	b[0] = a
-	return pgtype.UUID{Bytes: b, Valid: true}
+	return uuid.UUID(b)
 }
 
 func TestNewProjectMember_Success(t *testing.T) {
@@ -26,7 +26,7 @@ func TestNewProjectMember_Success(t *testing.T) {
 }
 
 func TestNewProjectMember_InvalidID_ReturnsError(t *testing.T) {
-	invalid := pgtype.UUID{} // Valid=false
+	invalid := uuid.Nil // invalid ID
 
 	member, err := NewProjectMember(invalid, RoleMember)
 

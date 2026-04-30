@@ -2,25 +2,24 @@ package util
 
 import (
 	"encoding/json"
-	"github.com/jackc/pgx/v5/pgtype"
 	"time"
 )
 
 // Timestamps holds createdAt and updatedAt timestamps for database models.
 type Timestamps struct {
-	CreatedAt utcTimestamptz `json:"createdAt"`
-	UpdatedAt utcTimestamptz `json:"updatedAt"`
+	CreatedAt UTCTime  `json:"createdAt" db:"created_at"`
+	UpdatedAt *UTCTime `json:"updatedAt" db:"updated_at"`
 }
 
-// utcTimestamptz is a wrapper around pgtype.Timestamptz that marshals time in UTC format.
-type utcTimestamptz struct {
-	pgtype.Timestamptz
+// UTCTime is a wrapper around time.Time that marshals time in UTC format.
+type UTCTime struct {
+	time.Time
 }
 
-// MarshalJSON implements the json.Marshaler interface for utcTimestamptz.
+// MarshalJSON implements the json.Marshaler interface for UTCTime.
 // It converts the time to UTC before marshaling to JSON.
-func (t utcTimestamptz) MarshalJSON() ([]byte, error) {
-	if !t.Valid {
+func (t UTCTime) MarshalJSON() ([]byte, error) {
+	if t.Time.IsZero() {
 		return []byte("null"), nil
 	}
 	utcTime := t.Time.UTC()

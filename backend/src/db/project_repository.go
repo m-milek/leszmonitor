@@ -2,41 +2,26 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models"
 )
 
 type IProjectRepository interface {
 	InsertProject(ctx context.Context, project *models.Project) error
-	GetProjectByID(ctx context.Context, id pgtype.UUID) (*models.Project, error)
+	GetProjectByID(ctx context.Context, id uuid.UUID) (*models.Project, error)
 	GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error)
-	GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error)
+	GetProjectsByUserID(ctx context.Context, userID uuid.UUID) ([]models.Project, error)
 	UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error)
 	DeleteProject(ctx context.Context, projectSlug string) (bool, error)
 	AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error)
-	RemoveMemberFromProject(ctx context.Context, projectSlug string, userID pgtype.UUID) (bool, error)
+	RemoveMemberFromProject(ctx context.Context, projectSlug string, userID uuid.UUID) (bool, error)
 }
 
 type projectRepository struct {
 	baseRepository
-}
-
-// projectMemberFromCollectableRow maps a pgx.CollectableRow to a models.ProjectMember.
-func projectMemberFromCollectableRow(row pgx.CollectableRow) (models.ProjectMember, error) {
-	member := models.ProjectMember{}
-	err := row.Scan(&member.ID, &member.Username, &member.Role, &member.CreatedAt, &member.UpdatedAt)
-	return member, err
-}
-
-// projectFromCollectableRow maps a pgx.CollectableRow to a models.Project struct (without members).
-func projectFromCollectableRow(row pgx.CollectableRow) (models.Project, error) {
-	project := models.Project{}
-	err := row.Scan(&project.ID, &project.Slug, &project.Name, &project.Description, &project.CreatedAt, &project.UpdatedAt)
-	return project, err
 }
 
 func newProjectRepository(repository baseRepository) IProjectRepository {
@@ -47,15 +32,12 @@ func newProjectRepository(repository baseRepository) IProjectRepository {
 
 // loadMembers fetches members for a single project and attaches them.
 func (r *projectRepository) loadMembers(ctx context.Context, project *models.Project) error {
-	memberRows, err := r.pool.Query(ctx,
-		`SELECT up.user_id, u.username, up.role, up.created_at, up.updated_at
+	var members []models.ProjectMember
+	err := r.pool.SelectContext(ctx, &members,
+		`SELECT up.user_id as id, u.username as username, up.role as role, up.created_at, up.updated_at
 		 FROM user_projects up JOIN users u ON u.id = up.user_id
 		 WHERE up.project_id = $1`,
 		project.ID)
-	if err != nil {
-		return err
-	}
-	members, err := pgx.CollectRows(memberRows, projectMemberFromCollectableRow)
 	if err != nil {
 		return err
 	}
@@ -65,51 +47,52 @@ func (r *projectRepository) loadMembers(ctx context.Context, project *models.Pro
 
 func (r *projectRepository) InsertProject(ctx context.Context, project *models.Project) error {
 	_, err := dbWrap(ctx, "InsertProject", func() (*any, error) {
-		tx, err := r.pool.Begin(ctx)
+		tx, err := r.pool.BeginTxx(ctx, nil)
 		if err != nil {
 			return nil, err
 		}
-		defer func() { _ = tx.Rollback(ctx) }()
+		defer func() { _ = tx.Rollback() }()
 
-		var projectID pgtype.UUID
-		row := tx.QueryRow(ctx,
-			`INSERT INTO projects (slug, name, description) VALUES ($1, $2, $3) RETURNING id`,
-			project.Slug, project.Name, project.Description)
+		if project.ID == uuid.Nil {
+			project.ID = uuid.New()
+		}
+
+		var projectID uuid.UUID
+		row := tx.QueryRowxContext(ctx,
+			`INSERT INTO projects (id, slug, name, description) VALUES ($1, $2, $3, $4) RETURNING id`,
+			project.ID, project.Slug, project.Name, project.Description)
 		if err = row.Scan(&projectID); err != nil {
-			if pgErrIs(err, pgerrcode.UniqueViolation) {
+			if isUniqueViolation(err) {
 				return nil, ErrAlreadyExists
 			}
 			return nil, err
 		}
+		project.ID = projectID
 
 		// Insert the owner member
-		_, err = tx.Exec(ctx,
+		_, err = tx.ExecContext(ctx,
 			`INSERT INTO user_projects (project_id, user_id, role) VALUES ($1, $2, $3)`,
 			projectID, project.Members[0].ID, project.Members[0].Role)
 		if err != nil {
 			return nil, err
 		}
 
-		return nil, tx.Commit(ctx)
+		return nil, tx.Commit()
 	})
-	if pgErrIs(err, pgerrcode.UniqueViolation) {
+	if isUniqueViolation(err) {
 		return ErrAlreadyExists
 	}
 	return err
 }
 
-func (r *projectRepository) GetProjectByID(ctx context.Context, id pgtype.UUID) (*models.Project, error) {
+func (r *projectRepository) GetProjectByID(ctx context.Context, id uuid.UUID) (*models.Project, error) {
 	return dbWrap(ctx, "GetProjectByID", func() (*models.Project, error) {
-		rows, err := r.pool.Query(ctx,
+		var project models.Project
+		err := r.pool.GetContext(ctx, &project,
 			`SELECT id, slug, name, description, created_at, updated_at FROM projects WHERE id = $1`,
 			id)
 		if err != nil {
-			return nil, err
-		}
-
-		project, err := pgx.CollectExactlyOneRow(rows, projectFromCollectableRow)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
@@ -125,16 +108,12 @@ func (r *projectRepository) GetProjectByID(ctx context.Context, id pgtype.UUID) 
 
 func (r *projectRepository) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
 	return dbWrap(ctx, "GetProjectBySlug", func() (*models.Project, error) {
-		rows, err := r.pool.Query(ctx,
+		var project models.Project
+		err := r.pool.GetContext(ctx, &project,
 			`SELECT id, slug, name, description, created_at, updated_at FROM projects WHERE slug = $1`,
 			slug)
 		if err != nil {
-			return nil, err
-		}
-
-		project, err := pgx.CollectExactlyOneRow(rows, projectFromCollectableRow)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
@@ -148,19 +127,15 @@ func (r *projectRepository) GetProjectBySlug(ctx context.Context, slug string) (
 	})
 }
 
-func (r *projectRepository) GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error) {
+func (r *projectRepository) GetProjectsByUserID(ctx context.Context, userID uuid.UUID) ([]models.Project, error) {
 	return dbWrap(ctx, "GetProjectsByUserID", func() ([]models.Project, error) {
-		rows, err := r.pool.Query(ctx,
+		var projects []models.Project
+		err := r.pool.SelectContext(ctx, &projects,
 			`SELECT p.id, p.slug, p.name, p.description, p.created_at, p.updated_at
 			 FROM projects p
 			 JOIN user_projects up ON up.project_id = p.id
 			 WHERE up.user_id = $1`,
 			userID)
-		if err != nil {
-			return nil, err
-		}
-
-		projects, err := pgx.CollectRows(rows, projectFromCollectableRow)
 		if err != nil {
 			return nil, err
 		}
@@ -171,19 +146,27 @@ func (r *projectRepository) GetProjectsByUserID(ctx context.Context, userID pgty
 			}
 		}
 
+		if projects == nil {
+			projects = []models.Project{}
+		}
+
 		return projects, nil
 	})
 }
 
 func (r *projectRepository) UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error) {
 	return dbWrap(ctx, "UpdateProject", func() (bool, error) {
-		result, err := r.pool.Exec(ctx,
+		result, err := r.pool.ExecContext(ctx,
 			`UPDATE projects SET slug = $1, name = $2, description = $3 WHERE id = $4`,
 			newProject.Slug, newProject.Name, newProject.Description, oldProject.ID)
 		if err != nil {
 			return false, err
 		}
-		if result.RowsAffected() == 0 {
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return false, err
+		}
+		if rows == 0 {
 			return false, ErrNotFound
 		}
 		return true, nil
@@ -192,60 +175,72 @@ func (r *projectRepository) UpdateProject(ctx context.Context, oldProject, newPr
 
 func (r *projectRepository) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
 	return dbWrap(ctx, "DeleteProject", func() (bool, error) {
-		result, err := r.pool.Exec(ctx,
+		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM projects WHERE slug = $1`,
 			projectSlug)
 		if err != nil {
 			return false, err
 		}
-		return result.RowsAffected() > 0, nil
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return false, err
+		}
+		return rows > 0, nil
 	})
 }
 
 func (r *projectRepository) AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error) {
 	return dbWrap(ctx, "AddMemberToProject", func() (bool, error) {
-		var projectID pgtype.UUID
-		err := r.pool.QueryRow(ctx,
+		var projectID uuid.UUID
+		err := r.pool.QueryRowxContext(ctx,
 			`SELECT id FROM projects WHERE slug = $1`, projectSlug).Scan(&projectID)
 		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				return false, ErrNotFound
 			}
 			return false, err
 		}
 
-		result, err := r.pool.Exec(ctx,
+		result, err := r.pool.ExecContext(ctx,
 			`INSERT INTO user_projects (project_id, user_id, role) VALUES ($1, $2, $3)`,
 			projectID, member.ID, member.Role)
 		if err != nil {
-			if pgErrIs(err, pgerrcode.UniqueViolation) {
+			if isUniqueViolation(err) {
 				return false, ErrAlreadyExists
 			}
 			return false, err
 		}
-		return result.RowsAffected() > 0, nil
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return false, err
+		}
+		return rows > 0, nil
 	})
 }
 
-func (r *projectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID pgtype.UUID) (bool, error) {
+func (r *projectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID uuid.UUID) (bool, error) {
 	return dbWrap(ctx, "RemoveMemberFromProject", func() (bool, error) {
-		var projectID pgtype.UUID
-		err := r.pool.QueryRow(ctx,
+		var projectID uuid.UUID
+		err := r.pool.QueryRowxContext(ctx,
 			`SELECT id FROM projects WHERE slug = $1`, projectSlug).Scan(&projectID)
 		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				return false, ErrNotFound
 			}
 			return false, err
 		}
 
-		result, err := r.pool.Exec(ctx,
+		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM user_projects WHERE project_id = $1 AND user_id = $2`,
 			projectID, userID)
 		if err != nil {
 			return false, err
 		}
-		if result.RowsAffected() == 0 {
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return false, err
+		}
+		if rows == 0 {
 			return false, ErrNotFound
 		}
 		return true, nil

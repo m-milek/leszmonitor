@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -53,7 +53,7 @@ func TestFromReader(t *testing.T) {
 		// Create a test HTTP monitor
 		testMonitor := NewTestMonitor().AsHttp()
 		testMonitor.Name = "Test HTTP Monitor"
-		testMonitor.ID = pgtype.UUID{}
+		testMonitor.ID = uuid.Nil
 		testMonitor.Interval = 30
 		testMonitor.HttpConfig.URL = "https://example.com/api"
 		testMonitor.HttpConfig.ExpectedStatusCodes = []int{200, 201}
@@ -71,7 +71,7 @@ func TestFromReader(t *testing.T) {
 		// Assert
 		assert.NoError(t, err)
 		assert.NotNil(t, monitor)
-		assert.Equal(t, pgtype.UUID{}, monitor.GetID())
+		assert.Equal(t, uuid.Nil, monitor.GetID())
 		assert.Equal(t, "Test HTTP Monitor", monitor.GetName())
 		assert.Equal(t, httpType, monitor.GetType())
 
@@ -87,7 +87,7 @@ func TestFromReader(t *testing.T) {
 		testMonitor := NewTestMonitor().AsPing()
 		testMonitor.Name = "Test pingType Monitor"
 		testMonitor.Description = "This is a test pingType monitor"
-		testMonitor.ID = pgtype.UUID{}
+		testMonitor.ID = uuid.Nil
 		testMonitor.Interval = 10
 		testMonitor.PingConfig.Host = "pingType.example.com"
 		testMonitor.PingConfig.Port = 443

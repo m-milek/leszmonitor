@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/mock"
 )
@@ -31,7 +31,7 @@ func (r *MockUserRepository) GetUserByUsername(ctx context.Context, username str
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (r *MockUserRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error) {
+func (r *MockUserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	args := r.Called(ctx, id)
 	return args.Get(0).(*models.User), args.Error(1)
 }
@@ -58,7 +58,7 @@ func (r *MockProjectRepository) GetProjectBySlug(ctx context.Context, slug strin
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug pgtype.UUID) (*models.Project, error) {
+func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug uuid.UUID) (*models.Project, error) {
 	args := r.Called(ctx, slug)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -66,7 +66,7 @@ func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug pgtype.
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]models.Project, error) {
+func (r *MockProjectRepository) GetProjectsByUserID(ctx context.Context, userID uuid.UUID) ([]models.Project, error) {
 	args := r.Called(ctx, userID)
 	return args.Get(0).([]models.Project), args.Error(1)
 }
@@ -86,7 +86,7 @@ func (r *MockProjectRepository) AddMemberToProject(ctx context.Context, projectS
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID pgtype.UUID) (bool, error) {
+func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID uuid.UUID) (bool, error) {
 	args := r.Called(ctx, projectSlug, userID)
 	return args.Bool(0), args.Error(1)
 }
