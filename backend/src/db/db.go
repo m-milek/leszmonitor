@@ -8,18 +8,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/log"
+	sqlite3 "github.com/mattn/go-sqlite3"
 )
 
 var ErrNotFound = errors.New("document not found")
 var ErrAlreadyExists = errors.New("resource already exists")
 
-func pgErrIs(err error, pgErrCode string) bool {
-	var e *pgconn.PgError
-	return errors.As(err, &e) && e.Code == pgErrCode
+func isUniqueViolation(err error) bool {
+	var sqliteErr sqlite3.Error
+	return errors.As(err, &sqliteErr) &&
+		errors.Is(sqliteErr, sqlite3.ErrConstraint) &&
+		errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique)
 }
 
 const dbSchemaFilePath = "db/schema.sql"
@@ -34,7 +36,7 @@ type DB interface {
 	Close()
 }
 
-// DBClient implements DB using a pgx connection pool.
+// DBClient implements DB using an sqlx DB.
 type DBClient struct {
 	dbPool
 	// cached repositories to avoid re-allocation on every getter call
@@ -44,7 +46,7 @@ type DBClient struct {
 }
 
 type dbPool struct {
-	pool *pgxpool.Pool
+	pool *sqlx.DB
 }
 
 type dbResult[T any] struct {
@@ -56,7 +58,7 @@ type baseRepository struct {
 	dbPool
 }
 
-func newBaseRepository(pool *pgxpool.Pool) baseRepository {
+func newBaseRepository(pool *sqlx.DB) baseRepository {
 	return baseRepository{
 		dbPool: dbPool{pool: pool},
 	}
@@ -64,7 +66,7 @@ func newBaseRepository(pool *pgxpool.Pool) baseRepository {
 
 // New creates a new DB client using the provided DSN. It pings the DB and ensures the schema exists.
 func New(ctx context.Context, dsn string) (*DBClient, error) {
-	pool, err := pgxpool.New(ctx, dsn)
+	pool, err := sqlx.ConnectContext(ctx, "sqlite3", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -86,19 +88,19 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 }
 
 // initSchema reads the database schema from a file and executes it to set up the database structure.
-func (c *DBClient) initSchema(ctx context.Context, pool *pgxpool.Pool) error {
+func (c *DBClient) initSchema(ctx context.Context, pool *sqlx.DB) error {
 	schemaBytes, err := os.ReadFile(dbSchemaFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read DB schema file: %w", err)
 	}
 	schema := string(schemaBytes)
 
-	status, err := pool.Exec(ctx, schema)
+	_, err = pool.ExecContext(ctx, schema)
 	if err != nil {
 		return err
 	}
 
-	log.Db.Info().Msgf("Database schema initialized: %s", status.String())
+	log.Db.Info().Msg("Database schema initialized successfully")
 	return nil
 }
 
@@ -138,9 +140,9 @@ func dbWrap[T any](timeoutCtx context.Context, operationName string, operation f
 	}
 	result, err := fun()
 
-	if err != nil {
+	if err != nil && err != ErrNotFound {
 		log.Db.Error().Err(err).Msgf("DB operation %s failed", operationName)
-	} else {
+	} else if err == nil {
 		log.Db.Trace().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
 	}
 
@@ -183,15 +185,18 @@ func InitFromEnv(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	log.Db.Info().Msg("Connecting to PostgreSQL...")
+	log.Db.Info().Msg("Connecting to SQLite...")
 
-	uri := os.Getenv(config.PostgresURI)
+	uri := os.Getenv(config.SqliteDbPath)
+	if uri == "" {
+		log.Db.Fatal().Msg("SQLite DB path is not defined")
+	}
 	c, err := New(ctx, uri)
 	if err != nil {
 		return err
 	}
 
 	Set(c)
-	log.Db.Info().Msg("PostgreSQL connection established.")
+	log.Db.Info().Msg("SQLite connection established.")
 	return nil
 }

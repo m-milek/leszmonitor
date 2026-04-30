@@ -3,14 +3,13 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestUTCTimestamptz_MarshalJSON_ReturnsNullForInvalid(t *testing.T) {
-	val := utcTimestamptz{Timestamptz: pgtype.Timestamptz{Valid: false}}
+	val := UTCTime{Time: time.Time{}}
 
 	b, err := val.MarshalJSON()
 
@@ -24,7 +23,7 @@ func TestUTCTimestamptz_MarshalJSON_UTCAndRFC3339(t *testing.T) {
 	in := time.Date(2024, 12, 31, 23, 0, 0, 0, loc)
 	expectedUTC := in.UTC().Format(time.RFC3339)
 
-	val := utcTimestamptz{Timestamptz: pgtype.Timestamptz{Time: in, Valid: true}}
+	val := UTCTime{Time: in}
 
 	b, err := val.MarshalJSON()
 
@@ -39,8 +38,8 @@ func TestTimestamps_MarshalJSON_FieldTagsAndNestedMarshaler(t *testing.T) {
 	expectedCreated := created.UTC().Format(time.RFC3339)
 
 	ts := Timestamps{
-		CreatedAt: utcTimestamptz{Timestamptz: pgtype.Timestamptz{Time: created, Valid: true}},
-		UpdatedAt: utcTimestamptz{Timestamptz: pgtype.Timestamptz{Valid: false}},
+		CreatedAt: UTCTime{Time: created},
+		UpdatedAt: nil,
 	}
 
 	b, err := json.Marshal(ts)
