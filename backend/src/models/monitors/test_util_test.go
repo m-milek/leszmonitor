@@ -1,14 +1,14 @@
 package monitors
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/util"
 )
 
 // TestMonitor provides a simple way to create monitors for testing
 type TestMonitor struct {
 	// Base fields
-	ID          pgtype.UUID
+	ID          uuid.UUID
 	Slug        string
 	Name        string
 	Description string
@@ -25,7 +25,7 @@ type TestMonitor struct {
 func NewTestMonitor() *TestMonitor {
 	name := "Test Monitor"
 	return &TestMonitor{
-		ID:          pgtype.UUID{Valid: false},
+		ID:          uuid.Nil,
 		Slug:        util.SlugFromString(name),
 		Name:        name,
 		Description: "Test monitor description",

@@ -2,18 +2,17 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models"
 )
 
 type IUserRepository interface {
 	InsertUser(ctx context.Context, user *models.User) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
-	GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetAllUsers(ctx context.Context) ([]models.User, error)
 }
 
@@ -27,23 +26,20 @@ func newUserRepository(repository baseRepository) IUserRepository {
 	}
 }
 
-func userFromCollectableRow(row pgx.CollectableRow) (models.User, error) {
-	var user models.User
-	err := row.Scan(&user.ID, &user.Username, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
-
-	return user, err
-}
-
 func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
 	return dbWrap(ctx, "CreateUser", func() (*models.User, error) {
+		if user.ID == uuid.Nil {
+			user.ID = uuid.New()
+		}
+
 		var createdUser models.User
-		err := r.pool.QueryRow(ctx,
-			`INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, password_hash, created_at, updated_at`,
-			user.Username, user.PasswordHash,
-		).Scan(&createdUser.ID, &createdUser.Username, &createdUser.PasswordHash, &createdUser.CreatedAt, &createdUser.UpdatedAt)
+		err := r.pool.QueryRowxContext(ctx,
+			`INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3) RETURNING id, username, password_hash, created_at, updated_at`,
+			user.ID, user.Username, user.PasswordHash,
+		).StructScan(&createdUser)
 
 		if err != nil {
-			if pgErrIs(err, pgerrcode.UniqueViolation) {
+			if isUniqueViolation(err) {
 				return nil, ErrAlreadyExists
 			}
 			return nil, err
@@ -55,16 +51,12 @@ func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*mo
 
 func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
-		row, err := r.pool.Query(ctx,
+		var user models.User
+		err := r.pool.GetContext(ctx, &user,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE username=$1`,
 			username)
 		if err != nil {
-			return nil, err
-		}
-
-		user, err := pgx.CollectExactlyOneRow(row, userFromCollectableRow)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
@@ -73,18 +65,14 @@ func (r *UserRepository) GetUserByUsername(ctx context.Context, username string)
 	})
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*models.User, error) {
-	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
-		row, err := r.pool.Query(ctx,
+func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	return dbWrap(ctx, "GetUserByID", func() (*models.User, error) {
+		var user models.User
+		err := r.pool.GetContext(ctx, &user,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE id=$1`,
 			id)
 		if err != nil {
-			return nil, err
-		}
-
-		user, err := pgx.CollectExactlyOneRow(row, userFromCollectableRow)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound
 			}
 			return nil, err
@@ -95,15 +83,16 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id pgtype.UUID) (*mode
 
 func (r *UserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
-		rows, err := r.pool.Query(ctx,
+		var users []models.User
+		err := r.pool.SelectContext(ctx, &users,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users`)
 		if err != nil {
 			return nil, err
 		}
-		defer rows.Close()
+		if users == nil {
+			users = []models.User{}
+		}
 
-		users, err := pgx.CollectRows(rows, userFromCollectableRow)
-
-		return users, err
+		return users, nil
 	})
 }

@@ -2,15 +2,15 @@ package models
 
 import (
 	"fmt"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models/util"
 )
 
 // User represents a user in the system.
 type User struct {
-	ID           pgtype.UUID `json:"id"`
-	Username     string      `json:"username"`
-	PasswordHash string      `json:"-"`
+	ID           uuid.UUID `json:"id" db:"id"`
+	Username     string    `json:"username" db:"username"`
+	PasswordHash string    `json:"-" db:"password_hash"`
 	util.Timestamps
 }
 

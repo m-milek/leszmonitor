@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
@@ -27,14 +27,14 @@ func setupTestAuthorizationService() (context.Context, *authorizationServiceT, *
 
 func createTestUser(username string) *models.User {
 	return &models.User{
-		ID:       pgtype.UUID{Bytes: [16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}, Valid: true},
+		ID:       uuid.UUID{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16},
 		Username: username,
 	}
 }
 
 func createTestProject(name string, members []models.ProjectMember) *models.Project {
 	project := &models.Project{
-		ID:      pgtype.UUID{Bytes: [16]byte{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, Valid: true},
+		ID:      uuid.UUID{16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
 		Members: members,
 	}
 	project.SlugFromName.Init(name)
@@ -145,7 +145,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 
 		user := createTestUser("testuser")
 		otherUser := createTestUser("otheruser")
-		otherUser.ID = pgtype.UUID{Bytes: [16]byte{99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84}, Valid: true}
+		otherUser.ID = uuid.UUID{99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84}
 
 		project := createTestProject("test-project", []models.ProjectMember{{ID: otherUser.ID, Role: models.RoleOwner}})
 		mockProjectAndUser(mockDB, ctx, project, user)
