@@ -19,35 +19,19 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    depends_on:
-      - db
     ports:
       - "7001:7001"
     env_file:
       - ./backend/.env
     environment:
       - LOG_FILE_PATH=/var/log/leszmonitor/backend.log
-    restart: unless-stopped
-    networks:
-      - leszmonitor
-
-  db:
-    image: timescale/timescaledb:2.22.1-pg17
-    environment:
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: leszmonitor
-      POSTGRES_USER: leszmonitor-dev
-      POSTGRES_PASSWORD: dev-password
-    ports:
-      - "5432:5432"
+      - SQLITE_DB_PATH=/data/leszmonitor.db
     volumes:
-      - timescale_data:/var/lib/postgresql/data
+      - ./backend/src/leszmonitor.db:/data/leszmonitor.db
+    restart: unless-stopped
     networks:
       - leszmonitor
 
 networks:
   leszmonitor:
     driver: bridge
-
-volumes:
-  timescale_data:

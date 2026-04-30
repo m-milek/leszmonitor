@@ -12,17 +12,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/log"
-	sqlite3 "github.com/mattn/go-sqlite3"
 )
 
 var ErrNotFound = errors.New("document not found")
 var ErrAlreadyExists = errors.New("resource already exists")
 
 func isUniqueViolation(err error) bool {
-	var sqliteErr sqlite3.Error
-	return errors.As(err, &sqliteErr) &&
-		errors.Is(sqliteErr, sqlite3.ErrConstraint) &&
-		errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique)
+	if err == nil {
+		return false
+	}
+	// SQLite reports unique constraint errors as text like: "UNIQUE constraint failed: table.column".
+	return strings.Contains(strings.ToLower(err.Error()), "unique constraint failed")
 }
 
 const dbSchemaFilePath = "db/schema.sql"
@@ -67,7 +67,7 @@ func newBaseRepository(pool *sqlx.DB) baseRepository {
 
 // New creates a new DB client using the provided DSN. It pings the DB and ensures the schema exists.
 func New(ctx context.Context, dsn string) (*DBClient, error) {
-	pool, err := sqlx.ConnectContext(ctx, "sqlite3", dsn)
+	pool, err := sqlx.ConnectContext(ctx, "sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
