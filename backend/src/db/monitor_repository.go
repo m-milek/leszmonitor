@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -155,28 +156,50 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			id = uuid.New() // manually inject UUID
 		}
 
-		row := r.pool.QueryRowxContext(ctx,
-			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, config)
-			SELECT $8, $1, p.id, $3, $4, $5, $6, $7
-			FROM projects p WHERE p.slug = $2
-			RETURNING
-				id, slug, name, description, interval, kind, config, created_at, updated_at,
-				$2 AS project_slug`,
-			monitor.GetSlug(),
+		configBytes, err := json.Marshal(monitor.GetConfig())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal monitor config: %w", err)
+		}
+
+		var projectID uuid.UUID
+		if err := r.pool.QueryRowxContext(ctx,
+			`SELECT id FROM projects WHERE slug = $1`,
 			monitor.GetProjectSlug(),
+		).Scan(&projectID); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+
+		_, err = r.pool.ExecContext(ctx,
+			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, config)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			id,
+			monitor.GetSlug(),
+			projectID,
 			monitor.GetName(),
 			monitor.GetDescription(),
 			int(monitor.GetInterval().Seconds()),
 			string(monitor.GetType()),
-			monitor.GetConfig(),
-			id,
+			configBytes,
 		)
-
-		created, err := mapRowToMonitor(row)
 		if err != nil {
 			if isUniqueViolation(err) {
 				return nil, ErrAlreadyExists
 			}
+			return nil, err
+		}
+
+		row := r.pool.QueryRowxContext(ctx,
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			 FROM monitors m
+			 JOIN projects p ON p.id = m.project_id
+			 WHERE m.id = $1`,
+			id,
+		)
+		created, err := mapRowToMonitor(row)
+		if err != nil {
 			return nil, err
 		}
 		return created, nil
@@ -185,6 +208,11 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 
 func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error) {
 	return dbWrap(ctx, "UpdateMonitor", func() (monitors.IConcreteMonitor, error) {
+		configBytes, err := json.Marshal(newMonitor.GetConfig())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal monitor config: %w", err)
+		}
+
 		row := r.pool.QueryRowxContext(ctx,
 			`UPDATE monitors m
 			SET slug=$1, project_id=(SELECT p.id FROM projects p WHERE p.slug=$2), name=$3, description=$4, interval=$5, kind=$6, config=$7
@@ -198,7 +226,7 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 			newMonitor.GetDescription(),
 			int(newMonitor.GetInterval().Seconds()),
 			string(newMonitor.GetType()),
-			newMonitor.GetConfig(),
+			configBytes,
 			newMonitor.GetID(),
 		)
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -191,6 +192,7 @@ func InitFromEnv(ctx context.Context) error {
 	if uri == "" {
 		log.Db.Fatal().Msg("SQLite DB path is not defined")
 	}
+	uri = ensureSQLiteUTC(uri)
 	c, err := New(ctx, uri)
 	if err != nil {
 		return err
@@ -199,4 +201,14 @@ func InitFromEnv(ctx context.Context) error {
 	Set(c)
 	log.Db.Info().Msg("SQLite connection established.")
 	return nil
+}
+
+func ensureSQLiteUTC(dsn string) string {
+	if strings.Contains(dsn, "_loc=") {
+		return dsn
+	}
+	if strings.Contains(dsn, "?") {
+		return dsn + "&_loc=UTC"
+	}
+	return dsn + "?_loc=UTC"
 }
