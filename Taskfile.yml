@@ -8,25 +8,7 @@ includes:
     taskfile: ./frontend
     dir: ./frontend
 
-vars:
-  LOCAL_POSTGRES_URI: 'postgres://leszmonitor-dev:dev-password@localhost:5432/leszmonitor?sslmode=disable'
-
-env:
-  POSTGRES_URI: '{{.LOCAL_POSTGRES_URI}}'
-
 tasks:
-  db:start:
-    desc: Run the TimescaleDB Docker container
-    cmds:
-      - docker compose up -d db
-      - echo "TimescaleDB container started on port 5432"
-
-  db:stop:
-    desc: Stop the TimescaleDB Docker container
-    cmds:
-      - docker compose stop db
-      - echo "TimescaleDB container stopped"
-
   # Docker compose tasks
   docker:up:
     desc: Start all services using Docker Compose
@@ -46,19 +28,19 @@ tasks:
   # Combined tasks
   dev:
     desc: Run both frontend and backend in development mode
-    deps: [backend:dev, frontend:dev]
+    deps: [ backend:dev, frontend:dev ]
 
   build:
     desc: Build both frontend and backend
-    deps: [backend:build, frontend:build]
+    deps: [ backend:build, frontend:build ]
 
   test:
     desc: Run tests for both frontend and backend
-    deps: [backend:test, frontend:test]
+    deps: [ backend:test, frontend:test ]
 
   clean:
     desc: Clean all build artifacts
-    deps: [frontend:clean, backend:clean, logs:clean]
+    deps: [ frontend:clean, backend:clean, logs:clean ]
 
   logs:clean:
     desc: Remove logs

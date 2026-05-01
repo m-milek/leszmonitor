@@ -24,6 +24,11 @@ tasks:
 
   run:
     desc: Run the back-end binary
+    env:
+      API_PORT: '7001'
+      JWT_SECRET: 'your_jwt_secret'
+      JWT_EXPIRY_HOURS: '24'
+      SQLITE_DB_PATH: ./leszmonitor.db
     cmds:
       - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
 
