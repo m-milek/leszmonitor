@@ -9,21 +9,20 @@ includes:
     dir: ./frontend
 
 tasks:
-  # Docker compose tasks
+  docker:build:
+    desc: Build both frontend and backend Docker images
+    cmds:
+      - docker build -t leszmonitor .
+
   docker:up:
     desc: Start all services using Docker Compose
     cmds:
-      - docker compose up -d
+      - docker compose up
 
   docker:down:
-    desc: Stop and remove all Docker Compose containers
+    desc: Stop all services using Docker Compose
     cmds:
       - docker compose down
-
-  docker:build:
-    desc: Build all Docker Compose images
-    cmds:
-      - docker compose build
 
   # Combined tasks
   dev:

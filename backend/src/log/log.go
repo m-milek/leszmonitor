@@ -181,7 +181,7 @@ func InitLogging(cfg Config) error {
 	// Open the log file
 	file, err := os.OpenFile(cfg.LogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		Init.Error().Msg("Failed to open log file")
+		Init.Error().Str("path", cfg.LogFilePath).Err(err).Msg("Failed to open log file")
 		return err
 	}
 
