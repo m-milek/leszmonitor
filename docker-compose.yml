@@ -1,37 +1,20 @@
 services:
-  ui:
+  app:
+    container_name: leszmonitor
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile
-      args:
-        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:7001}
     ports:
       - "3000:3000"
-    depends_on:
-      - api
-    env_file:
-      - ./frontend/.env
-    restart: unless-stopped
-    networks:
-      - leszmonitor
-
-  api:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "7001:7001"
-    env_file:
-      - ./backend/.env
     environment:
-      - LOG_FILE_PATH=/var/log/leszmonitor/backend.log
-      - SQLITE_DB_PATH=/data/leszmonitor.db
+      API_PORT: 7001
+      LOG_LEVEL: TRACE
+      SQLITE_DB_PATH: /data/leszmonitor.db
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:7001}
+      JWT_SECRET: your_jwt_secret
+      JWT_EXPIRY_HOURS: 24
+      LOG_FILE_PATH: /var/log/leszmonitor/app.log
     volumes:
       - ./backend/src/leszmonitor.db:/data/leszmonitor.db
+      - ./logs:/var/log/leszmonitor
     restart: unless-stopped
-    networks:
-      - leszmonitor
-
-networks:
-  leszmonitor:
-    driver: bridge
