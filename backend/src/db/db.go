@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"os"
@@ -12,7 +13,11 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/config"
 	"github.com/m-milek/leszmonitor/log"
+	_ "github.com/mattn/go-sqlite3"
 )
+
+//go:embed schema.sql
+var dbSchema embed.FS
 
 var ErrNotFound = errors.New("document not found")
 var ErrAlreadyExists = errors.New("resource already exists")
@@ -24,8 +29,6 @@ func isUniqueViolation(err error) bool {
 	// SQLite reports unique constraint errors as text like: "UNIQUE constraint failed: table.column".
 	return strings.Contains(strings.ToLower(err.Error()), "unique constraint failed")
 }
-
-const dbSchemaFilePath = "db/schema.sql"
 
 const timeoutDuration = 1000 * time.Second
 
@@ -67,7 +70,7 @@ func newBaseRepository(pool *sqlx.DB) baseRepository {
 
 // New creates a new DB client using the provided DSN. It pings the DB and ensures the schema exists.
 func New(ctx context.Context, dsn string) (*DBClient, error) {
-	pool, err := sqlx.ConnectContext(ctx, "sqlite", dsn)
+	pool, err := sqlx.ConnectContext(ctx, "sqlite3", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -90,13 +93,12 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 
 // initSchema reads the database schema from a file and executes it to set up the database structure.
 func (c *DBClient) initSchema(ctx context.Context, pool *sqlx.DB) error {
-	schemaBytes, err := os.ReadFile(dbSchemaFilePath)
+	dbSchemaContent, err := dbSchema.ReadFile("schema.sql")
 	if err != nil {
-		return fmt.Errorf("failed to read DB schema file: %w", err)
+		return fmt.Errorf("failed to read database schema: %w", err)
 	}
-	schema := string(schemaBytes)
 
-	_, err = pool.ExecContext(ctx, schema)
+	_, err = pool.ExecContext(ctx, string(dbSchemaContent))
 	if err != nil {
 		return err
 	}

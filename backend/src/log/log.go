@@ -149,7 +149,7 @@ func setupLoggers(level zerolog.Level) {
 	Api = NewServiceLogger("API")
 	Logs = NewServiceLogger("LogCollector")
 	Uptime = NewServiceLogger("UptimeMonitor")
-	Db = NewServiceLogger("PostgreSQL")
+	Db = NewServiceLogger("DB")
 }
 
 // InitLogging sets up logging with the given configuration.

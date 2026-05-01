@@ -1,4 +1,4 @@
-import { BACKEND_URL } from "@/lib/consts.ts";
+import { BACKEND_API_URL } from "@/lib/consts.ts";
 import type {
   Project,
   ProjectMember,
@@ -22,20 +22,20 @@ const parseProject = (project: Project): Project => ({
 });
 
 export const getProjects = async (): Promise<Project[]> => {
-  const res = await authFetch(`${BACKEND_URL}/projects`);
+  const res = await authFetch(`${BACKEND_API_URL}/projects`);
 
   const projects = (await res.json()) as Project[];
   return projects.map(parseProject);
 };
 
 export const getProject = async (projectId: string): Promise<Project> => {
-  const res = await authFetch(`${BACKEND_URL}/projects/${projectId}`);
+  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectId}`);
 
   return parseProject((await res.json()) as Project);
 };
 
 export const addProject = async (project: ProjectInput): Promise<Project> => {
-  const res = await authFetch(`${BACKEND_URL}/projects`, {
+  const res = await authFetch(`${BACKEND_API_URL}/projects`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(project),
@@ -45,7 +45,7 @@ export const addProject = async (project: ProjectInput): Promise<Project> => {
 };
 
 export const deleteProject = async (projectId: string): Promise<void> => {
-  const res = await authFetch(`${BACKEND_URL}/projects/${projectId}`, {
+  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectId}`, {
     method: "DELETE",
   });
 
@@ -63,7 +63,7 @@ export const addMemberToProject = async (
   projectId: string,
   payload: AddProjectMemberPayload,
 ): Promise<void> => {
-  const res = await authFetch(`${BACKEND_URL}/projects/${projectId}/members`, {
+  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectId}/members`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -82,7 +82,7 @@ export const removeMemberFromProject = async (
   projectId: string,
   payload: RemoveProjectMemberPayload,
 ): Promise<void> => {
-  const res = await authFetch(`${BACKEND_URL}/projects/${projectId}/members`, {
+  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectId}/members`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

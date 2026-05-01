@@ -1,9 +1,11 @@
 package api
 
 import (
+	"embed"
 	"errors"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/m-milek/leszmonitor/api/middleware"
@@ -29,26 +31,31 @@ func DefaultServerConfig() ServerConfig {
 }
 
 // createServer sets up the HTTP server with public and protected routes, applying necessary middleware.
-func createServer(config ServerConfig) (*http.Server, error) {
+func createServer(config ServerConfig, staticFiles embed.FS) (*http.Server, error) {
 	publicRouter := http.NewServeMux()
 	protectedRouter := http.NewServeMux()
 
-	SetupRouters(publicRouter, protectedRouter)
+	SetupRouters(publicRouter, protectedRouter, staticFiles)
 
 	combinedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
-		publicPaths := []string{
-			"/auth/register",
-			"/auth/login",
-			"/ws",
-		}
-		if util.SliceContains(publicPaths, path) {
+		if !strings.HasPrefix(path, "/api/") {
 			publicRouter.ServeHTTP(w, r)
 			return
 		}
 
-		// Apply JWT auth to all other paths
+		publicAPIPaths := []string{
+			"/api/auth/register",
+			"/api/auth/login",
+			"/api/ws",
+		}
+		if util.SliceContains(publicAPIPaths, path) {
+			publicRouter.ServeHTTP(w, r)
+			return
+		}
+
+		// Apply JWT auth to protected API paths
 		middleware.JwtAuth(protectedRouter).ServeHTTP(w, r)
 	})
 
@@ -73,8 +80,8 @@ func createServer(config ServerConfig) (*http.Server, error) {
 }
 
 // StartServer initializes and starts the HTTP server based on the provided configuration.
-func StartServer(config ServerConfig) (*http.Server, chan struct{}, error) {
-	server, err := createServer(config)
+func StartServer(config ServerConfig, staticFiles embed.FS) (*http.Server, chan struct{}, error) {
+	server, err := createServer(config, staticFiles)
 
 	if err != nil {
 		log.Api.Error().Err(err).Msg("Error creating API server")
