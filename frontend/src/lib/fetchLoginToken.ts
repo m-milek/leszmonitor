@@ -1,11 +1,11 @@
 import type { LoginPayload, LoginResponse } from "@/lib/types.ts";
-import { BACKEND_URL } from "@/lib/consts.ts";
+import { BACKEND_API_URL } from "@/lib/consts.ts";
 
 export const fetchLoginToken = async ({
   username,
   password,
 }: LoginPayload): Promise<LoginResponse> => {
-  const res = await fetch(`${BACKEND_URL}/auth/login`, {
+  const res = await fetch(`${BACKEND_API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

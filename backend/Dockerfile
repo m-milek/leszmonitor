@@ -1,6 +1,9 @@
 # Build stage
 FROM golang:1.26.1-alpine AS builder
 
+# Install build dependencies for CGO sqlite3
+RUN apk add --no-cache gcc musl-dev sqlite-dev
+
 # Set working directory
 WORKDIR /app
 
@@ -16,14 +19,14 @@ COPY . ./
 # Set working directory to where the source code is
 WORKDIR /app/src
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+# Build the application with CGO enabled for sqlite3
+RUN CGO_ENABLED=1 GOOS=linux go build -o main .
 
 # Final stage
 FROM alpine:latest
 
 # Install necessary runtime dependencies
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates sqlite-libs
 
 WORKDIR /app
 
@@ -32,9 +35,6 @@ COPY --from=builder /app/src/main .
 
 # Copy any necessary environment files
 COPY .env* ./
-
-# Include DB schema where the app expects it: /app/db/schema.sql
-COPY --from=builder /app/src/db/schema.sql ./db/schema.sql
 
 RUN mkdir -p /var/log/leszmonitor
 

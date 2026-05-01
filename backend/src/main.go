@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"os"
 	"os/signal"
 	"sync"
@@ -14,6 +15,9 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/workers"
 )
+
+//go:embed all:static
+var staticFiles embed.FS
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
@@ -45,13 +49,13 @@ func main() {
 
 	err = db.InitFromEnv(ctx)
 	if err != nil {
-		log.Init.Fatal().Err(err).Msg("Failed to initialize PostgreSQL connection")
+		log.Init.Fatal().Err(err).Msg("Failed to initialize SQLite connection")
 	}
 
 	// Start the server
 	serverConfig := api.DefaultServerConfig()
 	log.Main.Info().Msg("Starting API server...")
-	server, done, err := api.StartServer(serverConfig)
+	server, done, err := api.StartServer(serverConfig, staticFiles)
 	if err != nil {
 		log.Main.Error().Err(err).Msg("Failed to start API server")
 		os.Exit(1)
