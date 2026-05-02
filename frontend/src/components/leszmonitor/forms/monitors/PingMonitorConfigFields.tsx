@@ -6,7 +6,7 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
-import type { PingMonitorFormApi } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
+import type { MonitorFormApi } from "@/lib/formTypes.ts";
 
 const protocolItems = [
   { value: "tcp", label: "TCP" },
@@ -20,7 +20,7 @@ const protocolItems = [
 export function PingMonitorConfigFields({
   form,
 }: {
-  form: PingMonitorFormApi;
+  form: MonitorFormApi;
 }) {
   return (
     <Flex direction="column" className="gap-4 items-stretch">

@@ -19,7 +19,7 @@ function NewMonitorComponent() {
       <TypographyH1>New Monitor Wizard</TypographyH1>
       <Card>
         <CardContent>
-          <NewMonitorForm formId="new-monitor-form" projectId={projectId} />
+          <NewMonitorForm formId="new-monitor-form" projectSlug={projectId} />
         </CardContent>
         <CardFooter>
           <Button type="submit" form="new-monitor-form">

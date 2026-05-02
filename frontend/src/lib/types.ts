@@ -44,7 +44,7 @@ export interface Monitor extends Timestamps {
   name: string;
   slug: string;
   description?: string;
-  projectId: string;
+  projectSlug: string;
   interval: number;
   type: MonitorType;
   config?: HttpMonitorConfig | PingMonitorConfig;
@@ -117,7 +117,7 @@ const baseMonitorFields = {
       "Invalid slug format. Must be lowercase, alphanumeric, and can include hyphens.",
     ),
   description: z.string().optional(),
-  projectId: z.string(),
+  projectSlug: z.string(),
   interval: z
     .number({ message: "Interval must be a number" })
     .min(1, "Interval must be at least 1 second"),
@@ -148,7 +148,7 @@ export const newMonitorSchemaDefaultValues = {
   name: "",
   slug: "",
   description: "",
-  projectId: "",
+  projectSlug: "",
   interval: 60,
 } satisfies Partial<MonitorFormValues>;
 
@@ -172,6 +172,27 @@ export const defaultConfigs: Record<MonitorType, MonitorFormValues["config"]> =
       retryCount: 3,
     },
   };
+
+export type MonitorCreatePayload = MonitorFormValues;
+export type MonitorUpdatePayload = MonitorFormValues & { id: string };
+
+export const mapMonitorToFormValues = (monitor: Monitor): MonitorFormValues => {
+  const configDefaults = defaultConfigs[monitor.type];
+
+  return {
+    ...newMonitorSchemaDefaultValues,
+    projectSlug: monitor.projectSlug,
+    name: monitor.name,
+    slug: monitor.slug,
+    description: monitor.description ?? "",
+    interval: monitor.interval,
+    type: monitor.type,
+    config: {
+      ...configDefaults,
+      ...(monitor.config ?? {}),
+    },
+  } as MonitorFormValues;
+};
 
 export interface LoginPayload {
   username: string;
