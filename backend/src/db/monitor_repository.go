@@ -15,11 +15,12 @@ import (
 
 type IMonitorRepository interface {
 	GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.IConcreteMonitor, error)
-	GetMonitorByID(ctx context.Context, id string) (monitors.IConcreteMonitor, error)
+	GetMonitorByID(ctx context.Context, id uuid.UUID) (monitors.IConcreteMonitor, error)
+	GetMonitorBySlug(ctx context.Context, slug string) (monitors.IConcreteMonitor, error)
 	GetAllMonitors(ctx context.Context) ([]monitors.IConcreteMonitor, error)
 	DeleteMonitorBySlug(ctx context.Context, slug string) (*uuid.UUID, error)
 	InsertMonitor(ctx context.Context, monitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error)
-	UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error)
+	UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (interface{}, error)
 }
 
 type monitorRepository struct {
@@ -108,13 +109,25 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 	})
 }
 
-func (r *monitorRepository) GetMonitorByID(ctx context.Context, id string) (monitors.IConcreteMonitor, error) {
-	return dbWrap(ctx, "GetMonitorByID", func() (monitors.IConcreteMonitor, error) {
+func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string) (monitors.IConcreteMonitor, error) {
+	return dbWrap(ctx, "GetMonitorBySlug", func() (monitors.IConcreteMonitor, error) {
 		row := r.pool.QueryRowxContext(ctx,
 			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
 			 FROM monitors m
 			 JOIN projects p ON p.id = m.project_id
 			 WHERE m.slug = $1`,
+			slug)
+		return mapRowToMonitor(row)
+	})
+}
+
+func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (monitors.IConcreteMonitor, error) {
+	return dbWrap(ctx, "GetMonitorByID", func() (monitors.IConcreteMonitor, error) {
+		row := r.pool.QueryRowxContext(ctx,
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			 FROM monitors m
+			 JOIN projects p ON p.id = m.project_id
+			 WHERE m.id = $1`,
 			id)
 		return mapRowToMonitor(row)
 	})
@@ -206,20 +219,17 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 	})
 }
 
-func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (monitors.IConcreteMonitor, error) {
+func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monitors.IConcreteMonitor) (interface{}, error) {
 	return dbWrap(ctx, "UpdateMonitor", func() (monitors.IConcreteMonitor, error) {
 		configBytes, err := json.Marshal(newMonitor.GetConfig())
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal monitor config: %w", err)
 		}
 
-		row := r.pool.QueryRowxContext(ctx,
-			`UPDATE monitors m
+		res, err := r.pool.ExecContext(ctx,
+			`UPDATE monitors
 			SET slug=$1, project_id=(SELECT p.id FROM projects p WHERE p.slug=$2), name=$3, description=$4, interval=$5, kind=$6, config=$7
-			WHERE id=$8
-			RETURNING
-				m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at,
-				$2 AS project_slug`,
+			WHERE id=$8`,
 			newMonitor.GetSlug(),
 			newMonitor.GetProjectSlug(),
 			newMonitor.GetName(),
@@ -229,11 +239,21 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 			configBytes,
 			newMonitor.GetID(),
 		)
+		if err != nil {
+			if isUniqueViolation(err) {
+				return nil, ErrAlreadyExists
+			}
+			return nil, err
+		}
 
-		updatedMonitor, err := mapRowToMonitor(row)
+		rowsAffected, err := res.RowsAffected()
 		if err != nil {
 			return nil, err
 		}
-		return updatedMonitor, nil
+		if rowsAffected == 0 {
+			return nil, ErrNotFound
+		}
+
+		return nil, nil
 	})
 }

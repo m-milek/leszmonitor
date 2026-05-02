@@ -138,7 +138,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 		return nil, authErr
 	}
 
-	monitor, err := s.getDB().Monitors().GetMonitorByID(ctx, id)
+	monitor, err := s.getDB().Monitors().GetMonitorBySlug(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found in database")
@@ -169,7 +169,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middle
 		return authErr
 	}
 
-	updatedMonitor, err := s.getDB().Monitors().UpdateMonitor(ctx, monitor)
+	_, err := s.getDB().Monitors().UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found", monitor.GetID())}
@@ -178,14 +178,10 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middle
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor: %w", err)}
 	}
 
-	if updatedMonitor == nil {
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("monitor was not updated")}
-	}
-
 	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
-		ID:      updatedMonitor.GetID(),
+		ID:      monitor.GetID(),
 		Status:  monitors.Edited,
-		Monitor: &updatedMonitor,
+		Monitor: nil,
 	})
 
 	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor updated")
