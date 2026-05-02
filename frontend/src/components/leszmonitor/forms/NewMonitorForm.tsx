@@ -1,10 +1,10 @@
-import { useForm, type FormValidateOrFn } from "@tanstack/react-form";
+import { type FormValidateOrFn, useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import { slugFromString } from "@/lib/slugFromString.ts";
+import type { MonitorFormValues } from "@/lib/types.ts";
 import {
   defaultConfigs,
   isValidMonitorType,
-  type Monitor,
   type MonitorType,
   newMonitorSchema,
   newMonitorSchemaDefaultValues,
@@ -20,84 +20,87 @@ import {
 import { LMTextareaField } from "@/components/leszmonitor/forms/inputs/LMTextareaField.tsx";
 import { Divider } from "@/components/leszmonitor/ui/Divider.tsx";
 import { MonitorConfigFields } from "@/components/leszmonitor/forms/monitors/MonitorConfigFields.tsx";
-import type {
-  HttpMonitorFormValues,
-  PingMonitorFormValues,
-  MonitorFormValues,
-} from "@/lib/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createMonitor } from "@/lib/data/monitorData.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function __monitorFormHelper() {
-  return useForm({
-    defaultValues: {} as MonitorFormValues,
-    validators: {
-      onSubmit:
-        newMonitorSchema as unknown as FormValidateOrFn<MonitorFormValues>,
-    },
-  });
-}
-export type MonitorFormApi = ReturnType<typeof __monitorFormHelper>;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function __httpMonitorFormHelper() {
-  return useForm({
-    defaultValues: {} as HttpMonitorFormValues,
-  });
-}
-export type HttpMonitorFormApi = ReturnType<typeof __httpMonitorFormHelper>;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function __pingMonitorFormHelper() {
-  return useForm({
-    defaultValues: {} as PingMonitorFormValues,
-  });
-}
-export type PingMonitorFormApi = ReturnType<typeof __pingMonitorFormHelper>;
+import { toast } from "sonner";
 
 export interface NewMonitorFormProps {
-  projectId: string;
+  projectSlug: string;
   formId?: string;
 }
 
-export function NewMonitorForm({
-  projectId,
-  formId = "new-monitor-form",
-}: NewMonitorFormProps) {
-  const queryClient = useQueryClient();
-  const createMonitorMutation = useMutation({
-    mutationFn: (monitor: MonitorFormValues) => {
-      console.log("Creating monitor with values:", monitor);
-      return createMonitor(monitor as unknown as Monitor);
+export interface MonitorFormProps {
+  projectSlug: string;
+  formId?: string;
+  defaultValues?: Partial<MonitorFormValues>;
+  onSubmit: (value: MonitorFormValues) => Promise<void>;
+  resetOnSuccess?: boolean;
+}
+
+const buildMonitorDefaults = (
+  projectSlug: string,
+  defaultValues?: Partial<MonitorFormValues>,
+): MonitorFormValues => {
+  const baseValues = {
+    ...newMonitorSchemaDefaultValues,
+    projectSlug: projectSlug,
+  };
+  const type = defaultValues?.type;
+
+  if (!type) {
+    return {
+      ...baseValues,
+      ...defaultValues,
+    } as MonitorFormValues;
+  }
+
+  return {
+    ...baseValues,
+    ...defaultValues,
+    type,
+    projectSlug: projectSlug,
+    config: {
+      ...defaultConfigs[type],
+      ...(defaultValues?.config ?? {}),
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
-    },
-  });
+  } as MonitorFormValues;
+};
+
+export function MonitorForm({
+  projectSlug,
+  formId = "monitor-form",
+  defaultValues,
+  onSubmit,
+  resetOnSuccess = false,
+}: MonitorFormProps) {
+  const mergedDefaults = buildMonitorDefaults(projectSlug, defaultValues);
 
   const form = useForm({
-    defaultValues: {
-      ...newMonitorSchemaDefaultValues,
-      projectId,
-    } as MonitorFormValues,
+    defaultValues: mergedDefaults,
     validators: {
       onSubmit:
         newMonitorSchema as unknown as FormValidateOrFn<MonitorFormValues>,
     },
     onSubmit: async ({ value }) => {
-      await createMonitorMutation.mutateAsync(value);
-      form.reset();
+      await onSubmit(value);
+      if (resetOnSuccess) {
+        form.reset();
+      }
     },
     onSubmitInvalid: ({ value }) => {
       console.log("Invalid form submission");
       console.log("Values:", value);
+      toast.error("Please fix the errors in the form before submitting.");
     },
   });
 
-  const [useCustomSlug, setUseCustomSlug] = useState(false);
+  const [useCustomSlug, setUseCustomSlug] = useState(() => {
+    const name = mergedDefaults.name ?? "";
+    const slug = mergedDefaults.slug ?? "";
+    return slug.length > 0 && slug !== slugFromString(name);
+  });
 
   const onUseCustomSlugChanged = (checked: boolean) => {
     setUseCustomSlug(checked);
@@ -243,5 +246,30 @@ export function NewMonitorForm({
         </Flex>
       </Flex>
     </form>
+  );
+}
+
+export function NewMonitorForm({
+  projectSlug,
+  formId = "new-monitor-form",
+}: NewMonitorFormProps) {
+  const queryClient = useQueryClient();
+  const createMonitorMutation = useMutation({
+    mutationFn: (monitor: MonitorFormValues) => {
+      console.log("Creating monitor with values:", monitor);
+      return createMonitor(monitor);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
+    },
+  });
+
+  return (
+    <MonitorForm
+      projectSlug={projectSlug}
+      formId={formId}
+      onSubmit={(value) => createMonitorMutation.mutateAsync(value)}
+      resetOnSuccess
+    />
   );
 }

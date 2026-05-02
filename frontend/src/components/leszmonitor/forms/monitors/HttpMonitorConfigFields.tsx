@@ -7,7 +7,7 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
-import type { HttpMonitorFormApi } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
+import type { MonitorFormApi } from "@/lib/formTypes.ts";
 import { LMSwitch } from "@/components/leszmonitor/forms/inputs/LMSwitch.tsx";
 import { LMKeyValueInput } from "@/components/leszmonitor/forms/inputs/LMKeyValue.tsx";
 import { LMMultiSelect } from "@/components/leszmonitor/forms/inputs/LMMultiSelect.tsx";
@@ -27,7 +27,7 @@ const statusCodes = Array.from({ length: 600 }, (_, i) => i)
 export function HttpMonitorConfigFields({
   form,
 }: {
-  form: HttpMonitorFormApi;
+  form: MonitorFormApi;
 }) {
   return (
     <Flex direction="column" className="gap-4 items-stretch">

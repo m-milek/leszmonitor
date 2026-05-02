@@ -7,8 +7,8 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card.tsx";
-import { useQuery } from "@tanstack/react-query";
-import { getMonitors } from "@/lib/data/monitorData.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteMonitor, getMonitors } from "@/lib/data/monitorData.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
 import { MonitorListItem } from "@/components/leszmonitor/MonitorListItem.tsx";
@@ -23,14 +23,36 @@ export const Route = createFileRoute(
 function MonitorsComponent() {
   const { projectId } = Route.useParams();
 
+  const queryClient = useQueryClient();
+
   const { data } = useQuery({
     queryKey: ["monitors", projectId],
     queryFn: () => getMonitors(projectId),
   });
 
+  const { mutateAsync: deleteMutation } = useMutation({
+    mutationFn: async (monitorId: string) => {
+      await deleteMonitor(projectId, monitorId);
+    },
+  });
+
+  const navigate = Route.useNavigate();
+
   if (!data) {
     return null;
   }
+
+  const onDeleteMonitor = async (monitorId: string) => {
+    await deleteMutation(monitorId);
+    queryClient.invalidateQueries({ queryKey: ["monitors", projectId] });
+  };
+
+  const navigateToEditMonitor = (monitorId: string) => {
+    navigate({
+      to: "/projects/$projectId/monitors/$monitorSlug/edit",
+      params: { projectId, monitorSlug: monitorId },
+    });
+  };
 
   return (
     <MainPanelContainer>
@@ -48,9 +70,11 @@ function MonitorsComponent() {
           <Flex direction="column" className="gap-4">
             {data.map((monitor) => (
               <MonitorListItem
+                key={monitor.id}
                 monitor={monitor}
                 projectId={projectId}
-                key={monitor.id}
+                onDeleteMonitor={onDeleteMonitor}
+                navigateToEditMonitor={navigateToEditMonitor}
               />
             ))}
           </Flex>

@@ -90,9 +90,15 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 
 					switch msg.Status {
 					case monitors.Edited:
+						// refetch the monitor
+						newMonitor, err := db.Get().Monitors().GetMonitorByID(ctx, msg.ID)
+						if err != nil {
+							log.Uptime.Error().Err(err).Str("id", msg.ID.String()).Msg("Failed to refetch monitor after edit")
+							return
+						}
 						log.Uptime.Debug().Str("name", monitor.GetName()).Str("id", monitor.GetID().String()).Msg("Updating monitor")
 						oldInterval := monitor.GetInterval()
-						monitor = *msg.Monitor
+						monitor = newMonitor
 						if monitor.GetInterval() != oldInterval {
 							log.Uptime.Info().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Changing monitor interval to %s", monitor.GetInterval())
 							tickerChangedChannel <- struct{}{}
