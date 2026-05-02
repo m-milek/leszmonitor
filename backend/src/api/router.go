@@ -39,7 +39,9 @@ func SetupRouters(
 	protectedRouter.HandleFunc("DELETE /api/projects/{projectId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
 	protectedRouter.HandleFunc("PATCH /api/projects/{projectId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
 
+	// WebSocket
 	publicRouter.HandleFunc("GET /api/ws", handlers.WebSocketConnectionHandler)
 
+	// SPA Handler for frontend
 	publicRouter.Handle("/", newSPAHandler(staticFiles))
 }
