@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
+	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
 )
 
@@ -43,8 +46,8 @@ func (m *PingMonitor) SetConfig(config IMonitorConfig) {
 	m.Config = *config.(*PingConfig)
 }
 
-func (m *PingMonitor) Run() IMonitorResult {
-	return m.Config.run()
+func (m *PingMonitor) Run() monitorresult.IMonitorResult {
+	return m.Config.run(m.ID, m.Type)
 }
 
 func (m *PingMonitor) Validate() error {
@@ -74,31 +77,30 @@ func NewPingConfig(host string, port int, protocol string, timeout, retryCount i
 	return monitor, nil
 }
 
-func (m *PingConfig) run() IMonitorResult {
-	monitorResponse := NewPingMonitorResponse()
+func (m *PingConfig) run(id uuid.UUID, monitorType consts.MonitorConfigType) monitorresult.IMonitorResult {
+	result := monitorresult.NewMonitorResult(id, monitorType, true, false, 0, "", &monitorresult.PingResultDetails{}, time.Now().Format(time.RFC3339))
+	details := result.GetDetails().(*monitorresult.PingResultDetails)
 
 	portString := strconv.Itoa(m.Port)
-	// Handles IPv6 as well
 	address := net.JoinHostPort(m.Host, portString)
 
-	monitorResponse.Tries++
+	details.Tries++
 	for i := 0; i < m.RetryCount; i++ {
-		// PingTimeout is expressed in milliseconds, convert to time.Duration
 		success, duration := pingAddressFunc(m.Protocol, address, time.Duration(m.PingTimeout)*time.Millisecond)
 		if success {
-			monitorResponse.Duration = duration.Milliseconds()
-			return monitorResponse
+			result.SetDuration(duration.Milliseconds())
+			details.LatencyMs = duration.Milliseconds()
+			return result
 		}
 		if i < m.RetryCount-1 {
-			monitorResponse.Tries++
+			details.Tries++
 			time.Sleep(retryTimeout)
 		}
 	}
 
-	// If we reach here, all retries failed
-	monitorResponse.addFailureMsg(fmt.Sprintf("Failed to pingType %s after %d tries", address, m.RetryCount))
+	result.AddFailure(fmt.Sprintf("Failed to ping %s after %d tries", address, m.RetryCount))
 
-	return monitorResponse
+	return result
 }
 
 func (m *PingConfig) validate() error {

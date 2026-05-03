@@ -2,6 +2,7 @@ package monitors
 
 import (
 	"github.com/google/uuid"
+	shared "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/util"
 )
 
@@ -14,7 +15,7 @@ type TestMonitor struct {
 	Description string
 	Interval    int
 	ProjectID   string
-	Type        MonitorConfigType
+	Type        shared.MonitorConfigType
 
 	// Config fields
 	HttpConfig *HttpConfig
@@ -31,7 +32,7 @@ func NewTestMonitor() *TestMonitor {
 		Description: "Test monitor description",
 		Interval:    60,
 		ProjectID:   "test_owner",
-		Type:        httpType,
+		Type:        shared.HttpConfigType,
 		HttpConfig: &HttpConfig{
 			Method:              "GET",
 			URL:                 "https://example.com",
@@ -42,7 +43,7 @@ func NewTestMonitor() *TestMonitor {
 
 // AsHttp configures the monitor as an HTTP monitor
 func (t *TestMonitor) AsHttp() *TestMonitor {
-	t.Type = httpType
+	t.Type = shared.HttpConfigType
 	if t.HttpConfig == nil {
 		t.HttpConfig = &HttpConfig{
 			Method:              "GET",
@@ -56,7 +57,7 @@ func (t *TestMonitor) AsHttp() *TestMonitor {
 
 // AsPing configures the monitor as a pingType monitor
 func (t *TestMonitor) AsPing() *TestMonitor {
-	t.Type = pingType
+	t.Type = shared.PingConfigType
 	if t.PingConfig == nil {
 		t.PingConfig = &PingConfig{
 			Host:        "example.com",
@@ -82,12 +83,12 @@ func (t *TestMonitor) Build() IMonitor {
 	}
 
 	switch t.Type {
-	case httpType:
+	case shared.HttpConfigType:
 		return &HttpMonitor{
 			BaseMonitor: base,
 			Config:      *t.HttpConfig,
 		}
-	case pingType:
+	case shared.PingConfigType:
 		return &PingMonitor{
 			BaseMonitor: base,
 			Config:      *t.PingConfig,
