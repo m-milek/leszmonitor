@@ -39,6 +39,9 @@ func SetupRouters(
 	protectedRouter.HandleFunc("DELETE /api/projects/{projectId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
 	protectedRouter.HandleFunc("PATCH /api/projects/{projectId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
 
+	// Monitor Results
+	protectedRouter.HandleFunc("GET /api/monitors/{monitorId}/results/latest", handlers.GetLatestMonitorResultByMonitorIDHandler)
+
 	// WebSocket
 	publicRouter.HandleFunc("GET /api/ws", handlers.WebSocketConnectionHandler)
 
