@@ -37,6 +37,7 @@ type DB interface {
 	Users() IUserRepository
 	Monitors() IMonitorRepository
 	Projects() IProjectRepository
+	MonitorResults() IMonitorResultRepository
 	Close()
 }
 
@@ -44,9 +45,10 @@ type DB interface {
 type DBClient struct {
 	dbPool
 	// cached repositories to avoid re-allocation on every getter call
-	users    IUserRepository
-	monitors IMonitorRepository
-	projects IProjectRepository
+	users          IUserRepository
+	monitors       IMonitorRepository
+	projects       IProjectRepository
+	monitorResults IMonitorResultRepository
 }
 
 type dbPool struct {
@@ -87,6 +89,7 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 	c.users = newUserRepository(newBaseRepository(pool))
 	c.monitors = newMonitorRepository(newBaseRepository(pool))
 	c.projects = newProjectRepository(newBaseRepository(pool))
+	c.monitorResults = newMonitorResultRepository(newBaseRepository(pool))
 
 	return c, nil
 }
@@ -153,9 +156,11 @@ func dbWrap[T any](timeoutCtx context.Context, operationName string, operation f
 }
 
 // Repository getters (return interfaces for mocking)
-func (c *DBClient) Users() IUserRepository       { return c.users }
-func (c *DBClient) Monitors() IMonitorRepository { return c.monitors }
-func (c *DBClient) Projects() IProjectRepository { return c.projects }
+
+func (c *DBClient) Users() IUserRepository                   { return c.users }
+func (c *DBClient) Monitors() IMonitorRepository             { return c.monitors }
+func (c *DBClient) Projects() IProjectRepository             { return c.projects }
+func (c *DBClient) MonitorResults() IMonitorResultRepository { return c.monitorResults }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)
