@@ -90,7 +90,7 @@ func (m *HttpConfig) run(id uuid.UUID, monitorType consts.MonitorConfigType) mon
 	result.SetDuration(elapsed.Milliseconds())
 	if err != nil {
 		result.AddError(fmt.Sprintf("HTTP request failed: %s", err.Error()))
-		log.Uptime.Error().Err(err).Msg("HTTP monitor validation failed")
+		log.Uptime.Trace().Err(err).Msg("HTTP request execution failed")
 		return result
 	}
 
@@ -147,9 +147,8 @@ func (m *HttpConfig) checkStatusCode(response *http.Response, result monitorresu
 	}
 
 	if !util.SliceContains(m.ExpectedStatusCodes, response.StatusCode) {
-		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected one of %d", response.StatusCode, m.ExpectedStatusCodes)
+		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected one of %v", response.StatusCode, m.ExpectedStatusCodes)
 		result.AddFailure(failureMsg)
-		details.FailedAspects = append(details.FailedAspects, "StatusCode")
 	}
 }
 
@@ -160,7 +159,6 @@ func (m *HttpConfig) checkResponseTime(elapsed time.Duration, result monitorresu
 	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTime) {
 		failureMsg := fmt.Sprintf("Response time exceeded: got %dms, expected <= %dms", elapsed.Milliseconds(), *m.ExpectedResponseTime)
 		result.AddFailure(failureMsg)
-		details.FailedAspects = append(details.FailedAspects, "ResponseTime")
 	}
 }
 
@@ -174,7 +172,6 @@ func (m *HttpConfig) checkResponseHeaders(response *http.Response, result monito
 		if actualValue != expectedValue {
 			failureMsg := fmt.Sprintf("Header mismatch for %s: got %s, expected %s", key, actualValue, expectedValue)
 			result.AddFailure(failureMsg)
-			details.FailedAspects = append(details.FailedAspects, "Headers")
 		}
 	}
 }
@@ -203,7 +200,6 @@ func (m *HttpConfig) checkResponseBody(response *http.Response, result monitorre
 	if !matches {
 		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
 		result.AddFailure(failureMsg)
-		details.FailedAspects = append(details.FailedAspects, "Body")
 	}
 }
 

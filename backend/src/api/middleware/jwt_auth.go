@@ -79,7 +79,7 @@ func ProjectAuthFromRequest(r *http.Request, authSource AuthSourceKind) (*Projec
 		if monitorID == "" {
 			return nil, fmt.Errorf("monitor ID is required")
 		}
-		monitorUUID, err := uuid.FromBytes([]byte(monitorID))
+		monitorUUID, err := uuid.Parse(monitorID)
 		if err != nil {
 			log.Api.Error().Err(err).Msg("Invalid monitor ID format")
 			return nil, fmt.Errorf("invalid monitor ID format")

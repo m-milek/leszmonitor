@@ -2,6 +2,7 @@ package monitors
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -27,12 +28,12 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 	response := monitor.run(uuid.Nil, shared.HttpConfigType)
 
 	assert.True(t, response.GetIsSuccess())
-	assert.Empty(t, response.GetErrors())
+	assert.Empty(t, response.GetErrorDetails().Errors)
 
 	details, ok := response.GetDetails().(*monitorresult.HttpResultDetails)
 	assert.True(t, ok)
 	assert.Equal(t, 200, details.StatusCode)
-	assert.Empty(t, details.FailedAspects)
+	assert.Empty(t, response.GetErrorDetails().Failures)
 
 	mockHttpClient.AssertExpectations(t)
 }
@@ -54,9 +55,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 
 	assert.False(t, response.GetIsSuccess())
 
-	details, ok := response.GetDetails().(*monitorresult.HttpResultDetails)
-	assert.True(t, ok)
-	assert.Contains(t, details.FailedAspects, "StatusCode")
+	assert.Contains(t, response.GetErrorDetails().Failures[0], "Unexpected status code")
 
 	mockClient.AssertExpectations(t)
 }
@@ -73,8 +72,8 @@ func TestHttpMonitorRunError(t *testing.T) {
 	response := monitor.run(uuid.Nil, shared.HttpConfigType)
 
 	assert.False(t, response.GetIsSuccess())
-	assert.NotEmpty(t, response.GetErrors())
-	assert.Contains(t, response.GetErrors()[0], "connection refused")
+	assert.NotEmpty(t, response.GetErrorDetails().Errors)
+	assert.Contains(t, response.GetErrorDetails().Errors[0], "connection refused")
 
 	mockClient.AssertExpectations(t)
 }
@@ -98,11 +97,27 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 
 	assert.False(t, response.GetIsSuccess())
 
-	details, ok := response.GetDetails().(*monitorresult.HttpResultDetails)
-	assert.True(t, ok)
-	assert.Contains(t, details.FailedAspects, "StatusCode")
-	assert.Contains(t, details.FailedAspects, "Body")
-	assert.Contains(t, details.FailedAspects, "Headers")
+	failures := response.GetErrorDetails().Failures
+	assert.Len(t, failures, 3)
+
+	// Check that we have failures for all expected aspects
+	hasStatusCode := false
+	hasBody := false
+	hasHeaders := false
+	for _, f := range failures {
+		if strings.Contains(f, "status code") {
+			hasStatusCode = true
+		}
+		if strings.Contains(f, "body") {
+			hasBody = true
+		}
+		if strings.Contains(f, "Header mismatch") {
+			hasHeaders = true
+		}
+	}
+	assert.True(t, hasStatusCode)
+	assert.True(t, hasBody)
+	assert.True(t, hasHeaders)
 
 	mockClient.AssertExpectations(t)
 }

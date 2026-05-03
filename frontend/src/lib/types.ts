@@ -206,3 +206,33 @@ export interface LoginResponse {
 export interface JwtClaims {
   username: string;
 }
+
+export interface MonitorResult {
+  monitorId: string;
+  isSuccess: boolean;
+  isManuallyTriggered: boolean;
+  durationMs: number;
+  errorDetails: ErrorDetails;
+  monitorType: string;
+  details: HttpResultDetails | PingResultDetails;
+  createdAt: Date;
+}
+
+export interface ErrorDetails {
+  errorMessage: string;
+  errors: string[];
+  failures: string[];
+}
+
+export interface HttpResultDetails {
+  statusCode: number;
+  headers?: Record<string, string>;
+  body?: string;
+  contentLength: number;
+  proto: string;
+}
+
+export interface PingResultDetails {
+  tries: number;
+  latencyMs: number;
+}

@@ -33,16 +33,24 @@ func (r *monitorResultRepository) InsertMonitorResult(ctx context.Context, resul
 			return nil, err
 		}
 
-		// TODO: Handle ErrorDetails serialization if needed, but for now we focus on basic fields
+		var errorDetailsJson []byte
+		if ed := result.GetErrorDetails(); ed.ErrorMessage != "" || len(ed.Errors) > 0 || len(ed.Failures) > 0 {
+			var err error
+			errorDetailsJson, err = json.Marshal(ed)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		_, err = r.pool.ExecContext(ctx,
-			`INSERT INTO monitor_results (id, monitor_id, is_success, is_manually_triggered, duration_ms, error_message, details, created_at) 
+			`INSERT INTO monitor_results (id, monitor_id, is_success, is_manually_triggered, duration_ms, error_details, details, created_at) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-			uuid.New().String(), // Need ID for the result itself
+			uuid.New().String(),
 			result.GetMonitorID(),
 			result.GetIsSuccess(),
 			result.GetIsManuallyTriggered(),
 			result.GetDurationMs(),
-			result.GetErrorMessage(),
+			errorDetailsJson,
 			detailsJson,
 			result.GetCreatedAt(),
 		)
@@ -56,7 +64,7 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 		var result monitorresult.MonitorResult
 
 		err := r.pool.GetContext(ctx, &result, `
-            SELECT mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_message, mr.details, mr.created_at
+            SELECT mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
             FROM monitor_results mr
             JOIN monitors m ON m.id = mr.monitor_id
             WHERE mr.monitor_id = $1
@@ -74,6 +82,15 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 			return nil, err
 		}
 		result.Details = details
+
+		if len(result.ErrorDetailsJSON) > 0 {
+			var errorDetails monitorresult.ErrorDetails
+			if err := json.Unmarshal(result.ErrorDetailsJSON, &errorDetails); err == nil {
+				if errorDetails.ErrorMessage != "" || len(errorDetails.Errors) > 0 || len(errorDetails.Failures) > 0 {
+					result.ErrorDetails = &errorDetails
+				}
+			}
+		}
 
 		return &result, nil
 	})

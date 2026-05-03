@@ -146,8 +146,23 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 					Monitor: monitor,
 				})
 
-				if result.IsError() {
-					log.Uptime.Error().Strs("errors", result.GetErrors()).Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Monitor check failed")
+				if !result.GetIsSuccess() {
+					errDetails := result.GetErrorDetails()
+					if errDetails.ErrorMessage != "" || len(errDetails.Errors) > 0 {
+						log.Uptime.Error().
+							Str("error_message", errDetails.ErrorMessage).
+							Strs("errors", errDetails.Errors).
+							Str("id", monitor.GetID().String()).
+							Str("name", monitor.GetName()).
+							Msg("Monitor encountered internal error")
+					}
+					if len(errDetails.Failures) > 0 {
+						log.Uptime.Warn().
+							Strs("failures", errDetails.Failures).
+							Str("id", monitor.GetID().String()).
+							Str("name", monitor.GetName()).
+							Msg("Monitor check failed (service down or misconfigured)")
+					}
 				}
 
 				_, err = db.Get().MonitorResults().InsertMonitorResult(ctx, result)
