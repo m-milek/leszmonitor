@@ -4,6 +4,9 @@ import { WEBSOCKET_ENDPOINT } from "@/lib/data/webSocket.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { getLoginToken } from "@/lib/utils.ts";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { isMonitorResultMessage } from "@/lib/types.ts";
+import { QUERY_KEYS } from "@/lib/consts.ts";
 
 type WebSocketProviderProps = {
   children: ReactNode;
@@ -12,6 +15,8 @@ type WebSocketProviderProps = {
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const { setWebSocketConnectionStatus: setConnectionStatus } = useAppStore();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const onMessage = useCallback((event: MessageEvent) => {
     if (event.data === "pong") {
@@ -24,8 +29,17 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         setIsAuthenticated(true);
         return;
       }
-      console.log("Received WebSocket message:", data);
-      toast.info("Received WebSocket message");
+
+      if (isMonitorResultMessage(data)) {
+        if (data.response.isSuccess) {
+          toast.success(`Monitor ${data.monitorId} succeeded`);
+        } else {
+          toast.error(`Monitor ${data.monitorId} failed`);
+        }
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.MONITOR_RESULTS, data.monitorId],
+        });
+      }
     } catch {
       console.log("Received WebSocket message:", event.data);
     }
