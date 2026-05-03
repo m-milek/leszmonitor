@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/api/api_util"
+	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/services"
@@ -19,7 +20,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -41,7 +42,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -56,7 +57,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -78,7 +79,7 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -109,7 +110,7 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}

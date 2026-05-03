@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/auth"
+	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
 )
 
@@ -62,11 +64,42 @@ type ProjectAuth struct {
 	Username  string
 }
 
+type AuthSourceKind string
+
+var (
+	AuthSourceProject     = AuthSourceKind("projectId")
+	AuthSourceKindMonitor = AuthSourceKind("monitorId")
+)
+
 // ProjectAuthFromRequest extracts the project ID from the URL path and the username from the JWT context.
-func ProjectAuthFromRequest(r *http.Request) (*ProjectAuth, error) {
-	projectID := r.PathValue("projectId")
-	if projectID == "" {
-		return nil, fmt.Errorf("projectID is required")
+func ProjectAuthFromRequest(r *http.Request, authSource AuthSourceKind) (*ProjectAuth, error) {
+	var projectSlug string
+	if authSource == AuthSourceKindMonitor {
+		monitorID := r.PathValue("monitorId")
+		if monitorID == "" {
+			return nil, fmt.Errorf("monitor ID is required")
+		}
+		monitorUUID, err := uuid.FromBytes([]byte(monitorID))
+		if err != nil {
+			log.Api.Error().Err(err).Msg("Invalid monitor ID format")
+			return nil, fmt.Errorf("invalid monitor ID format")
+		}
+		monitor, err := db.Get().Monitors().GetMonitorByID(r.Context(), monitorUUID)
+		if err != nil {
+			log.Api.Error().Err(err).Msg("Failed to get monitor by ID")
+			return nil, fmt.Errorf("failed to get monitor")
+		}
+		project, err := db.Get().Projects().GetProjectBySlug(r.Context(), monitor.GetProjectSlug())
+		if err != nil {
+			log.Api.Error().Err(err).Msg("Failed to get project by slug")
+			return nil, fmt.Errorf("failed to get project")
+		}
+		projectSlug = project.Slug
+	} else if authSource == AuthSourceProject {
+		projectSlug = r.PathValue("projectId")
+		if projectSlug == "" {
+			return nil, fmt.Errorf("project slug is required")
+		}
 	}
 
 	userClaims, ok := GetUserFromContext(r.Context())
@@ -78,7 +111,7 @@ func ProjectAuthFromRequest(r *http.Request) (*ProjectAuth, error) {
 	}
 
 	return &ProjectAuth{
-		ProjectID: projectID,
+		ProjectID: projectSlug,
 		Username:  userClaims.Username,
 	}, nil
 }

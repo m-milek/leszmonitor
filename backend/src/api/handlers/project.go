@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	util "github.com/m-milek/leszmonitor/api/api_util"
+	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/services"
 )
@@ -47,7 +48,7 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -62,7 +63,7 @@ func GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -77,7 +78,7 @@ func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -99,7 +100,7 @@ func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -120,7 +121,7 @@ func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
@@ -141,7 +142,7 @@ func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ChangeProjectMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r)
+	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceProject)
 	if !ok {
 		return
 	}
