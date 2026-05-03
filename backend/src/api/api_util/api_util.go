@@ -61,8 +61,8 @@ func RespondError(w http.ResponseWriter, statusCode int, err error) {
 }
 
 // GetProjectAuthOrRespond extracts project auth from the request or writes a 401 and returns nil, false.
-func GetProjectAuthOrRespond(w http.ResponseWriter, r *http.Request) (*middleware.ProjectAuth, bool) {
-	projectAuth, err := middleware.ProjectAuthFromRequest(r)
+func GetProjectAuthOrRespond(w http.ResponseWriter, r *http.Request, authSource middleware.AuthSourceKind) (*middleware.ProjectAuth, bool) {
+	projectAuth, err := middleware.ProjectAuthFromRequest(r, authSource)
 	if err != nil {
 		log.Api.Warn().Err(err).Msg("Failed to authenticate")
 		RespondError(w, http.StatusUnauthorized, err)
