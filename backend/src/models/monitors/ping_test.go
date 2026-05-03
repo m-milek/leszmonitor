@@ -211,7 +211,7 @@ func TestPingMonitor_Run(t *testing.T) {
 		response := monitor.run(uuid.Nil, shared.PingConfigType)
 		assert.True(t, response.GetIsSuccess())
 		assert.Equal(t, int64(100), response.GetDurationMs())
-		assert.Empty(t, response.GetErrorMessage())
+		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
 	})
 
 	t.Run("Failed shared.PingConfigType with Retries", func(t *testing.T) {
