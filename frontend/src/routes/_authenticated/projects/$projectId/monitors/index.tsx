@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { Card, CardContent, CardFooter } from "@/components/ui/card.tsx";
+import { Card, CardContent } from "@/components/ui/card.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteMonitor, getMonitors } from "@/lib/data/monitorData.ts";
 import { MonitorListItem } from "@/components/leszmonitor/MonitorListItem.tsx";
@@ -60,7 +60,6 @@ function MonitorsComponent() {
             ))}
           </Flex>
         </CardContent>
-        <CardFooter>Footer</CardFooter>
       </Card>
     </MainPanelContainer>
   );
