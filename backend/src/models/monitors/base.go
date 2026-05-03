@@ -36,13 +36,13 @@ type IMonitorConfig interface {
 
 func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonitor, error) {
 	switch base.Type {
-	case httpType:
+	case HttpConfigType:
 		monitor := &HttpMonitor{
 			BaseMonitor: base,
 			Config:      *config.(*HttpConfig),
 		}
 		return monitor, nil
-	case pingType:
+	case PingConfigType:
 		monitor := &PingMonitor{
 			BaseMonitor: base,
 			Config:      *config.(*PingConfig),
@@ -67,8 +67,8 @@ type BaseMonitor struct {
 type MonitorConfigType string
 
 const (
-	httpType MonitorConfigType = "http"
-	pingType MonitorConfigType = "ping"
+	HttpConfigType MonitorConfigType = "http"
+	PingConfigType MonitorConfigType = "ping"
 )
 
 type monitorTypeExtractor struct {
