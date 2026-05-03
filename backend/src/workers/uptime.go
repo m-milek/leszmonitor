@@ -138,23 +138,22 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 				}
 
 				log.Uptime.Trace().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Running monitor")
-				response := monitor.Run()
-				log.Uptime.Debug().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Any("monitor_response", response).Msg("Monitor response")
+				result := monitor.Run()
+				log.Uptime.Debug().Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Any("monitor_result", result).Msg("Monitor result")
 
 				events.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
-					Result:  &response,
-					Monitor: &monitor,
+					Result:  result,
+					Monitor: monitor,
 				})
 
-				if response.IsError() {
-					log.Uptime.Error().Errs("errors", response.GetErrors()).Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Monitor check failed")
+				if result.IsError() {
+					log.Uptime.Error().Strs("errors", result.GetErrors()).Str("id", monitor.GetID().String()).Str("name", monitor.GetName()).Msgf("Monitor check failed")
 				}
 
-				//	// Optionally, you can save the result to the database or perform further actions
-				//	err = db.SaveMonitorResult(monitor.GetID(), result)
-				//	if err != nil {
-				//		logger.Uptime.Error().Err(err).Msgf("Failed to save result for monitor %s", monitor.GetName())
-				//	}
+				_, err = db.Get().MonitorResults().InsertMonitorResult(ctx, result)
+				if err != nil {
+					return
+				}
 			}()
 		case <-ctx.Done():
 			return

@@ -1,6 +1,9 @@
 package monitors
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/models/monitorresult"
+)
 
 type monitorLifecycleState string
 
@@ -19,6 +22,6 @@ type MonitorLifecycleMessage struct {
 }
 
 type MonitorRunMessage struct {
-	Result  *IMonitorResult
-	Monitor *IMonitor
+	Result  monitorresult.IMonitorResult
+	Monitor IMonitor
 }

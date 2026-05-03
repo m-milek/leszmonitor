@@ -3,6 +3,7 @@ package monitors
 import (
 	"testing"
 
+	shared "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/util"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ func createTestBaseMonitor() BaseMonitor {
 		Name:        name,
 		Description: "Test Description",
 		Interval:    60,
-		Type:        httpType,
+		Type:        shared.HttpConfigType,
 	}
 }
 

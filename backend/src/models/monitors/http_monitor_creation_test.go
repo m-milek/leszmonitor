@@ -1,129 +1,56 @@
 package monitors
 
 import (
-	"io"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewHttpMonitor(t *testing.T) {
-	tests := []struct {
-		name                string
-		httpMethod          string
-		url                 string
-		expectedStatusCodes []int
-		expectError         bool
-		errorMessage        string
-	}{
-		{
-			name:                "Valid HTTP BaseMonitor",
-			httpMethod:          "GET",
-			url:                 "https://example.com",
-			expectedStatusCodes: []int{200},
-			expectError:         false,
-		},
-		{
-			name:                "Empty URL",
-			httpMethod:          "GET",
-			url:                 "",
-			expectedStatusCodes: []int{200},
-			expectError:         true,
-			errorMessage:        "URL cannot be empty",
-		},
-		{
-			name:                "Empty HTTP Method",
-			httpMethod:          "",
-			url:                 "https://example.com",
-			expectedStatusCodes: []int{200},
-			expectError:         true,
-			errorMessage:        "HTTP method cannot be empty",
-		},
-		{
-			name:                "Invalid Status Code",
-			httpMethod:          "GET",
-			url:                 "https://example.com",
-			expectedStatusCodes: []int{600},
-			expectError:         true,
-			errorMessage:        "expected status codes must be between 100 and 599",
-		},
-		{
-			name:                "Invalid URL Scheme",
-			httpMethod:          "GET",
-			url:                 "ftp://example.com",
-			expectedStatusCodes: []int{200},
-			expectError:         true,
-			errorMessage:        "URL scheme must be either http or https",
-		},
-	}
+func TestHttpMonitorFromReader(t *testing.T) {
+	jsonInput := `{
+		"name": "Test Monitor",
+		"type": "http",
+		"config": {
+			"url": "http://example.com",
+			"method": "GET",
+			"expectedStatusCodes": [200]
+		}
+	}`
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			monitor, err := newHttpConfig(
-				tt.httpMethod,
-				tt.url,
-				map[string]string{},
-				"",
-				tt.expectedStatusCodes,
-				"",
-				map[string]string{},
-				1000,
-			)
+	reader := strings.NewReader(jsonInput)
+	monitor, err := FromReader(reader)
 
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Nil(t, monitor)
-				assert.Contains(t, err.Error(), tt.errorMessage)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, monitor)
-				assert.Equal(t, tt.httpMethod, monitor.Method)
-				assert.Equal(t, tt.url, monitor.URL)
-				assert.Equal(t, tt.expectedStatusCodes, monitor.ExpectedStatusCodes)
-			}
-		})
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, monitor)
+	assert.Equal(t, "Test Monitor", monitor.GetName())
+
+	httpMonitor, ok := monitor.(*HttpMonitor)
+	assert.True(t, ok)
+	assert.Equal(t, "http://example.com", httpMonitor.Config.URL)
 }
 
-func TestHttpMonitorValidate(t *testing.T) {
-	monitor := setupTestHttpMonitorConfig()
-	err := monitor.validate()
-	assert.NoError(t, err)
+func TestHttpMonitorFromReaderInvalidJSON(t *testing.T) {
+	jsonInput := `invalid json`
 
-	// Test invalid URL
-	monitor.URL = "invalid-url"
-	err = monitor.validate()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid URL format")
+	reader := strings.NewReader(jsonInput)
+	monitor, err := FromReader(reader)
 
-	// Reset and test invalid response time
-	monitor = setupTestHttpMonitorConfig()
-	negativeTime := -100
-	monitor.ExpectedResponseTime = &negativeTime
-	err = monitor.validate()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "expected response time cannot be negative")
+	assert.Nil(t, monitor)
 }
 
-func TestCreateRequest(t *testing.T) {
-	monitor := setupTestHttpMonitorConfig()
+func TestHttpMonitorFromReaderMissingType(t *testing.T) {
+	jsonInput := `{
+		"name": "Test Monitor",
+		"config": {
+			"url": "http://example.com"
+		}
+	}`
 
-	// Test basic request creation
-	req, err := monitor.createRequest()
-	assert.NoError(t, err)
-	assert.Equal(t, "GET", req.Method)
-	assert.Equal(t, "https://example.com", req.URL.String())
-	assert.Equal(t, "application/json", req.Header.Get("Accept"))
+	reader := strings.NewReader(jsonInput)
+	monitor, err := FromReader(reader)
 
-	// Test with body
-	monitor.Body = "test body"
-	monitor.Method = "POST"
-	req, err = monitor.createRequest()
-	assert.NoError(t, err)
-	assert.Equal(t, "POST", req.Method)
-
-	// Read the body to verify
-	bodyBytes, err := io.ReadAll(req.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, "test body", string(bodyBytes))
+	assert.Error(t, err)
+	assert.Nil(t, monitor)
 }

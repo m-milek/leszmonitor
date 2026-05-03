@@ -4,18 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
+	consts "github.com/m-milek/leszmonitor/models/consts"
 )
 
-var monitorTypeMap = map[MonitorConfigType]func() IConcreteMonitor{
-	HttpConfigType: func() IConcreteMonitor {
+var monitorTypeMap = map[consts.MonitorConfigType]func() IConcreteMonitor{
+	consts.HttpConfigType: func() IConcreteMonitor {
 		return &HttpMonitor{}
 	},
-	PingConfigType: func() IConcreteMonitor {
+	consts.PingConfigType: func() IConcreteMonitor {
 		return &PingMonitor{}
 	},
 }
 
-func mapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
+func mapMonitorType(typeTag consts.MonitorConfigType) IConcreteMonitor {
 	if typeTag == "" {
 		return nil
 	}
@@ -25,11 +27,11 @@ func mapMonitorType(typeTag MonitorConfigType) IConcreteMonitor {
 	return nil
 }
 
-func mapMonitorConfigType(kind MonitorConfigType) IMonitorConfig {
+func mapMonitorConfigType(kind consts.MonitorConfigType) IMonitorConfig {
 	switch kind {
-	case HttpConfigType:
+	case consts.HttpConfigType:
 		return &HttpConfig{}
-	case PingConfigType:
+	case consts.PingConfigType:
 		return &PingConfig{}
 	default:
 		return nil
@@ -64,7 +66,7 @@ func FromReader(reader io.Reader) (IConcreteMonitor, error) {
 	return monitor, nil
 }
 
-func UnmarshalConfigFromBytes(kind MonitorConfigType, data []byte) (IMonitorConfig, error) {
+func UnmarshalConfigFromBytes(kind consts.MonitorConfigType, data []byte) (IMonitorConfig, error) {
 	config := mapMonitorConfigType(kind)
 	if config == nil {
 		return nil, fmt.Errorf("unknown monitor config type: %s", kind)

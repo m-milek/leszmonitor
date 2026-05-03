@@ -10,7 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/log"
+	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
 )
 
@@ -32,8 +35,8 @@ type HttpMonitor struct {
 	Config      HttpConfig `json:"config" bson:"config"`
 }
 
-func (m *HttpMonitor) Run() IMonitorResult {
-	return m.Config.run()
+func (m *HttpMonitor) Run() monitorresult.IMonitorResult {
+	return m.Config.run(m.ID, m.Type)
 }
 
 func (m *HttpMonitor) Validate() error {
@@ -78,28 +81,43 @@ func newHttpClient() httpClient {
 
 var httpClientOrMock = newHttpClient()
 
-func (m *HttpConfig) run() IMonitorResult {
-	monitorResponse := NewHttpMonitorResponse()
+func (m *HttpConfig) run(id uuid.UUID, monitorType consts.MonitorConfigType) monitorresult.IMonitorResult {
+	result := monitorresult.NewMonitorResult(id, monitorType, true, false, 0, "", &monitorresult.HttpResultDetails{}, time.Now().Format(time.RFC3339))
+	details := result.GetDetails().(*monitorresult.HttpResultDetails)
 
 	httpResponse, elapsed, err := m.executeRequest(&httpClientOrMock)
 
-	monitorResponse.Duration = elapsed.Milliseconds()
+	result.SetDuration(elapsed.Milliseconds())
 	if err != nil {
-		// If the request failed altogether, there's no point in checking the httpResponse
-		monitorResponse.setStatus(Error)
-		monitorResponse.addErrorMsg(fmt.Sprintf("HTTP request failed: %s", err.Error()))
+		result.AddError(fmt.Sprintf("HTTP request failed: %s", err.Error()))
 		log.Uptime.Error().Err(err).Msg("HTTP monitor validation failed")
-		return monitorResponse
+		return result
 	}
 
-	monitorResponse.setRawHttpResponse(httpResponse, m.SaveResponseBody, m.SaveResponseHeaders)
+	details.StatusCode = httpResponse.StatusCode
+	details.Proto = httpResponse.Proto
+	details.ContentLength = httpResponse.ContentLength
 
-	m.checkStatusCode(httpResponse, monitorResponse)
-	m.checkResponseTime(elapsed, monitorResponse)
-	m.checkResponseHeaders(httpResponse, monitorResponse)
-	m.checkResponseBody(httpResponse, monitorResponse)
+	if m.SaveResponseHeaders {
+		details.Headers = make(map[string]string)
+		for key, value := range httpResponse.Header {
+			details.Headers[key] = strings.Join(value, ", ")
+		}
+	}
 
-	return monitorResponse
+	if m.SaveResponseBody {
+		body, err := readResponseBody(httpResponse)
+		if err == nil {
+			details.Body = body
+		}
+	}
+
+	m.checkStatusCode(httpResponse, result, details)
+	m.checkResponseTime(elapsed, result, details)
+	m.checkResponseHeaders(httpResponse, result, details)
+	m.checkResponseBody(httpResponse, result, details)
+
+	return result
 }
 
 // Encapsulates request creation and execution.
@@ -123,30 +141,30 @@ func (m *HttpConfig) executeRequest(httpClient *httpClient) (*http.Response, tim
 	return response, elapsed, nil
 }
 
-func (m *HttpConfig) checkStatusCode(response *http.Response, monitorResponse *HttpMonitorResponse) {
+func (m *HttpConfig) checkStatusCode(response *http.Response, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
 	if m.ExpectedStatusCodes == nil {
 		return
 	}
 
 	if !util.SliceContains(m.ExpectedStatusCodes, response.StatusCode) {
 		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected one of %d", response.StatusCode, m.ExpectedStatusCodes)
-		monitorResponse.addFailureMsg(failureMsg)
-		monitorResponse.addFailedAspect(statusCodeAspect)
+		result.AddFailure(failureMsg)
+		details.FailedAspects = append(details.FailedAspects, "StatusCode")
 	}
 }
 
-func (m *HttpConfig) checkResponseTime(elapsed time.Duration, monitorResponse *HttpMonitorResponse) {
+func (m *HttpConfig) checkResponseTime(elapsed time.Duration, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
 	if m.ExpectedResponseTime == nil {
 		return
 	}
 	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTime) {
 		failureMsg := fmt.Sprintf("Response time exceeded: got %dms, expected <= %dms", elapsed.Milliseconds(), *m.ExpectedResponseTime)
-		monitorResponse.addFailureMsg(failureMsg)
-		monitorResponse.addFailedAspect(responseTimeAspect)
+		result.AddFailure(failureMsg)
+		details.FailedAspects = append(details.FailedAspects, "ResponseTime")
 	}
 }
 
-func (m *HttpConfig) checkResponseHeaders(response *http.Response, monitorResponse *HttpMonitorResponse) {
+func (m *HttpConfig) checkResponseHeaders(response *http.Response, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
 	if len(m.ExpectedHeaders) == 0 {
 		return
 	}
@@ -155,20 +173,20 @@ func (m *HttpConfig) checkResponseHeaders(response *http.Response, monitorRespon
 		actualValue := response.Header.Get(key)
 		if actualValue != expectedValue {
 			failureMsg := fmt.Sprintf("Header mismatch for %s: got %s, expected %s", key, actualValue, expectedValue)
-			monitorResponse.addFailureMsg(failureMsg)
-			monitorResponse.addFailedAspect(headersAspect)
+			result.AddFailure(failureMsg)
+			details.FailedAspects = append(details.FailedAspects, "Headers")
 		}
 	}
 }
 
-func (m *HttpConfig) checkResponseBody(response *http.Response, monitorResponse *HttpMonitorResponse) {
+func (m *HttpConfig) checkResponseBody(response *http.Response, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
 	if m.ExpectedBodyRegex == "" {
 		return
 	}
 
 	responseBody, err := readResponseBody(response)
 	if err != nil {
-		monitorResponse.addErrorMsg("Error reading response body: " + err.Error())
+		result.AddError("Error reading response body: " + err.Error())
 		return
 	}
 
@@ -177,15 +195,15 @@ func (m *HttpConfig) checkResponseBody(response *http.Response, monitorResponse 
 
 	regex, err := regexp.Compile(patternWithFlag)
 	if err != nil {
-		monitorResponse.addErrorMsg(fmt.Sprintf("Invalid regex for expected body: %s", patternWithFlag))
+		result.AddError(fmt.Sprintf("Invalid regex for expected body: %s", patternWithFlag))
 		return
 	}
 
 	matches := regex.Match([]byte(responseBody))
 	if !matches {
 		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
-		monitorResponse.addFailureMsg(failureMsg)
-		monitorResponse.addFailedAspect(bodyAspect)
+		result.AddFailure(failureMsg)
+		details.FailedAspects = append(details.FailedAspects, "Body")
 	}
 }
 
@@ -255,6 +273,12 @@ func (m *HttpConfig) validate() error {
 		return fmt.Errorf("expected response time cannot be negative")
 	}
 
+	if m.ExpectedBodyRegex != "" {
+		if _, err := regexp.Compile(m.ExpectedBodyRegex); err != nil {
+			return fmt.Errorf("invalid body regex: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -274,20 +298,6 @@ func readResponseBody(response *http.Response) (string, error) {
 	response.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	return string(bodyBytes), nil
-}
-
-func (b *HttpMonitorResponse) setStatus(status monitorResponseStatus) {
-	b.Status = status
-}
-
-func (b *HttpMonitorResponse) addFailedAspect(aspect httpCheckAspect) {
-	if b.FailedAspects == nil {
-		b.FailedAspects = make([]httpCheckAspect, 0)
-	}
-	b.FailedAspects = append(b.FailedAspects, aspect)
-	if b.Status != Error {
-		b.Status = failure
-	}
 }
 
 func (m *HttpMonitor) GetConfig() IMonitorConfig {

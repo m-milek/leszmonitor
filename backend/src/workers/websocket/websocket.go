@@ -142,7 +142,7 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 			return
 		case runMsg := <-monitorRunChannel:
 			log.Uptime.Trace().Msg("Received monitor run event, sending notification to WebSocket client")
-			notification := newMonitorRunNotification(*runMsg.Result, *runMsg.Monitor)
+			notification := newMonitorRunNotification(runMsg.Result, runMsg.Monitor)
 			notificationBytes, err := json.Marshal(notification)
 			if err != nil {
 				log.Api.Error().Err(err).Msg("Failed to marshal monitor run notification")
