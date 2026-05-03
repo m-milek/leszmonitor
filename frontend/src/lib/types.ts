@@ -236,3 +236,24 @@ export interface PingResultDetails {
   tries: number;
   latencyMs: number;
 }
+
+export interface MonitorResultMessage {
+  type: string;
+  monitorId: string;
+  response: MonitorResult;
+}
+
+export const isMonitorResultMessage = (
+  obj: object,
+): obj is MonitorResultMessage => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "type" in obj &&
+    typeof (obj as any).type === "string" &&
+    "monitorId" in obj &&
+    typeof (obj as any).monitorId === "string" &&
+    "response" in obj &&
+    typeof (obj as any).response === "object"
+  );
+};
