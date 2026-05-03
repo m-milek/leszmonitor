@@ -2,15 +2,16 @@ package monitorresult
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/monitors"
 	"testing"
+
+	"github.com/google/uuid"
+	consts "github.com/m-milek/leszmonitor/models/consts"
 )
 
 func TestParseResultDetails(t *testing.T) {
 	t.Run("HTTP details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"statusCode": 200}`)
-		details, err := ParseResultDetails("http", rawJSON)
+		details, err := ParseResultDetails(consts.HttpConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -27,7 +28,7 @@ func TestParseResultDetails(t *testing.T) {
 
 	t.Run("Ping details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"latencyMs": 42}`)
-		details, err := ParseResultDetails("ping", rawJSON)
+		details, err := ParseResultDetails(consts.PingConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -45,10 +46,10 @@ func TestParseResultDetails(t *testing.T) {
 
 func TestMonitorResultJSON(t *testing.T) {
 	t.Run("Marshal", func(t *testing.T) {
-		original := newMonitorResult(
+		original := NewMonitorResult(
 			uuid.New(),
-			monitors.MonitorConfigType("http"),
-			"success",
+			consts.HttpConfigType,
+			true,
 			false,
 			100,
 			"",
