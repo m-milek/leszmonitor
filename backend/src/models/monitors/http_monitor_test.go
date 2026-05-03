@@ -1,67 +1,28 @@
 package monitors
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"io"
-	"net/http"
-	"strings"
 	"testing"
+
+	shared "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/stretchr/testify/assert"
 )
 
-// MockHTTPClient is a mock implementation of the HTTP mockHttpClient.
-type MockHTTPClient struct {
-	mock.Mock
-}
-
-func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	args := m.Called(req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*http.Response), args.Error(1)
-}
-
-// Setup test helper functions.
-func setupTestHttpMonitorConfig() *HttpConfig {
-	responseTime := 1000
-
-	return &HttpConfig{
-		Method:               "GET",
-		URL:                  "https://example.com",
-		Headers:              map[string]string{"Accept": "application/json"},
-		Body:                 "",
-		ExpectedStatusCodes:  []int{200},
-		ExpectedBodyRegex:    "success",
-		ExpectedHeaders:      map[string]string{"Content-Type": "application/json"},
-		ExpectedResponseTime: &responseTime,
-	}
-}
-
-func createMockResponse(statusCode int, body string, headers map[string]string) *http.Response {
-	header := http.Header{}
-	for k, v := range headers {
-		header.Add(k, v)
-	}
-
-	return &http.Response{
-		StatusCode: statusCode,
-		Body:       io.NopCloser(strings.NewReader(body)),
-		Header:     header,
-	}
-}
-
-func TestHttpConfig_ImplementsIMonitorConfig(t *testing.T) {
-	monitor := setupTestHttpMonitorConfig()
-	var iMonitor IMonitorConfig = monitor
-	assert.NotNil(t, iMonitor)
-}
-
-func TestHttpMonitor_ImplementsIMonitor(t *testing.T) {
+func TestHttpMonitorType(t *testing.T) {
 	monitor := &HttpMonitor{
-		BaseMonitor: BaseMonitor{Slug: "test-id"},
-		Config:      *setupTestHttpMonitorConfig(),
+		BaseMonitor: BaseMonitor{
+			Type: shared.HttpConfigType,
+		},
 	}
-	var iMonitor IMonitor = monitor
-	assert.NotNil(t, iMonitor)
+	assert.Equal(t, shared.HttpConfigType, monitor.GetType())
+}
+
+func TestHttpMonitorGetConfig(t *testing.T) {
+	config := HttpConfig{
+		Method: "POST",
+		URL:    "http://test.com",
+	}
+	monitor := &HttpMonitor{
+		Config: config,
+	}
+	assert.Equal(t, &config, monitor.GetConfig())
 }

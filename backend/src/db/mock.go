@@ -11,10 +11,11 @@ import (
 // MockDB is a simple implementation of DB for tests.
 // Provide your own fake repositories as needed.
 type MockDB struct {
-	UsersRepo    IUserRepository
-	MonitorsRepo IMonitorRepository
-	ProjectsRepo IProjectRepository
-	CloseFn      func()
+	UsersRepo          IUserRepository
+	MonitorsRepo       IMonitorRepository
+	ProjectsRepo       IProjectRepository
+	MonitorResultsRepo IMonitorResultRepository
+	CloseFn            func()
 }
 
 type MockUserRepository struct {
@@ -91,9 +92,10 @@ func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, pro
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockDB) Users() IUserRepository       { return m.UsersRepo }
-func (m *MockDB) Monitors() IMonitorRepository { return m.MonitorsRepo }
-func (m *MockDB) Projects() IProjectRepository { return m.ProjectsRepo }
+func (m *MockDB) Users() IUserRepository                   { return m.UsersRepo }
+func (m *MockDB) Monitors() IMonitorRepository             { return m.MonitorsRepo }
+func (m *MockDB) Projects() IProjectRepository             { return m.ProjectsRepo }
+func (m *MockDB) MonitorResults() IMonitorResultRepository { return m.MonitorResultsRepo }
 func (m *MockDB) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()

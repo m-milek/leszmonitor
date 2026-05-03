@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	shared "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/monitorresult"
 	util2 "github.com/m-milek/leszmonitor/models/util"
 	"github.com/m-milek/leszmonitor/util"
 )
 
 type IMonitor interface {
-	Run() IMonitorResult
+	Run() monitorresult.IMonitorResult
 	Validate() error
 	GetID() uuid.UUID
 	GetSlug() string
@@ -20,7 +22,7 @@ type IMonitor interface {
 	GetName() string
 	GetDescription() string
 	GetInterval() time.Duration
-	GetType() MonitorConfigType
+	GetType() shared.MonitorConfigType
 }
 
 type IConcreteMonitor interface {
@@ -30,19 +32,19 @@ type IConcreteMonitor interface {
 }
 
 type IMonitorConfig interface {
-	run() IMonitorResult
+	run(id uuid.UUID, monitorType shared.MonitorConfigType) monitorresult.IMonitorResult
 	validate() error
 }
 
 func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonitor, error) {
 	switch base.Type {
-	case HttpConfigType:
+	case shared.HttpConfigType:
 		monitor := &HttpMonitor{
 			BaseMonitor: base,
 			Config:      *config.(*HttpConfig),
 		}
 		return monitor, nil
-	case PingConfigType:
+	case shared.PingConfigType:
 		monitor := &PingMonitor{
 			BaseMonitor: base,
 			Config:      *config.(*PingConfig),
@@ -54,25 +56,18 @@ func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonit
 }
 
 type BaseMonitor struct {
-	ID          uuid.UUID         `json:"id" db:"id"`
-	Slug        string            `json:"slug" db:"slug"` // Unique identifier for the monitor
-	ProjectSlug string            `json:"projectSlug"`    // Slug of the project this monitor belongs to
-	Name        string            `json:"name"`           // Name of the monitor
-	Description string            `json:"description"`    // Description of the monitor
-	Interval    int               `json:"interval"`       // How often to run the monitor in seconds
-	Type        MonitorConfigType `json:"type"`           // Type of the monitor (httpType, pingType, etc.)
+	ID          uuid.UUID                `json:"id" db:"id"`
+	Slug        string                   `json:"slug" db:"slug"` // Unique identifier for the monitor
+	ProjectSlug string                   `json:"projectSlug"`    // Slug of the project this monitor belongs to
+	Name        string                   `json:"name"`           // Name of the monitor
+	Description string                   `json:"description"`    // Description of the monitor
+	Interval    int                      `json:"interval"`       // How often to run the monitor in seconds
+	Type        shared.MonitorConfigType `json:"type"`           // Type of the monitor (httpType, pingType, etc.)
 	util2.Timestamps
 }
 
-type MonitorConfigType string
-
-const (
-	HttpConfigType MonitorConfigType = "http"
-	PingConfigType MonitorConfigType = "ping"
-)
-
 type monitorTypeExtractor struct {
-	Type MonitorConfigType `json:"type"`
+	Type shared.MonitorConfigType `json:"type"`
 }
 
 func (m *BaseMonitor) Validate() error {
@@ -130,6 +125,6 @@ func (m *BaseMonitor) GetInterval() time.Duration {
 	return time.Duration(m.Interval) * time.Second
 }
 
-func (m *BaseMonitor) GetType() MonitorConfigType {
+func (m *BaseMonitor) GetType() shared.MonitorConfigType {
 	return m.Type
 }
