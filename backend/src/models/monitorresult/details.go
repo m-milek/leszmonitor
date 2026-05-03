@@ -6,7 +6,6 @@ type HttpResultDetails struct {
 	Body          string            `json:"body,omitempty"`
 	ContentLength int64             `json:"contentLength"`
 	Proto         string            `json:"proto"`
-	FailedAspects []string          `json:"failedAspects,omitempty"`
 }
 
 type PingResultDetails struct {
