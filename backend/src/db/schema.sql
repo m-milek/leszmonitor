@@ -99,7 +99,6 @@ CREATE TABLE IF NOT EXISTS monitor_results (
     is_manually_triggered BOOLEAN NOT NULL,
     duration_ms           INT     NOT NULL,
 
-    error_message         TEXT,
     error_details         TEXT, -- JSON string
 
     details               TEXT    NOT NULL,
