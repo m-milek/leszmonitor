@@ -7,4 +7,5 @@ export const QUERY_KEYS = {
   PROJECTS: "projects",
   USERS: "users",
   MONITORS: "monitors",
+  MONITOR_RESULTS: "monitorResults",
 };
