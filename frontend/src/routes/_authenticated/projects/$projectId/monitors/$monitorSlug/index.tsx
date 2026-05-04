@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getMonitorBySlug } from "@/lib/data/monitorData.ts";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
+import type { Pagination } from "@/lib/types.ts";
+import { MonitorResultsList } from "@/components/leszmonitor/MonitorResultsList.tsx";
 
 export const Route = createFileRoute(
   "/_authenticated/projects/$projectId/monitors/$monitorSlug/",
@@ -11,6 +13,11 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
+  const pagination: Pagination = {
+    page: 1,
+    perPage: 20,
+  };
+
   const { projectId, monitorSlug } = Route.useParams();
 
   const { data: monitor } = useQuery({
@@ -28,6 +35,7 @@ function RouteComponent() {
       <span>{monitor.id}</span>
       <span>{monitor.type}</span>
       <span>{monitor.description}</span>
+      <MonitorResultsList monitor={monitor} pagination={pagination} />
     </MainPanelContainer>
   );
 }
