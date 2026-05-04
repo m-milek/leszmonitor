@@ -26,7 +26,9 @@ export const MonitorResultsList = ({
           <Flex direction="row" className="gap-4">
             <StatusDot status={result.isSuccess ? "success" : "failure"} />
             <span className="font-mono">{result.id}</span>
-            <span>{result.isSuccess ? "Success" : "Failure"}</span>
+            <span className="font-mono">
+              {result.isSuccess ? "Success" : "Failure"}
+            </span>
             <span>{result.createdAt.toLocaleString()}</span>
           </Flex>
         </div>
