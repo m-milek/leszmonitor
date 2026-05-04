@@ -7,7 +7,7 @@ import { LucideEdit, LucideTrash2 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { StatusDot } from "@/components/leszmonitor/ui/StatusDot.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-import { getLatestMonitorResultById } from "@/lib/data/monitorResultsData.ts";
+import { getLatestMonitorResultByMonitorId } from "@/lib/data/monitorResultsData.ts";
 import { useQuery } from "@tanstack/react-query";
 
 export interface MonitorListItemProps {
@@ -25,7 +25,7 @@ export function MonitorListItem({
 }: MonitorListItemProps) {
   const { data: lastResultData } = useQuery({
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id],
-    queryFn: () => getLatestMonitorResultById(monitor.id),
+    queryFn: () => getLatestMonitorResultByMonitorId(monitor.id),
   });
 
   const dotStatus = lastResultData

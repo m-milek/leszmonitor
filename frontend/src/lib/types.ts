@@ -208,6 +208,7 @@ export interface JwtClaims {
 }
 
 export interface MonitorResult {
+  id: string;
   monitorId: string;
   isSuccess: boolean;
   isManuallyTriggered: boolean;
@@ -257,3 +258,8 @@ export const isMonitorResultMessage = (
     typeof (obj as any).response === "object"
   );
 };
+
+export interface Pagination {
+  page: number;
+  perPage: number;
+}

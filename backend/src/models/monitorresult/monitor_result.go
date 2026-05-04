@@ -26,6 +26,7 @@ type ErrorDetails struct {
 }
 
 type baseMonitorResult struct {
+	ID                  uuid.UUID     `json:"id"                  db:"id"`
 	MonitorID           uuid.UUID     `json:"monitorId"           db:"monitor_id"`
 	IsSuccess           bool          `json:"isSuccess"           db:"is_success"`
 	IsManuallyTriggered bool          `json:"isManuallyTriggered" db:"is_manually_triggered"`

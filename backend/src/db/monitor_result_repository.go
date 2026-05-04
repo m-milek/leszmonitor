@@ -9,15 +9,60 @@ import (
 	"github.com/google/uuid"
 	consts "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
+	"github.com/m-milek/leszmonitor/util"
 )
 
 type IMonitorResultRepository interface {
 	InsertMonitorResult(ctx context.Context, result monitorresult.IMonitorResult) (interface{}, error)
 	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, error)
+	GetMonitorResultsByMonitorID(ctx context.Context, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, error)
 }
 
 type monitorResultRepository struct {
 	baseRepository
+}
+
+func (r *monitorResultRepository) GetMonitorResultsByMonitorID(ctx context.Context, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, error) {
+	return dbWrap(ctx, "GetMonitorResultsByMonitorID", func() ([]monitorresult.IMonitorResult, error) {
+		var results []monitorresult.MonitorResult
+
+		err := r.pool.SelectContext(ctx, &results, `
+			SELECT mr.id, mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+			FROM monitor_results mr
+			JOIN monitors m ON m.id = mr.monitor_id
+			WHERE mr.monitor_id = $1
+			ORDER BY mr.created_at DESC
+			LIMIT $2 OFFSET $3`, id, pagination.PerPage, pagination.Offset())
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+
+		var monitorResults []monitorresult.IMonitorResult
+		for _, r := range results {
+			details, err := monitorresult.ParseResultDetails(consts.MonitorConfigType(r.MonitorType), r.DetailsJSON)
+			if err != nil {
+				return nil, err
+			}
+			r.Details = details
+
+			if len(r.ErrorDetailsJSON) > 0 {
+				var errorDetails monitorresult.ErrorDetails
+				if err := json.Unmarshal(r.ErrorDetailsJSON, &errorDetails); err == nil {
+					if errorDetails.ErrorMessage != "" || len(errorDetails.Errors) > 0 || len(errorDetails.Failures) > 0 {
+						r.ErrorDetails = &errorDetails
+					}
+				}
+			}
+
+			monitorResults = append(monitorResults, &r)
+		}
+
+		return monitorResults, nil
+	})
 }
 
 func newMonitorResultRepository(repository baseRepository) IMonitorResultRepository {
