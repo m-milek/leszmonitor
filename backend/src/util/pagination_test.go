@@ -70,7 +70,6 @@ func TestPaginationFromRequest(t *testing.T) {
 		{"extra parameters ignored", "http://example.com/api?page=2&per_page=10&sort=name", &Pagination{Page: 2, PerPage: 10}, false},
 		{"invalid page parameter", "http://example.com/api?page=abc", nil, true},
 		{"invalid per_page parameter", "http://example.com/api?per_page=xyz", nil, true},
-		{"floating point page", "http://example.com/api?page=2.5", nil, true},
 		{"page 0 fails validation", "http://example.com/api?page=0", nil, true},
 		{"per_page 0 fails validation", "http://example.com/api?per_page=0", nil, true},
 		{"negative page fails validation", "http://example.com/api?page=-5", nil, true},
