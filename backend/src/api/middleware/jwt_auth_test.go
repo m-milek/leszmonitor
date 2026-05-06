@@ -227,7 +227,7 @@ func TestProjectAuthFromRequest(t *testing.T) {
 				ctx := SetUserContext(req.Context(), claims)
 				return req.WithContext(ctx)
 			},
-			expectedError: "projectID is required",
+			expectedError: "project slug is required",
 		},
 		{
 			name: "missing user claims in context",
@@ -257,7 +257,7 @@ func TestProjectAuthFromRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := tt.setupRequest()
 
-			auth, err := ProjectAuthFromRequest(req)
+			auth, err := ProjectAuthFromRequest(req, AuthSourceProject)
 
 			if tt.expectedError != "" {
 				assert.Error(t, err)
