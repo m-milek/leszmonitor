@@ -1,4 +1,4 @@
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+export const BACKEND_URL = "http://localhost:7001";
 export const BACKEND_API_URL = `${BACKEND_URL}/api`;
 export const BACKEND_WS_URL = BACKEND_API_URL.replace(/^http/, "ws");
 
