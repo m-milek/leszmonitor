@@ -2,7 +2,6 @@ package monitors
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	shared "github.com/m-milek/leszmonitor/models/consts"
@@ -11,120 +10,43 @@ import (
 	"github.com/m-milek/leszmonitor/util"
 )
 
-type IMonitor interface {
-	Run() monitorresult.IMonitorResult
-	Validate() error
-	GetID() uuid.UUID
-	GetSlug() string
-	GenerateSlug()
-	GetProjectSlug() string
-	SetProjectSlug(slug string)
-	GetName() string
-	GetDescription() string
-	GetInterval() time.Duration
-	GetType() shared.MonitorConfigType
-}
-
-type IConcreteMonitor interface {
-	IMonitor
-	GetConfig() IMonitorConfig
-	SetConfig(IMonitorConfig)
-}
-
-type IMonitorConfig interface {
-	run(id uuid.UUID, monitorType shared.MonitorConfigType) monitorresult.IMonitorResult
-	validate() error
-}
-
-func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonitor, error) {
-	switch base.Type {
-	case shared.HttpConfigType:
-		monitor := &HttpMonitor{
-			BaseMonitor: base,
-			Config:      *config.(*HttpConfig),
-		}
-		return monitor, nil
-	case shared.TCPConfigType:
-		monitor := &TCPMonitor{
-			BaseMonitor: base,
-			Config:      *config.(*TCPConfig),
-		}
-		return monitor, nil
-	default:
-		return nil, fmt.Errorf("unknown monitor type: %s", base.Type)
-	}
-}
-
-type BaseMonitor struct {
-	ID          uuid.UUID                `json:"id" db:"id"`
-	Slug        string                   `json:"slug" db:"slug"` // Unique identifier for the monitor
-	ProjectSlug string                   `json:"projectSlug"`    // Slug of the project this monitor belongs to
-	Name        string                   `json:"name"`           // Name of the monitor
-	Description string                   `json:"description"`    // Description of the monitor
-	Interval    int                      `json:"interval"`       // How often to run the monitor in seconds
-	Type        shared.MonitorConfigType `json:"type"`           // Type of the monitor (http, tcp, etc.)
+type Monitor struct {
+	ID          uuid.UUID        `json:"id" db:"id"`     // ID is the unique identifier for the monitor, generated as a UUID
+	Slug        string           `json:"slug" db:"slug"` // Slug is unique in the project
+	ProjectSlug string           `json:"projectSlug"`    // ProjectSlug is used to associate the monitor with a project
+	Name        string           `json:"name"`           // Name of the monitor
+	Description string           `json:"description"`    // Description of the monitor
+	Interval    int              `json:"interval"`       // Interval determines how often to run the monitor in seconds
+	Type        shared.ProbeType `json:"type"`           // Type of the monitor (http, tcp, etc.)
+	ProbeConfig string           `json:"probeConfig"`    // JSON string containing the specific configuration for the monitor type
 	util2.Timestamps
 }
 
+type Probe interface {
+	Run(monitorID uuid.UUID) monitorresult.IMonitorResult
+	Validate() error
+}
+
 type monitorTypeExtractor struct {
-	Type shared.MonitorConfigType `json:"type"`
+	Type shared.ProbeType `json:"type"`
 }
 
-func (m *BaseMonitor) Validate() error {
-	if err := m.validateBase(); err != nil {
-		return fmt.Errorf("monitor validation failed: %w", err)
-	}
-	return nil
-}
-
-func (m *BaseMonitor) validateBase() error {
-	if m.GetName() == "" {
+func (m *Monitor) Validate() error {
+	if m.Name == "" {
 		return fmt.Errorf("monitor name cannot be empty")
 	}
-	if m.GetInterval() <= 0 {
+	if m.Interval <= 0 {
 		return fmt.Errorf("monitor interval must be greater than zero")
 	}
-	if m.GetType() == "" {
+	if m.Type == "" {
 		return fmt.Errorf("monitor type cannot be empty")
 	}
-	if m.GetSlug() == "" {
+	if m.Slug == "" {
 		return fmt.Errorf("monitor slug cannot be empty")
 	}
 	return nil
 }
 
-func (m *BaseMonitor) GenerateSlug() {
-	m.Slug = util.SlugFromString(m.GetName())
-}
-
-func (m *BaseMonitor) GetSlug() string {
-	return m.Slug
-}
-
-func (m *BaseMonitor) GetID() uuid.UUID {
-	return m.ID
-}
-
-func (m *BaseMonitor) GetProjectSlug() string {
-	return m.ProjectSlug
-}
-
-func (m *BaseMonitor) SetProjectSlug(slug string) {
-	m.ProjectSlug = slug
-}
-
-func (m *BaseMonitor) GetName() string {
-	return m.Name
-}
-
-func (m *BaseMonitor) GetDescription() string {
-	return m.Description
-}
-
-func (m *BaseMonitor) GetInterval() time.Duration {
-	return time.Duration(m.Interval) * time.Second
-}
-
-func (m *BaseMonitor) GetType() shared.MonitorConfigType {
-	return m.Type
+func (m *Monitor) GenerateSlug() {
+	m.Slug = util.SlugFromString(m.Name)
 }

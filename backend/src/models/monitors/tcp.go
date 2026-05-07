@@ -21,7 +21,7 @@ var (
 	retryTimeout = 1 * time.Second // Default retry timeout
 )
 
-type TCPConfig struct {
+type TCPProbe struct {
 	Host            string `json:"host" bson:"host"`             // Host to call
 	Port            int    `json:"port" bson:"port"`             // Port to call
 	Protocol        string `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
@@ -30,52 +30,8 @@ type TCPConfig struct {
 	dialAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
-type TCPMonitor struct {
-	BaseMonitor `bson:",inline"` // Embed BaseMonitor for common fields
-	Config      TCPConfig        `json:"config" bson:"config"`
-}
-
-func (m *TCPMonitor) GetConfig() IMonitorConfig {
-	return &m.Config
-}
-
-func (m *TCPMonitor) SetConfig(config IMonitorConfig) {
-	m.Config = *config.(*TCPConfig)
-}
-
-func (m *TCPMonitor) Run() monitorresult.IMonitorResult {
-	return m.Config.run(m.ID, m.Type)
-}
-
-func (m *TCPMonitor) Validate() error {
-	if err := m.validateBase(); err != nil {
-		return fmt.Errorf("monitor validation failed: %w", err)
-	}
-	if err := m.Config.validate(); err != nil {
-		return fmt.Errorf("TCP monitor config validation failed: %w", err)
-	}
-	return nil
-}
-
-func NewTCPConfig(host string, port int, protocol string, timeout, retryCount int) (*TCPConfig, error) {
-	monitor := &TCPConfig{
-		Host:            host,
-		Port:            port,
-		Protocol:        protocol,
-		Timeout:         timeout,
-		RetryCount:      retryCount,
-		dialAddressFunc: dialAddress,
-	}
-
-	if err := monitor.validate(); err != nil {
-		return nil, fmt.Errorf("failed to create TCPConfig: %w", err)
-	}
-
-	return monitor, nil
-}
-
-func (m *TCPConfig) run(id uuid.UUID, monitorType consts.MonitorConfigType) monitorresult.IMonitorResult {
-	result := monitorresult.NewMonitorResult(id, monitorType, true, false, 0, "", &monitorresult.TCPResultDetails{}, time.Now().Format(time.RFC3339))
+func (m *TCPProbe) Run(monitorID uuid.UUID) monitorresult.IMonitorResult {
+	result := monitorresult.NewMonitorResult(monitorID, consts.TCPConfigType, true, false, 0, "", &monitorresult.TCPResultDetails{}, time.Now().Format(time.RFC3339))
 	details := result.GetDetails().(*monitorresult.TCPResultDetails)
 
 	portString := strconv.Itoa(m.Port)
@@ -100,7 +56,7 @@ func (m *TCPConfig) run(id uuid.UUID, monitorType consts.MonitorConfigType) moni
 	return result
 }
 
-func (m *TCPConfig) validate() error {
+func (m *TCPProbe) Validate() error {
 	if m.Host == "" {
 		return fmt.Errorf("host cannot be empty")
 	}
@@ -123,6 +79,23 @@ func (m *TCPConfig) validate() error {
 	}
 
 	return nil
+}
+
+func NewTCPProbe(host string, port int, protocol string, timeout, retryCount int) (*TCPProbe, error) {
+	probe := &TCPProbe{
+		Host:            host,
+		Port:            port,
+		Protocol:        protocol,
+		Timeout:         timeout,
+		RetryCount:      retryCount,
+		dialAddressFunc: dialAddress,
+	}
+
+	if err := probe.Validate(); err != nil {
+		return nil, fmt.Errorf("failed to create TCPConfig: %w", err)
+	}
+
+	return probe, nil
 }
 
 // dialAddressFunc is a function variable that can be replaced for testing purposes.

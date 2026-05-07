@@ -47,7 +47,7 @@ export interface Monitor extends Timestamps {
   projectSlug: string;
   interval: number;
   type: MonitorType;
-  config?: HttpMonitorConfig | TcpMonitorConfig;
+  probeConfig?: HttpMonitorConfig | TcpMonitorConfig;
 }
 
 export type MonitorType = "http" | "tcp";
@@ -126,13 +126,13 @@ const baseMonitorFields = {
 const httpMonitorSchema = z.object({
   ...baseMonitorFields,
   type: z.literal("http"),
-  config: httpMonitorConfigSchema.optional(),
+  probeConfig: httpMonitorConfigSchema.optional(),
 });
 
 const tcpMonitorSchema = z.object({
   ...baseMonitorFields,
   type: z.literal("tcp"),
-  config: tcpMonitorConfigSchema.optional(),
+  probeConfig: tcpMonitorConfigSchema.optional(),
 });
 
 export const newMonitorSchema = z.discriminatedUnion("type", [
@@ -152,26 +152,28 @@ export const newMonitorSchemaDefaultValues = {
   interval: 60,
 } satisfies Partial<MonitorFormValues>;
 
-export const defaultConfigs: Record<MonitorType, MonitorFormValues["config"]> =
-  {
-    http: {
-      method: "GET",
-      url: "",
-      headers: {},
-      body: "",
-      saveResponseBody: false,
-      saveResponseHeaders: false,
-      expectedStatusCodes: [],
-      expectedHeaders: {},
-    },
-    tcp: {
-      host: "",
-      port: 443,
-      protocol: "tcp",
-      timeout: 5000,
-      retryCount: 3,
-    },
-  };
+export const defaultConfigs: Record<
+  MonitorType,
+  MonitorFormValues["probeConfig"]
+> = {
+  http: {
+    method: "GET",
+    url: "",
+    headers: {},
+    body: "",
+    saveResponseBody: false,
+    saveResponseHeaders: false,
+    expectedStatusCodes: [],
+    expectedHeaders: {},
+  },
+  tcp: {
+    host: "",
+    port: 443,
+    protocol: "tcp",
+    timeout: 5000,
+    retryCount: 3,
+  },
+};
 
 export type MonitorCreatePayload = MonitorFormValues;
 export type MonitorUpdatePayload = MonitorFormValues & { id: string };
@@ -187,9 +189,9 @@ export const mapMonitorToFormValues = (monitor: Monitor): MonitorFormValues => {
     description: monitor.description ?? "",
     interval: monitor.interval,
     type: monitor.type,
-    config: {
+    probeConfig: {
       ...configDefaults,
-      ...(monitor.config ?? {}),
+      ...(monitor.probeConfig ?? {}),
     },
   } as MonitorFormValues;
 };

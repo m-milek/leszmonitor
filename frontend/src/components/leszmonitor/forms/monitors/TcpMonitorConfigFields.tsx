@@ -20,7 +20,7 @@ export function TcpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
       <div className="text-lg font-semibold">TCP Monitor Settings</div>
 
       <form.Field
-        name="config.host"
+        name="probeConfig.host"
         children={(field) => (
           <Field>
             <FieldLabel>Host</FieldLabel>
@@ -37,7 +37,7 @@ export function TcpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
       />
 
       <form.Field
-        name="config.port"
+        name="probeConfig.port"
         children={(field) => (
           <Field>
             <FieldLabel>Port</FieldLabel>
@@ -56,7 +56,7 @@ export function TcpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
       />
 
       <form.Field
-        name="config.protocol"
+        name="probeConfig.protocol"
         children={(field) => (
           <Field>
             <FieldLabel>Protocol</FieldLabel>
@@ -77,7 +77,7 @@ export function TcpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
       />
 
       <form.Field
-        name="config.timeout"
+        name="probeConfig.timeout"
         children={(field) => (
           <Field>
             <FieldLabel>Timeout (ms)</FieldLabel>
@@ -96,7 +96,7 @@ export function TcpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
       />
 
       <form.Field
-        name="config.retryCount"
+        name="probeConfig.retryCount"
         children={(field) => (
           <Field>
             <FieldLabel>Retry Count</FieldLabel>

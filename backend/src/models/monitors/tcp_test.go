@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 
-	shared "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -68,8 +67,8 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 }
 
 // Setup function for tests
-func setupTCPMonitorConfig() *TCPConfig {
-	monitor, err := NewTCPConfig("example.com", 80, "tcp", 5000, 3)
+func setupTCPProbe() *TCPProbe {
+	monitor, err := NewTCPProbe("example.com", 80, "tcp", 5000, 3)
 	monitor.dialAddressFunc = dialAddressFunc // Use the global function for testing
 
 	if err != nil {
@@ -78,85 +77,66 @@ func setupTCPMonitorConfig() *TCPConfig {
 	return monitor
 }
 
-func TestTCPConfig_ImplementsIMonitorConfig(t *testing.T) {
-	monitor := setupTCPMonitorConfig()
-	var iMonitor IMonitorConfig = monitor
-	assert.NotNil(t, iMonitor)
-}
-
-func TestTCPMonitor_ImplementsIMonitor(t *testing.T) {
-	monitor := &TCPMonitor{
-		BaseMonitor: BaseMonitor{Slug: "test-id"},
-		Config:      *setupTCPMonitorConfig(),
-	}
-	var iMonitor IMonitor = monitor
-	assert.NotNil(t, iMonitor)
-}
-
 func TestTCPMonitor_Validate(t *testing.T) {
 	t.Run("Valid Configuration", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
-		err := monitor.validate()
+		probe := setupTCPProbe()
+		err := probe.Validate()
 		assert.NoError(t, err)
 	})
 
 	t.Run("Empty Host", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
-		monitor.Host = ""
-		err := monitor.validate()
+		probe := setupTCPProbe()
+		probe.Host = ""
+		err := probe.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "host cannot be empty")
 	})
 
 	t.Run("Invalid RetryCount", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
-		monitor.RetryCount = 0
-		err := monitor.validate()
+		probe := setupTCPProbe()
+		probe.RetryCount = 0
+		err := probe.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "count must be greater than zero")
 	})
 
 	t.Run("Invalid Protocol", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
-		monitor.Protocol = "invalid"
-		err := monitor.validate()
+		probe := setupTCPProbe()
+		probe.Protocol = "invalid"
+		err := probe.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid protocol")
 	})
 
 	t.Run("Valid Protocols", func(t *testing.T) {
 		for _, protocol := range validProtocols {
-			monitor := setupTCPMonitorConfig()
-			monitor.Protocol = protocol
-			err := monitor.validate()
+			probe := setupTCPProbe()
+			probe.Protocol = protocol
+			err := probe.Validate()
 			assert.NoError(t, err, "Protocol %s should be valid", protocol)
 		}
 	})
 
 	t.Run("Negative Timeout", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
-		monitor.Timeout = -1
-		err := monitor.validate()
+		probe := setupTCPProbe()
+		probe.Timeout = -1
+		err := probe.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "timeout must be greater than zero")
 	})
 
 	t.Run("Timeout Exceeds Limit", func(t *testing.T) {
-		pConfig := setupTCPMonitorConfig()
-		pConfig.Timeout = 60001 // Exceeds the limit of 60 seconds (60000ms)
-		monitor := &TCPMonitor{
-			BaseMonitor: BaseMonitor{Slug: "test-slug", Name: "Test Name", Interval: 60, Type: shared.TCPConfigType},
-			Config:      *pConfig,
-		}
-		err := monitor.Validate()
+		probe := setupTCPProbe()
+		probe.Timeout = 60001 // Exceeds the limit of 60 seconds (60000ms)
+		err := probe.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "timeout must not exceed 60 seconds")
 	})
 
 	t.Run("Zero Timeout", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
-		monitor.Timeout = 0
-		err := monitor.validate()
+		probe := setupTCPProbe()
+		probe.Timeout = 0
+		err := probe.Validate()
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "timeout must be greater than zero")
 	})
@@ -198,7 +178,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 	defer func() { dialAddressFunc = originalDialAddress }()
 
 	t.Run("Successful shared.TCPConfigType", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
+		probe := setupTCPProbe()
 
 		// Mock the dialAddress function
 		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
@@ -208,14 +188,14 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return true, 100 * time.Millisecond
 		}
 
-		response := monitor.run(uuid.Nil, shared.TCPConfigType)
+		response := probe.Run(uuid.Nil)
 		assert.True(t, response.GetIsSuccess())
 		assert.Equal(t, int64(100), response.GetDurationMs())
 		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
 	})
 
 	t.Run("Failed shared.TCPConfigType with Retries", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
+		probe := setupTCPProbe()
 		callCount := 0
 
 		// Mock the dialAddress function to fail for all retries
@@ -224,13 +204,13 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response := monitor.run(uuid.Nil, shared.TCPConfigType)
+		response := probe.Run(uuid.Nil)
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
 		assert.False(t, response.GetIsSuccess())
 	})
 
 	t.Run("Successful shared.TCPConfigType After Retry", func(t *testing.T) {
-		monitor := setupTCPMonitorConfig()
+		probe := setupTCPProbe()
 		callCount := 0
 
 		// Mock the dialAddress function to succeed on the second try
@@ -242,7 +222,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response := monitor.run(uuid.Nil, shared.TCPConfigType)
+		response := probe.Run(uuid.Nil)
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
 		assert.True(t, response.GetIsSuccess())
 		assert.Equal(t, int64(150), response.GetDurationMs())

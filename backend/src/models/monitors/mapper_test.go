@@ -10,33 +10,33 @@ import (
 
 func TestUnmarshalConfigFromBytes(t *testing.T) {
 	t.Run("HTTP Config", func(t *testing.T) {
-		config := HttpConfig{
+		config := HttpProbe{
 			Method: "GET",
 			URL:    "http://example.com",
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalConfigFromBytes(shared.HttpConfigType, bytes)
+		parsed, err := UnmarshalProbeFromBytes(shared.HttpConfigType, bytes)
 		assert.NoError(t, err)
-		assert.IsType(t, &HttpConfig{}, parsed)
-		assert.Equal(t, config.URL, parsed.(*HttpConfig).URL)
+		assert.IsType(t, &HttpProbe{}, parsed)
+		assert.Equal(t, config.URL, parsed.(*HttpProbe).URL)
 	})
 
 	t.Run("TCP Config", func(t *testing.T) {
-		config := TCPConfig{
+		config := TCPProbe{
 			Host: "example.com",
 			Port: 80,
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalConfigFromBytes(shared.TCPConfigType, bytes)
+		parsed, err := UnmarshalProbeFromBytes(shared.TCPConfigType, bytes)
 		assert.NoError(t, err)
-		assert.IsType(t, &TCPConfig{}, parsed)
-		assert.Equal(t, config.Host, parsed.(*TCPConfig).Host)
+		assert.IsType(t, &TCPProbe{}, parsed)
+		assert.Equal(t, config.Host, parsed.(*TCPProbe).Host)
 	})
 
 	t.Run("Unknown Config", func(t *testing.T) {
-		_, err := UnmarshalConfigFromBytes("unknown", []byte("{}"))
+		_, err := UnmarshalProbeFromBytes("unknown", []byte("{}"))
 		assert.Error(t, err)
 	})
 }
