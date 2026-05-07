@@ -20,10 +20,10 @@ func ParseResultDetails(monitorType consts.MonitorConfigType, rawDetails []byte)
 			return nil, fmt.Errorf("failed to parse HTTP result details: %w", err)
 		}
 		return &details, nil
-	case consts.PingConfigType:
-		var details PingResultDetails
+	case consts.TCPConfigType:
+		var details TCPResultDetails
 		if err := json.Unmarshal(rawDetails, &details); err != nil {
-			return nil, fmt.Errorf("failed to parse Ping result details: %w", err)
+			return nil, fmt.Errorf("failed to parse TCP result details: %w", err)
 		}
 		return &details, nil
 	default:

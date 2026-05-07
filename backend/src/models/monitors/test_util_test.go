@@ -19,7 +19,7 @@ type TestMonitor struct {
 
 	// Config fields
 	HttpConfig *HttpConfig
-	PingConfig *PingConfig
+	TCPConfig  *TCPConfig
 }
 
 // NewTestMonitor creates a new test monitor with default values
@@ -51,20 +51,20 @@ func (t *TestMonitor) AsHttp() *TestMonitor {
 			ExpectedStatusCodes: []int{200},
 		}
 	}
-	t.PingConfig = nil
+	t.TCPConfig = nil
 	return t
 }
 
-// AsPing configures the monitor as a pingType monitor
-func (t *TestMonitor) AsPing() *TestMonitor {
-	t.Type = shared.PingConfigType
-	if t.PingConfig == nil {
-		t.PingConfig = &PingConfig{
-			Host:        "example.com",
-			Port:        80,
-			Protocol:    "tcp",
-			PingTimeout: 5000,
-			RetryCount:  3,
+// AsTCP configures the monitor as a tcpType monitor
+func (t *TestMonitor) AsTCP() *TestMonitor {
+	t.Type = shared.TCPConfigType
+	if t.TCPConfig == nil {
+		t.TCPConfig = &TCPConfig{
+			Host:       "example.com",
+			Port:       80,
+			Protocol:   "tcp",
+			Timeout:    5000,
+			RetryCount: 3,
 		}
 	}
 	t.HttpConfig = nil
@@ -88,10 +88,10 @@ func (t *TestMonitor) Build() IMonitor {
 			BaseMonitor: base,
 			Config:      *t.HttpConfig,
 		}
-	case shared.PingConfigType:
-		return &PingMonitor{
+	case shared.TCPConfigType:
+		return &TCPMonitor{
 			BaseMonitor: base,
-			Config:      *t.PingConfig,
+			Config:      *t.TCPConfig,
 		}
 	}
 	return nil

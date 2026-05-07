@@ -12,8 +12,8 @@ var monitorTypeMap = map[consts.MonitorConfigType]func() IConcreteMonitor{
 	consts.HttpConfigType: func() IConcreteMonitor {
 		return &HttpMonitor{}
 	},
-	consts.PingConfigType: func() IConcreteMonitor {
-		return &PingMonitor{}
+	consts.TCPConfigType: func() IConcreteMonitor {
+		return &TCPMonitor{}
 	},
 }
 
@@ -31,8 +31,8 @@ func mapMonitorConfigType(kind consts.MonitorConfigType) IMonitorConfig {
 	switch kind {
 	case consts.HttpConfigType:
 		return &HttpConfig{}
-	case consts.PingConfigType:
-		return &PingConfig{}
+	case consts.TCPConfigType:
+		return &TCPConfig{}
 	default:
 		return nil
 	}
