@@ -3,71 +3,38 @@ package monitors
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 
 	consts "github.com/m-milek/leszmonitor/models/consts"
 )
 
-var monitorTypeMap = map[consts.MonitorConfigType]func() IConcreteMonitor{
-	consts.HttpConfigType: func() IConcreteMonitor {
-		return &HttpMonitor{}
-	},
-	consts.TCPConfigType: func() IConcreteMonitor {
-		return &TCPMonitor{}
-	},
-}
-
-func mapMonitorType(typeTag consts.MonitorConfigType) IConcreteMonitor {
-	if typeTag == "" {
-		return nil
-	}
-	if monitorInstanceCreatorFn, ok := monitorTypeMap[typeTag]; ok {
-		return monitorInstanceCreatorFn()
-	}
-	return nil
-}
-
-func mapMonitorConfigType(kind consts.MonitorConfigType) IMonitorConfig {
+func mapProbeType(kind consts.ProbeType) Probe {
 	switch kind {
 	case consts.HttpConfigType:
-		return &HttpConfig{}
+		return &HttpProbe{}
 	case consts.TCPConfigType:
-		return &TCPConfig{}
+		return &TCPProbe{}
 	default:
 		return nil
 	}
 }
 
-func FromReader(reader io.Reader) (IConcreteMonitor, error) {
-	var rawData json.RawMessage
-	if err := json.NewDecoder(reader).Decode(&rawData); err != nil {
-		return nil, fmt.Errorf("failed to decode request body: %w", err)
-	}
-
-	var monitorTypeExtractor monitorTypeExtractor
-	if err := json.Unmarshal(rawData, &monitorTypeExtractor); err != nil {
-		return nil, fmt.Errorf("failed to parse monitor type: %w", err)
-	}
-
+func ProbeFromJSON(probeConfig string, probeType consts.ProbeType) (Probe, error) {
 	// Map the monitor type to the appropriate config type
-	monitor := mapMonitorType(monitorTypeExtractor.Type)
-	if monitorTypeExtractor.Type == "" {
-		return nil, fmt.Errorf("monitor type cannot be empty")
-	}
-	if monitor == nil {
-		return nil, fmt.Errorf("unknown monitor type: %s", monitorTypeExtractor.Type)
+	probe := mapProbeType(probeType)
+	if probe == nil {
+		return nil, fmt.Errorf("unknown monitor type: %s", probeType)
 	}
 
-	// unmarshal the raw data into a monitor instance
-	if err := json.Unmarshal(rawData, &monitor); err != nil {
-		return nil, fmt.Errorf("failed to parse monitor config: %w: %s", err, rawData)
+	// unmarshal the raw data into a probe instance
+	if err := json.Unmarshal([]byte(probeConfig), &probe); err != nil {
+		return nil, fmt.Errorf("failed to parse monitor config: %w: %s", err, probeConfig)
 	}
 
-	return monitor, nil
+	return probe, nil
 }
 
-func UnmarshalConfigFromBytes(kind consts.MonitorConfigType, data []byte) (IMonitorConfig, error) {
-	config := mapMonitorConfigType(kind)
+func UnmarshalProbeFromBytes(kind consts.ProbeType, data []byte) (Probe, error) {
+	config := mapProbeType(kind)
 	if config == nil {
 		return nil, fmt.Errorf("unknown monitor config type: %s", kind)
 	}

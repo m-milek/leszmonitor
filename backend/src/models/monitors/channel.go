@@ -18,10 +18,10 @@ const (
 type MonitorLifecycleMessage struct {
 	ID      uuid.UUID
 	Status  monitorLifecycleState
-	Monitor *IConcreteMonitor
+	Monitor *Monitor
 }
 
 type MonitorRunMessage struct {
+	Monitor Monitor
 	Result  monitorresult.IMonitorResult
-	Monitor IMonitor
 }

@@ -83,7 +83,9 @@ func ExtractUserOrRespond(w http.ResponseWriter, r *http.Request) (*auth.UserCla
 
 // DecodeJSONOrRespond decodes JSON from the request body into v, or writes a 400 response and returns false.
 func DecodeJSONOrRespond(w http.ResponseWriter, r *http.Request, v interface{}) bool {
-	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(v); err != nil {
 		RespondError(w, http.StatusBadRequest, err)
 		return false
 	}

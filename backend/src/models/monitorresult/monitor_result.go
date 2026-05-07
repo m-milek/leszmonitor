@@ -43,7 +43,7 @@ type MonitorResult struct {
 	Details     IMonitorResultDetails `json:"details"     db:"-"`
 }
 
-func NewMonitorResult(monitorID uuid.UUID, monitorType consts.MonitorConfigType, isSuccess bool, isManuallyTriggered bool, durationMs int64, errorMessage string, details IMonitorResultDetails, createdAt string) *MonitorResult {
+func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSuccess bool, isManuallyTriggered bool, durationMs int64, errorMessage string, details IMonitorResultDetails, createdAt string) *MonitorResult {
 	res := &MonitorResult{
 		baseMonitorResult: baseMonitorResult{
 			MonitorID:           monitorID,

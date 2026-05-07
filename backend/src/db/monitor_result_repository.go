@@ -43,7 +43,7 @@ func (r *monitorResultRepository) GetMonitorResultsByMonitorID(ctx context.Conte
 
 		var monitorResults []monitorresult.IMonitorResult
 		for _, r := range results {
-			details, err := monitorresult.ParseResultDetails(consts.MonitorConfigType(r.MonitorType), r.DetailsJSON)
+			details, err := monitorresult.ParseResultDetails(consts.ProbeType(r.MonitorType), r.DetailsJSON)
 			if err != nil {
 				return nil, err
 			}
@@ -122,7 +122,7 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 			return nil, err
 		}
 
-		details, err := monitorresult.ParseResultDetails(consts.MonitorConfigType(result.MonitorType), result.DetailsJSON)
+		details, err := monitorresult.ParseResultDetails(consts.ProbeType(result.MonitorType), result.DetailsJSON)
 		if err != nil {
 			return nil, err
 		}

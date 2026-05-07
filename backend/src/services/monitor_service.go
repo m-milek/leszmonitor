@@ -35,7 +35,7 @@ type MonitorCreateResponse struct {
 }
 
 // CreateMonitor creates a new monitor in the specified project.
-func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.IConcreteMonitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
@@ -44,7 +44,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 		return nil, authErr
 	}
 
-	monitor.SetProjectSlug(project.Slug)
+	monitor.ProjectSlug = project.Slug
 	monitor.GenerateSlug()
 
 	if err := monitor.Validate(); err != nil {
@@ -65,13 +65,13 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 	}
 
 	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
-		ID:      dbRes.GetID(),
+		ID:      dbRes.ID,
 		Status:  monitors.Created,
-		Monitor: &dbRes,
+		Monitor: dbRes,
 	})
 
-	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor created")
-	return &MonitorCreateResponse{MonitorID: dbRes.GetID().String()}, nil
+	logger.Info().Str("id", monitor.ID.String()).Msg("Monitor created")
+	return &MonitorCreateResponse{MonitorID: dbRes.ID.String()}, nil
 }
 
 // DeleteMonitor deletes a monitor by its slug.
@@ -108,7 +108,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *middle
 }
 
 // GetMonitorsByProjectID retrieves all monitors for the project in the provided ProjectAuth.
-func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAuth *middleware.ProjectAuth) ([]monitors.IConcreteMonitor, *ServiceError) {
+func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAuth *middleware.ProjectAuth) ([]monitors.Monitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorsByProjectID")
 
 	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
@@ -129,7 +129,7 @@ func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAut
 }
 
 // GetMonitorByID retrieves a specific monitor by its slug.
-func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) (monitors.IMonitor, *ServiceError) {
+func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) (*monitors.Monitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorByID")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by slug")
 
@@ -148,7 +148,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}
 	}
 
-	if monitor.GetProjectSlug() != projectAuth.ProjectID {
+	if monitor.ProjectSlug != projectAuth.ProjectID {
 		logger.Warn().Str("id", id).Msg("Monitor does not belong to the authorized project")
 		return nil, &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with slug %s does not belong to the authorized project", id)}
 	}
@@ -157,7 +157,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 }
 
 // UpdateMonitor updates an existing monitor's configuration.
-func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.IConcreteMonitor) *ServiceError {
+func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.Monitor) *ServiceError {
 	logger := s.getMethodLogger("UpdateMonitor")
 
 	if err := monitor.Validate(); err != nil {
@@ -172,18 +172,18 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middle
 	_, err := s.getDB().Monitors().UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found", monitor.GetID())}
+			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found", monitor.ID)}
 		}
 		logger.Error().Err(err).Msg("Failed to update monitor in database")
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor: %w", err)}
 	}
 
 	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
-		ID:      monitor.GetID(),
+		ID:      monitor.ID,
 		Status:  monitors.Edited,
 		Monitor: nil,
 	})
 
-	logger.Info().Str("id", monitor.GetID().String()).Msg("Monitor updated")
+	logger.Info().Str("id", monitor.ID.String()).Msg("Monitor updated")
 	return nil
 }

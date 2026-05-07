@@ -8,7 +8,7 @@ import (
 )
 
 // ParseResultDetails parses the raw JSON details based on the monitorType
-func ParseResultDetails(monitorType consts.MonitorConfigType, rawDetails []byte) (IMonitorResultDetails, error) {
+func ParseResultDetails(monitorType consts.ProbeType, rawDetails []byte) (IMonitorResultDetails, error) {
 	if len(rawDetails) == 0 || string(rawDetails) == "null" {
 		return nil, nil
 	}
