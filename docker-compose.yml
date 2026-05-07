@@ -10,7 +10,6 @@ services:
       API_PORT: 7001
       LOG_LEVEL: TRACE
       SQLITE_DB_PATH: /data/leszmonitor.db
-      VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:7001}
       JWT_SECRET: your_jwt_secret
       JWT_EXPIRY_HOURS: 24
       LOG_FILE_PATH: /var/log/leszmonitor/app.log
