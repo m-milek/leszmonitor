@@ -44,10 +44,10 @@ func NewConcreteMonitor(base BaseMonitor, config IMonitorConfig) (IConcreteMonit
 			Config:      *config.(*HttpConfig),
 		}
 		return monitor, nil
-	case shared.PingConfigType:
-		monitor := &PingMonitor{
+	case shared.TCPConfigType:
+		monitor := &TCPMonitor{
 			BaseMonitor: base,
-			Config:      *config.(*PingConfig),
+			Config:      *config.(*TCPConfig),
 		}
 		return monitor, nil
 	default:
@@ -62,7 +62,7 @@ type BaseMonitor struct {
 	Name        string                   `json:"name"`           // Name of the monitor
 	Description string                   `json:"description"`    // Description of the monitor
 	Interval    int                      `json:"interval"`       // How often to run the monitor in seconds
-	Type        shared.MonitorConfigType `json:"type"`           // Type of the monitor (httpType, pingType, etc.)
+	Type        shared.MonitorConfigType `json:"type"`           // Type of the monitor (http, tcp, etc.)
 	util2.Timestamps
 }
 
