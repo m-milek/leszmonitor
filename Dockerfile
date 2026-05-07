@@ -2,9 +2,6 @@ FROM node:24-alpine AS frontend-builder
 
 WORKDIR /app
 
-ARG VITE_BACKEND_URL
-ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
-
 COPY frontend/package*.json ./
 RUN npm ci
 
