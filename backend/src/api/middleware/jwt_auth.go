@@ -89,7 +89,7 @@ func ProjectAuthFromRequest(r *http.Request, authSource AuthSourceKind) (*Projec
 			log.Api.Error().Err(err).Msg("Failed to get monitor by ID")
 			return nil, fmt.Errorf("failed to get monitor")
 		}
-		project, err := db.Get().Projects().GetProjectBySlug(r.Context(), monitor.GetProjectSlug())
+		project, err := db.Get().Projects().GetProjectBySlug(r.Context(), monitor.ProjectSlug)
 		if err != nil {
 			log.Api.Error().Err(err).Msg("Failed to get project by slug")
 			return nil, fmt.Errorf("failed to get project")

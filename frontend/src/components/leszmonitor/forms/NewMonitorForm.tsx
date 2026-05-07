@@ -61,9 +61,9 @@ const buildMonitorDefaults = (
     ...defaultValues,
     type,
     projectSlug: projectSlug,
-    config: {
+    probeConfig: {
       ...defaultConfigs[type],
-      ...(defaultValues?.config ?? {}),
+      ...(defaultValues?.probeConfig ?? {}),
     },
   } as MonitorFormValues;
 };
@@ -130,7 +130,7 @@ export function MonitorForm({
             listeners={{
               onChange: ({ value }) => {
                 if (isValidMonitorType(value)) {
-                  form.setFieldValue("config", defaultConfigs[value]);
+                  form.setFieldValue("probeConfig", defaultConfigs[value]);
                 }
               },
             }}

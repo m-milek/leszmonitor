@@ -24,17 +24,13 @@ const statusCodes = Array.from({ length: 600 }, (_, i) => i)
   .filter((code) => code >= 100 && code < 600)
   .map((code) => String(code));
 
-export function HttpMonitorConfigFields({
-  form,
-}: {
-  form: MonitorFormApi;
-}) {
+export function HttpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
   return (
     <Flex direction="column" className="gap-4 items-stretch">
       <div className="text-lg font-semibold">HTTP Settings</div>
 
       <form.Field
-        name="config.url"
+        name="probeConfig.url"
         children={(field) => (
           <Field>
             <FieldLabel>URL</FieldLabel>
@@ -51,7 +47,7 @@ export function HttpMonitorConfigFields({
       />
 
       <form.Field
-        name="config.method"
+        name="probeConfig.method"
         children={(field) => (
           <Field>
             <FieldLabel>Method</FieldLabel>
@@ -74,7 +70,7 @@ export function HttpMonitorConfigFields({
       />
 
       <form.Field
-        name="config.body"
+        name="probeConfig.body"
         children={(field) => (
           <Field>
             <FieldLabel>Request Body</FieldLabel>
@@ -92,7 +88,7 @@ export function HttpMonitorConfigFields({
       />
 
       <form.Field
-        name="config.headers"
+        name="probeConfig.headers"
         children={(field) => (
           <Field>
             <FieldLabel>Request Headers</FieldLabel>
@@ -112,14 +108,18 @@ export function HttpMonitorConfigFields({
       <div className="text-lg font-semibold">Expected Response</div>
 
       <form.Field
-        name="config.expectedStatusCodes"
+        name="probeConfig.expectedStatusCodes"
         children={(field) => (
           <Field>
             <FieldLabel>Expected Status Codes</FieldLabel>
             <LMMultiSelect
               name={field.name}
               options={statusCodes}
-              value={Array.isArray(field.state.value) ? field.state.value.map(String) : []}
+              value={
+                Array.isArray(field.state.value)
+                  ? field.state.value.map(String)
+                  : []
+              }
               onChange={(values) => field.handleChange(values.map(Number))}
               placeholder="Add status code"
               emptyMessage="No status codes found."
@@ -131,7 +131,7 @@ export function HttpMonitorConfigFields({
       />
 
       <form.Field
-        name="config.expectedResponseTimeMs"
+        name="probeConfig.expectedResponseTimeMs"
         children={(field) => (
           <Field>
             <FieldLabel>Expected Response Time (ms)</FieldLabel>
@@ -154,7 +154,7 @@ export function HttpMonitorConfigFields({
       />
 
       <form.Field
-        name="config.expectedBodyRegex"
+        name="probeConfig.expectedBodyRegex"
         children={(field) => (
           <Field>
             <FieldLabel>Expected Body Pattern (RegExp)</FieldLabel>
@@ -171,7 +171,7 @@ export function HttpMonitorConfigFields({
       />
 
       <form.Field
-        name="config.expectedHeaders"
+        name="probeConfig.expectedHeaders"
         children={(field) => (
           <Field>
             <FieldLabel>Expected Response Headers</FieldLabel>
@@ -191,7 +191,7 @@ export function HttpMonitorConfigFields({
       <div className="text-lg font-semibold">Capture Response</div>
 
       <form.Field
-        name="config.saveResponseBody"
+        name="probeConfig.saveResponseBody"
         children={(field) => (
           <Field>
             <Flex direction="row" className="justify-between">
@@ -208,7 +208,7 @@ export function HttpMonitorConfigFields({
         )}
       />
       <form.Field
-        name="config.saveResponseHeaders"
+        name="probeConfig.saveResponseHeaders"
         children={(field) => (
           <Field>
             <Flex direction="row" className="justify-between">

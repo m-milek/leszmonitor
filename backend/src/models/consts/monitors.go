@@ -1,8 +1,8 @@
 package _const
 
-type MonitorConfigType string
+type ProbeType string
 
 var (
-	HttpConfigType MonitorConfigType = "http"
-	TCPConfigType  MonitorConfigType = "tcp"
+	HttpConfigType ProbeType = "http"
+	TCPConfigType  ProbeType = "tcp"
 )

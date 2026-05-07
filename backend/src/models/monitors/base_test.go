@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createTestBaseMonitor() BaseMonitor {
+func createTestBaseMonitor() Monitor {
 	name := "Test BaseMonitor"
-	return BaseMonitor{
+	return Monitor{
 		Slug:        util.SlugFromString(name),
 		Name:        name,
 		Description: "Test Description",
@@ -21,7 +21,7 @@ func createTestBaseMonitor() BaseMonitor {
 
 func TestBaseMonitorValidateSuccess(t *testing.T) {
 	monitor := createTestBaseMonitor()
-	err := monitor.validateBase()
+	err := monitor.Validate()
 	assert.NoError(t, err)
 }
 

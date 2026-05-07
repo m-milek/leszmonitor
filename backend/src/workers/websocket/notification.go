@@ -24,13 +24,13 @@ type monitorRunNotification struct {
 	Response  monitorresult.IMonitorResult `json:"response"`
 }
 
-func newMonitorRunNotification(result monitorresult.IMonitorResult, monitor monitors.IMonitor) *monitorRunNotification {
+func newMonitorRunNotification(result monitorresult.IMonitorResult, monitor monitors.Monitor) *monitorRunNotification {
 	return &monitorRunNotification{
 		baseNotification: baseNotification{
 			Type: notificationTypeMonitorRun,
 		},
 		Response:  result,
-		MonitorID: monitor.GetID().String(),
+		MonitorID: monitor.ID.String(),
 	}
 }
 
