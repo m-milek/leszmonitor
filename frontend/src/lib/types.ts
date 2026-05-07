@@ -47,13 +47,13 @@ export interface Monitor extends Timestamps {
   projectSlug: string;
   interval: number;
   type: MonitorType;
-  config?: HttpMonitorConfig | PingMonitorConfig;
+  config?: HttpMonitorConfig | TcpMonitorConfig;
 }
 
-export type MonitorType = "http" | "ping";
+export type MonitorType = "http" | "tcp";
 
 export const isValidMonitorType = (value: string): value is MonitorType => {
-  const values = ["http", "ping"] as MonitorType[];
+  const values = ["http", "tcp"];
   return values.includes(value as MonitorType);
 };
 
@@ -72,10 +72,10 @@ export interface HttpMonitorConfig {
   expectedResponseTimeMs?: number;
 }
 
-export interface PingMonitorConfig {
+export interface TcpMonitorConfig {
   host: string;
   port: number;
-  protocol: "tcp" | "udp" | "tcp4" | "tcp6" | "udp4" | "udp6";
+  protocol: "tcp" | "tcp4" | "tcp6";
   timeout: number;
   retryCount: number;
 }
@@ -96,13 +96,13 @@ export const httpMonitorConfigSchema = z.object({
     .optional(),
 });
 
-export const pingMonitorConfigSchema = z.object({
+export const tcpMonitorConfigSchema = z.object({
   host: z.string().min(1, "Host is required"),
   port: z
     .number()
     .min(1, "Port must be at least 1")
     .max(65535, "Port must be at most 65535"),
-  protocol: z.enum(["tcp", "udp", "tcp4", "tcp6", "udp4", "udp6"]),
+  protocol: z.enum(["tcp", "tcp4", "tcp6"]),
   timeout: z.number().min(1, "Timeout must be at least 1 ms"),
   retryCount: z.number().min(0, "Retry count cannot be negative"),
 });
@@ -129,20 +129,20 @@ const httpMonitorSchema = z.object({
   config: httpMonitorConfigSchema.optional(),
 });
 
-const pingMonitorSchema = z.object({
+const tcpMonitorSchema = z.object({
   ...baseMonitorFields,
-  type: z.literal("ping"),
-  config: pingMonitorConfigSchema.optional(),
+  type: z.literal("tcp"),
+  config: tcpMonitorConfigSchema.optional(),
 });
 
 export const newMonitorSchema = z.discriminatedUnion("type", [
   httpMonitorSchema,
-  pingMonitorSchema,
+  tcpMonitorSchema,
 ]);
 
 export type MonitorFormValues = z.infer<typeof newMonitorSchema>;
 export type HttpMonitorFormValues = z.infer<typeof httpMonitorSchema>;
-export type PingMonitorFormValues = z.infer<typeof pingMonitorSchema>;
+export type TcpMonitorFormValues = z.infer<typeof tcpMonitorSchema>;
 
 export const newMonitorSchemaDefaultValues = {
   name: "",
@@ -164,7 +164,7 @@ export const defaultConfigs: Record<MonitorType, MonitorFormValues["config"]> =
       expectedStatusCodes: [],
       expectedHeaders: {},
     },
-    ping: {
+    tcp: {
       host: "",
       port: 443,
       protocol: "tcp",
@@ -215,7 +215,7 @@ export interface MonitorResult {
   durationMs: number;
   errorDetails: ErrorDetails;
   monitorType: string;
-  details: HttpResultDetails | PingResultDetails;
+  details: HttpResultDetails | TcpResultDetails;
   createdAt: Date;
 }
 
@@ -233,7 +233,7 @@ export interface HttpResultDetails {
   proto: string;
 }
 
-export interface PingResultDetails {
+export interface TcpResultDetails {
   tries: number;
   latencyMs: number;
 }

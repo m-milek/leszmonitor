@@ -22,17 +22,17 @@ func TestUnmarshalConfigFromBytes(t *testing.T) {
 		assert.Equal(t, config.URL, parsed.(*HttpConfig).URL)
 	})
 
-	t.Run("Ping Config", func(t *testing.T) {
-		config := PingConfig{
+	t.Run("TCP Config", func(t *testing.T) {
+		config := TCPConfig{
 			Host: "example.com",
 			Port: 80,
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalConfigFromBytes(shared.PingConfigType, bytes)
+		parsed, err := UnmarshalConfigFromBytes(shared.TCPConfigType, bytes)
 		assert.NoError(t, err)
-		assert.IsType(t, &PingConfig{}, parsed)
-		assert.Equal(t, config.Host, parsed.(*PingConfig).Host)
+		assert.IsType(t, &TCPConfig{}, parsed)
+		assert.Equal(t, config.Host, parsed.(*TCPConfig).Host)
 	})
 
 	t.Run("Unknown Config", func(t *testing.T) {

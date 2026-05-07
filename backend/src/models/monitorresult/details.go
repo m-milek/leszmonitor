@@ -8,7 +8,7 @@ type HttpResultDetails struct {
 	Proto         string            `json:"proto"`
 }
 
-type PingResultDetails struct {
+type TCPResultDetails struct {
 	Tries     int64 `json:"tries"`
 	LatencyMs int64 `json:"latencyMs"`
 }
@@ -19,4 +19,4 @@ type IMonitorResultDetails interface {
 
 func (*HttpResultDetails) implDetails() {}
 
-func (*PingResultDetails) implDetails() {}
+func (*TCPResultDetails) implDetails() {}

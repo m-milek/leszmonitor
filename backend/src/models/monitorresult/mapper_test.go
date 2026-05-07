@@ -26,20 +26,20 @@ func TestParseResultDetails(t *testing.T) {
 		}
 	})
 
-	t.Run("Ping details parsing", func(t *testing.T) {
+	t.Run("TCP details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"latencyMs": 42}`)
-		details, err := ParseResultDetails(consts.PingConfigType, rawJSON)
+		details, err := ParseResultDetails(consts.TCPConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
-		pingDetails, ok := details.(*PingResultDetails)
+		tcpDetails, ok := details.(*TCPResultDetails)
 		if !ok {
-			t.Fatalf("expected PingResultDetails, got %T", details)
+			t.Fatalf("expected TCPResultDetails, got %T", details)
 		}
 
-		if pingDetails.LatencyMs != 42 {
-			t.Errorf("expected 42, got %d", pingDetails.LatencyMs)
+		if tcpDetails.LatencyMs != 42 {
+			t.Errorf("expected 42, got %d", tcpDetails.LatencyMs)
 		}
 	})
 }

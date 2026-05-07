@@ -10,21 +10,14 @@ import type { MonitorFormApi } from "@/lib/formTypes.ts";
 
 const protocolItems = [
   { value: "tcp", label: "TCP" },
-  { value: "udp", label: "UDP" },
   { value: "tcp4", label: "TCP (Force IPv4)" },
   { value: "tcp6", label: "TCP (Force IPv6)" },
-  { value: "udp4", label: "UDP (Force IPv4)" },
-  { value: "udp6", label: "UDP (Force IPv6)" },
 ];
 
-export function PingMonitorConfigFields({
-  form,
-}: {
-  form: MonitorFormApi;
-}) {
+export function TcpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
   return (
     <Flex direction="column" className="gap-4 items-stretch">
-      <div className="text-lg font-semibold">Ping Settings</div>
+      <div className="text-lg font-semibold">TCP Monitor Settings</div>
 
       <form.Field
         name="config.host"
@@ -72,9 +65,7 @@ export function PingMonitorConfigFields({
               name={field.name}
               value={field.state.value}
               onValueChange={(value) =>
-                field.handleChange(
-                  value as "tcp" | "udp" | "tcp4" | "tcp6" | "udp4" | "udp6",
-                )
+                field.handleChange(value as "tcp" | "tcp4" | "tcp6")
               }
               placeholder="Select Protocol"
               items={protocolItems}
