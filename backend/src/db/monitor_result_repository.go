@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/google/uuid"
 	consts "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
@@ -90,7 +89,7 @@ func (r *monitorResultRepository) InsertMonitorResult(ctx context.Context, resul
 		_, err = r.pool.ExecContext(ctx,
 			`INSERT INTO monitor_results (id, monitor_id, is_success, is_manually_triggered, duration_ms, error_details, details, created_at) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-			uuid.New().String(),
+			result.GetID(),
 			result.GetMonitorID(),
 			result.GetIsSuccess(),
 			result.GetIsManuallyTriggered(),

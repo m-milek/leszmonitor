@@ -27,7 +27,6 @@ func JwtAuth(next http.Handler) http.Handler {
 
 		userClaims, err := auth.ValidateJwt(tokenString)
 		if err != nil {
-			log.Api.Warn().Err(err).Msg("Unauthorized access attempt with invalid token")
 			http.Error(rw, "Unauthorized: Invalid token", http.StatusUnauthorized)
 			return
 		}
@@ -47,14 +46,14 @@ const userClaimsKey contextKey = "userClaims"
 
 // SetUserContext stores user claims in the request context.
 func SetUserContext(ctx context.Context, claims *auth.UserClaims) context.Context {
-	log.Api.Debug().Msg("Setting user claims in context: " + claims.Username)
+	logger := log.FromContext(ctx)
+	logger.Debug().Msg("Setting user claims in context: " + claims.Username)
 	return context.WithValue(ctx, userClaimsKey, claims)
 }
 
 // GetUserFromContext retrieves user claims from the request context.
 func GetUserFromContext(ctx context.Context) (*auth.UserClaims, bool) {
 	claims, ok := ctx.Value(userClaimsKey).(*auth.UserClaims)
-	log.Api.Debug().Msgf("Retrieving user claims from context: %v, ok: %v", claims, ok)
 	return claims, ok
 }
 
@@ -81,17 +80,14 @@ func ProjectAuthFromRequest(r *http.Request, authSource AuthSourceKind) (*Projec
 		}
 		monitorUUID, err := uuid.Parse(monitorID)
 		if err != nil {
-			log.Api.Error().Err(err).Msg("Invalid monitor ID format")
 			return nil, fmt.Errorf("invalid monitor ID format")
 		}
 		monitor, err := db.Get().Monitors().GetMonitorByID(r.Context(), monitorUUID)
 		if err != nil {
-			log.Api.Error().Err(err).Msg("Failed to get monitor by ID")
 			return nil, fmt.Errorf("failed to get monitor")
 		}
 		project, err := db.Get().Projects().GetProjectBySlug(r.Context(), monitor.ProjectSlug)
 		if err != nil {
-			log.Api.Error().Err(err).Msg("Failed to get project by slug")
 			return nil, fmt.Errorf("failed to get project")
 		}
 		projectSlug = project.Slug

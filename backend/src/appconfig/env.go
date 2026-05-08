@@ -8,7 +8,6 @@ import (
 const (
 	ApiPort        = "API_PORT"
 	LogLevel       = "LOG_LEVEL" // TRACE, DEBUG, INFO, WARN, ERROR
-	LogFilePath    = "LOG_FILE_PATH"
 	SqliteDbPath   = "SQLITE_DB_PATH"
 	JwtSecret      = "JWT_SECRET"
 	JwtExpiryHours = "JWT_EXPIRY_HOURS"
