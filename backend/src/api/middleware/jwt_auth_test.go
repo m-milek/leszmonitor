@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/auth"
-	"github.com/m-milek/leszmonitor/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

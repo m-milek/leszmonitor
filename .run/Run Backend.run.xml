@@ -1,27 +1,27 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Backend" type="GoApplicationRunConfiguration" factoryName="Go Application">
-    <module name="leszmonitor" />
-    <working_directory value="$PROJECT_DIR$/backend/src" />
-    <envs>
-      <env name="SQLITE_DB_PATH" value="./leszmonitor.db" />
-    </envs>
-    <EXTENSION ID="net.ashald.envfile">
-      <option name="IS_ENABLED" value="true" />
-      <option name="IS_SUBST" value="false" />
-      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-      <option name="IS_IGNORE_MISSING_FILES" value="false" />
-      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-      <ENTRIES>
-        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
-        <ENTRY IS_ENABLED="true" PARSER="env" IS_EXECUTABLE="false" PATH="backend/.env" />
-      </ENTRIES>
-    </EXTENSION>
-    <kind value="DIRECTORY" />
-    <package value="github.com/m-milek/leszmonitor" />
-    <directory value="$PROJECT_DIR$/backend/src" />
-    <filePath value="$PROJECT_DIR$/backend/src/" />
-    <method v="2">
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Build Backend" run_configuration_type="TaskRunConfiguration" />
-    </method>
-  </configuration>
+    <configuration default="false" name="Run Backend" type="GoApplicationRunConfiguration" factoryName="Go Application">
+        <module name="leszmonitor"/>
+        <working_directory value="$PROJECT_DIR$/backend/src"/>
+        <envs>
+            <env name="API_PORT" value="7001"/>
+            <env name="JWT_SECRET" value="your_jwt_secret"/>
+            <env name="SQLITE_DB_PATH" value="./leszmonitor.db"/>
+            <env name="JWT_EXPIRY_HOURS" value="24"/>
+        </envs>
+        <EXTENSION ID="net.ashald.envfile">
+            <option name="IS_ENABLED" value="true"/>
+            <option name="IS_SUBST" value="false"/>
+            <option name="IS_PATH_MACRO_SUPPORTED" value="false"/>
+            <option name="IS_IGNORE_MISSING_FILES" value="false"/>
+            <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false"/>
+            <ENTRIES>
+                <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false"/>
+            </ENTRIES>
+        </EXTENSION>
+        <kind value="DIRECTORY"/>
+        <package value="github.com/m-milek/leszmonitor"/>
+        <directory value="$PROJECT_DIR$/backend/src"/>
+        <filePath value="$PROJECT_DIR$/backend/src/"/>
+        <method v="2"/>
+    </configuration>
 </component>

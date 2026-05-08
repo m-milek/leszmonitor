@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"embed"
 	"errors"
 	"net"
@@ -31,11 +32,14 @@ func DefaultServerConfig() ServerConfig {
 }
 
 // createServer sets up the HTTP server with public and protected routes, applying necessary middleware.
-func createServer(config ServerConfig, staticFiles embed.FS) (*http.Server, error) {
+func createServer(ctx context.Context, config ServerConfig, staticFiles embed.FS) (*http.Server, error) {
 	publicRouter := http.NewServeMux()
 	protectedRouter := http.NewServeMux()
 
 	SetupRouters(publicRouter, protectedRouter, staticFiles)
+
+	logger := log.FromContext(ctx).With().Str("component", "api_server").Logger()
+	ctx = log.WithContext(ctx, &logger)
 
 	combinedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -68,7 +72,7 @@ func createServer(config ServerConfig, staticFiles embed.FS) (*http.Server, erro
 
 	handler := c.Handler(combinedHandler)
 
-	handler = middleware.Logger(handler)
+	handler = middleware.Logger(ctx, handler)
 
 	server := &http.Server{
 		Addr:         net.JoinHostPort(config.Host, config.Port),
@@ -80,11 +84,12 @@ func createServer(config ServerConfig, staticFiles embed.FS) (*http.Server, erro
 }
 
 // StartServer initializes and starts the HTTP server based on the provided configuration.
-func StartServer(config ServerConfig, staticFiles embed.FS) (*http.Server, chan struct{}, error) {
-	server, err := createServer(config, staticFiles)
+func StartServer(ctx context.Context, config ServerConfig, staticFiles embed.FS) (*http.Server, chan struct{}, error) {
+	logger := log.FromContext(ctx).With().Str("component", "api_server").Logger()
 
+	server, err := createServer(ctx, config, staticFiles)
 	if err != nil {
-		log.Api.Error().Err(err).Msg("Error creating API server")
+		logger.Error().Err(err).Msg("Error creating API server")
 		return nil, nil, err
 	}
 
@@ -93,9 +98,9 @@ func StartServer(config ServerConfig, staticFiles embed.FS) (*http.Server, chan 
 
 	// Start server in a goroutine
 	go func() {
-		log.Api.Info().Msgf("API server listening on %s", server.Addr)
+		logger.Info().Msgf("API server listening on %s", server.Addr)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Api.Fatal().Err(err).Msgf("Error starting API server: %v", err)
+			logger.Fatal().Err(err).Msg("Error starting API server")
 		}
 	}()
 

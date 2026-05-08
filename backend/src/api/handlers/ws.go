@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/websocket"
 	util "github.com/m-milek/leszmonitor/api/api_util"
 	websocket2 "github.com/m-milek/leszmonitor/workers/websocket"
-	"github.com/rs/zerolog/log"
 )
 
 var upgrader = websocket.Upgrader{
@@ -18,13 +17,12 @@ var upgrader = websocket.Upgrader{
 }
 
 func WebSocketConnectionHandler(w http.ResponseWriter, r *http.Request) {
-	log.Debug().Msg("Received WebSocket connection request")
+	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to upgrade to WebSocket connection")
-		util.RespondError(w, http.StatusInternalServerError, err)
+		util.RespondError(ctx, w, http.StatusInternalServerError, err)
 		return
 	}
 
-	websocket2.RunWebSocketWorker(r.Context(), conn)
+	websocket2.RunWebSocketWorker(ctx, conn)
 }

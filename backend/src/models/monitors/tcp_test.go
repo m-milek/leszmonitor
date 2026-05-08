@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"context"
 	"net"
 	"testing"
 	"time"
@@ -188,7 +189,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return true, 100 * time.Millisecond
 		}
 
-		response := probe.Run(uuid.Nil)
+		response := probe.Run(context.Background(), uuid.Nil)
 		assert.True(t, response.GetIsSuccess())
 		assert.Equal(t, int64(100), response.GetDurationMs())
 		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
@@ -204,7 +205,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response := probe.Run(uuid.Nil)
+		response := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
 		assert.False(t, response.GetIsSuccess())
 	})
@@ -222,7 +223,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response := probe.Run(uuid.Nil)
+		response := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
 		assert.True(t, response.GetIsSuccess())
 		assert.Equal(t, int64(150), response.GetDurationMs())

@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ type Monitor struct {
 }
 
 type Probe interface {
-	Run(monitorID uuid.UUID) monitorresult.IMonitorResult
+	Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult
 	Validate() error
 }
 
@@ -32,6 +33,9 @@ type monitorTypeExtractor struct {
 }
 
 func (m *Monitor) Validate() error {
+	if uuid.Validate(m.ID.String()) != nil {
+		return fmt.Errorf("monitor ID cannot be null")
+	}
 	if m.Name == "" {
 		return fmt.Errorf("monitor name cannot be empty")
 	}

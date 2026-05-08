@@ -6,6 +6,7 @@ import (
 )
 
 type IMonitorResult interface {
+	GetID() uuid.UUID
 	GetMonitorID() uuid.UUID
 	GetIsSuccess() bool
 	GetIsManuallyTriggered() bool
@@ -46,6 +47,7 @@ type MonitorResult struct {
 func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSuccess bool, isManuallyTriggered bool, durationMs int64, errorMessage string, details IMonitorResultDetails, createdAt string) *MonitorResult {
 	res := &MonitorResult{
 		baseMonitorResult: baseMonitorResult{
+			ID:                  uuid.New(),
 			MonitorID:           monitorID,
 			IsSuccess:           isSuccess,
 			IsManuallyTriggered: isManuallyTriggered,
@@ -59,6 +61,10 @@ func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSucce
 		res.ErrorDetails.ErrorMessage = errorMessage
 	}
 	return res
+}
+
+func (m *MonitorResult) GetID() uuid.UUID {
+	return m.ID
 }
 
 func (m *MonitorResult) GetMonitorID() uuid.UUID {

@@ -11,49 +11,51 @@ import (
 )
 
 func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceKindMonitor)
+	ctx := r.Context()
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceKindMonitor)
 	if !ok {
 		return
 	}
 
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondError(w, http.StatusBadRequest, errors.New("monitor ID is required"))
+		util.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
 		return
 	}
 
-	result, err := services.MonitorResultsService.GetLatestMonitorResultByMonitorID(r.Context(), projectAuth, monitorID)
+	result, err := services.MonitorResultsService.GetLatestMonitorResultByMonitorID(ctx, projectAuth, monitorID)
 	if err != nil {
-		util.RespondError(w, err.Code, err.Err)
+		util.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, result)
+	util.RespondJSON(ctx, w, http.StatusOK, result)
 }
 
 func GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
-	projectAuth, ok := util.GetProjectAuthOrRespond(w, r, middleware.AuthSourceKindMonitor)
+	ctx := r.Context()
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceKindMonitor)
 	if !ok {
 		return
 	}
 
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondError(w, http.StatusBadRequest, errors.New("monitor ID is required"))
+		util.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
 		return
 	}
 
 	pagination, paginationErr := util2.PaginationFromRequest(r)
 	if paginationErr != nil {
-		util.RespondError(w, http.StatusBadRequest, paginationErr)
+		util.RespondError(ctx, w, http.StatusBadRequest, paginationErr)
 		return
 	}
 
-	results, err := services.MonitorResultsService.GetMonitorResultsByMonitorID(r.Context(), projectAuth, monitorID, pagination)
+	results, err := services.MonitorResultsService.GetMonitorResultsByMonitorID(ctx, projectAuth, monitorID, pagination)
 	if err != nil {
-		util.RespondError(w, err.Code, err.Err)
+		util.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, results)
+	util.RespondJSON(ctx, w, http.StatusOK, results)
 }

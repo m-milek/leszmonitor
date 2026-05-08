@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/log"
 	monitors "github.com/m-milek/leszmonitor/models/monitors"
 )
 
@@ -80,7 +79,6 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 		}
 		mappedMonitors, err := mapRowsToMonitors(rows)
 		if err != nil {
-			log.Db.Error().Err(err).Msg("Error mapRowsToMonitors")
 			return nil, err
 		}
 		return mappedMonitors, nil

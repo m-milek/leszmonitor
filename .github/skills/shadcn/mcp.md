@@ -8,24 +8,25 @@ The CLI includes an MCP server that lets AI assistants search, browse, view, and
 
 ```bash
 shadcn mcp        # start the MCP server (stdio)
-shadcn mcp init   # write config for your editor
+shadcn mcp init   # write appconfig for your editor
 ```
 
-Editor config files:
+Editor appconfig files:
 
-| Editor | Config file |
-|--------|------------|
-| Claude Code | `.mcp.json` |
-| Cursor | `.cursor/mcp.json` |
-| VS Code | `.vscode/mcp.json` |
-| OpenCode | `opencode.json` |
-| Codex | `~/.codex/config.toml` (manual) |
+| Editor      | Config file                        |
+|-------------|------------------------------------|
+| Claude Code | `.mcp.json`                        |
+| Cursor      | `.cursor/mcp.json`                 |
+| VS Code     | `.vscode/mcp.json`                 |
+| OpenCode    | `opencode.json`                    |
+| Codex       | `~/.codex/appconfig.toml` (manual) |
 
 ---
 
 ## Tools
 
-> **Tip:** MCP tools handle registry operations (search, view, install). For project configuration (aliases, framework, Tailwind version), use `npx shadcn@latest info` — there is no MCP equivalent.
+> **Tip:** MCP tools handle registry operations (search, view, install). For project configuration (aliases, framework,
+> Tailwind version), use `npx shadcn@latest info` — there is no MCP equivalent.
 
 ### `shadcn:get_project_registries`
 

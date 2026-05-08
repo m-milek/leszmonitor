@@ -4,20 +4,24 @@ import (
 	"sync"
 
 	"github.com/m-milek/leszmonitor/log"
+	"github.com/rs/zerolog"
 )
 
-type broadcaster[T any] struct {
+type eventBus[T any] struct {
 	mu          sync.Mutex
 	subscribers []chan T
+	logger      zerolog.Logger
 }
 
-func newBroadcaster[T any]() *broadcaster[T] {
-	return &broadcaster[T]{
+func newEventBus[T any](busName string) *eventBus[T] {
+	logger := log.New().With().Str("component", "eventBus").Str("busName", busName).Logger()
+	return &eventBus[T]{
 		subscribers: make([]chan T, 0),
+		logger:      logger,
 	}
 }
 
-func (b *broadcaster[T]) Subscribe() <-chan T {
+func (b *eventBus[T]) Subscribe() <-chan T {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -26,7 +30,7 @@ func (b *broadcaster[T]) Subscribe() <-chan T {
 	return ch
 }
 
-func (b *broadcaster[T]) Unsubscribe(ch <-chan T) {
+func (b *eventBus[T]) Unsubscribe(ch <-chan T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -39,11 +43,11 @@ func (b *broadcaster[T]) Unsubscribe(ch <-chan T) {
 	}
 }
 
-func (b *broadcaster[T]) Broadcast(message T) {
+func (b *eventBus[T]) Broadcast(message T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	log.Main.Trace().Msgf("Broadcasting message: %v", message)
+	b.logger.Trace().Msgf("Broadcasting message: %v", message)
 
 	for _, subscriber := range b.subscribers {
 		select {

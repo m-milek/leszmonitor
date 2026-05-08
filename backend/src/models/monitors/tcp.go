@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strconv"
@@ -30,7 +31,7 @@ type TCPProbe struct {
 	dialAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
-func (m *TCPProbe) Run(monitorID uuid.UUID) monitorresult.IMonitorResult {
+func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
 	result := monitorresult.NewMonitorResult(monitorID, consts.TCPConfigType, true, false, 0, "", &monitorresult.TCPResultDetails{}, time.Now().Format(time.RFC3339))
 	details := result.GetDetails().(*monitorresult.TCPResultDetails)
 
