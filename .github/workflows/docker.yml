@@ -10,15 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v4
 
       - name: Install Task
         uses: arduino/setup-task@v2
-        with:
-          version: 3.x
 
       - name: Build the app image
         run: |

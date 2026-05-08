@@ -10,16 +10,18 @@ jobs:
   backend:
     name: Back-end
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: '1.26.1'
+          cache: true
+          cache-dependency-path: backend/src/go.sum
 
       - name: Install Task
         uses: arduino/setup-task@v2
@@ -38,7 +40,7 @@ jobs:
         run: task backend:coverage
 
       - name: Upload Go Coverage Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: go-coverage-report
           path: backend/src/coverage.out
@@ -47,20 +49,19 @@ jobs:
   frontend:
     name: Front-end
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: ./frontend
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: '23.x'
+          node-version: '24.x'
           cache: 'npm'
           cache-dependency-path: './frontend/package-lock.json'
 
@@ -80,12 +81,12 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Download Go Coverage Report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: go-coverage-report
           path: backend/src
@@ -97,7 +98,7 @@ jobs:
       #          path: frontend/coverage/ # Ensure it's downloaded to the correct relative path
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
