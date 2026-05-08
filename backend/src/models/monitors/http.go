@@ -2,6 +2,7 @@ package monitors
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,7 +31,8 @@ type HttpProbe struct {
 	ExpectedResponseTime *int              `json:"expectedResponseTime" bson:"expectedResponseTime"` // in milliseconds
 }
 
-func (m *HttpProbe) Run(monitorID uuid.UUID) monitorresult.IMonitorResult {
+func (m *HttpProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
+	logger := log.FromContext(ctx)
 	result := monitorresult.NewMonitorResult(monitorID, consts.HttpConfigType, true, false, 0, "", &monitorresult.HttpResultDetails{}, time.Now().Format(time.RFC3339))
 	details := result.GetDetails().(*monitorresult.HttpResultDetails)
 
@@ -39,7 +41,7 @@ func (m *HttpProbe) Run(monitorID uuid.UUID) monitorresult.IMonitorResult {
 	result.SetDuration(elapsed.Milliseconds())
 	if err != nil {
 		result.AddError(fmt.Sprintf("HTTP request failed: %s", err.Error()))
-		log.Uptime.Trace().Err(err).Msg("HTTP request execution failed")
+		logger.Trace().Err(err).Msg("HTTP request execution failed")
 		return result
 	}
 
@@ -217,7 +219,6 @@ func (m *HttpProbe) checkResponseBody(response *http.Response, result monitorres
 func (m *HttpProbe) createRequest() (*http.Request, error) {
 	parsedUrl, err := url.Parse(m.URL)
 	if err != nil {
-		log.Uptime.Error().Err(err).Msg("Invalid URL in HTTP monitor")
 		return nil, fmt.Errorf("invalid URL: %s", m.URL)
 	}
 

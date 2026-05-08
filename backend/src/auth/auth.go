@@ -1,13 +1,13 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/config"
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/appconfig"
 )
 
 // JwtClaims represents the claims stored in a Leszmonitor JWT token.
@@ -46,12 +46,10 @@ func decodeJwtClaims(jwtString string) (JwtClaims, error) {
 	})
 
 	if err != nil {
-		log.Api.Error().Err(err).Msg("Failed to parse JWT token")
-		return JwtClaims{}, err
+		return JwtClaims{}, errors.Join(fmt.Errorf("failed to parse JWT token: %w", err))
 	}
 
 	if !token.Valid {
-		log.Api.Warn().Msg("Invalid JWT token")
 		return JwtClaims{}, fmt.Errorf("invalid JWT token")
 	}
 
@@ -68,30 +66,25 @@ func ValidateJwt(token string) (*UserClaims, error) {
 
 	parsedJwt, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			log.Api.Warn().Msgf("Unexpected signing method: %v", token.Header["alg"])
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(jwtSecret), nil
 	})
 
 	if err != nil {
-		log.Api.Error().Err(err).Msg("Failed to parse JWT token")
 		return nil, fmt.Errorf("invalid JWT token: %w", err)
 	}
 
 	if !parsedJwt.Valid {
-		log.Api.Warn().Msg("Invalid JWT token")
 		return nil, fmt.Errorf("invalid JWT token")
 	}
 
 	userClaims, ok := parsedJwt.Claims.(*UserClaims)
 	if !ok {
-		log.Api.Warn().Msg("Unexpected JWT claims type")
 		return nil, fmt.Errorf("unexpected JWT claims type")
 	}
 
 	if userClaims.Username == "" {
-		log.Api.Warn().Msg("JWT token is missing username claim")
 		return nil, fmt.Errorf("JWT token is missing username claim")
 	}
 
