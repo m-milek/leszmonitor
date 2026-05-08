@@ -66,29 +66,24 @@ func writeAuthAck(conn *websocket.Conn) error {
 	return conn.WriteMessage(websocket.TextMessage, authAck)
 }
 
-func authenticateConnection(ctx context.Context, conn *websocket.Conn) (context.Context, bool) {
+func authenticateConnection(ctx context.Context, conn *websocket.Conn) (context.Context, error) {
 	authMsg, err := readAuthFrame(conn)
 	if err != nil {
-		log.Api.Error().Err(err).Msg("Failed to read auth message from WebSocket connection")
 		closeUnauthorized(conn, err.Error())
-		return ctx, false
+		return ctx, err
 	}
 
 	userClaims, err := auth.ValidateJwt(authMsg.Token)
 	if err != nil {
-		log.Api.Error().Err(err).Msg("Failed to validate JWT token from WebSocket connection")
 		closeUnauthorized(conn, "invalid token")
-		return ctx, false
+		return ctx, err
 	}
 
 	if err := writeAuthAck(conn); err != nil {
-		log.Api.Error().Err(err).Msg("Failed to write auth acknowledgment to WebSocket connection")
-		return ctx, false
+		return ctx, err
 	}
 
-	log.Api.Info().Any("username", userClaims.Username).Msg("WebSocket connection authenticated successfully")
-
-	return middleware.SetUserContext(ctx, userClaims), true
+	return middleware.SetUserContext(ctx, userClaims), nil
 }
 
 func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
@@ -98,15 +93,21 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 		_ = conn.Close()
 	}()
 
-	log.Api.Info().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection established")
+	logger := log.FromContext(ctx).With().Str("remoteAddr", conn.RemoteAddr().String()).Str("component", "websocket_worker").Logger()
+	ctx = log.WithContext(ctx, &logger)
+
+	logger.Info().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection established")
 
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 
-	authCtx, ok := authenticateConnection(ctx, conn)
-	if !ok {
+	authCtx, err := authenticateConnection(ctx, conn)
+	if err != nil {
+		logger.Error().Err(err).Msg("WebSocket authentication failed")
 		return
 	}
+
+	logger.Info().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection authenticated successfully")
 
 	conn.SetReadDeadline(time.Time{})
 	conn.SetWriteDeadline(time.Time{})
@@ -135,22 +136,22 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 	for {
 		select {
 		case <-authCtx.Done():
-			log.Api.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed due to context cancellation")
+			logger.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed due to context cancellation")
 			return
 		case <-disconnected:
-			log.Api.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed by client")
+			logger.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed by client")
 			return
 		case runMsg := <-monitorRunChannel:
-			log.Uptime.Trace().Msg("Received monitor run event, sending notification to WebSocket client")
+			logger.Trace().Msg("Received monitor run event, sending notification to WebSocket client")
 			notification := newMonitorRunNotification(runMsg.Result, runMsg.Monitor)
 			notificationBytes, err := json.Marshal(notification)
 			if err != nil {
-				log.Api.Error().Err(err).Msg("Failed to marshal monitor run notification")
+				logger.Error().Err(err).Msg("Failed to marshal monitor run notification")
 				continue
 			}
 			writeMu.Lock()
 			if err := conn.WriteMessage(websocket.TextMessage, notificationBytes); err != nil {
-				log.Api.Error().Err(err).Msg("Failed to write monitor run notification to WebSocket connection")
+				logger.Error().Err(err).Msg("Failed to write monitor run notification to WebSocket connection")
 				writeMu.Unlock()
 				return
 			}

@@ -5,66 +5,65 @@ import (
 	"net/http"
 
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/services"
 )
 
 func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var payload services.UserRegisterPayload
-	if !util.DecodeJSONOrRespond(w, r, &payload) {
+	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := services.UserService.RegisterUser(r.Context(), &payload)
+	err := services.UserService.RegisterUser(ctx, &payload)
 	if err != nil {
-		util.RespondError(w, err.Code, err.Err)
+		util.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondMessage(w, http.StatusOK, "")
+	util.RespondMessage(ctx, w, http.StatusOK, "")
 }
 
 func UserLoginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var payload services.LoginPayload
-	if !util.DecodeJSONOrRespond(w, r, &payload) {
+	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	loginResponse, err := services.UserService.Login(r.Context(), payload)
-
+	loginResponse, err := services.UserService.Login(ctx, payload)
 	if err != nil {
-		util.RespondError(w, err.Code, err.Err)
+		util.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, loginResponse)
+	util.RespondJSON(ctx, w, http.StatusOK, loginResponse)
 }
 
 func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	users, err := services.UserService.GetAllUsers(r.Context())
-
+	ctx := r.Context()
+	users, err := services.UserService.GetAllUsers(ctx)
 	if err != nil {
-		util.RespondError(w, err.Code, err.Err)
+		util.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, users)
+	util.RespondJSON(ctx, w, http.StatusOK, users)
 }
 
 func GetUserHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	username := r.PathValue("username")
 	if username == "" {
-		log.Api.Trace().Msg("Username is required")
-		util.RespondError(w, http.StatusBadRequest, fmt.Errorf("username is required"))
+		util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("username is required"))
 		return
 	}
 
-	user, err := services.UserService.GetUserByUsername(r.Context(), username)
-
+	user, err := services.UserService.GetUserByUsername(ctx, username)
 	if err != nil {
-		util.RespondError(w, err.Code, err.Err)
+		util.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(w, http.StatusOK, user)
+	util.RespondJSON(ctx, w, http.StatusOK, user)
 }

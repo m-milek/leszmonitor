@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/config"
+	"github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/log"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -96,6 +96,7 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 
 // initSchema reads the database schema from a file and executes it to set up the database structure.
 func (c *DBClient) initSchema(ctx context.Context, pool *sqlx.DB) error {
+	logger := log.FromContext(ctx)
 	dbSchemaContent, err := dbSchema.ReadFile("schema.sql")
 	if err != nil {
 		return fmt.Errorf("failed to read database schema: %w", err)
@@ -106,7 +107,7 @@ func (c *DBClient) initSchema(ctx context.Context, pool *sqlx.DB) error {
 		return err
 	}
 
-	log.Db.Info().Msg("Database schema initialized successfully")
+	logger.Info().Msg("Database schema initialized successfully")
 	return nil
 }
 
@@ -116,9 +117,10 @@ func (c *DBClient) Close() {
 }
 
 // dbWrap creates a child context with timeout and handles cancellation.
-func dbWrap[T any](timeoutCtx context.Context, operationName string, operation func() (T, error)) (T, error) {
+func dbWrap[T any](ctx context.Context, operationName string, operation func() (T, error)) (T, error) {
+	logger := log.FromContext(ctx)
 	fun := func() (dbResult[T], error) {
-		timeoutCtx, cancel := context.WithTimeout(timeoutCtx, timeoutDuration)
+		timeoutCtx, cancel := context.WithTimeout(ctx, timeoutDuration)
 		defer cancel()
 
 		start := time.Now()
@@ -146,10 +148,10 @@ func dbWrap[T any](timeoutCtx context.Context, operationName string, operation f
 	}
 	result, err := fun()
 
-	if err != nil && err != ErrNotFound {
-		log.Db.Error().Err(err).Msgf("DB operation %s failed", operationName)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		logger.Error().Err(err).Msgf("DB operation %s failed", operationName)
 	} else if err == nil {
-		log.Db.Trace().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
+		logger.Trace().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
 	}
 
 	return result.Result, err
@@ -193,11 +195,13 @@ func InitFromEnv(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	log.Db.Info().Msg("Connecting to SQLite...")
+	logger := log.FromContext(ctx)
+
+	logger.Info().Msg("Connecting to SQLite...")
 
 	uri := os.Getenv(config.SqliteDbPath)
 	if uri == "" {
-		log.Db.Fatal().Msg("SQLite DB path is not defined")
+		logger.Fatal().Msg("SQLite DB path is not defined")
 	}
 	uri = ensureSQLiteUTC(uri)
 	c, err := New(ctx, uri)
@@ -206,7 +210,7 @@ func InitFromEnv(ctx context.Context) error {
 	}
 
 	Set(c)
-	log.Db.Info().Msg("SQLite connection established.")
+	logger.Info().Msg("SQLite connection established.")
 	return nil
 }
 

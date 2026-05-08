@@ -10,7 +10,7 @@ import (
 	"time"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/config"
+	"github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"

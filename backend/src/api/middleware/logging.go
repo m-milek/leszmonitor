@@ -1,15 +1,22 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/log"
 )
 
-func Logger(next http.Handler) http.Handler {
+func Logger(ctx context.Context, next http.Handler) http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Api.Trace().
+		logger := log.FromContext(ctx).With().Str("request_id", uuid.New().String()).Logger()
+		ctx = log.WithContext(ctx, &logger)
+		r = r.WithContext(ctx)
+
+		logger.Trace().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
 			Str("user_agent", r.UserAgent()).
@@ -23,7 +30,7 @@ func Logger(next http.Handler) http.Handler {
 		next.ServeHTTP(rw, r)
 
 		duration := time.Since(start).Truncate(1 * time.Microsecond)
-		log.Api.Trace().
+		logger.Trace().
 			Str("method", r.Method).
 			Str("path", r.URL.Path).
 			Str("remote_addr", r.RemoteAddr).

@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -125,7 +126,7 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 	mockHttpClient.On("Do", mock.Anything).Return(successResponse, nil).Once()
 	httpClientOrMock = mockHttpClient
 
-	response := probe.Run(uuid.Nil)
+	response := probe.Run(context.Background(), uuid.Nil)
 
 	assert.True(t, response.GetIsSuccess())
 	assert.Empty(t, response.GetErrorDetails().Errors)
@@ -150,7 +151,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
 	httpClientOrMock = mockClient
 
-	response := probe.Run(uuid.Nil)
+	response := probe.Run(context.Background(), uuid.Nil)
 
 	assert.False(t, response.GetIsSuccess())
 
@@ -167,7 +168,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(nil, errors.New("connection refused")).Once()
 	httpClientOrMock = mockClient
 
-	response := probe.Run(uuid.Nil)
+	response := probe.Run(context.Background(), uuid.Nil)
 
 	assert.False(t, response.GetIsSuccess())
 	assert.NotEmpty(t, response.GetErrorDetails().Errors)
@@ -190,7 +191,7 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
 	httpClientOrMock = mockClient
 
-	response := probe.Run(uuid.Nil)
+	response := probe.Run(context.Background(), uuid.Nil)
 
 	assert.False(t, response.GetIsSuccess())
 

@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"github.com/m-milek/leszmonitor/api/api_util"
 	"net/http"
 	"time"
+
+	util "github.com/m-milek/leszmonitor/api/api_util"
 )
 
 type healthCheckResponse struct {
@@ -12,10 +13,11 @@ type healthCheckResponse struct {
 }
 
 func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	response := healthCheckResponse{
 		Status:    "OK",
 		Timestamp: time.Now(),
 	}
 
-	util.RespondJSON(w, http.StatusOK, response)
+	util.RespondJSON(ctx, w, http.StatusOK, response)
 }
