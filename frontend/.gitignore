@@ -1,10 +1,11 @@
 node_modules
-.DS_Store
+coverage
 dist
+.tanstack
+.DS_Store
 dist-ssr
 *.local
 count.txt
 .env
 .nitro
-.tanstack
 .wrangler
