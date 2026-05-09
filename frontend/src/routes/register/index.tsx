@@ -21,8 +21,10 @@ import { Input } from "@/components/ui/input.tsx";
 import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
-import type { JwtClaims } from "@/lib/types.ts";
 import { fetchUser, registerUser } from "@/lib/data/userData.ts";
+import { isJwtClaims } from "@/lib/jwt.ts";
+import { setCookie } from "@/lib/cookies.ts";
+import {toast} from "sonner";
 
 export const Route = createFileRoute("/register/")({
   component: RegisterComponent,
@@ -59,22 +61,33 @@ function RegisterComponent() {
       onSubmit: registerFormSchema,
     },
     onSubmit: async ({ value }) => {
-      await registerUser(value);
+      try {
+        await registerUser(value);
 
-      const loginResponse = await fetchLoginToken(value);
+        const loginResponse = await fetchLoginToken(value);
 
-      await cookieStore.set({
-        name: "LOGIN_TOKEN",
-        value: loginResponse.jwt,
-      });
+        setCookie("LOGIN_TOKEN", loginResponse.jwt, {
+          maxAge: 24 * 60 * 60,
+          path: "/",
+          sameSite: "Lax",
+        });
 
-      const claims = jwtDecode(loginResponse.jwt) as JwtClaims;
-      setUsername(claims.username);
+        const claims = jwtDecode(loginResponse.jwt);
+        if (!isJwtClaims(claims)) {
+          console.error("Invalid JWT claims");
+          return;
+        }
 
-      const user = await fetchUser(claims.username);
-      setUser(user);
+        setUsername(claims.username);
 
-      await navigate({ to: "/", replace: true });
+        const user = await fetchUser(claims.username);
+        setUser(user);
+
+        await navigate({ to: "/", replace: true });
+      } catch (error) {
+        console.error("Registration failed:", error);
+        toast.error("Registration failed. Please try again.");
+      }
     },
   });
 
