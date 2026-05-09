@@ -21,8 +21,9 @@ import { Input } from "@/components/ui/input.tsx";
 import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
-import type { JwtClaims } from "@/lib/types.ts";
+import { isJwtClaims } from "@/lib/jwt.ts";
 import { fetchUser } from "@/lib/data/userData.ts";
+import { setCookie } from "@/lib/cookies.ts";
 
 export const Route = createFileRoute("/login/")({
   component: RouteComponent,
@@ -47,19 +48,32 @@ function RouteComponent() {
       onSubmit: loginFormSchema,
     },
     onSubmit: async ({ value }) => {
-      const loginResponse = await fetchLoginToken(value);
-      await cookieStore.set({
-        name: "LOGIN_TOKEN",
-        value: loginResponse.jwt,
-      });
+      try {
+        const loginResponse = await fetchLoginToken(value);
 
-      const claims = jwtDecode(loginResponse.jwt) as JwtClaims;
-      setUsername(claims.username);
+        // Store JWT in cookie (7 days expiry)
+        setCookie("LOGIN_TOKEN", loginResponse.jwt, {
+          maxAge: 7 * 24 * 60 * 60,
+          path: "/",
+          sameSite: "Lax",
+        });
 
-      const user = await fetchUser(claims.username);
-      setUser(user);
+        const claims = jwtDecode(loginResponse.jwt);
+        if (!isJwtClaims(claims)) {
+          console.error("Invalid JWT claims");
+          return;
+        }
 
-      await navigate({ to: "/", replace: true });
+        setUsername(claims.username);
+
+        const user = await fetchUser(claims.username);
+        setUser(user);
+
+        await navigate({ to: "/", replace: true });
+      } catch (error) {
+        console.error("Login failed:", error);
+        // TODO: Show error toast to user
+      }
     },
   });
 
