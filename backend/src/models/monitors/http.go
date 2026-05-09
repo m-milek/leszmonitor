@@ -19,16 +19,16 @@ import (
 )
 
 type HttpProbe struct {
-	Method               string            `json:"method" bson:"method"`
-	URL                  string            `json:"url" bson:"url"`
-	Headers              map[string]string `json:"headers" bson:"headers"`
-	Body                 string            `json:"body" bson:"body"`
-	SaveResponseBody     bool              `json:"saveResponseBody" bson:"saveResponseBody"`       // Whether to save the response body in the monitor response
-	SaveResponseHeaders  bool              `json:"saveResponseHeaders" bson:"saveResponseHeaders"` // Whether to save the response headers in the monitor response
-	ExpectedStatusCodes  []int             `json:"expectedStatusCodes" bson:"expectedStatusCodes"`
-	ExpectedBodyRegex    string            `json:"expectedBodyRegex" bson:"expectedBodyRegex"`
-	ExpectedHeaders      map[string]string `json:"expectedHeaders" bson:"expectedHeaders"`
-	ExpectedResponseTime *int              `json:"expectedResponseTime" bson:"expectedResponseTime"` // in milliseconds
+	Method               string            `json:"method"`
+	URL                  string            `json:"url"`
+	Headers              map[string]string `json:"headers"`
+	Body                 string            `json:"body"`
+	SaveResponseBody     bool              `json:"saveResponseBody"`    // Whether to save the response body in the monitor response
+	SaveResponseHeaders  bool              `json:"saveResponseHeaders"` // Whether to save the response headers in the monitor response
+	ExpectedStatusCodes  []int             `json:"expectedStatusCodes"`
+	ExpectedBodyRegex    string            `json:"expectedBodyRegex"`
+	ExpectedHeaders      map[string]string `json:"expectedHeaders"`
+	ExpectedResponseTime *int              `json:"expectedResponseTime"` // in milliseconds
 }
 
 func (m *HttpProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {

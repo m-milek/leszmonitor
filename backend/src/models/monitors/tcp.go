@@ -23,11 +23,11 @@ var (
 )
 
 type TCPProbe struct {
-	Host            string `json:"host" bson:"host"`             // Host to call
-	Port            int    `json:"port" bson:"port"`             // Port to call
-	Protocol        string `json:"protocol" bson:"protocol"`     // Protocol to use (tcp, udp, etc.)
-	Timeout         int    `json:"timeout" bson:"timeout"`       // Timeout in milliseconds for each connection attempt
-	RetryCount      int    `json:"retryCount" bson:"retryCount"` // RetryCount is the number of retries until
+	Host            string `json:"host"`       // Host to call
+	Port            int    `json:"port"`       // Port to call
+	Protocol        string `json:"protocol"`   // Protocol to use (tcp, udp, etc.)
+	Timeout         int    `json:"timeout"`    // Timeout in milliseconds for each connection attempt
+	RetryCount      int    `json:"retryCount"` // RetryCount is the number of retries until
 	dialAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
