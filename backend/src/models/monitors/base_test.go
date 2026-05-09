@@ -11,11 +11,12 @@ import (
 func createTestBaseMonitor() Monitor {
 	name := "Test BaseMonitor"
 	return Monitor{
-		Slug:        util.SlugFromString(name),
-		Name:        name,
-		Description: "Test Description",
-		Interval:    60,
-		Type:        shared.HttpConfigType,
+		Slug:                   util.SlugFromString(name),
+		Name:                   name,
+		Description:            "Test Description",
+		Interval:               60,
+		Type:                   shared.HttpConfigType,
+		ResultRetentionSeconds: 60,
 	}
 }
 
@@ -55,6 +56,22 @@ func TestBaseMonitorValidateEmptyType(t *testing.T) {
 	err := monitor.Validate()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "type cannot be empty")
+}
+
+func TestBaseMonitorValidateZeroResultRetentionSeconds(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.ResultRetentionSeconds = 0
+	err := monitor.Validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "result retention period must be greater than zero")
+}
+
+func TestBaseMonitorValidateNegativeResultRetentionSeconds(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.ResultRetentionSeconds = -10
+	err := monitor.Validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "result retention period must be greater than zero")
 }
 
 func TestBaseMonitorGenerateSlug(t *testing.T) {

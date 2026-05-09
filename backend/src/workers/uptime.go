@@ -27,7 +27,7 @@ func StartUptimeWorker(ctx context.Context) {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
 		return
 	}
-	logger.Info().Any("monitors", allMonitors).Msgf("Found %d monitors to check", len(allMonitors))
+	logger.Debug().Any("monitors", allMonitors).Msgf("Found %d monitors to check", len(allMonitors))
 
 	for _, monitor := range allMonitors {
 		childContext, cancel := context.WithCancel(ctx)

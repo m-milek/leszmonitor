@@ -69,17 +69,18 @@ BEGIN
 END;
 
 CREATE TABLE IF NOT EXISTS monitors (
-    id          TEXT PRIMARY KEY,
-    slug        VARCHAR(50)   NOT NULL,
-    project_id  TEXT          NOT NULL,
-    name        VARCHAR(100)  NOT NULL,
-    description VARCHAR(1000) NOT NULL,
-    interval    INT           NOT NULL,
-    kind        VARCHAR(50)   NOT NULL,
-    config      TEXT          NOT NULL, -- JSON string
+    id                       TEXT PRIMARY KEY,
+    slug                     VARCHAR(50)   NOT NULL,
+    project_id               TEXT          NOT NULL,
+    name                     VARCHAR(100)  NOT NULL,
+    description              VARCHAR(1000) NOT NULL,
+    interval                 INT           NOT NULL,
+    kind                     VARCHAR(50)   NOT NULL,
+    result_retention_seconds INT           NOT NULL,
+    config                   TEXT          NOT NULL, -- JSON string
 
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     UNIQUE (project_id, slug),
     FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE

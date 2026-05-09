@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"time"
 
+	"github.com/google/uuid"
 	consts "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
@@ -15,6 +17,7 @@ type IMonitorResultRepository interface {
 	InsertMonitorResult(ctx context.Context, result monitorresult.IMonitorResult) (interface{}, error)
 	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, error)
 	GetMonitorResultsByMonitorID(ctx context.Context, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, error)
+	DeleteMonitorResultsOlderThanDuration(ctx context.Context, monitorID uuid.UUID, duration time.Duration) (int64, error)
 }
 
 type monitorResultRepository struct {
@@ -137,5 +140,21 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 		}
 
 		return &result, nil
+	})
+}
+
+func (r *monitorResultRepository) DeleteMonitorResultsOlderThanDuration(ctx context.Context, monitorID uuid.UUID, duration time.Duration) (int64, error) {
+	return dbWrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
+		cutoffTime := time.Now().Add(-duration).Format(time.RFC3339)
+		result, err := r.pool.ExecContext(ctx,
+			`DELETE FROM monitor_results WHERE monitor_id = $1 AND created_at < $2`,
+			monitorID,
+			cutoffTime,
+		)
+		if err != nil {
+			return 0, err
+		}
+		rowsAffected, err := result.RowsAffected()
+		return rowsAffected, err
 	})
 }
