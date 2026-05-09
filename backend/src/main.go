@@ -25,6 +25,11 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		workers.StartUptimeWorker(ctx)
 	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		workers.StartDataCleanupWorker(ctx)
+	}()
 }
 
 func main() {

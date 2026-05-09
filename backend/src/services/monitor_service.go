@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
@@ -46,6 +47,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 
 	monitor.ProjectSlug = project.Slug
 	monitor.GenerateSlug()
+	monitor.ResultRetentionSeconds = int((12 * time.Hour).Seconds()) // TODO: Make this configurable later
 
 	if err := monitor.Validate(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid monitor configuration")
