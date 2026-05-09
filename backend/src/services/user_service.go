@@ -28,8 +28,9 @@ func newUserService(base baseService) *UserServiceT {
 var UserService = newUserService(newBaseService(newAuthorizationService(), "UserService"))
 
 type UserRegisterPayload struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
 }
 
 type LoginPayload struct {
