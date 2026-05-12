@@ -103,7 +103,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 	_, err = s.getDB().Users().InsertUser(ctx, userModel)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			return &ServiceError{Code: http.StatusConflict, Err: fmt.Errorf("user %s already exists", payload.Username)}
+			return &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("failed to register user")}
 		}
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to register user %s: %w", payload.Username, err)}
@@ -131,13 +131,13 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 	user, err := s.getDB().Users().GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", payload.Username)}
+			return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid credentials")}
 		}
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving user %s: %w", payload.Username, err)}
 	}
 
 	if err = checkPasswordHash(payload.Password, user.PasswordHash); err != nil {
-		return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid password for user %s", payload.Username)}
+		return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid credentials")}
 	}
 
 	expiryHours, err := strconv.Atoi(os.Getenv(config.JwtExpiryHours))

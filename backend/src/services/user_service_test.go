@@ -115,7 +115,7 @@ func TestUserServiceT_RegisterUser(t *testing.T) {
 
 		err := userService.RegisterUser(ctx, payload)
 
-		assert.Equal(t, http.StatusConflict, err.Code)
+		assert.Equal(t, http.StatusUnauthorized, err.Code)
 		mockUserRepo.AssertExpectations(t)
 	})
 }
@@ -236,7 +236,7 @@ func TestUserServiceT_Login(t *testing.T) {
 		response, err := userService.Login(ctx, payload)
 
 		assert.Nil(t, response)
-		assert.Equal(t, http.StatusNotFound, err.Code)
+		assert.Equal(t, http.StatusUnauthorized, err.Code)
 		mockUserRepo.AssertExpectations(t)
 	})
 

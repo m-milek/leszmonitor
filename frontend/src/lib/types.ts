@@ -265,3 +265,12 @@ export interface Pagination {
   page: number;
   perPage: number;
 }
+
+export interface ErrorDetails {
+  message: string;
+}
+
+export interface ApiError {
+  error: ErrorDetails;
+  status: number;
+}

@@ -27,7 +27,7 @@ export const LMInputField = (props: LMInputFieldProps) => {
         type={props.type}
         value={props.value}
         onChange={props.onChange}
-        autoComplete={props.autoComplete}
+        autoComplete={props.autoComplete ?? "off"}
         placeholder={props.placeholder}
         inputMode={props.inputMode}
         disabled={props.disabled}

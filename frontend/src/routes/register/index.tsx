@@ -11,20 +11,19 @@ import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx
 import { Button } from "@/components/ui/button.tsx";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
 import { fetchUser, registerUser } from "@/lib/data/userData.ts";
 import { isJwtClaims } from "@/lib/jwt.ts";
 import { setCookie } from "@/lib/cookies.ts";
-import {toast} from "sonner";
+import { toast } from "sonner";
+import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
+import {
+  getFirstError,
+  isFieldInvalid,
+} from "@/components/leszmonitor/forms/inputs/utils.ts";
 
 export const Route = createFileRoute("/register/")({
   component: RegisterComponent,
@@ -62,6 +61,7 @@ function RegisterComponent() {
     },
     onSubmit: async ({ value }) => {
       try {
+        console.log("Registering user with values:", value);
         await registerUser(value);
 
         const loginResponse = await fetchLoginToken(value);
@@ -114,73 +114,55 @@ function RegisterComponent() {
               <FieldGroup className="gap-2">
                 <form.Field
                   name="username"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <Field>
+                      <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                      <LMInputField
+                        name={field.name}
+                        type="text"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        isInvalid={isFieldInvalid(field)}
+                        errorMessage={getFirstError(field)}
+                      />
+                    </Field>
+                  )}
                 />
                 <form.Field
                   name="password"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          type="password"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="new-password"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <Field>
+                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <LMInputField
+                        name={field.name}
+                        type="password"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        autoComplete="new-password"
+                        isInvalid={isFieldInvalid(field)}
+                        errorMessage={getFirstError(field)}
+                      />
+                    </Field>
+                  )}
                 />
                 <form.Field
                   name="passwordConfirm"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>
-                          Confirm your password
-                        </FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          type="password"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="new-password"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <Field>
+                      <FieldLabel htmlFor={field.name}>
+                        Confirm your password
+                      </FieldLabel>
+                      <LMInputField
+                        name={field.name}
+                        type="password"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        autoComplete="new-password"
+                        isInvalid={isFieldInvalid(field)}
+                        errorMessage={getFirstError(field)}
+                      />
+                    </Field>
+                  )}
                 />
               </FieldGroup>
             </form>

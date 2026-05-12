@@ -2,7 +2,6 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/leszmonitor/sidebar/AppSidebar.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { WebSocketProvider } from "@/components/leszmonitor/providers/WebSocketProvider.tsx";
-import { ToasterProvider } from "@/components/leszmonitor/providers/ToasterProvider.tsx";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -10,19 +9,17 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   return (
-    <ToasterProvider>
-      <WebSocketProvider>
-        <div className="flex h-screen w-full text-foreground">
-          <AppSidebar />
-          <div className="flex-1 flex flex-col bg-background overflow-hidden">
-            <ScrollArea className="h-full">
-              <main className="min-h-full">
-                <Outlet />
-              </main>
-            </ScrollArea>
-          </div>
+    <WebSocketProvider>
+      <div className="flex h-screen w-full text-foreground">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col bg-background overflow-hidden">
+          <ScrollArea className="h-full">
+            <main className="min-h-full">
+              <Outlet />
+            </main>
+          </ScrollArea>
         </div>
-      </WebSocketProvider>
-    </ToasterProvider>
+      </div>
+    </WebSocketProvider>
   );
 }

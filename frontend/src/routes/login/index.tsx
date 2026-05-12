@@ -11,19 +11,19 @@ import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx
 import { Button } from "@/components/ui/button.tsx";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
 import { isJwtClaims } from "@/lib/jwt.ts";
 import { fetchUser } from "@/lib/data/userData.ts";
 import { setCookie } from "@/lib/cookies.ts";
+import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
+import {
+  getFirstError,
+  isFieldInvalid,
+} from "@/components/leszmonitor/forms/inputs/utils.ts";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/login/")({
   component: RouteComponent,
@@ -51,9 +51,8 @@ function RouteComponent() {
       try {
         const loginResponse = await fetchLoginToken(value);
 
-        // Store JWT in cookie (7 days expiry)
         setCookie("LOGIN_TOKEN", loginResponse.jwt, {
-          maxAge: 7 * 24 * 60 * 60,
+          maxAge: 24 * 60 * 60,
           path: "/",
           sameSite: "Lax",
         });
@@ -71,8 +70,12 @@ function RouteComponent() {
 
         await navigate({ to: "/", replace: true });
       } catch (error) {
-        console.error("Login failed:", error);
-        // TODO: Show error toast to user
+        if (error instanceof Error) {
+          console.error(error);
+          toast.error(
+            "Failed to log in. Please check your credentials and try again.",
+          );
+        }
       }
     },
   });
@@ -98,48 +101,36 @@ function RouteComponent() {
               <FieldGroup className="gap-2">
                 <form.Field
                   name="username"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="off"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <Field>
+                      <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                      <LMInputField
+                        name={field.name}
+                        type="text"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        isInvalid={isFieldInvalid(field)}
+                        errorMessage={getFirstError(field)}
+                      />
+                    </Field>
+                  )}
                 />
                 <form.Field
                   name="password"
-                  children={(field) => {
-                    const isInvalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <Field>
-                        <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                        <Input
-                          id={field.name}
-                          name={field.name}
-                          type="password"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          autoComplete="current-password"
-                        />
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
-                      </Field>
-                    );
-                  }}
+                  children={(field) => (
+                    <Field>
+                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <LMInputField
+                        name={field.name}
+                        type="password"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        autoComplete="current-password"
+                        isInvalid={isFieldInvalid(field)}
+                        errorMessage={getFirstError(field)}
+                      />
+                    </Field>
+                  )}
                 />
               </FieldGroup>
             </form>
