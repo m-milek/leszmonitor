@@ -61,6 +61,7 @@ function RegisterComponent() {
     },
     onSubmit: async ({ value }) => {
       try {
+        console.log("Registering user with values:", value);
         await registerUser(value);
 
         const loginResponse = await fetchLoginToken(value);

@@ -5,6 +5,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 import "./styles.css";
+import { ToasterProvider } from "@/components/leszmonitor/providers/ToasterProvider.tsx";
 // import reportWebVitals from "./reportWebVitals.ts";
 
 const router = createRouter({
@@ -27,7 +28,9 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <ToasterProvider>
+        <RouterProvider router={router} />
+      </ToasterProvider>
     </StrictMode>,
   );
 }

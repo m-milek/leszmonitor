@@ -23,6 +23,7 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/login/")({
   component: RouteComponent,
@@ -50,9 +51,8 @@ function RouteComponent() {
       try {
         const loginResponse = await fetchLoginToken(value);
 
-        // Store JWT in cookie (7 days expiry)
         setCookie("LOGIN_TOKEN", loginResponse.jwt, {
-          maxAge: 7 * 24 * 60 * 60,
+          maxAge: 24 * 60 * 60,
           path: "/",
           sameSite: "Lax",
         });
@@ -70,8 +70,12 @@ function RouteComponent() {
 
         await navigate({ to: "/", replace: true });
       } catch (error) {
-        console.error("Login failed:", error);
-        // TODO: Show error toast to user
+        if (error instanceof Error) {
+          console.error(error);
+          toast.error(
+            "Failed to log in. Please check your credentials and try again.",
+          );
+        }
       }
     },
   });

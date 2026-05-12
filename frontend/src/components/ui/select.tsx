@@ -85,15 +85,13 @@ function SelectTrigger({
     selectContext?.value !== undefined &&
     selectContext?.value !== "";
 
-  const onClearClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const onClearClick = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
     selectContext?.clearValue?.();
   };
 
-  const onClearPointerDown = (
-    event: React.PointerEvent<HTMLButtonElement>,
-  ) => {
+  const onClearPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
   };
@@ -111,15 +109,26 @@ function SelectTrigger({
       {children}
       <div className="flex items-center gap-2 ml-auto">
         {showClearButton && (
-          <button
-            type="button"
+          <div
+            role="button"
             aria-label="Clear selection"
-            className={cn("text-muted-foreground hover:text-foreground")}
+            tabIndex={0}
+            className={cn(
+              "text-muted-foreground hover:text-foreground cursor-pointer",
+            )}
             onPointerDown={onClearPointerDown}
             onClick={onClearClick}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClearClick(
+                  e as unknown as React.MouseEvent<HTMLDivElement>,
+                );
+              }
+            }}
           >
             <XIcon className="size-4" />
-          </button>
+          </div>
         )}
         <SelectPrimitive.Icon asChild>
           <ChevronDownIcon className="size-4 opacity-50" />
