@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	monitors "github.com/m-milek/leszmonitor/models/monitors"
 )
 
@@ -30,95 +29,72 @@ func newMonitorRepository(repository baseRepository) IMonitorRepository {
 	}
 }
 
-func mapRowsToMonitors(rows *sqlx.Rows) ([]monitors.Monitor, error) {
-	defer rows.Close()
-	var allMonitors []monitors.Monitor
-	for rows.Next() {
-		var b monitors.Monitor
-
-		err := rows.Scan(&b.ID, &b.Slug, &b.Name, &b.Description, &b.Interval, &b.Type, &b.ResultRetentionSeconds, &b.ProbeConfig, &b.CreatedAt, &b.UpdatedAt, &b.ProjectSlug)
-		if err != nil {
-			return nil, err
-		}
-
-		allMonitors = append(allMonitors, b)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	if allMonitors == nil {
-		allMonitors = []monitors.Monitor{}
-	}
-	return allMonitors, nil
-}
-
-func mapRowToMonitor(row *sqlx.Row) (*monitors.Monitor, error) {
-	var b monitors.Monitor
-
-	err := row.Scan(&b.ID, &b.Slug, &b.Name, &b.Description, &b.Interval, &b.Type, &b.ResultRetentionSeconds, &b.ProbeConfig, &b.CreatedAt, &b.UpdatedAt, &b.ProjectSlug)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
-		}
-		return nil, err
-	}
-
-	return &b, nil
-}
-
 func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorsByProjectID", func() ([]monitors.Monitor, error) {
-		rows, err := r.pool.QueryxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+		var allMonitors []monitors.Monitor
+		err := r.pool.SelectContext(ctx, &allMonitors,
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, m.project_id
 			 FROM monitors m
-			 JOIN projects p ON p.id = m.project_id
 			 WHERE m.project_id = $1`,
 			projectID)
-		if err != nil {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
-		mappedMonitors, err := mapRowsToMonitors(rows)
-		if err != nil {
-			return nil, err
+		if allMonitors == nil {
+			allMonitors = []monitors.Monitor{}
 		}
-		return mappedMonitors, nil
+		return allMonitors, nil
 	})
 }
 
 func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
-		row := r.pool.QueryRowxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+		var monitor monitors.Monitor
+		err := r.pool.GetContext(ctx, &monitor,
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
 			 FROM monitors m
-			 JOIN projects p ON p.id = m.project_id
 			 WHERE m.slug = $1`,
 			slug)
-		return mapRowToMonitor(row)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		return &monitor, nil
 	})
 }
 
 func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (*monitors.Monitor, error) {
-		row := r.pool.QueryRowxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+		var monitor monitors.Monitor
+		err := r.pool.GetContext(ctx, &monitor,
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
 			 FROM monitors m
-			 JOIN projects p ON p.id = m.project_id
-			 WHERE m.id = $1`,
-			id)
-		return mapRowToMonitor(row)
+			 WHERE m.id = $1`, id)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		return &monitor, nil
 	})
 }
 
 func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetAllMonitors", func() ([]monitors.Monitor, error) {
-		rows, err := r.pool.QueryxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
-			 FROM monitors m
-			 JOIN projects p ON p.id = m.project_id`)
-		if err != nil {
+		var allMonitors []monitors.Monitor
+		err := r.pool.SelectContext(ctx, &allMonitors,
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
+			 FROM monitors m`)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
-		return mapRowsToMonitors(rows)
+		if allMonitors == nil {
+			allMonitors = []monitors.Monitor{}
+		}
+		return allMonitors, nil
 	})
 }
 
@@ -142,18 +118,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 	return dbWrap(ctx, "InsertMonitor", func() (*monitors.Monitor, error) {
 		id := monitor.ID
 		if id == uuid.Nil {
-			id = uuid.New() // manually inject UUID
-		}
-
-		var projectID uuid.UUID
-		if err := r.pool.QueryRowxContext(ctx,
-			`SELECT id FROM projects WHERE slug = $1`,
-			monitor.ProjectSlug,
-		).Scan(&projectID); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
-			}
-			return nil, err
+			id = uuid.New()
 		}
 
 		_, err := r.pool.ExecContext(ctx,
@@ -161,7 +126,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 			id,
 			monitor.Slug,
-			projectID,
+			monitor.ProjectID,
 			monitor.Name,
 			monitor.Description,
 			monitor.Interval,
@@ -176,18 +141,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			return nil, err
 		}
 
-		row := r.pool.QueryRowxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
-			 FROM monitors m
-			 JOIN projects p ON p.id = m.project_id
-			 WHERE m.id = $1`,
-			id,
-		)
-		created, err := mapRowToMonitor(row)
-		if err != nil {
-			return nil, err
-		}
-		return created, nil
+		return r.GetMonitorByID(ctx, id)
 	})
 }
 
@@ -198,7 +152,7 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 			SET slug=$1, project_id=(SELECT p.id FROM projects p WHERE p.slug=$2), name=$3, description=$4, interval=$5, kind=$6, config=$7
 			WHERE id=$8`,
 			newMonitor.Slug,
-			newMonitor.ProjectSlug,
+			newMonitor.ProjectID,
 			newMonitor.Name,
 			newMonitor.Description,
 			newMonitor.Interval,

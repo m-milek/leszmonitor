@@ -23,7 +23,7 @@ export const MonitorResultsList = ({
     <div>
       {results?.map((result) => (
         <div key={result.id}>
-          <Flex direction="row" className="gap-4">
+          <Flex direction="row" className="gap-4 items-center">
             <StatusDot status={result.isSuccess ? "success" : "failure"} />
             <span className="font-mono">{result.id}</span>
             <span className="font-mono">

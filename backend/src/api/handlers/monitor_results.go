@@ -12,7 +12,7 @@ import (
 
 func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceKindMonitor)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceMonitorID)
 	if !ok {
 		return
 	}
@@ -34,7 +34,7 @@ func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Req
 
 func GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceKindMonitor)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceMonitorID)
 	if !ok {
 		return
 	}

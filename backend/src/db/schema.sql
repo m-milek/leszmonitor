@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id            TEXT PRIMARY KEY,
-    username      VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255)       NOT NULL,
+    username      TEXT UNIQUE NOT NULL CHECK (LENGTH(username) >= 2) CHECK (LENGTH(username) <= 50),
+    password_hash TEXT        NOT NULL,
 
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -16,9 +16,9 @@ END;
 
 CREATE TABLE IF NOT EXISTS projects (
     id          TEXT PRIMARY KEY,
-    slug        VARCHAR(50) UNIQUE NOT NULL,
-    name        VARCHAR(100)       NOT NULL,
-    description VARCHAR(1000)      NOT NULL,
+    slug        TEXT UNIQUE NOT NULL CHECK (LENGTH(slug) >= 2) CHECK (LENGTH(slug) <= 50),
+    name        TEXT        NOT NULL CHECK (LENGTH(name) >= 2) CHECK (LENGTH(name) <= 100),
+    description TEXT        NOT NULL CHECK (LENGTH(description) <= 1000),
 
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -51,33 +51,19 @@ BEGIN
     UPDATE user_projects SET updated_at = CURRENT_TIMESTAMP WHERE user_id = new.user_id AND project_id = new.project_id;
 END;
 
-CREATE TABLE IF NOT EXISTS permissions (
-    id          TEXT PRIMARY KEY,
-    slug        VARCHAR(50)   NOT NULL,
-    name        VARCHAR(100)  NOT NULL,
-    description VARCHAR(1000) NOT NULL,
-
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TRIGGER IF NOT EXISTS update_permissions_updated_at
-    AFTER UPDATE
-    ON permissions
-    FOR EACH ROW
-BEGIN
-    UPDATE permissions SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
-END;
+CREATE INDEX IF NOT EXISTS idx_user_projects_project_id
+    ON user_projects (project_id);
 
 CREATE TABLE IF NOT EXISTS monitors (
     id                       TEXT PRIMARY KEY,
-    slug                     VARCHAR(50)   NOT NULL,
-    project_id               TEXT          NOT NULL,
-    name                     VARCHAR(100)  NOT NULL,
-    description              VARCHAR(1000) NOT NULL,
-    interval                 INT           NOT NULL,
-    kind                     VARCHAR(50)   NOT NULL,
-    result_retention_seconds INT           NOT NULL,
-    config                   TEXT          NOT NULL, -- JSON string
+    slug                     TEXT NOT NULL CHECK (LENGTH(slug) >= 2) CHECK (LENGTH(slug) <= 50),
+    project_id               TEXT NOT NULL,                            -- UUID
+    name                     TEXT NOT NULL CHECK (LENGTH(name) >= 2) CHECK (LENGTH(name) <= 100),
+    description              TEXT NOT NULL CHECK (LENGTH(description) <= 1000),
+    interval                 INT  NOT NULL CHECK (interval > 0),       -- in seconds
+    kind                     TEXT NOT NULL,
+    result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
+    config                   TEXT NOT NULL CHECK (JSON_VALID(config)), -- JSON string
 
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -93,14 +79,16 @@ BEGIN
     UPDATE monitors SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
 END;
 
+CREATE INDEX IF NOT EXISTS idx_monitors_project_id ON monitors (project_id);
+
 CREATE TABLE IF NOT EXISTS monitor_results (
     id                    TEXT PRIMARY KEY,
     monitor_id            TEXT    NOT NULL,
     is_success            BOOLEAN NOT NULL,
     is_manually_triggered BOOLEAN NOT NULL,
-    duration_ms           INT     NOT NULL,
+    duration_ms           INT     NOT NULL CHECK (duration_ms >= 0),
 
-    error_details         TEXT, -- JSON string
+    error_details         TEXT CHECK (error_details IS NULL OR JSON_VALID(error_details)), -- JSON string
 
     details               TEXT    NOT NULL,
 
@@ -108,3 +96,4 @@ CREATE TABLE IF NOT EXISTS monitor_results (
 
     FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS idx_monitor_results_monitor_id_created ON monitor_results (monitor_id, created_at DESC);

@@ -50,7 +50,7 @@ func setupProjectWithUser(username string, role models.Role) (*models.User, *mod
 
 // Helper to mock successful project and user retrieval
 func mockProjectAndUser(mockDB *db.MockDB, ctx context.Context, project *models.Project, user *models.User) {
-	mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, project.Slug).Return(project, nil)
+	mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByID", ctx, project.ID).Return(project, nil)
 	mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, user.Username).Return(user, nil)
 }
 
@@ -76,7 +76,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 			mockProjectAndUser(mockDB, ctx, project, user)
 
 			resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-				ProjectID: project.Slug,
+				ProjectID: project.ID,
 				Username:  tt.username,
 			}, tt.permission)
 
@@ -90,11 +90,12 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "nonexistent").
+		dummyID := uuid.New()
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByID", ctx, dummyID).
 			Return((*models.Project)(nil), db.ErrNotFound)
 
 		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-			ProjectID: "nonexistent",
+			ProjectID: dummyID,
 			Username:  "testuser",
 		}, models.PermissionProjectReader)
 
@@ -107,11 +108,12 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		ctx, authService, mockDB := setupTestAuthorizationService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").
+		dummyID := uuid.New()
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByID", ctx, dummyID).
 			Return((*models.Project)(nil), errors.New("database error"))
 
 		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-			ProjectID: "test-project",
+			ProjectID: dummyID,
 			Username:  "testuser",
 		}, models.PermissionProjectReader)
 
@@ -125,12 +127,12 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		defer db.Set(nil)
 
 		_, project := setupProjectWithUser("testuser", models.RoleOwner)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, project.Slug).Return(project, nil)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByID", ctx, project.ID).Return(project, nil)
 		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, "nonexistent").
 			Return((*models.User)(nil), db.ErrNotFound)
 
 		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-			ProjectID: project.Slug,
+			ProjectID: project.ID,
 			Username:  "nonexistent",
 		}, models.PermissionProjectReader)
 
@@ -151,7 +153,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		mockProjectAndUser(mockDB, ctx, project, user)
 
 		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-			ProjectID: project.Slug,
+			ProjectID: project.ID,
 			Username:  user.Username,
 		}, models.PermissionProjectReader)
 
@@ -179,7 +181,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 			mockProjectAndUser(mockDB, ctx, project, user)
 
 			resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-				ProjectID: project.Slug,
+				ProjectID: project.ID,
 				Username:  user.Username,
 			}, tt.permission)
 
@@ -198,7 +200,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		mockProjectAndUser(mockDB, ctx, project, user)
 
 		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-			ProjectID: project.Slug,
+			ProjectID: project.ID,
 			Username:  user.Username,
 		}, models.PermissionProjectAdmin, models.PermissionMonitorAdmin)
 
@@ -214,7 +216,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		mockProjectAndUser(mockDB, ctx, project, user)
 
 		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
-			ProjectID: project.Slug,
+			ProjectID: project.ID,
 			Username:  user.Username,
 		}, models.PermissionProjectEditor, models.PermissionProjectAdmin)
 
