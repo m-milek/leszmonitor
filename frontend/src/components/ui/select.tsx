@@ -1,13 +1,59 @@
 import * as React from "react";
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, XIcon } from "lucide-react";
 import { Select as SelectPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+const SelectContext = React.createContext<{
+  value?: string;
+  clearValue?: () => void;
+} | null>(null);
+
 function Select({
+  value: valueProp,
+  defaultValue,
+  onValueChange,
+  onClear,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+}: React.ComponentProps<typeof SelectPrimitive.Root> & {
+  onClear?: () => void;
+}) {
+  const isControlled = valueProp !== undefined;
+  const [internalValue, setInternalValue] = React.useState<string | undefined>(
+    defaultValue,
+  );
+
+  const value = isControlled ? valueProp : internalValue;
+  // Treat empty string as "no selection" for Radix UI
+  const radixValue = value === "" || value === undefined ? "" : value;
+
+  const handleValueChange = (nextValue: string) => {
+    if (!isControlled) {
+      setInternalValue(nextValue);
+    }
+    onValueChange?.(nextValue);
+  };
+
+  const clearValue = () => {
+    if (!isControlled) {
+      setInternalValue("");
+    }
+    onValueChange?.("");
+    if (onClear) {
+      onClear();
+    }
+  };
+
+  return (
+    <SelectContext.Provider value={{ value: radixValue, clearValue }}>
+      <SelectPrimitive.Root
+        data-slot="select"
+        value={radixValue}
+        onValueChange={handleValueChange}
+        {...props}
+      />
+    </SelectContext.Provider>
+  );
 }
 
 function SelectGroup({
@@ -26,10 +72,32 @@ function SelectTrigger({
   className,
   size = "default",
   children,
+  withClearButton = false,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
+} & {
+  withClearButton?: boolean;
 }) {
+  const selectContext = React.useContext(SelectContext);
+  const showClearButton =
+    withClearButton &&
+    selectContext?.value !== undefined &&
+    selectContext?.value !== "";
+
+  const onClearClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    selectContext?.clearValue?.();
+  };
+
+  const onClearPointerDown = (
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -41,9 +109,22 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
-      </SelectPrimitive.Icon>
+      <div className="flex items-center gap-2 ml-auto">
+        {showClearButton && (
+          <button
+            type="button"
+            aria-label="Clear selection"
+            className={cn("text-muted-foreground hover:text-foreground")}
+            onPointerDown={onClearPointerDown}
+            onClick={onClearClick}
+          >
+            <XIcon className="size-4" />
+          </button>
+        )}
+        <SelectPrimitive.Icon asChild>
+          <ChevronDownIcon className="size-4 opacity-50" />
+        </SelectPrimitive.Icon>
+      </div>
     </SelectPrimitive.Trigger>
   );
 }

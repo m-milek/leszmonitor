@@ -35,6 +35,9 @@ function RouteComponent() {
       <span>{monitor.id}</span>
       <span>{monitor.type}</span>
       <span>{monitor.description}</span>
+      <div>
+        <pre>{JSON.stringify(monitor, null, 2)}</pre>
+      </div>
       <MonitorResultsList monitor={monitor} pagination={pagination} />
     </MainPanelContainer>
   );

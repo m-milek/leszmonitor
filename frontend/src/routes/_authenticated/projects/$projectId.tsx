@@ -32,7 +32,7 @@ function ProjectLayout() {
 function NotFound() {
   return (
     <MainPanelContainer>
-      <TypographyH1>Not Found</TypographyH1>;
+      <TypographyH1>Not Found</TypographyH1>
     </MainPanelContainer>
   );
 }
