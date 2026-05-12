@@ -26,6 +26,7 @@ var ProjectService = newProjectService(newBaseService(newAuthorizationService(),
 
 type CreateProjectPayload struct {
 	Name        string `json:"name"`
+	Slug        string `json:"slug"`
 	Description string `json:"description"`
 }
 

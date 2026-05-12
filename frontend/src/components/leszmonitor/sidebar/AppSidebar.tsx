@@ -7,18 +7,16 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx";
 
 import {
-  LayoutDashboardIcon,
-  LucideActivity,
   LucideBookText,
-  LucideFolderOpen,
-  LucidePlusCircle,
+  LucideHome,
+  LucideLogs,
   LucideSearch,
   LucideSettings,
-  LucideUsers
+  LucideUsers,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store.ts";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +28,7 @@ import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFoo
 import { fetchUser } from "@/lib/data/userData.ts";
 import { getProjects } from "@/lib/data/projectData.ts";
 import { AppSidebarHeader } from "@/components/leszmonitor/sidebar/AppSidebarHeader.tsx";
+import { ProjectMenu } from "@/components/leszmonitor/sidebar/ProjectMenu.tsx";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -38,12 +37,12 @@ interface SidebarButtonProps {
   variant?: "default" | "primary";
 }
 
-const SidebarButton = ({
-                         icon,
-                         href,
-                         label,
-                         variant = "default"
-                       }: SidebarButtonProps) => {
+export const SidebarButton = ({
+  icon,
+  href,
+  label,
+  variant = "default",
+}: SidebarButtonProps) => {
   const onClick = () => {
     console.log("navigating to", href);
   };
@@ -69,8 +68,6 @@ export const AppSidebar = () => {
   const { username, setUsername, user, setUser } = useAppStore();
   const hasInitialized = useRef(false);
 
-  const { project } = useAppStore();
-
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
@@ -92,12 +89,12 @@ export const AppSidebar = () => {
     queryKey: ["user", username],
     queryFn: () => fetchUser(username!),
     enabled: !!username,
-    staleTime: 5 * 60 * 1000
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: projectsData } = useQuery({
     queryKey: ["projects"],
-    queryFn: getProjects
+    queryFn: getProjects,
   });
 
   useEffect(() => {
@@ -108,55 +105,43 @@ export const AppSidebar = () => {
 
   return (
     <Sidebar variant="inset">
-      <AppSidebarHeader projects={projectsData || []} />
+      <AppSidebarHeader />
 
       <SidebarContent>
-        {project && (
-          <>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarButton
-                    icon={<LucidePlusCircle />}
-                    href={`/projects/${project.slug}/monitors/new`}
-                    label="New Monitor"
-                    variant="primary"
-                  />
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>This Project</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarButton
-                    icon={<LayoutDashboardIcon />}
-                    href={`/projects/${project.slug}/dashboard`}
-                    label="Dashboard"
-                  />
-                  <SidebarButton
-                    icon={<LucideActivity />}
-                    href={`/projects/${project.slug}/monitors`}
-                    label="Monitors"
-                  />
-                  <SidebarButton
-                    icon={<LucideUsers />}
-                    href={`/projects/${project.slug}/members`}
-                    label="Members"
-                  />
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
         <SidebarGroup>
-          <SidebarGroupLabel>Workspaces</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarButton
-                icon={<LucideFolderOpen />}
+                icon={<LucideHome />}
                 href="/projects"
-                label="All Projects"
+                label="Home"
+              />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <ProjectMenu projects={projectsData ?? []} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Administration</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarButton
+                icon={<LucideUsers />}
+                href={`/users`}
+                label="Users"
+              />
+              <SidebarButton
+                icon={<LucideLogs />}
+                href="/auditLog"
+                label="Audit Log"
+              />
+              <SidebarButton
+                icon={<LucideSettings />}
+                href={`/user/${user?.username}/settings`}
+                label="Settings"
               />
             </SidebarMenu>
           </SidebarGroupContent>
@@ -166,19 +151,14 @@ export const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarButton
-                icon={<LucideBookText />}
-                href="/docs"
-                label="Documentation"
-              />
-              <SidebarButton
                 icon={<LucideSearch />}
                 href="/search"
                 label="Search"
               />
               <SidebarButton
-                icon={<LucideSettings />}
-                href={`/user/${user?.username}/settings`}
-                label="Settings"
+                icon={<LucideBookText />}
+                href="/docs"
+                label="Documentation"
               />
             </SidebarMenu>
           </SidebarGroupContent>

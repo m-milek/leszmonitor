@@ -6,12 +6,28 @@ import type {
   MonitorUpdatePayload,
 } from "@/lib/types.ts";
 
+const normalizeMonitor = (monitor: Monitor): Monitor => {
+  if (typeof monitor.probeConfig === "string") {
+    try {
+      return {
+        ...monitor,
+        probeConfig: JSON.parse(monitor.probeConfig),
+      } as Monitor;
+    } catch {
+      return monitor;
+    }
+  }
+
+  return monitor;
+};
+
 export const getMonitors = async (projectId: string): Promise<Monitor[]> => {
   const res = await authFetch(
     `${BACKEND_API_URL}/projects/${projectId}/monitors`,
   );
 
-  return res.json();
+  const monitors = (await res.json()) as Monitor[];
+  return monitors.map(normalizeMonitor);
 };
 
 export const getMonitorBySlug = async (
@@ -22,7 +38,8 @@ export const getMonitorBySlug = async (
     `${BACKEND_API_URL}/projects/${projectId}/monitors/${monitorSlug}`,
   );
 
-  return res.json();
+  const monitor = (await res.json()) as Monitor;
+  return normalizeMonitor(monitor);
 };
 
 export const createMonitor = async (monitorData: MonitorCreatePayload) => {
