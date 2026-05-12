@@ -36,7 +36,7 @@ func mapRowsToMonitors(rows *sqlx.Rows) ([]monitors.Monitor, error) {
 	for rows.Next() {
 		var b monitors.Monitor
 
-		err := rows.Scan(&b.ID, &b.Slug, &b.Name, &b.Description, &b.Interval, &b.Type, &b.ProbeConfig, &b.CreatedAt, &b.UpdatedAt, &b.ProjectSlug)
+		err := rows.Scan(&b.ID, &b.Slug, &b.Name, &b.Description, &b.Interval, &b.Type, &b.ResultRetentionSeconds, &b.ProbeConfig, &b.CreatedAt, &b.UpdatedAt, &b.ProjectSlug)
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +55,7 @@ func mapRowsToMonitors(rows *sqlx.Rows) ([]monitors.Monitor, error) {
 func mapRowToMonitor(row *sqlx.Row) (*monitors.Monitor, error) {
 	var b monitors.Monitor
 
-	err := row.Scan(&b.ID, &b.Slug, &b.Name, &b.Description, &b.Interval, &b.Type, &b.ProbeConfig, &b.CreatedAt, &b.UpdatedAt, &b.ProjectSlug)
+	err := row.Scan(&b.ID, &b.Slug, &b.Name, &b.Description, &b.Interval, &b.Type, &b.ResultRetentionSeconds, &b.ProbeConfig, &b.CreatedAt, &b.UpdatedAt, &b.ProjectSlug)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
@@ -69,7 +69,7 @@ func mapRowToMonitor(row *sqlx.Row) (*monitors.Monitor, error) {
 func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorsByProjectID", func() ([]monitors.Monitor, error) {
 		rows, err := r.pool.QueryxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
 			 FROM monitors m
 			 JOIN projects p ON p.id = m.project_id
 			 WHERE m.project_id = $1`,
@@ -88,7 +88,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
 		row := r.pool.QueryRowxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
 			 FROM monitors m
 			 JOIN projects p ON p.id = m.project_id
 			 WHERE m.slug = $1`,
@@ -100,7 +100,7 @@ func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string) (
 func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (*monitors.Monitor, error) {
 		row := r.pool.QueryRowxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
 			 FROM monitors m
 			 JOIN projects p ON p.id = m.project_id
 			 WHERE m.id = $1`,
@@ -112,7 +112,7 @@ func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*
 func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetAllMonitors", func() ([]monitors.Monitor, error) {
 		rows, err := r.pool.QueryxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
 			 FROM monitors m
 			 JOIN projects p ON p.id = m.project_id`)
 		if err != nil {
@@ -157,8 +157,8 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 		}
 
 		_, err := r.pool.ExecContext(ctx,
-			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, config)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, result_retention_seconds,config)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 			id,
 			monitor.Slug,
 			projectID,
@@ -166,6 +166,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			monitor.Description,
 			monitor.Interval,
 			monitor.Type,
+			monitor.ResultRetentionSeconds,
 			monitor.ProbeConfig,
 		)
 		if err != nil {
@@ -176,7 +177,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 		}
 
 		row := r.pool.QueryRowxContext(ctx,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.config, m.created_at, m.updated_at, p.slug AS project_slug
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, p.slug AS project_slug
 			 FROM monitors m
 			 JOIN projects p ON p.id = m.project_id
 			 WHERE m.id = $1`,

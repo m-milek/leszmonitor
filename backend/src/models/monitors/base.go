@@ -12,24 +12,21 @@ import (
 )
 
 type Monitor struct {
-	ID          uuid.UUID        `json:"id" db:"id"`     // ID is the unique identifier for the monitor, generated as a UUID
-	Slug        string           `json:"slug" db:"slug"` // Slug is unique in the project
-	ProjectSlug string           `json:"projectSlug"`    // ProjectSlug is used to associate the monitor with a project
-	Name        string           `json:"name"`           // Name of the monitor
-	Description string           `json:"description"`    // Description of the monitor
-	Interval    int              `json:"interval"`       // Interval determines how often to run the monitor in seconds
-	Type        shared.ProbeType `json:"type"`           // Type of the monitor (http, tcp, etc.)
-	ProbeConfig string           `json:"probeConfig"`    // JSON string containing the specific configuration for the monitor type
+	ID                     uuid.UUID        `json:"id" db:"id"`             // ID is the unique identifier for the monitor, generated as a UUID
+	Slug                   string           `json:"slug" db:"slug"`         // Slug is unique in the project
+	ProjectSlug            string           `json:"projectSlug"`            // ProjectSlug is used to associate the monitor with a project
+	Name                   string           `json:"name"`                   // Name of the monitor
+	Description            string           `json:"description"`            // Description of the monitor
+	Interval               int              `json:"interval"`               // Interval determines how often to run the monitor in seconds
+	Type                   shared.ProbeType `json:"type"`                   // Type of the monitor (http, tcp, etc.)
+	ProbeConfig            string           `json:"probeConfig"`            // JSON string containing the specific configuration for the monitor type
+	ResultRetentionSeconds int              `json:"resultRetentionSeconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
 	util2.Timestamps
 }
 
 type Probe interface {
 	Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult
 	Validate() error
-}
-
-type monitorTypeExtractor struct {
-	Type shared.ProbeType `json:"type"`
 }
 
 func (m *Monitor) Validate() error {
@@ -48,6 +45,10 @@ func (m *Monitor) Validate() error {
 	if m.Slug == "" {
 		return fmt.Errorf("monitor slug cannot be empty")
 	}
+	if m.ResultRetentionSeconds <= 0 {
+		return fmt.Errorf("monitor result retention period must be greater than zero")
+	}
+
 	return nil
 }
 
