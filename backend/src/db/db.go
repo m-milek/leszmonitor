@@ -215,11 +215,19 @@ func InitFromEnv(ctx context.Context) error {
 }
 
 func ensureSQLiteUTC(dsn string) string {
-	if strings.Contains(dsn, "_loc=") {
-		return dsn
+	if !strings.Contains(dsn, "_loc=") {
+		if strings.Contains(dsn, "?") {
+			dsn += "&_loc=UTC"
+		} else {
+			dsn += "?_loc=UTC"
+		}
 	}
-	if strings.Contains(dsn, "?") {
-		return dsn + "&_loc=UTC"
+	if !strings.Contains(dsn, "_foreign_keys=") {
+		if strings.Contains(dsn, "?") {
+			dsn += "&_foreign_keys=on"
+		} else {
+			dsn += "?_foreign_keys=on"
+		}
 	}
-	return dsn + "?_loc=UTC"
+	return dsn
 }

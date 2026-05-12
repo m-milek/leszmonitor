@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
@@ -76,19 +77,19 @@ func (s *authorizationServiceT) authorizeProjectAction(ctx context.Context, proj
 }
 
 // internalGetProjectByID retrieves a project by its display ID without authorization checks.
-func (s *authorizationServiceT) internalGetProjectByID(ctx context.Context, projectID string) (*models.Project, *ServiceError) {
+func (s *authorizationServiceT) internalGetProjectByID(ctx context.Context, projectID uuid.UUID) (*models.Project, *ServiceError) {
 	logger := s.getMethodLogger("internalGetProjectByID")
 
-	project, err := db.Get().Projects().GetProjectBySlug(ctx, projectID)
+	project, err := db.Get().Projects().GetProjectByID(ctx, projectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("projectID", projectID).Msg("Project not found")
+			logger.Warn().Str("projectID", projectID.String()).Msg("Project not found")
 			return nil, &ServiceError{
 				Code: http.StatusNotFound,
 				Err:  fmt.Errorf("project %s not found", projectID),
 			}
 		}
-		logger.Error().Err(err).Str("projectID", projectID).Msg("Error retrieving project")
+		logger.Error().Err(err).Str("projectID", projectID.String()).Msg("Error retrieving project")
 		return nil, &ServiceError{
 			Code: http.StatusInternalServerError,
 			Err:  fmt.Errorf("error retrieving project %s: %w", projectID, err),

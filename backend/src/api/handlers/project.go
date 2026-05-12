@@ -48,7 +48,7 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -64,7 +64,7 @@ func GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -80,7 +80,7 @@ func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -102,7 +102,7 @@ func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 
 func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -124,7 +124,7 @@ func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 
 func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -146,7 +146,7 @@ func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 
 func ChangeProjectMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}

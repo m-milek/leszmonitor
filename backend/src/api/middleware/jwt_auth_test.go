@@ -9,9 +9,13 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/auth"
+	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -198,28 +202,35 @@ func TestGetUserFromContext(t *testing.T) {
 func TestProjectAuthFromRequest(t *testing.T) {
 	tests := []struct {
 		name          string
-		setupRequest  func() *http.Request
+		setupRequest  func(mockDB *db.MockDB) *http.Request
 		expectedAuth  *ProjectAuth
 		expectedError string
 	}{
 		{
 			name: "valid request with project slug and user claims",
-			setupRequest: func() *http.Request {
+			setupRequest: func(mockDB *db.MockDB) *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
 				req.SetPathValue("projectId", "proj123")
 
+				projectID := uuid.New()
+				mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", mock.Anything, "proj123").
+					Return(&models.Project{ID: projectID}, nil)
+
 				claims := &auth.UserClaims{Username: "testuser"}
 				ctx := SetUserContext(req.Context(), claims)
-				return req.WithContext(ctx)
+				req = req.WithContext(ctx)
+
+				// Stash the UUID so we can compare it
+				req.Header.Set("X-Expected-UUID", projectID.String())
+				return req
 			},
 			expectedAuth: &ProjectAuth{
-				ProjectID: "proj123",
-				Username:  "testuser",
+				Username: "testuser",
 			},
 		},
 		{
 			name: "missing project slug",
-			setupRequest: func() *http.Request {
+			setupRequest: func(mockDB *db.MockDB) *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/projects/", nil)
 				// No projectId path value set
 
@@ -231,9 +242,13 @@ func TestProjectAuthFromRequest(t *testing.T) {
 		},
 		{
 			name: "missing user claims in context",
-			setupRequest: func() *http.Request {
+			setupRequest: func(mockDB *db.MockDB) *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
 				req.SetPathValue("projectId", "proj123")
+
+				mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", mock.Anything, "proj123").
+					Return(&models.Project{ID: uuid.New()}, nil)
+
 				// No user claims in context
 				return req
 			},
@@ -241,9 +256,12 @@ func TestProjectAuthFromRequest(t *testing.T) {
 		},
 		{
 			name: "empty username in claims",
-			setupRequest: func() *http.Request {
+			setupRequest: func(mockDB *db.MockDB) *http.Request {
 				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
 				req.SetPathValue("projectId", "proj123")
+
+				mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", mock.Anything, "proj123").
+					Return(&models.Project{ID: uuid.New()}, nil)
 
 				claims := &auth.UserClaims{Username: ""} // Empty username
 				ctx := SetUserContext(req.Context(), claims)
@@ -255,19 +273,27 @@ func TestProjectAuthFromRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := tt.setupRequest()
+			mockDB := &db.MockDB{
+				ProjectsRepo: new(db.MockProjectRepository),
+			}
+			db.Set(mockDB)
+			defer db.Set(nil)
 
-			auth, err := ProjectAuthFromRequest(req, AuthSourceProject)
+			req := tt.setupRequest(mockDB)
+
+			authRes, err := ProjectAuthFromRequest(req, AuthSourceProjectSlug)
 
 			if tt.expectedError != "" {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
-				assert.Nil(t, auth)
+				assert.Nil(t, authRes)
 			} else {
 				assert.NoError(t, err)
-				require.NotNil(t, auth)
-				assert.Equal(t, tt.expectedAuth.ProjectID, auth.ProjectID)
-				assert.Equal(t, tt.expectedAuth.Username, auth.Username)
+				require.NotNil(t, authRes)
+
+				expectedUUID := uuid.MustParse(req.Header.Get("X-Expected-UUID"))
+				assert.Equal(t, expectedUUID, authRes.ProjectID)
+				assert.Equal(t, tt.expectedAuth.Username, authRes.Username)
 			}
 		})
 	}

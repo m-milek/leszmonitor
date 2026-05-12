@@ -25,6 +25,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createMonitor } from "@/lib/data/monitorData.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 
 export interface NewMonitorFormProps {
   projectSlug: string;
@@ -254,6 +255,7 @@ export function NewMonitorForm({
   formId = "new-monitor-form",
 }: NewMonitorFormProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const createMonitorMutation = useMutation({
     mutationFn: (monitor: MonitorFormValues) => {
       console.log("Creating monitor with values:", monitor);
@@ -264,11 +266,19 @@ export function NewMonitorForm({
     },
   });
 
+  const onSubmit = async (value: MonitorFormValues) => {
+    await createMonitorMutation.mutateAsync(value);
+    await navigate({
+      to: "/projects/$projectId/monitors/$monitorSlug",
+      params: { projectId: projectSlug, monitorSlug: value.slug },
+    });
+  };
+
   return (
     <MonitorForm
       projectSlug={projectSlug}
       formId={formId}
-      onSubmit={(value) => createMonitorMutation.mutateAsync(value)}
+      onSubmit={onSubmit}
       resetOnSuccess
     />
   );

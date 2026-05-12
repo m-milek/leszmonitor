@@ -32,7 +32,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -54,7 +54,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -70,7 +70,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -92,7 +92,7 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}
@@ -133,7 +133,7 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProject)
+	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
 	if !ok {
 		return
 	}

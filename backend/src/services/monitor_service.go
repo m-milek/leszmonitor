@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/events"
@@ -45,7 +46,8 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 		return nil, authErr
 	}
 
-	monitor.ProjectSlug = project.Slug
+	monitor.ID = uuid.New()
+	monitor.ProjectID = project.ID
 	monitor.GenerateSlug()
 	monitor.ResultRetentionSeconds = int((12 * time.Hour).Seconds()) // TODO: Make this configurable later
 
@@ -150,7 +152,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}
 	}
 
-	if monitor.ProjectSlug != projectAuth.ProjectID {
+	if monitor.ProjectID != projectAuth.ProjectID {
 		logger.Warn().Str("id", id).Msg("Monitor does not belong to the authorized project")
 		return nil, &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with slug %s does not belong to the authorized project", id)}
 	}
