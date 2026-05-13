@@ -1,4 +1,7 @@
-<h1 align="center">Leszmonitor</h1>
+<div align="center">
+<img src="frontend/public/logo-512x512.png" alt="Leszmonitor Logo" height="150" />
+<h1 style="margin: 0;">Leszmonitor</h1>
+</div>
 <div align="center">
  <strong>
    Lightweight homelab monitoring
