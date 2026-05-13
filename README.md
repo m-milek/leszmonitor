@@ -1,6 +1,18 @@
-# Leszmonitor
+<h1 align="center">Leszmonitor</h1>
+<div align="center">
+ <strong>
+   Lightweight homelab monitoring
+ </strong>
+<br/>
+</div>
 
-Lightweight logging and monitoring
+<div align="center">
+  <br/>
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=leszmonitor_leszmonitor&metric=alert_status" alt="SonarQube run result" height="20"/>
+<img src="https://sonarcloud.io/api/project_badges/measure?project=leszmonitor_leszmonitor&metric=coverage" alt="SonarQube run result" height="20"/>
+<img src="https://sonarcloud.io/api/project_badges/measure?project=leszmonitor_leszmonitor&metric=vulnerabilities" alt="SonarQube run result" height="20"/>
+  <br/>
+</div>
 
 ### Development
 

@@ -5,7 +5,7 @@ interface DividerProps {
   className?: string;
 }
 
-export function Divider({ direction, className }: DividerProps) {
+export function Divider({ direction, className }: Readonly<DividerProps>) {
   return (
     <div
       className={cn(

@@ -10,6 +10,13 @@ import { QUERY_KEYS } from "@/lib/consts.ts";
 import { getLatestMonitorResultByMonitorId } from "@/lib/data/monitorResultsData.ts";
 import { useQuery } from "@tanstack/react-query";
 
+const getDotStatus = (isSuccess: boolean | undefined) => {
+  if (isSuccess === undefined) {
+    return "pending";
+  }
+  return isSuccess ? "success" : "failure";
+};
+
 export interface MonitorListItemProps {
   monitor: Monitor;
   projectId: string;
@@ -28,11 +35,7 @@ export function MonitorListItem({
     queryFn: () => getLatestMonitorResultByMonitorId(monitor.id),
   });
 
-  const dotStatus = lastResultData
-    ? lastResultData.isSuccess
-      ? "success"
-      : "failure"
-    : "pending";
+  const dotStatus = getDotStatus(lastResultData?.isSuccess);
 
   return (
     <Card>

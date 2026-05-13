@@ -142,7 +142,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 		return nil, authErr
 	}
 
-	monitor, err := s.getDB().Monitors().GetMonitorBySlug(ctx, id)
+	monitor, err := s.getDB().Monitors().GetMonitorBySlug(ctx, id, projectAuth.ProjectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found in database")

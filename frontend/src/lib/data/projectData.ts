@@ -1,10 +1,5 @@
 import { BACKEND_API_URL } from "@/lib/consts.ts";
-import type {
-  Project,
-  ProjectMember,
-  ProjectRole,
-  Timestamps,
-} from "@/lib/types.ts";
+import type { Project, ProjectRole, Timestamps } from "@/lib/types.ts";
 import { authFetch } from "@/lib/data/utils.ts";
 
 export type ProjectInput = Omit<Project, "id" | "members" | keyof Timestamps>;
@@ -63,11 +58,14 @@ export const addMemberToProject = async (
   projectId: string,
   payload: AddProjectMemberPayload,
 ): Promise<void> => {
-  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectId}/members`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const res = await authFetch(
+    `${BACKEND_API_URL}/projects/${projectId}/members`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
 
   if (!res.ok) {
     throw new Error("Failed to add member to project");
@@ -82,15 +80,16 @@ export const removeMemberFromProject = async (
   projectId: string,
   payload: RemoveProjectMemberPayload,
 ): Promise<void> => {
-  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectId}/members`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const res = await authFetch(
+    `${BACKEND_API_URL}/projects/${projectId}/members`,
+    {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
 
   if (!res.ok) {
     throw new Error("Failed to remove member from project");
   }
 };
-
-export type { ProjectMember };

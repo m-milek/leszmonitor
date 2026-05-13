@@ -12,7 +12,7 @@ import (
 type IMonitorRepository interface {
 	GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.Monitor, error)
 	GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error)
-	GetMonitorBySlug(ctx context.Context, slug string) (*monitors.Monitor, error)
+	GetMonitorBySlug(ctx context.Context, slug string, projectID uuid.UUID) (*monitors.Monitor, error)
 	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error)
 	DeleteMonitorBySlug(ctx context.Context, slug string) (*uuid.UUID, error)
 	InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error)
@@ -47,14 +47,17 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 	})
 }
 
-func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string) (*monitors.Monitor, error) {
+func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string, projectID uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
 		err := r.pool.GetContext(ctx, &monitor,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
 			 FROM monitors m
-			 WHERE m.slug = $1`,
-			slug)
+			 WHERE m.slug = $1 
+			   AND m.project_id = $2`,
+			slug,
+			projectID,
+		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound

@@ -7,8 +7,9 @@ import {
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
 import type { MonitorFormApi } from "@/lib/formTypes.ts";
+import type { TcpProtocol } from "@/lib/types.ts";
 
-const protocolItems = [
+const protocolItems: { value: TcpProtocol; label: string }[] = [
   { value: "tcp", label: "TCP" },
   { value: "tcp4", label: "TCP (Force IPv4)" },
   { value: "tcp6", label: "TCP (Force IPv6)" },
@@ -67,7 +68,7 @@ export function TcpMonitorConfigFields({
               name={field.name}
               value={field.state.value}
               onValueChange={(value) =>
-                field.handleChange(value as "tcp" | "tcp4" | "tcp6")
+                field.handleChange(value as TcpProtocol)
               }
               placeholder="Select Protocol"
               items={protocolItems}
