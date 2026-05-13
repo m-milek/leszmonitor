@@ -26,7 +26,7 @@ export function AddMemberForm({
   onSubmitMember,
   validUsernames,
   formId = "add-member-form",
-}: AddMemberFormProps) {
+}: Readonly<AddMemberFormProps>) {
   const roles = Object.values(ProjectRole);
 
   const form = useForm({

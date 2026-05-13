@@ -33,7 +33,7 @@ type HttpProbe struct {
 
 func (m *HttpProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
 	logger := log.FromContext(ctx)
-	result := monitorresult.NewMonitorResult(monitorID, consts.HttpConfigType, true, false, 0, "", &monitorresult.HttpResultDetails{}, time.Now().Format(time.RFC3339))
+	result := monitorresult.NewMonitorResult(monitorID, consts.HttpConfigType, true, false, 0, "", &monitorresult.HttpResultDetails{})
 	details := result.GetDetails().(*monitorresult.HttpResultDetails)
 
 	httpResponse, elapsed, err := m.executeRequest(&httpClientOrMock)

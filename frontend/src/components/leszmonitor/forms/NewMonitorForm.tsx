@@ -75,7 +75,7 @@ export function MonitorForm({
   defaultValues,
   onSubmit,
   resetOnSuccess = false,
-}: MonitorFormProps) {
+}: Readonly<MonitorFormProps>) {
   const mergedDefaults = buildMonitorDefaults(projectSlug, defaultValues);
 
   const form = useForm({
@@ -253,7 +253,7 @@ export function MonitorForm({
 export function NewMonitorForm({
   projectSlug,
   formId = "new-monitor-form",
-}: NewMonitorFormProps) {
+}: Readonly<NewMonitorFormProps>) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const createMonitorMutation = useMutation({

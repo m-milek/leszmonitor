@@ -13,6 +13,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/log"
+
+	// Blank import to initialize the SQLite driver
 	_ "github.com/mattn/go-sqlite3"
 )
 

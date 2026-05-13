@@ -1,6 +1,8 @@
 package monitorresult
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	consts "github.com/m-milek/leszmonitor/models/consts"
 )
@@ -44,7 +46,7 @@ type MonitorResult struct {
 	Details     IMonitorResultDetails `json:"details"     db:"-"`
 }
 
-func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSuccess bool, isManuallyTriggered bool, durationMs int64, errorMessage string, details IMonitorResultDetails, createdAt string) *MonitorResult {
+func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSuccess bool, isManuallyTriggered bool, durationMs int64, errorMessage string, details IMonitorResultDetails) *MonitorResult {
 	res := &MonitorResult{
 		baseMonitorResult: baseMonitorResult{
 			ID:                  uuid.New(),
@@ -52,7 +54,7 @@ func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSucce
 			IsSuccess:           isSuccess,
 			IsManuallyTriggered: isManuallyTriggered,
 			DurationMs:          durationMs,
-			CreatedAt:           createdAt,
+			CreatedAt:           time.Now().Format(time.RFC3339),
 		},
 		MonitorType: string(monitorType),
 		Details:     details,

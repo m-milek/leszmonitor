@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface TypographyProps {
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 export function TypographyH1({ children }: TypographyProps) {

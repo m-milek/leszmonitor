@@ -33,7 +33,7 @@ export interface NewProjectFormProps {
 export function NewProjectForm({
   onSubmitProject,
   formId = "project-form",
-}: NewProjectFormProps) {
+}: Readonly<NewProjectFormProps>) {
   const form = useForm({
     defaultValues: {
       name: "",

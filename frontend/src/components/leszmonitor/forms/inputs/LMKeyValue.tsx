@@ -75,7 +75,7 @@ const KeyValueRow = memo(function KeyValueRow({
   );
 });
 
-export function LMKeyValueInput(props: LMKeyValueInputProps) {
+export function LMKeyValueInput(props: Readonly<LMKeyValueInputProps>) {
   const [pairs, setPairs] = useState<KeyValuePair[]>(() =>
     Object.entries(props.value ?? {}).map(([key, value]) => ({
       id: `kv-${nextId++}`,

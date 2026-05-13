@@ -14,24 +14,26 @@ const (
 )
 
 func Validate() error {
-	envAPIPort := os.Getenv(ApiPort)
-	if envAPIPort == "" {
-		return fmt.Errorf("environment variable %s is not set", ApiPort)
+	var missingVars []string
+
+	if os.Getenv(ApiPort) == "" {
+		missingVars = append(missingVars, ApiPort)
 	}
 
-	envSqlite := os.Getenv(SqliteDbPath)
-	if envSqlite == "" {
-		return fmt.Errorf("environment variable %s is not set", SqliteDbPath)
+	if os.Getenv(SqliteDbPath) == "" {
+		missingVars = append(missingVars, SqliteDbPath)
 	}
 
-	envJwtSecret := os.Getenv(JwtSecret)
-	if envJwtSecret == "" {
-		return fmt.Errorf("environment variable %s is not set", JwtSecret)
+	if os.Getenv(JwtSecret) == "" {
+		missingVars = append(missingVars, JwtSecret)
 	}
 
-	envJwtValidHours := os.Getenv(JwtExpiryHours)
-	if envJwtValidHours == "" {
-		return fmt.Errorf("environment variable %s is not set", JwtExpiryHours)
+	if os.Getenv(JwtExpiryHours) == "" {
+		missingVars = append(missingVars, JwtExpiryHours)
+	}
+
+	if len(missingVars) > 0 {
+		return fmt.Errorf("missing environment variables: %v", missingVars)
 	}
 
 	return nil

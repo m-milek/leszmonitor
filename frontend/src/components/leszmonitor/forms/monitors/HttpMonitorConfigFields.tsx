@@ -24,7 +24,9 @@ const statusCodes = Array.from({ length: 600 }, (_, i) => i)
   .filter((code) => code >= 100 && code < 600)
   .map((code) => String(code));
 
-export function HttpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
+export function HttpMonitorConfigFields({
+  form,
+}: Readonly<{ form: MonitorFormApi }>) {
   return (
     <Flex direction="column" className="gap-4 items-stretch">
       <div className="text-lg font-semibold">HTTP Settings</div>

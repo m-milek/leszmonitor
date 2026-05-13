@@ -11,6 +11,8 @@ import (
 	"github.com/m-milek/leszmonitor/services"
 )
 
+const messageMonitorSlugIsRequired = "Monitor slug is required"
+
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +52,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Monitor slug is required")
+		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorSlugIsRequired)
 		return
 	}
 
@@ -88,7 +90,7 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Monitor slug is required")
+		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorSlugIsRequired)
 		return
 	}
 
@@ -112,7 +114,7 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Monitor slug is required")
+		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorSlugIsRequired)
 		return
 	}
 

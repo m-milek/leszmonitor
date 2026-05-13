@@ -7,13 +7,14 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/auth"
+	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/log"
 )
 
 func RespondJSON(ctx context.Context, w http.ResponseWriter, statusCode int, data any) {
 	logger := log.FromContext(ctx)
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.HttpHeaderContentType, constants.HttpContentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -31,7 +32,7 @@ type errorResponse struct {
 
 func RespondMessage(ctx context.Context, w http.ResponseWriter, statusCode int, message string) {
 	logger := log.FromContext(ctx)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.HttpHeaderContentType, constants.HttpContentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	response := simpleResponse{Message: message}
@@ -45,7 +46,7 @@ func RespondError(ctx context.Context, w http.ResponseWriter, statusCode int, er
 	logger := log.FromContext(ctx)
 	logger.Error().Err(err).Msg("Responding with error")
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(constants.HttpHeaderContentType, constants.HttpContentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	message := err.Error()

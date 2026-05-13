@@ -24,7 +24,7 @@ export interface LMMultiSelectProps {
   errorMessage?: string;
 }
 
-export function LMMultiSelect(props: LMMultiSelectProps) {
+export function LMMultiSelect(props: Readonly<LMMultiSelectProps>) {
   const anchor = useComboboxAnchor();
 
   const shouldDisplayPlaceholder = !props.value || props.value.length === 0;
