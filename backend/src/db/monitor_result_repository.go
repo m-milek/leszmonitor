@@ -45,19 +45,9 @@ func (r *monitorResultRepository) GetMonitorResultsByMonitorID(ctx context.Conte
 
 		var monitorResults []monitorresult.IMonitorResult
 		for _, r := range results {
-			details, err := monitorresult.ParseResultDetails(consts.ProbeType(r.MonitorType), r.DetailsJSON)
+			err = processResultDetails(r)
 			if err != nil {
 				return nil, err
-			}
-			r.Details = details
-
-			if len(r.ErrorDetailsJSON) > 0 {
-				var errorDetails monitorresult.ErrorDetails
-				if err := json.Unmarshal(r.ErrorDetailsJSON, &errorDetails); err == nil {
-					if errorDetails.ErrorMessage != "" || len(errorDetails.Errors) > 0 || len(errorDetails.Failures) > 0 {
-						r.ErrorDetails = &errorDetails
-					}
-				}
 			}
 
 			monitorResults = append(monitorResults, &r)
@@ -124,19 +114,9 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 			return nil, err
 		}
 
-		details, err := monitorresult.ParseResultDetails(consts.ProbeType(result.MonitorType), result.DetailsJSON)
+		err = processResultDetails(result)
 		if err != nil {
 			return nil, err
-		}
-		result.Details = details
-
-		if len(result.ErrorDetailsJSON) > 0 {
-			var errorDetails monitorresult.ErrorDetails
-			if err := json.Unmarshal(result.ErrorDetailsJSON, &errorDetails); err == nil {
-				if errorDetails.ErrorMessage != "" || len(errorDetails.Errors) > 0 || len(errorDetails.Failures) > 0 {
-					result.ErrorDetails = &errorDetails
-				}
-			}
 		}
 
 		return &result, nil
@@ -157,4 +137,23 @@ func (r *monitorResultRepository) DeleteMonitorResultsOlderThanDuration(ctx cont
 		rowsAffected, err := result.RowsAffected()
 		return rowsAffected, err
 	})
+}
+
+func processResultDetails(result monitorresult.MonitorResult) error {
+	details, err := monitorresult.ParseResultDetails(consts.ProbeType(result.MonitorType), result.DetailsJSON)
+	if err != nil {
+		return err
+	}
+	result.Details = details
+
+	if len(result.ErrorDetailsJSON) > 0 {
+		var errorDetails monitorresult.ErrorDetails
+		if err := json.Unmarshal(result.ErrorDetailsJSON, &errorDetails); err == nil {
+			if errorDetails.ErrorMessage != "" || len(errorDetails.Errors) > 0 || len(errorDetails.Failures) > 0 {
+				result.ErrorDetails = &errorDetails
+			}
+		}
+	}
+
+	return nil
 }

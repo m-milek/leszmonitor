@@ -1,8 +1,8 @@
 import { type FormValidateOrFn, useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import { slugFromString } from "@/lib/slugFromString.ts";
-import type { MonitorFormValues } from "@/lib/types.ts";
 import {
+  type MonitorFormValues,
   defaultConfigs,
   isValidMonitorType,
   type MonitorType,

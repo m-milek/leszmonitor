@@ -50,14 +50,15 @@ export interface Monitor extends Timestamps {
   probeConfig?: HttpMonitorConfig | TcpMonitorConfig;
 }
 
-export type MonitorType = "http" | "tcp";
+const monitorTypes = ["http", "tcp"] as const;
+export type MonitorType = (typeof monitorTypes)[number];
 
 export const isValidMonitorType = (value: string): value is MonitorType => {
-  const values = ["http", "tcp"];
-  return values.includes(value as MonitorType);
+  return monitorTypes.includes(value as MonitorType);
 };
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+const httpMethods = ["GET", "POST", "PUT", "DELETE", "PATCH"] as const;
+export type HttpMethod = (typeof httpMethods)[number];
 
 export interface HttpMonitorConfig {
   method: HttpMethod;
@@ -72,16 +73,19 @@ export interface HttpMonitorConfig {
   expectedResponseTimeMs?: number;
 }
 
+const tcpProtocols = ["tcp", "tcp4", "tcp6"] as const;
+export type TcpProtocol = (typeof tcpProtocols)[number];
+
 export interface TcpMonitorConfig {
   host: string;
   port: number;
-  protocol: "tcp" | "tcp4" | "tcp6";
+  protocol: TcpProtocol;
   timeout: number;
   retryCount: number;
 }
 
 export const httpMonitorConfigSchema = z.object({
-  method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]),
+  method: z.enum(httpMethods),
   url: z.url("Invalid URL"),
   headers: z.record(z.string(), z.string()).optional(),
   body: z.string().optional(),
@@ -102,7 +106,7 @@ export const tcpMonitorConfigSchema = z.object({
     .number()
     .min(1, "Port must be at least 1")
     .max(65535, "Port must be at most 65535"),
-  protocol: z.enum(["tcp", "tcp4", "tcp6"]),
+  protocol: z.enum(tcpProtocols),
   timeout: z.number().min(1, "Timeout must be at least 1 ms"),
   retryCount: z.number().min(0, "Retry count cannot be negative"),
 });
@@ -191,7 +195,7 @@ export const mapMonitorToFormValues = (monitor: Monitor): MonitorFormValues => {
     type: monitor.type,
     probeConfig: {
       ...configDefaults,
-      ...(monitor.probeConfig ?? {}),
+      ...monitor.probeConfig,
     },
   } as MonitorFormValues;
 };

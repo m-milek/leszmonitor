@@ -11,6 +11,7 @@ import type { MonitorFormApi } from "@/lib/formTypes.ts";
 import { LMSwitch } from "@/components/leszmonitor/forms/inputs/LMSwitch.tsx";
 import { LMKeyValueInput } from "@/components/leszmonitor/forms/inputs/LMKeyValue.tsx";
 import { LMMultiSelect } from "@/components/leszmonitor/forms/inputs/LMMultiSelect.tsx";
+import type { HttpMethod } from "@/lib/types.ts";
 
 const httpMethodItems = [
   { value: "GET", label: "GET" },
@@ -57,11 +58,7 @@ export function HttpMonitorConfigFields({
               id={field.name}
               name={field.name}
               value={field.state.value}
-              onValueChange={(value) =>
-                field.handleChange(
-                  value as "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
-                )
-              }
+              onValueChange={(value) => field.handleChange(value as HttpMethod)}
               placeholder="Select HTTP Method"
               items={httpMethodItems}
               isInvalid={isFieldInvalid(field)}
