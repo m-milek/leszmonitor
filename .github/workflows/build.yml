@@ -40,7 +40,6 @@ jobs:
         run: task backend:coverage
 
       - name: Upload Go Coverage Report
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v6
         with:
           name: go-coverage-report
@@ -73,7 +72,6 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload TS Coverage Report
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v6
         with:
           name: ts-coverage-report
@@ -86,7 +84,6 @@ jobs:
   sonar:
     name: SonarQube
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     needs: [ backend, frontend ]
     continue-on-error: true
 
