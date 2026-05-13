@@ -54,7 +54,6 @@ func TestMonitorResultJSON(t *testing.T) {
 			100,
 			"",
 			&HttpResultDetails{StatusCode: 200},
-			"2023-01-01T00:00:00Z",
 		)
 
 		data, err := json.Marshal(original)

@@ -108,8 +108,7 @@ func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload services.AddProjectMemberPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+	if util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
@@ -130,8 +129,7 @@ func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload services.RemoveProjectMemberPayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+	if util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
@@ -152,8 +150,7 @@ func ChangeProjectMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload services.ChangeProjectMemberRolePayload
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
+	if util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 

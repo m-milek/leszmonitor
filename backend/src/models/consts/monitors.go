@@ -1,4 +1,4 @@
-package _const
+package consts
 
 type ProbeType string
 

@@ -9,7 +9,7 @@ export interface LMSwitchProps {
   errorMessage?: string;
 }
 
-export function LMSwitch(props: LMSwitchProps) {
+export function LMSwitch(props: Readonly<LMSwitchProps>) {
   return (
     <ErrorTooltip isOpen={props.isInvalid} message={props.errorMessage}>
       <Switch

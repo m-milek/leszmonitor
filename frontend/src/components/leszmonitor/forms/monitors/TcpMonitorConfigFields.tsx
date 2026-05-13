@@ -14,7 +14,9 @@ const protocolItems = [
   { value: "tcp6", label: "TCP (Force IPv6)" },
 ];
 
-export function TcpMonitorConfigFields({ form }: { form: MonitorFormApi }) {
+export function TcpMonitorConfigFields({
+  form,
+}: Readonly<{ form: MonitorFormApi }>) {
   return (
     <Flex direction="column" className="gap-4 items-stretch">
       <div className="text-lg font-semibold">TCP Monitor Settings</div>

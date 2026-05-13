@@ -12,7 +12,9 @@ type WebSocketProviderProps = {
   children: ReactNode;
 };
 
-export function WebSocketProvider({ children }: WebSocketProviderProps) {
+export function WebSocketProvider({
+  children,
+}: Readonly<WebSocketProviderProps>) {
   const { setWebSocketConnectionStatus: setConnectionStatus } = useAppStore();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 

@@ -22,7 +22,7 @@ export function MonitorListItem({
   projectId,
   onDeleteMonitor,
   navigateToEditMonitor,
-}: MonitorListItemProps) {
+}: Readonly<MonitorListItemProps>) {
   const { data: lastResultData } = useQuery({
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id],
     queryFn: () => getLatestMonitorResultByMonitorId(monitor.id),

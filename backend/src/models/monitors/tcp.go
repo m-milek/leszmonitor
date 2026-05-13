@@ -32,7 +32,7 @@ type TCPProbe struct {
 }
 
 func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
-	result := monitorresult.NewMonitorResult(monitorID, consts.TCPConfigType, true, false, 0, "", &monitorresult.TCPResultDetails{}, time.Now().Format(time.RFC3339))
+	result := monitorresult.NewMonitorResult(monitorID, consts.TCPConfigType, true, false, 0, "", &monitorresult.TCPResultDetails{})
 	details := result.GetDetails().(*monitorresult.TCPResultDetails)
 
 	portString := strconv.Itoa(m.Port)

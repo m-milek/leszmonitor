@@ -25,7 +25,7 @@ export interface LMSelectProps {
   errorMessage?: string;
 }
 
-export function LMSelect(props: LMSelectProps) {
+export function LMSelect(props: Readonly<LMSelectProps>) {
   return (
     <Select
       value={props.value}

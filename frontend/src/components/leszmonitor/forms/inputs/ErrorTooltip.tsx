@@ -17,7 +17,7 @@ export function ErrorTooltip({
   message = "",
   side = "top",
   children,
-}: ErrorTooltipProps) {
+}: Readonly<ErrorTooltipProps>) {
   return (
     <Tooltip open={isOpen}>
       <TooltipTrigger asChild>

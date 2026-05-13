@@ -22,7 +22,7 @@ export interface LMComboboxProps {
   errorMessage?: string;
 }
 
-export function LMCombobox(props: LMComboboxProps) {
+export function LMCombobox(props: Readonly<LMComboboxProps>) {
   return (
     <Combobox
       items={props.items}
