@@ -23,21 +23,22 @@ func SetupRouters(
 	// Projects
 	protectedRouter.HandleFunc("GET /api/projects", handlers.GetProjectsHandler)
 	protectedRouter.HandleFunc("POST /api/projects", handlers.CreateProjectHandler)
-	protectedRouter.HandleFunc("GET /api/projects/{projectId}", handlers.GetProjectByIDHandler)
-	protectedRouter.HandleFunc("PATCH /api/projects/{projectId}", handlers.UpdateProjectHandler)
-	protectedRouter.HandleFunc("DELETE /api/projects/{projectId}", handlers.DeleteProjectHandler)
+	protectedRouter.HandleFunc("GET /api/projects/{projectSlug}", handlers.GetProjectByIDHandler)
+	protectedRouter.HandleFunc("PATCH /api/projects/{projectSlug}", handlers.UpdateProjectHandler)
+	protectedRouter.HandleFunc("DELETE /api/projects/{projectSlug}", handlers.DeleteProjectHandler)
 
 	// Project Members
-	protectedRouter.HandleFunc("POST /api/projects/{projectId}/members", handlers.AddProjectMemberHandler)
-	protectedRouter.HandleFunc("DELETE /api/projects/{projectId}/members", handlers.RemoveProjectMemberHandler)
-	protectedRouter.HandleFunc("PATCH /api/projects/{projectId}/members/{userId}", handlers.ChangeProjectMemberRoleHandler)
+	protectedRouter.HandleFunc("POST /api/projects/{projectSlug}/members", handlers.AddProjectMemberHandler)
+	protectedRouter.HandleFunc("DELETE /api/projects/{projectSlug}/members", handlers.RemoveProjectMemberHandler)
+	protectedRouter.HandleFunc("PATCH /api/projects/{projectSlug}/members/{userId}", handlers.ChangeProjectMemberRoleHandler)
 
 	// Monitors
-	protectedRouter.HandleFunc("GET /api/projects/{projectId}/monitors", handlers.GetAllMonitorsHandler)
-	protectedRouter.HandleFunc("GET /api/projects/{projectId}/monitors/{monitorId}", handlers.GetMonitorByIDHandler)
-	protectedRouter.HandleFunc("POST /api/projects/{projectId}/monitors", handlers.CreateMonitorHandler)
-	protectedRouter.HandleFunc("DELETE /api/projects/{projectId}/monitors/{monitorId}", handlers.DeleteMonitorHandler)
-	protectedRouter.HandleFunc("PATCH /api/projects/{projectId}/monitors/{monitorId}", handlers.UpdateMonitorHandler)
+	protectedRouter.HandleFunc("GET /api/monitors", handlers.GetMonitorByProjectSlugHandler)
+	protectedRouter.HandleFunc("POST /api/monitors", handlers.CreateMonitorHandler)
+	protectedRouter.HandleFunc("GET /api/monitors/{monitorId}", handlers.GetMonitorByIDHandler)
+	protectedRouter.HandleFunc("DELETE /api/monitors/{monitorId}", handlers.DeleteMonitorHandler)
+	protectedRouter.HandleFunc("PATCH /api/monitors/{monitorId}", handlers.UpdateMonitorHandler)
+	protectedRouter.HandleFunc("GET /api/projects/{projectSlug}/monitors/{monitorSlug}", handlers.GetMonitorBySlugByProject)
 
 	// Monitor Results
 	protectedRouter.HandleFunc("GET /api/monitors/{monitorId}/results/latest", handlers.GetLatestMonitorResultByMonitorIDHandler)

@@ -21,21 +21,35 @@ const normalizeMonitor = (monitor: Monitor): Monitor => {
   return monitor;
 };
 
-export const getMonitors = async (projectId: string): Promise<Monitor[]> => {
-  const res = await authFetch(
-    `${BACKEND_API_URL}/projects/${projectId}/monitors`,
-  );
+export const getMonitorsByProjectSlug = async (
+  projectSlug: string,
+): Promise<Monitor[]> => {
+  const query = new URLSearchParams({
+    projectSlug,
+  }).toString();
+  const res = await authFetch(`${BACKEND_API_URL}/monitors?${query}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   const monitors = (await res.json()) as Monitor[];
   return monitors.map(normalizeMonitor);
 };
 
 export const getMonitorBySlug = async (
-  projectId: string,
+  projectSlug: string,
   monitorSlug: string,
 ): Promise<Monitor> => {
   const res = await authFetch(
-    `${BACKEND_API_URL}/projects/${projectId}/monitors/${monitorSlug}`,
+    `${BACKEND_API_URL}/projects/${projectSlug}/monitors/${monitorSlug}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
   );
 
   const monitor = (await res.json()) as Monitor;
@@ -43,16 +57,16 @@ export const getMonitorBySlug = async (
 };
 
 export const createMonitor = async (monitorData: MonitorCreatePayload) => {
-  const res = await authFetch(
-    `${BACKEND_API_URL}/projects/${monitorData.projectSlug}/monitors`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(monitorData),
+  const query = new URLSearchParams({
+    projectSlug: monitorData.projectSlug,
+  }).toString();
+  const res = await authFetch(`${BACKEND_API_URL}/monitors?${query}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify(monitorData),
+  });
 
   return res.json();
 };

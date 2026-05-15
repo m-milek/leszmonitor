@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/log"
@@ -37,7 +37,7 @@ type MonitorCreateResponse struct {
 }
 
 // CreateMonitor creates a new monitor in the specified project.
-func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := s.getMethodLogger("CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
@@ -79,7 +79,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *middle
 }
 
 // DeleteMonitor deletes a monitor by its slug.
-func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) *ServiceError {
+func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string) *ServiceError {
 	logger := s.getMethodLogger("DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
 
@@ -112,7 +112,7 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *middle
 }
 
 // GetMonitorsByProjectID retrieves all monitors for the project in the provided ProjectAuth.
-func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAuth *middleware.ProjectAuth) ([]monitors.Monitor, *ServiceError) {
+func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAuth *authorization.ProjectAuthorization) ([]monitors.Monitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorsByProjectID")
 
 	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
@@ -133,7 +133,7 @@ func (s *MonitorServiceT) GetMonitorsByProjectID(ctx context.Context, projectAut
 }
 
 // GetMonitorByID retrieves a specific monitor by its slug.
-func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middleware.ProjectAuth, id string) (*monitors.Monitor, *ServiceError) {
+func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string) (*monitors.Monitor, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorByID")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by slug")
 
@@ -161,7 +161,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *middl
 }
 
 // UpdateMonitor updates an existing monitor's configuration.
-func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middleware.ProjectAuth, monitor monitors.Monitor) *ServiceError {
+func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitor monitors.Monitor) *ServiceError {
 	logger := s.getMethodLogger("UpdateMonitor")
 
 	if err := monitor.Validate(); err != nil {
@@ -190,4 +190,24 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *middle
 
 	logger.Info().Str("id", monitor.ID.String()).Msg("Monitor updated")
 	return nil
+}
+
+func (s *MonitorServiceT) GetMonitorBySlugByProject(ctx context.Context, auth *authorization.ProjectAuthorization, slug string) (*monitors.Monitor, *ServiceError) {
+	logger := s.getMethodLogger("GetMonitorBySlugByProject")
+
+	_, authErr := s.authService.authorizeProjectAction(ctx, auth, models.PermissionMonitorReader)
+	if authErr != nil {
+		return nil, authErr
+	}
+
+	monitor, err := s.getDB().Monitors().GetMonitorBySlugByProject(ctx, slug, auth.ProjectID)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found in project", slug)}
+		}
+		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor by slug and project: %w", err)}
+	}
+
+	logger.Debug().Str("slug", slug).Str("projectID", auth.ProjectID.String()).Msg("Monitor retrieved by slug and project")
+	return monitor, nil
 }

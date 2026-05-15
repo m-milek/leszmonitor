@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
@@ -31,7 +31,7 @@ func newAuthorizationService() *authorizationServiceT {
 }
 
 // authorizeProjectAction checks if a given user has the given permissions within the context of a specific project.
-func (s *authorizationServiceT) authorizeProjectAction(ctx context.Context, projectAuth *middleware.ProjectAuth, permissions ...models.Permission) (*models.Project, *ServiceError) {
+func (s *authorizationServiceT) authorizeProjectAction(ctx context.Context, projectAuth *authorization.ProjectAuthorization, permissions ...models.Permission) (*models.Project, *ServiceError) {
 	logger := s.getMethodLogger("authorizeProjectAction")
 
 	requestorUsername := projectAuth.Username

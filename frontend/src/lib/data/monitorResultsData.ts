@@ -20,6 +20,10 @@ export const getMonitorResultsByMonitorId = async (
   monitorId: string,
   pagination: Pagination,
 ): Promise<MonitorResult[] | null> => {
+  console.log(
+    `Fetching results for monitor ${monitorId} with pagination:`,
+    pagination,
+  );
   const queryParams = new URLSearchParams({
     page: pagination.page.toString(),
     per_page: pagination.perPage.toString(),

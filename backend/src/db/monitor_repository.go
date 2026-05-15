@@ -17,6 +17,7 @@ type IMonitorRepository interface {
 	DeleteMonitorBySlug(ctx context.Context, slug string) (*uuid.UUID, error)
 	InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error)
 	UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (interface{}, error)
+	GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error)
 }
 
 type monitorRepository struct {
@@ -179,5 +180,26 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 		}
 
 		return nil, nil
+	})
+}
+
+func (r *monitorRepository) GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error) {
+	return dbWrap(ctx, "GetMonitorBySlugByProject", func() (*monitors.Monitor, error) {
+		var monitor monitors.Monitor
+		err := r.pool.GetContext(ctx, &monitor,
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
+			 FROM monitors m
+			 WHERE m.slug = $1 
+			   AND m.project_id = $2`,
+			slug,
+			id,
+		)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		return &monitor, nil
 	})
 }
