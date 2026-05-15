@@ -30,12 +30,8 @@ export function TypographyH3({ children }: TypographyProps) {
 
 export function TypographyH4({ children }: TypographyProps) {
   return (
-    <h4 className="scroll-m-20 font-semibold tracking-tight text-foreground">{children}</h4>
-  );
-}
-
-export function TypographyP({ children }: TypographyProps) {
-  return (
-    <p className="leading-7 not-first:mt-6 text-muted-foreground">{children}</p>
+    <h4 className="scroll-m-20 font-semibold tracking-tight text-foreground">
+      {children}
+    </h4>
   );
 }
