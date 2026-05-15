@@ -1,12 +1,11 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
-import { WEBSOCKET_ENDPOINT } from "@/lib/data/webSocket.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { getLoginToken } from "@/lib/utils.ts";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { isMonitorResultMessage } from "@/lib/types.ts";
-import { QUERY_KEYS } from "@/lib/consts.ts";
+import { BACKEND_WS_URL, QUERY_KEYS } from "@/lib/consts.ts";
 
 type WebSocketProviderProps = {
   children: ReactNode;
@@ -48,7 +47,7 @@ export function WebSocketProvider({
   }, []);
 
   const { readyState, sendMessage, getWebSocket } = useWebSocket(
-    WEBSOCKET_ENDPOINT,
+    BACKEND_WS_URL,
     {
       share: true,
       onMessage,
