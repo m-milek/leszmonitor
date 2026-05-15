@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/appconfig"
@@ -89,4 +91,28 @@ func ValidateJwt(token string) (*UserClaims, error) {
 	}
 
 	return userClaims, nil
+}
+
+func NewJwt(username string) (*string, error) {
+	expiryHours, err := strconv.Atoi(os.Getenv(config.JwtExpiryHours))
+	if err != nil {
+		return nil, fmt.Errorf("invalid JwtExpiryHours value: %w", err)
+	}
+	validFor := time.Duration(expiryHours) * time.Hour
+	expiryDate := time.Now().Add(validFor)
+
+	jwtToken := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"username": username,
+			"exp":      jwt.NewNumericDate(expiryDate),
+			"iat":      jwt.NewNumericDate(time.Now()),
+		},
+	)
+	token, err := jwtToken.SignedString([]byte(os.Getenv(config.JwtSecret)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create JWT token: %w", err)
+	}
+
+	return &token, nil
 }

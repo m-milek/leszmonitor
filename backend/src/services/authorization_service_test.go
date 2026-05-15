@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
@@ -75,7 +75,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 			user, project := setupProjectWithUser(tt.username, tt.role)
 			mockProjectAndUser(mockDB, ctx, project, user)
 
-			resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 				ProjectID: project.ID,
 				Username:  tt.username,
 			}, tt.permission)
@@ -94,7 +94,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByID", ctx, dummyID).
 			Return((*models.Project)(nil), db.ErrNotFound)
 
-		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+		resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 			ProjectID: dummyID,
 			Username:  "testuser",
 		}, models.PermissionProjectReader)
@@ -112,7 +112,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectByID", ctx, dummyID).
 			Return((*models.Project)(nil), errors.New("database error"))
 
-		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+		resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 			ProjectID: dummyID,
 			Username:  "testuser",
 		}, models.PermissionProjectReader)
@@ -131,7 +131,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, "nonexistent").
 			Return((*models.User)(nil), db.ErrNotFound)
 
-		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+		resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  "nonexistent",
 		}, models.PermissionProjectReader)
@@ -152,7 +152,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		project := createTestProject("test-project", []models.ProjectMember{{ID: otherUser.ID, Role: models.RoleOwner}})
 		mockProjectAndUser(mockDB, ctx, project, user)
 
-		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+		resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  user.Username,
 		}, models.PermissionProjectReader)
@@ -180,7 +180,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 			user, project := setupProjectWithUser("testuser", tt.role)
 			mockProjectAndUser(mockDB, ctx, project, user)
 
-			resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+			resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 				ProjectID: project.ID,
 				Username:  user.Username,
 			}, tt.permission)
@@ -199,7 +199,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		user, project := setupProjectWithUser("owner", models.RoleOwner)
 		mockProjectAndUser(mockDB, ctx, project, user)
 
-		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+		resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  user.Username,
 		}, models.PermissionProjectAdmin, models.PermissionMonitorAdmin)
@@ -215,7 +215,7 @@ func TestAuthorizationServiceT_AuthorizeProjectAction(t *testing.T) {
 		user, project := setupProjectWithUser("admin", models.RoleAdmin)
 		mockProjectAndUser(mockDB, ctx, project, user)
 
-		resultProject, err := authService.authorizeProjectAction(ctx, &middleware.ProjectAuth{
+		resultProject, err := authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  user.Username,
 		}, models.PermissionProjectEditor, models.PermissionProjectAdmin)

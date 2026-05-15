@@ -435,27 +435,3 @@ func TestJwtClaimsIntegration(t *testing.T) {
 		assert.Equal(t, claims.Exp, decodedClaims.Exp)
 	})
 }
-
-// Benchmark tests
-func BenchmarkJwtFromRequest(b *testing.B) {
-	req, _ := http.NewRequest("GET", "/test", nil)
-	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test")
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = jwtFromRequest(req)
-	}
-}
-
-func BenchmarkDecodeJwtClaims(b *testing.B) {
-	claims := JwtClaims{
-		Username: "benchuser",
-		Exp:      time.Now().Add(time.Hour).Unix(),
-	}
-	token, _ := createTestToken(claims, testJwtSecret)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = decodeJwtClaims(token)
-	}
-}
