@@ -3,7 +3,7 @@ import {
   TypographyH1,
   TypographyH3,
 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { Center } from "@/components/leszmonitor/ui/Center.tsx";
+import { Center } from "./ui/Center.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 
 export function GlobalNotFound() {

@@ -1,20 +1,22 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from "node:url";
 
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
   test: {
-    environment: 'jsdom',
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "vitestSetup.ts",
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      reportsDirectory: './coverage',
-      exclude: ['**/*.gen.ts', '**/routeTree.gen.ts'],
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      reportsDirectory: "./coverage",
+      exclude: ["**/*.gen.ts", "**/routeTree.gen.ts"],
     },
   },
-})
+});

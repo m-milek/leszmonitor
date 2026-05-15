@@ -23,7 +23,7 @@ export interface LMKeyValueInputProps {
 
 let nextId = 0;
 
-function pairsToRecord(pairs: KeyValuePair[]): Record<string, string> {
+export function pairsToRecord(pairs: KeyValuePair[]): Record<string, string> {
   return Object.fromEntries(
     pairs.filter((p) => p.key || p.value).map((p) => [p.key, p.value]),
   );
@@ -64,6 +64,8 @@ const KeyValueRow = memo(function KeyValueRow({
       />
       <Button
         type="button"
+        aria-label="Remove"
+        aria-roledescription={`Remove pair with key ${pair.key}`}
         onClick={() => onDelete(pair.id)}
         variant="ghost"
         size="sm"
