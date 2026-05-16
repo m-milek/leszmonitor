@@ -26,11 +26,11 @@ const mappings: MockMapping[] = [
     url: "/api/v1/projects/leszmaks-sandbox/monitors/gnu",
     output: `${MOCKS_BASE_PATH}/leszmaks_sandbox_monitor_gnu.json`
   },
-  {
-    url: "/api/v1/monitors/c71649c4-cbb6-4f1d-8149-210a365f2a99/results",
-    params: {page: "1", per_page: "100"},
-    output: `${MOCKS_BASE_PATH}/leszmaks_sandbox_monitor_gnu_100_results.json`
-  },
+  // {
+  //   url: "/api/v1/monitors/c71649c4-cbb6-4f1d-8149-210a365f2a99/results",
+  //   params: {page: "1", per_page: "100"},
+  //   output: `${MOCKS_BASE_PATH}/leszmaks_sandbox_monitor_gnu_100_results.json`
+  // },
 ];
 
 async function getLoginToken(): Promise<string> {

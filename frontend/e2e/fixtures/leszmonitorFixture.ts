@@ -7,12 +7,51 @@ import leszmaksSandboxMonitors from "../mocks/leszmaks_sandbox_monitors.json" wi
 import leszmaksSandboxMonitorGnu from "../mocks/leszmaks_sandbox_monitor_gnu.json" with { type: "json" };
 import leszmaksSandboxMonitorGnu100Results from "../mocks/leszmaks_sandbox_monitor_gnu_100_results.json" with { type: "json" };
 
+interface AuthConfig {
+  username: string;
+  password: string;
+}
+
 type LeszmonitorFixture = {
-  dupa: string;
+  auth: AuthConfig;
 };
 
 export const test = base.extend<LeszmonitorFixture>({
+  auth: {
+    username: "leszmak",
+    password: "123123",
+  },
   page: async ({ page }, use) => {
+    await page.route("**/api/v1/auth/login", (route) => {
+      if (route.request().method() === "POST") {
+        const postData = route.request().postData();
+        if (postData) {
+          const { username, password } = JSON.parse(postData);
+          if (username !== "leszmak" || password !== "123123") {
+            route.fulfill({
+              status: 401,
+              contentType: "application/json",
+              body: JSON.stringify({ error: "Invalid credentials" }),
+            });
+            return;
+          }
+        } else {
+          route.fulfill({
+            status: 400,
+            contentType: "application/json",
+            body: JSON.stringify({ error: "Missing request body" }),
+          });
+          return;
+        }
+      }
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzkwNDc1MzgsImlhdCI6MTc3ODk2MTEzOCwidXNlcm5hbWUiOiJsZXN6bWFrIn0.BD0zIfx2kdtPd_GZwsVYh30HxdQf4sm4JYGFFNttT0M",
+        }),
+      });
+    });
     await page.route("**/api/v1/users", (route) => {
       route.fulfill({
         status: 200,

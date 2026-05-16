@@ -1,6 +1,7 @@
 services:
   app:
     container_name: leszmonitor
+    image: leszmonitor
     build:
       context: .
       dockerfile: Dockerfile

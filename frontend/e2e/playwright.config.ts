@@ -71,9 +71,10 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: {
+    cwd: "../../",
+    command: "task docker:up:no-build",
+    url: "http://localhost:7001",
+    reuseExistingServer: !process.env.CI,
+  },
 });
