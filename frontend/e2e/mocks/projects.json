@@ -1,0 +1,43 @@
+[
+  {
+    "id": "06a761d5-3693-49f6-b4d8-d59e0ae09872",
+    "slug": "leszmaks-sandbox",
+    "name": "leszmak's Sandbox",
+    "description": "Your default sandbox project",
+    "members": [
+      {
+        "id": "a3cbab0c-2c74-4683-8ccc-f7e376801be4",
+        "username": "leszmak",
+        "role": "owner",
+        "createdAt": "2026-05-12T18:58:53Z",
+        "updatedAt": "2026-05-12T18:58:53Z"
+      }
+    ],
+    "createdAt": "2026-05-12T18:58:53Z",
+    "updatedAt": "2026-05-12T18:58:53Z"
+  },
+  {
+    "id": "a65764fd-beb5-467b-a78c-4964d992e234",
+    "slug": "leszmans-sandbox",
+    "name": "leszman's Sandbox",
+    "description": "Your default sandbox project",
+    "members": [
+      {
+        "id": "2405a6fc-7082-481c-95cb-95137accd57a",
+        "username": "leszman",
+        "role": "owner",
+        "createdAt": "2026-05-13T19:12:50Z",
+        "updatedAt": "2026-05-13T19:12:50Z"
+      },
+      {
+        "id": "a3cbab0c-2c74-4683-8ccc-f7e376801be4",
+        "username": "leszmak",
+        "role": "member",
+        "createdAt": "2026-05-15T17:44:44Z",
+        "updatedAt": "2026-05-15T17:44:44Z"
+      }
+    ],
+    "createdAt": "2026-05-13T19:12:50Z",
+    "updatedAt": "2026-05-13T19:12:50Z"
+  }
+]

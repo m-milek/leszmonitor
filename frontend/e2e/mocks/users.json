@@ -1,0 +1,20 @@
+[
+  {
+    "id": "a3cbab0c-2c74-4683-8ccc-f7e376801be4",
+    "username": "leszmak",
+    "createdAt": "2026-05-12T18:58:53Z",
+    "updatedAt": "2026-05-12T18:58:53Z"
+  },
+  {
+    "id": "2405a6fc-7082-481c-95cb-95137accd57a",
+    "username": "leszman",
+    "createdAt": "2026-05-13T19:12:50Z",
+    "updatedAt": "2026-05-13T19:12:50Z"
+  },
+  {
+    "id": "40de6ed6-94ae-46e6-8234-6eb50774a9a1",
+    "username": "admin",
+    "createdAt": "2026-05-16T12:13:30Z",
+    "updatedAt": "2026-05-16T12:13:30Z"
+  }
+]

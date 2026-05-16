@@ -50,8 +50,8 @@ func createServer(ctx context.Context, config ServerConfig, staticFiles embed.FS
 		}
 
 		publicAPIPaths := []string{
-			"/api/auth/register",
-			"/api/auth/login",
+			"/api/v1/auth/register",
+			"/api/v1/auth/login",
 			"/api/ws",
 		}
 		if util.SliceContains(publicAPIPaths, path) {
