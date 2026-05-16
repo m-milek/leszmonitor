@@ -25,7 +25,7 @@ COPY --from=frontend-builder /app/dist ./src/static
 
 WORKDIR /app/src
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o main .
 
 FROM alpine:latest
 

@@ -15,7 +15,7 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 
 	// Blank import to initialize the SQLite driver
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 //go:embed schema.sql
@@ -74,7 +74,7 @@ func newBaseRepository(pool *sqlx.DB) baseRepository {
 
 // New creates a new DB client using the provided DSN. It pings the DB and ensures the schema exists.
 func New(ctx context.Context, dsn string) (*DBClient, error) {
-	pool, err := sqlx.ConnectContext(ctx, "sqlite3", dsn)
+	pool, err := sqlx.ConnectContext(ctx, "sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
