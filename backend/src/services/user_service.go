@@ -5,12 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
-	"time"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/appconfig"
+	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"
@@ -140,27 +137,13 @@ func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginR
 		return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid credentials")}
 	}
 
-	expiryHours, err := strconv.Atoi(os.Getenv(config.JwtExpiryHours))
-	if err != nil {
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("invalid JwtExpiryHours value: %w", err)}
-	}
-	validFor := time.Duration(expiryHours) * time.Hour
-	expiryDate := time.Now().Add(validFor)
-
-	jwt := jwt2.NewWithClaims(
-		jwt2.SigningMethodHS256,
-		jwt2.MapClaims{
-			"username": payload.Username,
-			"exp":      jwt2.NewNumericDate(expiryDate),
-			"iat":      jwt2.NewNumericDate(time.Now()),
-		},
-	)
-	token, err := jwt.SignedString([]byte(os.Getenv(config.JwtSecret)))
-	if err != nil {
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to create JWT token: %w", err)}
+	jwtToken, err := auth.NewJwt(payload.Username)
+	if jwtToken == nil {
+		logger.Error().Str("username", payload.Username).Err(err).Msg("Failed to generate JWT token")
+		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to generate JWT token")}
 	}
 
-	return &LoginResponse{Jwt: token}, nil
+	return &LoginResponse{Jwt: *jwtToken}, nil
 }
 
 func hashPassword(password string) (string, error) {

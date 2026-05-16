@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
@@ -85,7 +85,7 @@ func (s *ProjectServiceT) CreateProject(ctx context.Context, ownerUsername strin
 }
 
 // GetProjectByID retrieves a project by its slug, authorizing the requesting user.
-func (s *ProjectServiceT) GetProjectByID(ctx context.Context, projectAuth *middleware.ProjectAuth) (*models.Project, *ServiceError) {
+func (s *ProjectServiceT) GetProjectByID(ctx context.Context, projectAuth *authorization.ProjectAuthorization) (*models.Project, *ServiceError) {
 	logger := s.getMethodLogger("GetProjectByID")
 
 	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectReader)
@@ -120,7 +120,7 @@ func (s *ProjectServiceT) GetProjectsForUser(ctx context.Context, username strin
 }
 
 // DeleteProject deletes a project. Requires ProjectAdmin permission.
-func (s *ProjectServiceT) DeleteProject(ctx context.Context, projectAuth *middleware.ProjectAuth) *ServiceError {
+func (s *ProjectServiceT) DeleteProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization) *ServiceError {
 	logger := s.getMethodLogger("DeleteProject")
 
 	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectAdmin)
@@ -142,7 +142,7 @@ func (s *ProjectServiceT) DeleteProject(ctx context.Context, projectAuth *middle
 }
 
 // UpdateProject updates a project's name/description. Requires ProjectEditor permission.
-func (s *ProjectServiceT) UpdateProject(ctx context.Context, projectAuth *middleware.ProjectAuth, payload *UpdateProjectPayload) (*models.Project, *ServiceError) {
+func (s *ProjectServiceT) UpdateProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload UpdateProjectPayload) (*models.Project, *ServiceError) {
 	logger := s.getMethodLogger("UpdateProject")
 
 	oldProject, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectEditor)
@@ -165,7 +165,7 @@ func (s *ProjectServiceT) UpdateProject(ctx context.Context, projectAuth *middle
 }
 
 // AddUserToProject adds a user to a project with a specified role. Requires ProjectEditor permission.
-func (s *ProjectServiceT) AddUserToProject(ctx context.Context, projectAuth *middleware.ProjectAuth, payload *AddProjectMemberPayload) *ServiceError {
+func (s *ProjectServiceT) AddUserToProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload AddProjectMemberPayload) *ServiceError {
 	logger := s.getMethodLogger("AddUserToProject")
 
 	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectEditor)
@@ -203,7 +203,7 @@ func (s *ProjectServiceT) AddUserToProject(ctx context.Context, projectAuth *mid
 }
 
 // RemoveUserFromProject removes a user from a project. Requires ProjectEditor permission.
-func (s *ProjectServiceT) RemoveUserFromProject(ctx context.Context, projectAuth *middleware.ProjectAuth, payload *RemoveProjectMemberPayload) *ServiceError {
+func (s *ProjectServiceT) RemoveUserFromProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload RemoveProjectMemberPayload) *ServiceError {
 	logger := s.getMethodLogger("RemoveUserFromProject")
 
 	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectEditor)
@@ -237,7 +237,7 @@ func (s *ProjectServiceT) RemoveUserFromProject(ctx context.Context, projectAuth
 }
 
 // ChangeProjectMemberRole changes a member's role. Requires ProjectAdmin permission.
-func (s *ProjectServiceT) ChangeProjectMemberRole(ctx context.Context, projectAuth *middleware.ProjectAuth, payload ChangeProjectMemberRolePayload) *ServiceError {
+func (s *ProjectServiceT) ChangeProjectMemberRole(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload ChangeProjectMemberRolePayload) *ServiceError {
 	logger := s.getMethodLogger("ChangeProjectMemberRole")
 
 	project, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectAdmin)

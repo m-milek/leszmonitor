@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/services"
 )
 
-const messageMonitorSlugIsRequired = "Monitor slug is required"
+const messageMonitorIDIsRequired = "Monitor ID is required"
 
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
@@ -33,8 +33,9 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
 		return
 	}
-
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		ProjectSlug: r.URL.Query().Get("projectSlug"),
+	})
 	if !ok {
 		return
 	}
@@ -52,11 +53,13 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorSlugIsRequired)
+		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		MonitorID: monitorID,
+	})
 	if !ok {
 		return
 	}
@@ -70,31 +73,17 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondMessage(ctx, w, http.StatusOK, "Monitor deleted successfully")
 }
 
-func GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
-	if !ok {
-		return
-	}
-
-	monitorsList, err := services.MonitorService.GetMonitorsByProjectID(ctx, projectAuth)
-	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
-		return
-	}
-
-	util.RespondJSON(ctx, w, http.StatusOK, monitorsList)
-}
-
 func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorSlugIsRequired)
+		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		MonitorID: monitorID,
+	})
 	if !ok {
 		return
 	}
@@ -114,7 +103,7 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorSlugIsRequired)
+		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
 		return
 	}
 
@@ -135,7 +124,9 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceProjectSlug)
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		MonitorID: monitorID,
+	})
 	if !ok {
 		return
 	}
@@ -177,4 +168,48 @@ func decodeMonitorPayload(r *http.Request) (monitors.Monitor, error) {
 
 	monitor.ProbeConfig = string(probeConfigRaw)
 	return monitor, nil
+}
+
+func GetMonitorByProjectSlugHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		ProjectSlug: r.URL.Query().Get("projectSlug"),
+	})
+	if !ok {
+		return
+	}
+
+	monitor, err := services.MonitorService.GetMonitorsByProjectID(ctx, projectAuth)
+	if err != nil {
+		util.RespondError(ctx, w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondJSON(ctx, w, http.StatusOK, monitor)
+}
+
+func GetMonitorBySlugByProject(w http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+
+	monitorSlug := request.PathValue("monitorSlug")
+	if monitorSlug == "" {
+		util.RespondMessage(ctx, w, http.StatusBadRequest, "Monitor slug is required")
+		return
+	}
+
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		ProjectSlug: request.PathValue("projectSlug"),
+	})
+	if !ok {
+		return
+	}
+
+	monitor, err := services.MonitorService.GetMonitorBySlugByProject(ctx, projectAuth, monitorSlug)
+	if err != nil {
+		util.RespondError(ctx, w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondJSON(ctx, w, http.StatusOK, monitor)
 }

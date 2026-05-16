@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/log"
 )
@@ -64,26 +62,6 @@ func RespondError(ctx context.Context, w http.ResponseWriter, statusCode int, er
 	if encodeErr := json.NewEncoder(w).Encode(response); encodeErr != nil {
 		logger.Error().Err(encodeErr).Msg("Failed to encode JSON error response")
 	}
-}
-
-// GetProjectAuthOrRespond extracts project auth from the request or writes a 401 and returns nil, false.
-func GetProjectAuthOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request, authSource middleware.AuthSourceKind) (*middleware.ProjectAuth, bool) {
-	projectAuth, err := middleware.ProjectAuthFromRequest(r, authSource)
-	if err != nil {
-		RespondError(ctx, w, http.StatusUnauthorized, err)
-		return nil, false
-	}
-	return projectAuth, true
-}
-
-// ExtractUserOrRespond returns the user from context or writes a 401 response and returns nil, false.
-func ExtractUserOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request) (*auth.UserClaims, bool) {
-	user, ok := middleware.GetUserFromContext(r.Context())
-	if !ok {
-		RespondMessage(ctx, w, http.StatusUnauthorized, "Unauthorized")
-		return nil, false
-	}
-	return user, true
 }
 
 // DecodeJSONOrRespond decodes JSON from the request body into v, or writes a 400 response and returns false.

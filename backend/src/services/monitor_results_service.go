@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
@@ -21,7 +21,7 @@ func newMonitorResultsService(service baseService) *MonitorResultsServiceT {
 
 var MonitorResultsService = newMonitorResultsService(newBaseService(newAuthorizationService(), "MonitorResultsService"))
 
-func (s *MonitorResultsServiceT) GetLatestMonitorResultByMonitorID(ctx context.Context, projectAuth *middleware.ProjectAuth, monitorID string) (monitorresult.IMonitorResult, *ServiceError) {
+func (s *MonitorResultsServiceT) GetLatestMonitorResultByMonitorID(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitorID string) (monitorresult.IMonitorResult, *ServiceError) {
 	logger := s.getMethodLogger("GetLatestMonitorResultByMonitorID")
 
 	_, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
@@ -43,10 +43,10 @@ func (s *MonitorResultsServiceT) GetLatestMonitorResultByMonitorID(ctx context.C
 	return result, nil
 }
 
-func (s *MonitorResultsServiceT) GetMonitorResultsByMonitorID(ctx context.Context, auth *middleware.ProjectAuth, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, *ServiceError) {
+func (s *MonitorResultsServiceT) GetMonitorResultsByMonitorID(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, *ServiceError) {
 	logger := s.getMethodLogger("GetMonitorResultsByMonitorID")
 
-	_, authErr := s.authService.authorizeProjectAction(ctx, auth, models.PermissionMonitorReader)
+	_, authErr := s.authService.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		logger.Warn().Err(authErr).Msg("Unauthorized access to GetMonitorResultsByMonitorID")
 		return nil, &ServiceError{Code: 403, Err: authErr}

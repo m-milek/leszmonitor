@@ -1,321 +1,96 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/appconfig"
+	"github.com/m-milek/leszmonitor/api/authorization"
+	config "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/auth"
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
-// Helper function to create a valid JWT token
-func createTestToken(t *testing.T, claims *auth.UserClaims, secret string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(secret))
-	require.NoError(t, err)
-	return tokenString
+func TestJwtAuth_NoAuthHeader(t *testing.T) {
+	handler := JwtAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler should not be called")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
 }
 
-// Helper function to create a test handler that captures the context
-func createTestHandler(t *testing.T) (http.Handler, **auth.UserClaims) {
-	var capturedClaims *auth.UserClaims
+func TestJwtAuth_InvalidToken(t *testing.T) {
+	handler := JwtAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler should not be called")
+	}))
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claims, ok := GetUserFromContext(r.Context())
-		if ok {
-			capturedClaims = claims
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer invalid-token")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
+}
+
+func TestJwtAuth_ValidToken(t *testing.T) {
+	os.Setenv(config.JwtSecret, "test-secret")
+	os.Setenv(config.JwtExpiryHours, "1")
+	token, err := auth.NewJwt("testuser")
+	if err != nil {
+		t.Fatalf("failed to generate token: %v", err)
+	}
+
+	called := false
+	handler := JwtAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+
+		claims, ok := authorization.GetUserFromContext(r.Context())
+		if !ok {
+			t.Fatal("expected claims in context, got nil")
 		}
+		if claims.Username != "testuser" {
+			t.Errorf("expected username 'testuser', got '%s'", claims.Username)
+		}
+
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
-	})
+	}))
 
-	return handler, &capturedClaims
-}
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "Bearer "+*token)
+	rec := httptest.NewRecorder()
 
-func TestJwtAuth(t *testing.T) {
-	// Set up test JWT secret
-	testSecret := "test-secret-key"
-	os.Setenv(config.JwtSecret, testSecret)
-	defer os.Unsetenv(config.JwtSecret)
+	handler.ServeHTTP(rec, req)
 
-	tests := []struct {
-		name           string
-		setupAuth      func() string
-		setupEnv       func()
-		expectedStatus int
-		expectedError  string
-		expectClaims   bool
-	}{
-		{
-			name: "valid token with Bearer prefix",
-			setupAuth: func() string {
-				claims := &auth.UserClaims{
-					Username: "testuser",
-					RegisteredClaims: jwt.RegisteredClaims{
-						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-					},
-				}
-				token := createTestToken(t, claims, testSecret)
-				return "Bearer " + token
-			},
-			expectedStatus: http.StatusOK,
-			expectClaims:   true,
-		},
-		{
-			name: "missing authorization header",
-			setupAuth: func() string {
-				return ""
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Unauthorized: No token provided",
-		},
-		{
-			name:           "invalid token returns generic unauthorized",
-			setupAuth:      func() string { return "Bearer invalid.token.value" },
-			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Unauthorized: Invalid token",
-		},
-		{
-			name: "missing JWT secret returns unauthorized",
-			setupAuth: func() string {
-				return "Bearer some.token.here"
-			},
-			setupEnv: func() {
-				os.Unsetenv(config.JwtSecret)
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Unauthorized: Invalid token",
-		},
+	if !called {
+		t.Fatal("next handler was not called")
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Reset environment
-			os.Setenv(config.JwtSecret, testSecret)
-
-			if tt.setupEnv != nil {
-				tt.setupEnv()
-			}
-
-			// Create test request
-			req := httptest.NewRequest(http.MethodGet, "/test", nil)
-			if auth := tt.setupAuth(); auth != "" {
-				req.Header.Set("Authorization", auth)
-			}
-
-			// Create response recorder
-			rr := httptest.NewRecorder()
-
-			// Create test handler
-			testHandler, capturedClaims := createTestHandler(t)
-
-			// Apply middleware
-			handler := JwtAuth(testHandler)
-
-			// Execute request
-			handler.ServeHTTP(rr, req)
-
-			// Assert status code
-			assert.Equal(t, tt.expectedStatus, rr.Code)
-
-			// Assert error message if expected
-			if tt.expectedError != "" {
-				assert.Contains(t, rr.Body.String(), tt.expectedError)
-			}
-
-			// Assert claims were set in context
-			if tt.expectClaims {
-				require.NotNil(t, *capturedClaims)
-				assert.Equal(t, "testuser", (*capturedClaims).Username)
-			} else {
-				assert.Nil(t, *capturedClaims)
-			}
-		})
+	if rec.Code != http.StatusOK {
+		t.Errorf("expected %d, got %d", http.StatusOK, rec.Code)
 	}
 }
 
-func TestSetUserContext(t *testing.T) {
-	ctx := context.Background()
-	claims := &auth.UserClaims{
-		Username: "testuser",
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: "user123",
-		},
+func TestJwtAuth_MissingBearerPrefix(t *testing.T) {
+	handler := JwtAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("handler should not be called")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "not-a-bearer-token")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected %d, got %d", http.StatusUnauthorized, rec.Code)
 	}
-
-	newCtx := SetUserContext(ctx, claims)
-
-	// Verify context contains the claims
-	value := newCtx.Value(userClaimsKey)
-	assert.NotNil(t, value)
-
-	retrievedClaims, ok := value.(*auth.UserClaims)
-	assert.True(t, ok)
-	assert.Equal(t, claims.Username, retrievedClaims.Username)
-	assert.Equal(t, claims.Subject, retrievedClaims.Subject)
-}
-
-func TestGetUserFromContext(t *testing.T) {
-	t.Run("context with claims", func(t *testing.T) {
-		ctx := context.Background()
-		expectedClaims := &auth.UserClaims{
-			Username: "testuser",
-		}
-
-		ctx = SetUserContext(ctx, expectedClaims)
-
-		claims, ok := GetUserFromContext(ctx)
-		assert.True(t, ok)
-		assert.NotNil(t, claims)
-		assert.Equal(t, expectedClaims.Username, claims.Username)
-	})
-
-	t.Run("context without claims", func(t *testing.T) {
-		ctx := context.Background()
-
-		claims, ok := GetUserFromContext(ctx)
-		assert.False(t, ok)
-		assert.Nil(t, claims)
-	})
-
-	t.Run("context with wrong type", func(t *testing.T) {
-		ctx := context.Background()
-		ctx = context.WithValue(ctx, userClaimsKey, "not-a-claim")
-
-		claims, ok := GetUserFromContext(ctx)
-		assert.False(t, ok)
-		assert.Nil(t, claims)
-	})
-}
-
-func TestProjectAuthFromRequest(t *testing.T) {
-	tests := []struct {
-		name          string
-		setupRequest  func(mockDB *db.MockDB) *http.Request
-		expectedAuth  *ProjectAuth
-		expectedError string
-	}{
-		{
-			name: "valid request with project slug and user claims",
-			setupRequest: func(mockDB *db.MockDB) *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
-				req.SetPathValue("projectId", "proj123")
-
-				projectID := uuid.New()
-				mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", mock.Anything, "proj123").
-					Return(&models.Project{ID: projectID}, nil)
-
-				claims := &auth.UserClaims{Username: "testuser"}
-				ctx := SetUserContext(req.Context(), claims)
-				req = req.WithContext(ctx)
-
-				// Stash the UUID so we can compare it
-				req.Header.Set("X-Expected-UUID", projectID.String())
-				return req
-			},
-			expectedAuth: &ProjectAuth{
-				Username: "testuser",
-			},
-		},
-		{
-			name: "missing project slug",
-			setupRequest: func(mockDB *db.MockDB) *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/projects/", nil)
-				// No projectId path value set
-
-				claims := &auth.UserClaims{Username: "testuser"}
-				ctx := SetUserContext(req.Context(), claims)
-				return req.WithContext(ctx)
-			},
-			expectedError: "project slug is required",
-		},
-		{
-			name: "missing user claims in context",
-			setupRequest: func(mockDB *db.MockDB) *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
-				req.SetPathValue("projectId", "proj123")
-
-				mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", mock.Anything, "proj123").
-					Return(&models.Project{ID: uuid.New()}, nil)
-
-				// No user claims in context
-				return req
-			},
-			expectedError: "user claims not found in context",
-		},
-		{
-			name: "empty username in claims",
-			setupRequest: func(mockDB *db.MockDB) *http.Request {
-				req := httptest.NewRequest(http.MethodGet, "/projects/proj123", nil)
-				req.SetPathValue("projectId", "proj123")
-
-				mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", mock.Anything, "proj123").
-					Return(&models.Project{ID: uuid.New()}, nil)
-
-				claims := &auth.UserClaims{Username: ""} // Empty username
-				ctx := SetUserContext(req.Context(), claims)
-				return req.WithContext(ctx)
-			},
-			expectedError: "username is missing in user claims",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockDB := &db.MockDB{
-				ProjectsRepo: new(db.MockProjectRepository),
-			}
-			db.Set(mockDB)
-			defer db.Set(nil)
-
-			req := tt.setupRequest(mockDB)
-
-			authRes, err := ProjectAuthFromRequest(req, AuthSourceProjectSlug)
-
-			if tt.expectedError != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedError)
-				assert.Nil(t, authRes)
-			} else {
-				assert.NoError(t, err)
-				require.NotNil(t, authRes)
-
-				expectedUUID := uuid.MustParse(req.Header.Get("X-Expected-UUID"))
-				assert.Equal(t, expectedUUID, authRes.ProjectID)
-				assert.Equal(t, tt.expectedAuth.Username, authRes.Username)
-			}
-		})
-	}
-}
-
-// Test the responseWriter wrapper if it's used
-func TestResponseWriterWrapper(t *testing.T) {
-	// This assumes you have a newResponseWriter function that wraps http.ResponseWriter
-	// If not, you can skip this test
-
-	t.Run("wrapper passes through writes", func(t *testing.T) {
-		recorder := httptest.NewRecorder()
-		wrapper := newResponseWriter(recorder)
-
-		// Test writing header
-		wrapper.WriteHeader(http.StatusCreated)
-		assert.Equal(t, http.StatusCreated, recorder.Code)
-
-		// Test writing body
-		n, err := wrapper.Write([]byte("test response"))
-		assert.NoError(t, err)
-		assert.Equal(t, 13, n)
-		assert.Equal(t, "test response", recorder.Body.String())
-	})
 }

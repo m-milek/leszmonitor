@@ -1,6 +1,6 @@
-export const BACKEND_URL = "http://localhost:7001";
-export const BACKEND_API_URL = `${BACKEND_URL}/api`;
-export const BACKEND_WS_URL = BACKEND_API_URL.replace(/^http/, "ws");
+const BACKEND_HOSTNAME = "localhost:7001";
+export const BACKEND_API_URL = `http://${BACKEND_HOSTNAME}/api/v1`;
+export const BACKEND_WS_URL = `ws://${BACKEND_HOSTNAME}/api/ws`;
 
 export const QUERY_KEYS = {
   ORGS: "orgs",

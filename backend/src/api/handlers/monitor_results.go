@@ -5,21 +5,24 @@ import (
 	"net/http"
 
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/services"
 	util2 "github.com/m-milek/leszmonitor/util"
 )
 
 func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceMonitorID)
-	if !ok {
-		return
-	}
 
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
 		util.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
+		return
+	}
+
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		MonitorID: monitorID,
+	})
+	if !ok {
 		return
 	}
 
@@ -34,10 +37,6 @@ func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Req
 
 func GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := util.GetProjectAuthOrRespond(ctx, w, r, middleware.AuthSourceMonitorID)
-	if !ok {
-		return
-	}
 
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
@@ -48,6 +47,13 @@ func GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request)
 	pagination, paginationErr := util2.PaginationFromRequest(r)
 	if paginationErr != nil {
 		util.RespondError(ctx, w, http.StatusBadRequest, paginationErr)
+		return
+	}
+
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		MonitorID: monitorID,
+	})
+	if !ok {
 		return
 	}
 

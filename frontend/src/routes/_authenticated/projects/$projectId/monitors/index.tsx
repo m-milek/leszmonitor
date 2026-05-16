@@ -3,7 +3,10 @@ import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteMonitor, getMonitors } from "@/lib/data/monitorData.ts";
+import {
+  deleteMonitor,
+  getMonitorsByProjectSlug,
+} from "@/lib/data/monitorData.ts";
 import { MonitorListItem } from "@/components/leszmonitor/MonitorListItem.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
@@ -22,7 +25,7 @@ function MonitorsComponent() {
 
   const { data: monitors = [] } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS, projectId],
-    queryFn: () => getMonitors(projectId),
+    queryFn: () => getMonitorsByProjectSlug(projectId),
   });
 
   const { mutateAsync: deleteMutation } = useMutation({
