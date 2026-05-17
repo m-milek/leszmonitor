@@ -9,7 +9,7 @@ COPY frontend/ .
 
 RUN npm run build
 
-FROM golang:1.26.1-alpine AS backend-builder
+FROM golang:1.26.3-alpine AS backend-builder
 
 RUN apk add --no-cache gcc musl-dev sqlite-dev
 
@@ -25,17 +25,17 @@ COPY --from=frontend-builder /app/dist ./src/static
 
 WORKDIR /app/src
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o main .
+RUN mkdir -p /var/log/leszmonitor
 
-FROM alpine:latest
+FROM scratch
 
-RUN apk --no-cache add ca-certificates sqlite-libs
+COPY --from=backend-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=backend-builder /var/log/leszmonitor /var/log/leszmonitor
 
 WORKDIR /app
 
 COPY --from=backend-builder /app/src/main .
-
-RUN mkdir -p /var/log/leszmonitor
 
 EXPOSE 7001
 

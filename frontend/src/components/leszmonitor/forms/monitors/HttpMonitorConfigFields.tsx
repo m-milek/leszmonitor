@@ -7,11 +7,11 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
-import type { MonitorFormApi } from "@/lib/formTypes.ts";
 import { LMSwitch } from "@/components/leszmonitor/forms/inputs/LMSwitch.tsx";
 import { LMKeyValueInput } from "@/components/leszmonitor/forms/inputs/LMKeyValue.tsx";
 import { LMMultiSelect } from "@/components/leszmonitor/forms/inputs/LMMultiSelect.tsx";
 import type { HttpMethod } from "@/lib/types.ts";
+import type { MonitorFormApi } from "@/hooks/useMonitorForm";
 
 const httpMethodItems = [
   { value: "GET", label: "GET" },

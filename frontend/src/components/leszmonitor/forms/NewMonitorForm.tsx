@@ -1,4 +1,3 @@
-import { type FormValidateOrFn, useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import { slugFromString } from "@/lib/slugFromString.ts";
 import {
@@ -6,7 +5,6 @@ import {
   defaultConfigs,
   isValidMonitorType,
   type MonitorType,
-  newMonitorSchema,
   newMonitorSchemaDefaultValues,
 } from "@/lib/types.ts";
 import { Field, FieldLabel } from "@/components/ui/field.tsx";
@@ -24,8 +22,8 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createMonitor } from "@/lib/data/monitorData.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { useMonitorForm } from "@/hooks/useMonitorForm";
 
 export interface NewMonitorFormProps {
   projectSlug: string;
@@ -78,23 +76,10 @@ export function MonitorForm({
 }: Readonly<MonitorFormProps>) {
   const mergedDefaults = buildMonitorDefaults(projectSlug, defaultValues);
 
-  const form = useForm({
+  const form = useMonitorForm({
     defaultValues: mergedDefaults,
-    validators: {
-      onSubmit:
-        newMonitorSchema as unknown as FormValidateOrFn<MonitorFormValues>,
-    },
-    onSubmit: async ({ value }) => {
-      await onSubmit(value);
-      if (resetOnSuccess) {
-        form.reset();
-      }
-    },
-    onSubmitInvalid: ({ value }) => {
-      console.log("Invalid form submission");
-      console.log("Values:", value);
-      toast.error("Please fix the errors in the form before submitting.");
-    },
+    onSubmit,
+    onReset: resetOnSuccess ? () => form.reset() : undefined,
   });
 
   const [useCustomSlug, setUseCustomSlug] = useState(() => {

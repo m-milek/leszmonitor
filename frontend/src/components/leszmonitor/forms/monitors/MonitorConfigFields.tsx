@@ -1,6 +1,6 @@
-import type { MonitorFormApi } from "@/lib/formTypes.ts";
 import { HttpMonitorConfigFields } from "@/components/leszmonitor/forms/monitors/HttpMonitorConfigFields.tsx";
 import { TcpMonitorConfigFields } from "@/components/leszmonitor/forms/monitors/TcpMonitorConfigFields.tsx";
+import type { MonitorFormApi } from "@/hooks/useMonitorForm.ts";
 
 export function MonitorConfigFields({
   form,
