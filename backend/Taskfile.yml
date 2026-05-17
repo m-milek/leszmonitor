@@ -42,6 +42,16 @@ tasks:
     cmds:
       - cd {{.BACKEND_SRC_DIR}} && air -build.stop_on_error true
 
+  docker:run:
+    desc: Run the Docker image
+    env:
+      API_PORT: '7001'
+      JWT_SECRET: 'your_jwt_secret'
+      JWT_EXPIRY_HOURS: '24'
+      SQLITE_DB_PATH: ./leszmonitor.db
+    cmds:
+      - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
+
   clean:
     desc: Clean the back-end build artifacts
     cmds:

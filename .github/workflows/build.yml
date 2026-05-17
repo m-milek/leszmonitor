@@ -90,7 +90,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
 
       - name: Download Go Coverage Report
         uses: actions/download-artifact@v6
@@ -114,3 +114,35 @@ jobs:
       - name: Exit with status 0 to prevent failure
         if: always()
         run: exit 0
+
+  e2e:
+    name: Docker Build & E2E Tests
+    runs-on: ubuntu-latest
+    needs: [ backend, frontend ]
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+
+      - name: Build the app image
+        run: task docker:build
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Initialize DB
+        run: touch backend/src/leszmonitor.db
+
+      - name: Run end-to-end tests
+        run: task frontend:test:e2e

@@ -19,6 +19,11 @@ tasks:
     cmds:
       - docker compose up
 
+  docker:up:no-build:
+    desc: Start without rebuilding
+    cmds:
+      - docker compose up --no-build
+
   docker:down:
     desc: Stop all services using Docker Compose
     cmds:

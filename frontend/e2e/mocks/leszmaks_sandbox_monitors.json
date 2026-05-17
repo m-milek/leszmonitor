@@ -1,0 +1,41 @@
+[
+  {
+    "id": "c71649c4-cbb6-4f1d-8149-210a365f2a99",
+    "slug": "gnu",
+    "projectId": "06a761d5-3693-49f6-b4d8-d59e0ae09872",
+    "name": "GNU",
+    "description": "123123",
+    "interval": 10,
+    "type": "tcp",
+    "probeConfig": "{\"host\":\"gnu.org\",\"port\":443,\"protocol\":\"tcp\",\"timeout\":5000,\"retryCount\":3}",
+    "resultRetentionSeconds": 43200,
+    "createdAt": "2026-05-12T18:59:10Z",
+    "updatedAt": "2026-05-12T18:59:10Z"
+  },
+  {
+    "id": "7580b3fc-cbfd-45d0-aa53-d64d012f4efa",
+    "slug": "ford-uk",
+    "projectId": "06a761d5-3693-49f6-b4d8-d59e0ae09872",
+    "name": "Ford UK",
+    "description": "",
+    "interval": 15,
+    "type": "tcp",
+    "probeConfig": "{\"host\":\"ford.co.uk\",\"port\":443,\"protocol\":\"tcp\",\"timeout\":5000,\"retryCount\":3}",
+    "resultRetentionSeconds": 43200,
+    "createdAt": "2026-05-12T19:10:39Z",
+    "updatedAt": "2026-05-12T19:10:39Z"
+  },
+  {
+    "id": "468d0ebb-b8c0-4256-b5d3-222b79624024",
+    "slug": "example",
+    "projectId": "06a761d5-3693-49f6-b4d8-d59e0ae09872",
+    "name": "Example",
+    "description": "",
+    "interval": 20,
+    "type": "tcp",
+    "probeConfig": "{\"host\":\"example.com\",\"port\":443,\"protocol\":\"tcp\",\"timeout\":5000,\"retryCount\":3}",
+    "resultRetentionSeconds": 43200,
+    "createdAt": "2026-05-12T19:14:23Z",
+    "updatedAt": "2026-05-12T19:14:23Z"
+  }
+]

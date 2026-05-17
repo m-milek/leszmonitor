@@ -1,0 +1,13 @@
+{
+  "id": "c71649c4-cbb6-4f1d-8149-210a365f2a99",
+  "slug": "gnu",
+  "projectId": "06a761d5-3693-49f6-b4d8-d59e0ae09872",
+  "name": "GNU",
+  "description": "123123",
+  "interval": 10,
+  "type": "tcp",
+  "probeConfig": "{\"host\":\"gnu.org\",\"port\":443,\"protocol\":\"tcp\",\"timeout\":5000,\"retryCount\":3}",
+  "resultRetentionSeconds": 43200,
+  "createdAt": "2026-05-12T18:59:10Z",
+  "updatedAt": "2026-05-12T18:59:10Z"
+}

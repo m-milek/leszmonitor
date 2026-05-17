@@ -1,0 +1,10 @@
+version: 3
+
+tasks:
+  run:
+    desc: Sync mocks from the repository to the local directory
+    env:
+      AUTH_USERNAME: leszmak
+      AUTH_PASSWORD: 123123
+    cmds:
+      - npx tsx main.ts

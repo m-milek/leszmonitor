@@ -123,7 +123,7 @@ func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPa
 // Login authenticates a user and returns a JWT token if successful.
 func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
 	logger := s.getMethodLogger("Login")
-	logger.Trace().Str("username", payload.Username).Msg("User login attempt")
+	logger.Info().Str("username", payload.Username).Msg("User login attempt")
 
 	user, err := s.getDB().Users().GetUserByUsername(ctx, payload.Username)
 	if err != nil {
