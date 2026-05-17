@@ -6,8 +6,8 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
-import type { MonitorFormApi } from "@/lib/formTypes.ts";
 import type { TcpProtocol } from "@/lib/types.ts";
+import type { MonitorFormApi } from "@/hooks/useMonitorForm.ts";
 
 const protocolItems: { value: TcpProtocol; label: string }[] = [
   { value: "tcp", label: "TCP" },
