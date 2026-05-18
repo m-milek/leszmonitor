@@ -32,12 +32,16 @@ func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
 	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
-	projects, err := services.ProjectService.GetProjectsForUser(ctx, userClaims.Username)
+	requestingUser := userClaims.Username
+	usernameQuery := r.URL.Query().Get("username")
+
+	projects, err := services.ProjectService.GetProjects(ctx, requestingUser, usernameQuery)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return

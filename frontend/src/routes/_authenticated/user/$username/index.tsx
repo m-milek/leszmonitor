@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
-import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUser } from "@/lib/data/userData.ts";
-import { Card, CardContent } from "@/components/ui/card.tsx";
+import { UserProfilePage } from "@/components/leszmonitor/UserProfilePage.tsx";
 
 export const Route = createFileRoute("/_authenticated/user/$username/")({
   component: UserProfileComponent,
@@ -12,21 +11,18 @@ export const Route = createFileRoute("/_authenticated/user/$username/")({
 function UserProfileComponent() {
   const { username } = Route.useParams();
 
-  const { data } = useQuery({
+  const { data: user } = useQuery({
     queryKey: ["users", username],
     queryFn: () => fetchUser(username),
   });
 
-  if (!data) {
+  if (!user) {
     return null;
   }
 
   return (
     <MainPanelContainer>
-      <TypographyH1>{username}</TypographyH1>
-      <Card>
-        <CardContent>{JSON.stringify(data, null, 2)}</CardContent>
-      </Card>
+      <UserProfilePage user={user} />
     </MainPanelContainer>
   );
 }

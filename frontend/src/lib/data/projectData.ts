@@ -16,8 +16,15 @@ const parseProject = (project: Project): Project => ({
     })) ?? [],
 });
 
-export const getProjects = async (): Promise<Project[]> => {
-  const res = await authFetch(`${BACKEND_API_URL}/projects`);
+export const getProjects = async (userQuery?: string): Promise<Project[]> => {
+  console.log("Fetching projects with userQuery:", userQuery);
+  const queryParams = new URLSearchParams();
+  if (userQuery) {
+    queryParams.append("user", userQuery);
+  }
+  const res = await authFetch(
+    `${BACKEND_API_URL}/projects?${queryParams.toString()}`,
+  );
 
   const projects = (await res.json()) as Project[];
   return projects.map(parseProject);

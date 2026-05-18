@@ -1,10 +1,18 @@
 export interface CenterProps {
   children: React.ReactNode;
+  centerVertically?: boolean;
+  centerHorizontally?: boolean;
 }
 
-export function Center({ children }: Readonly<CenterProps>) {
+export function Center({
+  children,
+  centerVertically = true,
+  centerHorizontally = true,
+}: Readonly<CenterProps>) {
   return (
-    <div className="flex items-center justify-center w-full h-full">
+    <div
+      className={`flex w-full h-full ${centerVertically ? "items-center" : ""} ${centerHorizontally ? "justify-center" : ""}`}
+    >
       {children}
     </div>
   );

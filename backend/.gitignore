@@ -37,4 +37,7 @@ src/coverage.out
 .DS_Store
 
 *.db
+*.db-wal
+*.db-shm
+
 src/static

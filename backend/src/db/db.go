@@ -87,6 +87,8 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 		return nil, fmt.Errorf("failed to initialize database schema: %w", err)
 	}
 
+	pool.SetMaxOpenConns(1)
+
 	// initialize and cache repositories once
 	c.users = newUserRepository(newBaseRepository(pool))
 	c.monitors = newMonitorRepository(newBaseRepository(pool))
@@ -205,7 +207,7 @@ func InitFromEnv(ctx context.Context) error {
 	if uri == "" {
 		logger.Fatal().Msg("SQLite DB path is not defined")
 	}
-	uri = ensureSQLiteUTC(uri)
+	uri = setupSQLiteConfig(uri)
 	c, err := New(ctx, uri)
 	if err != nil {
 		return err
@@ -216,20 +218,31 @@ func InitFromEnv(ctx context.Context) error {
 	return nil
 }
 
-func ensureSQLiteUTC(dsn string) string {
-	if !strings.Contains(dsn, "_loc=") {
-		if strings.Contains(dsn, "?") {
-			dsn += "&_loc=UTC"
-		} else {
-			dsn += "?_loc=UTC"
+func setupSQLiteConfig(dsn string) string {
+	pragmas := []string{
+		"_pragma=journal_mode(WAL)",
+		"_pragma=busy_timeout(5000)",
+		"_pragma=foreign_keys(1)",
+	}
+
+	for _, p := range pragmas {
+		if !strings.Contains(dsn, p) {
+			if strings.Contains(dsn, "?") {
+				dsn += "&" + p
+			} else {
+				dsn += "?" + p
+			}
 		}
 	}
-	if !strings.Contains(dsn, "_foreign_keys=") {
+
+	// _txlock=immediate prevents SQLITE_BUSY on write transactions in WAL mode
+	if !strings.Contains(dsn, "_txlock=") {
 		if strings.Contains(dsn, "?") {
-			dsn += "&_foreign_keys=on"
+			dsn += "&_txlock=immediate"
 		} else {
-			dsn += "?_foreign_keys=on"
+			dsn += "?_txlock=immediate"
 		}
 	}
+
 	return dsn
 }
