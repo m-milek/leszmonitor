@@ -94,7 +94,7 @@ export const AppSidebar = () => {
 
   const { data: projectsData } = useQuery({
     queryKey: ["projects"],
-    queryFn: getProjects,
+    queryFn: () => getProjects(),
   });
 
   useEffect(() => {

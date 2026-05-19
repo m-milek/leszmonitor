@@ -13,7 +13,7 @@ type IProjectRepository interface {
 	InsertProject(ctx context.Context, project *models.Project) error
 	GetProjectByID(ctx context.Context, id uuid.UUID) (*models.Project, error)
 	GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error)
-	GetProjectsByUserID(ctx context.Context, userID uuid.UUID) ([]models.Project, error)
+	GetProjectsByQuery(ctx context.Context, query GetProjectsQuery) ([]models.Project, error)
 	UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error)
 	DeleteProject(ctx context.Context, projectSlug string) (bool, error)
 	AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error)
@@ -34,7 +34,7 @@ func newProjectRepository(repository baseRepository) IProjectRepository {
 func (r *projectRepository) loadMembers(ctx context.Context, project *models.Project) error {
 	var members []models.ProjectMember
 	err := r.pool.SelectContext(ctx, &members,
-		`SELECT up.user_id as id, u.username as username, up.role as role, up.created_at, up.updated_at
+		`SELECT up.user_id AS id, u.username AS username, up.role AS role, up.created_at, up.updated_at
 		 FROM user_projects up JOIN users u ON u.id = up.user_id
 		 WHERE up.project_id = $1`,
 		project.ID)
@@ -127,21 +127,44 @@ func (r *projectRepository) GetProjectBySlug(ctx context.Context, slug string) (
 	})
 }
 
-func (r *projectRepository) GetProjectsByUserID(ctx context.Context, userID uuid.UUID) ([]models.Project, error) {
-	return dbWrap(ctx, "GetProjectsByUserID", func() ([]models.Project, error) {
+type GetProjectsQuery struct {
+	RequestingUserID uuid.UUID
+	MemberUsername   string
+}
+
+func (r *projectRepository) GetProjectsByQuery(ctx context.Context, query GetProjectsQuery) ([]models.Project, error) {
+	return dbWrap(ctx, "GetProjectsByQuery", func() ([]models.Project, error) {
 		var projects []models.Project
-		err := r.pool.SelectContext(ctx, &projects,
-			`SELECT p.id, p.slug, p.name, p.description, p.created_at, p.updated_at
+
+		if query.MemberUsername == "" {
+			// Return all projects the requesting user belongs to
+			err := r.pool.SelectContext(ctx, &projects,
+				`SELECT p.id, p.slug, p.name, p.description, p.created_at, p.updated_at
 			 FROM projects p
 			 JOIN user_projects up ON up.project_id = p.id
-			 WHERE up.user_id = $1`,
-			userID)
-		if err != nil {
-			return nil, err
+			 WHERE up.user_id = ?`,
+				query.RequestingUserID)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			// Return projects where BOTH the requesting user and the target user are members
+			err := r.pool.SelectContext(ctx, &projects,
+				`SELECT p.id, p.slug, p.name, p.description, p.created_at, p.updated_at
+			 FROM projects p
+			 JOIN user_projects requester ON requester.project_id = p.id
+			 JOIN user_projects member ON member.project_id = p.id
+			 JOIN users u ON u.id = member.user_id
+			 WHERE requester.user_id = ?
+			   AND u.username = ?`,
+				query.RequestingUserID, query.MemberUsername)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		for i := range projects {
-			if err = r.loadMembers(ctx, &projects[i]); err != nil {
+			if err := r.loadMembers(ctx, &projects[i]); err != nil {
 				return nil, err
 			}
 		}

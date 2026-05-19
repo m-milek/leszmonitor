@@ -1,7 +1,11 @@
 import type { Project } from "@/lib/types";
 import { formatDate } from "@/lib/utils.ts";
 import { StyledLink } from "../StyledLink";
-import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
+import {
+  type ColumnDef,
+  getCoreRowModel,
+  type Row,
+} from "@tanstack/table-core";
 import { Button } from "@/components/ui/button.tsx";
 import { flexRender, useReactTable } from "@tanstack/react-table";
 import {
@@ -16,7 +20,7 @@ import { LucideTrash2 } from "lucide-react";
 
 export interface ProjectsTableProps {
   projects: Project[];
-  onProjectDeleted: (projectId: string) => Promise<void>;
+  onProjectDeleted?: (projectId: string) => Promise<void>;
 }
 
 export const ProjectsTable = ({
@@ -61,21 +65,25 @@ export const ProjectsTable = ({
       accessorKey: "description",
       header: "Description",
     },
-    {
-      header: "Actions",
-      cell: ({ row }) => {
-        const projectId = row.original.slug;
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => onProjectDeleted(projectId)}
-            className="text-destructive"
-          >
-            <LucideTrash2 />
-          </Button>
-        );
-      },
-    },
+    ...(onProjectDeleted
+      ? [
+          {
+            header: "Actions",
+            cell: ({ row }: { row: Row<Project> }) => {
+              const projectId = row.original.slug;
+              return (
+                <Button
+                  variant="ghost"
+                  onClick={() => onProjectDeleted(projectId)}
+                  className="text-destructive"
+                >
+                  <LucideTrash2 />
+                </Button>
+              );
+            },
+          },
+        ]
+      : []),
   ];
 
   const table = useReactTable({
@@ -129,4 +137,3 @@ export const ProjectsTable = ({
     </Table>
   );
 };
-

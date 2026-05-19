@@ -97,25 +97,30 @@ func (s *ProjectServiceT) GetProjectByID(ctx context.Context, projectAuth *autho
 	return project, nil
 }
 
-// GetProjectsForUser returns all projects the authenticated user is a member of.
-func (s *ProjectServiceT) GetProjectsForUser(ctx context.Context, username string) ([]models.Project, *ServiceError) {
-	logger := s.getMethodLogger("GetProjectsForUser")
+// GetProjects returns all projects the authenticated user is a member of.
+func (s *ProjectServiceT) GetProjects(ctx context.Context, requestorUsername string, usernameQuery string) ([]models.Project, *ServiceError) {
+	logger := s.getMethodLogger("GetProjects")
 
-	user, err := db.Get().Users().GetUserByUsername(ctx, username)
+	user, err := db.Get().Users().GetUserByUsername(ctx, requestorUsername)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", username)}
+			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", requestorUsername)}
 		}
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve user: %w", err)}
 	}
 
-	projects, err := s.getDB().Projects().GetProjectsByUserID(ctx, user.ID)
+	getProjectsQuery := db.GetProjectsQuery{
+		RequestingUserID: user.ID,
+		MemberUsername:   usernameQuery,
+	}
+
+	projects, err := s.getDB().Projects().GetProjectsByQuery(ctx, getProjectsQuery)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get projects for user")
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to get projects: %w", err)}
 	}
 
-	logger.Info().Int("count", len(projects)).Msg("Retrieved projects for user")
+	logger.Info().Int("count", len(projects)).Str("requestingUser", requestorUsername).Str("userQuery", usernameQuery).Msg("Retrieved projects for user")
 	return projects, nil
 }
 

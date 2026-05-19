@@ -5,7 +5,7 @@ export const generateValuesWithInterval = (
   return Array.from({ length }, (_, i) => i * interval);
 };
 
-const padZero = (x: number): string => {
+export const padZero = (x: number): string => {
   return x < 10 ? `0${x}` : `${x}`;
 };
 

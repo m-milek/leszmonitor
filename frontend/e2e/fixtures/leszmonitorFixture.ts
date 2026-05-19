@@ -48,7 +48,7 @@ export const test = base.extend<LeszmonitorFixture>({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzkwNDc1MzgsImlhdCI6MTc3ODk2MTEzOCwidXNlcm5hbWUiOiJsZXN6bWFrIn0.BD0zIfx2kdtPd_GZwsVYh30HxdQf4sm4JYGFFNttT0M",
+          jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjUzNzkxMzc2NDksImlhdCI6MTc3OTE0MTI0OSwidXNlcm5hbWUiOiJsZXN6bWFrIn0.f4hIqBGicZyvJ5UYIQ9-33GsndjA_mKMLXN5WBHHUvg",
         }),
       });
     });

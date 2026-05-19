@@ -67,8 +67,8 @@ func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug uuid.UU
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) GetProjectsByUserID(ctx context.Context, userID uuid.UUID) ([]models.Project, error) {
-	args := r.Called(ctx, userID)
+func (r *MockProjectRepository) GetProjectsByQuery(ctx context.Context, query GetProjectsQuery) ([]models.Project, error) {
+	args := r.Called(ctx, query)
 	return args.Get(0).([]models.Project), args.Error(1)
 }
 
