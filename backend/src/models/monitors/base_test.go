@@ -17,6 +17,7 @@ func createTestBaseMonitor() Monitor {
 		Interval:               60,
 		Type:                   shared.HttpConfigType,
 		ResultRetentionSeconds: 60,
+		State:                  MonitorStateActive,
 	}
 }
 
@@ -72,6 +73,14 @@ func TestBaseMonitorValidateNegativeResultRetentionSeconds(t *testing.T) {
 	err := monitor.Validate()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "result retention period must be greater than zero")
+}
+
+func TestBaseMonitorValidateInvalidState(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.State = "invalid_state"
+	err := monitor.Validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "state must be either 'running' or 'stopped'")
 }
 
 func TestBaseMonitorGenerateSlug(t *testing.T) {

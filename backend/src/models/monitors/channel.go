@@ -5,19 +5,17 @@ import (
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 )
 
-type monitorLifecycleState string
+type MonitorLifecycleState string
 
 const (
-	Created monitorLifecycleState = "created"
-	Edited  monitorLifecycleState = "edited"
-	Deleted monitorLifecycleState = "deleted"
-	Stopped monitorLifecycleState = "stopped"
-	Started monitorLifecycleState = "started"
+	Created MonitorLifecycleState = "created"
+	Edited  MonitorLifecycleState = "edited"
+	Deleted MonitorLifecycleState = "deleted"
 )
 
 type MonitorLifecycleMessage struct {
 	ID      uuid.UUID
-	Status  monitorLifecycleState
+	Status  MonitorLifecycleState
 	Monitor *Monitor
 }
 

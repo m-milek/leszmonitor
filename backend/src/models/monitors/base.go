@@ -3,6 +3,7 @@ package monitors
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	shared "github.com/m-milek/leszmonitor/models/consts"
@@ -21,12 +22,39 @@ type Monitor struct {
 	Type                   shared.ProbeType `json:"type" db:"kind"`                                       // Type of the monitor (http, tcp, etc.)
 	ProbeConfig            string           `json:"probeConfig" db:"config"`                              // JSON string containing the specific configuration for the monitor type
 	ResultRetentionSeconds int              `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
+	State                  MonitorState     `json:"state" db:"state"`                                     // State indicates whether the monitor is currently running or stopped
 	util2.Timestamps
 }
 
 type Probe interface {
 	Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult
 	Validate() error
+}
+
+type MonitorState string
+
+const (
+	MonitorStateActive  MonitorState = "active"
+	MonitorStateStopped MonitorState = "paused"
+)
+
+func IsValidMonitorState(state string) bool {
+	return state == string(MonitorStateActive) || state == string(MonitorStateStopped)
+}
+
+func InitializeFromPayload(payload Monitor, projectID uuid.UUID) *Monitor {
+	return &Monitor{
+		ID:                     uuid.New(),
+		Slug:                   payload.Slug,
+		ProjectID:              projectID,
+		Name:                   payload.Name,
+		Description:            payload.Description,
+		Interval:               payload.Interval,
+		Type:                   payload.Type,
+		ProbeConfig:            payload.ProbeConfig,
+		ResultRetentionSeconds: int((12 * time.Hour).Seconds()), // TODO: Make this configurable later
+		State:                  MonitorStateActive,
+	}
 }
 
 func (m *Monitor) Validate() error {
@@ -47,6 +75,9 @@ func (m *Monitor) Validate() error {
 	}
 	if m.ResultRetentionSeconds <= 0 {
 		return fmt.Errorf("monitor result retention period must be greater than zero")
+	}
+	if !IsValidMonitorState(string(m.State)) {
+		return fmt.Errorf("monitor state must be either 'running' or 'stopped'")
 	}
 
 	return nil

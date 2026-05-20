@@ -46,9 +46,14 @@ export interface Monitor extends Timestamps {
   description?: string;
   projectSlug: string;
   interval: number;
+  // Retention seconds not configurable yet
+  state: MonitorState;
   type: MonitorType;
   probeConfig?: HttpMonitorConfig | TcpMonitorConfig;
 }
+
+const monitorStates = ["active", "paused"] as const;
+export type MonitorState = (typeof monitorStates)[number];
 
 const monitorTypes = ["http", "tcp"] as const;
 export type MonitorType = (typeof monitorTypes)[number];

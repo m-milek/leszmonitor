@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/google/uuid"
 	util "github.com/m-milek/leszmonitor/api/api_util"
 	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/models/monitors"
@@ -212,4 +213,49 @@ func GetMonitorBySlugByProject(w http.ResponseWriter, request *http.Request) {
 	}
 
 	util.RespondJSON(ctx, w, http.StatusOK, monitor)
+}
+
+type UpdateMonitorStatePayload struct {
+	NewState string `json:"newState"`
+}
+
+func UpdateMonitorStateByIDHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	monitorID := r.PathValue("monitorId")
+	if monitorID == "" {
+		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		return
+	}
+
+	monitorUUID, err := uuid.Parse(monitorID)
+	if err != nil {
+		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		return
+	}
+
+	payload := UpdateMonitorStatePayload{}
+	ok := util.DecodeJSONOrRespond(ctx, w, r, &payload)
+	if !ok {
+		return
+	}
+
+	if payload.NewState == "" {
+		util.RespondMessage(ctx, w, http.StatusBadRequest, "newState is required")
+		return
+	}
+
+	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
+		MonitorID: monitorID,
+	})
+	if !ok {
+		return
+	}
+
+	serviceErr := services.MonitorService.UpdateMonitorStateByID(ctx, projectAuth, monitorUUID, monitors.MonitorState(payload.NewState))
+	if serviceErr != nil {
+		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
+		return
+	}
+
+	util.RespondMessage(ctx, w, http.StatusOK, "Monitor state updated successfully")
 }
