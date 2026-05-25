@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getMonitorBySlug,
-  updateMonitorState
+  updateMonitorState,
 } from "@/lib/data/monitorData.ts";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
 import {
   TypographyH1,
-  TypographyH2
+  TypographyH2,
 } from "@/components/leszmonitor/ui/Typography.tsx";
 import type { Pagination } from "@/lib/types.ts";
 import { MonitorResultsList } from "@/components/leszmonitor/MonitorResultsList.tsx";
@@ -22,20 +22,20 @@ import { PauseIcon, PlayIcon, TrashIcon } from "lucide-react";
 import { MonitorStatusPill } from "@/components/leszmonitor/MonitorStatusPill.tsx";
 
 export const Route = createFileRoute(
-  "/_authenticated/projects/$projectId/monitors/$monitorSlug/"
+  "/_authenticated/projects/$projectId/monitors/$monitorSlug/",
 )({
-  component: RouteComponent
+  component: RouteComponent,
 });
 
 function RouteComponent() {
   const pagination: Pagination = {
     page: 1,
-    perPage: 20
+    perPage: 20,
   };
 
   const largePagination: Pagination = {
     page: 1,
-    perPage: 100
+    perPage: 100,
   };
 
   const { projectId, monitorSlug } = Route.useParams();
@@ -44,13 +44,13 @@ function RouteComponent() {
 
   const { data: monitor } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS, monitorSlug, projectId],
-    queryFn: () => getMonitorBySlug(projectId, monitorSlug)
+    queryFn: () => getMonitorBySlug(projectId, monitorSlug),
   });
 
   const { data: monitorResults } = useQuery({
     enabled: !!monitor,
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", largePagination],
-    queryFn: () => getMonitorResultsByMonitorId(monitor!.id, largePagination)
+    queryFn: () => getMonitorResultsByMonitorId(monitor!.id, largePagination),
   });
 
   const mutation = useMutation({
@@ -59,9 +59,9 @@ function RouteComponent() {
       updateMonitorState(monitor!.id, isPaused ? "active" : "paused"),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.MONITORS, monitorSlug, projectId]
+        queryKey: [QUERY_KEYS.MONITORS, monitorSlug, projectId],
       });
-    }
+    },
   });
 
   if (!monitor) {
@@ -79,26 +79,13 @@ function RouteComponent() {
       <TypographyH1>{monitor.name}</TypographyH1>
       <Flex direction="row" className="gap-4">
         <ButtonGroup>
-          {isPaused ? (
-            <Button
-              variant="outline"
-              className="size-10"
-              disabled={!isPaused}
-              onClick={handleToggleMonitorState}
-            >
-              <PlayIcon />
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              className="size-10"
-              disabled={isPaused}
-              onClick={handleToggleMonitorState}
-            >
-              <PauseIcon />
-            </Button>
-          )}
-
+          <Button
+            variant="outline"
+            className="size-10"
+            onClick={handleToggleMonitorState}
+          >
+            {isPaused ? <PlayIcon /> : <PauseIcon />}
+          </Button>
           <Button variant="destructive" className="size-10">
             <TrashIcon />
           </Button>
