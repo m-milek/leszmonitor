@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     interval                 INT  NOT NULL CHECK (interval > 0),       -- in seconds
     kind                     TEXT NOT NULL,
     result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
+    state                    TEXT NOT NULL,
     config                   TEXT NOT NULL CHECK (JSON_VALID(config)), -- JSON string
 
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,

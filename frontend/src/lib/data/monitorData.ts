@@ -89,6 +89,24 @@ export const updateMonitor = async (
   return res.json();
 };
 
+export const updateMonitorState = async (
+  monitorId: string,
+  newState: string,
+) => {
+  const res = await authFetch(
+    `${BACKEND_API_URL}/monitors/${monitorId}/state`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newState }),
+    },
+  );
+
+  return res.json();
+};
+
 export const deleteMonitor = async (projectId: string, monitorId: string) => {
   await authFetch(
     `${BACKEND_API_URL}/projects/${projectId}/monitors/${monitorId}`,

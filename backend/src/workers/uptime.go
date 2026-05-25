@@ -111,7 +111,7 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 							tickerChangedChannel <- struct{}{}
 						}
 
-					case monitors.Deleted, monitors.Stopped:
+					case monitors.Deleted:
 						logger.Info().Str("id", monitor.ID.String()).Str("name", monitor.Name).Msgf("Stopping monitor due to deletion or disablement")
 						cancelSelf()
 						shouldExit = true
@@ -136,6 +136,11 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 			continue
 		case <-ticker.C:
 			func() {
+				if monitor.State != monitors.MonitorStateActive {
+					logger.Trace().Str("id", monitor.ID.String()).Str("name", monitor.Name).Str("state", string(monitor.State)).Msgf("Skipping monitor run - monitor is not active")
+					return
+				}
+
 				monitorMutex.Lock()
 				defer monitorMutex.Unlock()
 

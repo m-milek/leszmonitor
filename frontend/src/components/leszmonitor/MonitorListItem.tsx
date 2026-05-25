@@ -9,6 +9,7 @@ import { StatusDot } from "@/components/leszmonitor/ui/StatusDot.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 import { getLatestMonitorResultByMonitorId } from "@/lib/data/monitorResultsData.ts";
 import { useQuery } from "@tanstack/react-query";
+import { MonitorStatusPill } from "@/components/leszmonitor/MonitorStatusPill.tsx";
 
 const getDotStatus = (isSuccess: boolean | undefined) => {
   if (isSuccess === undefined) {
@@ -25,14 +26,14 @@ export interface MonitorListItemProps {
 }
 
 export function MonitorListItem({
-  monitor,
-  projectId,
-  onDeleteMonitor,
-  navigateToEditMonitor,
-}: Readonly<MonitorListItemProps>) {
+                                  monitor,
+                                  projectId,
+                                  onDeleteMonitor,
+                                  navigateToEditMonitor
+                                }: Readonly<MonitorListItemProps>) {
   const { data: lastResultData } = useQuery({
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id],
-    queryFn: () => getLatestMonitorResultByMonitorId(monitor.id),
+    queryFn: () => getLatestMonitorResultByMonitorId(monitor.id)
   });
 
   const dotStatus = getDotStatus(lastResultData?.isSuccess);
@@ -51,6 +52,7 @@ export function MonitorListItem({
                 {monitor.name}
               </StyledLink>
             </TypographyH3>
+            <MonitorStatusPill monitor={monitor} />
           </Flex>
           <Flex direction="row">
             <Button

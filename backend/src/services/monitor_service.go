@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/authorization"
@@ -46,12 +45,9 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *author
 		return nil, authErr
 	}
 
-	monitor.ID = uuid.New()
-	monitor.ProjectID = project.ID
-	monitor.GenerateSlug()
-	monitor.ResultRetentionSeconds = int((12 * time.Hour).Seconds()) // TODO: Make this configurable later
+	initializedMonitor := monitors.InitializeFromPayload(monitor, project.ID)
 
-	if err := monitor.Validate(); err != nil {
+	if err := initializedMonitor.Validate(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid monitor configuration")
 		return nil, &ServiceError{
 			Code: http.StatusBadRequest,
@@ -59,7 +55,7 @@ func (s *MonitorServiceT) CreateMonitor(ctx context.Context, projectAuth *author
 		}
 	}
 
-	dbRes, createErr := s.getDB().Monitors().InsertMonitor(ctx, monitor)
+	dbRes, createErr := s.getDB().Monitors().InsertMonitor(ctx, *initializedMonitor)
 	if createErr != nil {
 		logger.Error().Err(createErr).Msg("Failed to add monitor to database")
 		return nil, &ServiceError{
@@ -142,6 +138,7 @@ func (s *MonitorServiceT) GetMonitorByID(ctx context.Context, projectAuth *autho
 		return nil, authErr
 	}
 
+	// TODO fix - monitor ID uses slug - bug. This method is not used by the frontend
 	monitor, err := s.getDB().Monitors().GetMonitorBySlug(ctx, id, projectAuth.ProjectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
@@ -176,7 +173,7 @@ func (s *MonitorServiceT) UpdateMonitor(ctx context.Context, projectAuth *author
 	_, err := s.getDB().Monitors().UpdateMonitor(ctx, monitor)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found", monitor.ID)}
+			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with ID %s not found", monitor.ID)}
 		}
 		logger.Error().Err(err).Msg("Failed to update monitor in database")
 		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor: %w", err)}
@@ -210,4 +207,47 @@ func (s *MonitorServiceT) GetMonitorBySlugByProject(ctx context.Context, auth *a
 
 	logger.Debug().Str("slug", slug).Str("projectID", auth.ProjectID.String()).Msg("Monitor retrieved by slug and project")
 	return monitor, nil
+}
+
+func (s *MonitorServiceT) UpdateMonitorStateByID(ctx context.Context, auth *authorization.ProjectAuthorization, monitorID uuid.UUID, state monitors.MonitorState) *ServiceError {
+	logger := s.getMethodLogger("UpdateMonitorStateByID")
+
+	if !monitors.IsValidMonitorState(string(state)) {
+		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Invalid monitor state provided")
+		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor state: %s", state)}
+	}
+
+	_, authErr := s.authService.authorizeProjectAction(ctx, auth, models.PermissionMonitorEditor)
+	if authErr != nil {
+		return authErr
+	}
+
+	monitor, err := s.getDB().Monitors().GetMonitorByID(ctx, monitorID)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with ID %s not found", monitorID.String())}
+		}
+		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor for state update: %w", err)}
+	}
+
+	if monitor.State == state {
+		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Monitor state is already in the desired state, no update needed")
+		return nil
+	}
+
+	monitor.State = state
+
+	_, updateErr := s.getDB().Monitors().UpdateMonitor(ctx, *monitor)
+	if updateErr != nil {
+		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor state in database: %w", updateErr)}
+	}
+
+	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+		ID:      monitor.ID,
+		Monitor: monitor,
+		Status:  monitors.Edited,
+	})
+
+	logger.Info().Str("id", monitorID.String()).Str("newState", string(state)).Msg("Monitor state updated")
+	return nil
 }

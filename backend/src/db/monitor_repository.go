@@ -34,7 +34,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 	return dbWrap(ctx, "GetMonitorsByProjectID", func() ([]monitors.Monitor, error) {
 		var allMonitors []monitors.Monitor
 		err := r.pool.SelectContext(ctx, &allMonitors,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at, m.project_id
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at, m.project_id
 			 FROM monitors m
 			 WHERE m.project_id = $1`,
 			projectID)
@@ -52,7 +52,7 @@ func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string, p
 	return dbWrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
 		err := r.pool.GetContext(ctx, &monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 
 			   AND m.project_id = $2`,
@@ -73,7 +73,7 @@ func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*
 	return dbWrap(ctx, "GetMonitorByID", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
 		err := r.pool.GetContext(ctx, &monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.id = $1`, id)
 		if err != nil {
@@ -90,7 +90,7 @@ func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Moni
 	return dbWrap(ctx, "GetAllMonitors", func() ([]monitors.Monitor, error) {
 		var allMonitors []monitors.Monitor
 		err := r.pool.SelectContext(ctx, &allMonitors,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m`)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
@@ -126,8 +126,8 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 		}
 
 		_, err := r.pool.ExecContext(ctx,
-			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, result_retention_seconds,config)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, result_retention_seconds, state, config)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			id,
 			monitor.Slug,
 			monitor.ProjectID,
@@ -136,6 +136,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			monitor.Interval,
 			monitor.Type,
 			monitor.ResultRetentionSeconds,
+			monitor.State,
 			monitor.ProbeConfig,
 		)
 		if err != nil {
@@ -153,14 +154,15 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 	return dbWrap(ctx, "UpdateMonitor", func() (any, error) {
 		res, err := r.pool.ExecContext(ctx,
 			`UPDATE monitors
-			SET slug=$1, project_id=(SELECT p.id FROM projects p WHERE p.slug=$2), name=$3, description=$4, interval=$5, kind=$6, config=$7
-			WHERE id=$8`,
+			SET slug=$1, project_id=$2, name=$3, description=$4, interval=$5, kind=$6, state=$7, config=$8
+			WHERE id=$9`,
 			newMonitor.Slug,
 			newMonitor.ProjectID,
 			newMonitor.Name,
 			newMonitor.Description,
 			newMonitor.Interval,
 			newMonitor.Type,
+			newMonitor.State,
 			newMonitor.ProbeConfig,
 			newMonitor.ID,
 		)
@@ -187,7 +189,7 @@ func (r *monitorRepository) GetMonitorBySlugByProject(ctx context.Context, slug 
 	return dbWrap(ctx, "GetMonitorBySlugByProject", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
 		err := r.pool.GetContext(ctx, &monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 
 			   AND m.project_id = $2`,

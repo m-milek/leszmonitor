@@ -38,6 +38,7 @@ func SetupRouters(
 	protectedRouter.HandleFunc("GET /api/v1/monitors/{monitorId}", handlers.GetMonitorByIDHandler)
 	protectedRouter.HandleFunc("DELETE /api/v1/monitors/{monitorId}", handlers.DeleteMonitorHandler)
 	protectedRouter.HandleFunc("PATCH /api/v1/monitors/{monitorId}", handlers.UpdateMonitorHandler)
+	protectedRouter.HandleFunc("PATCH /api/v1/monitors/{monitorId}/state", handlers.UpdateMonitorStateByIDHandler)
 	protectedRouter.HandleFunc("GET /api/v1/projects/{projectSlug}/monitors/{monitorSlug}", handlers.GetMonitorBySlugByProject)
 
 	// Monitor Results
