@@ -99,6 +99,7 @@ export function MonitorForm({
   const monitorTypeSelectItems: { value: MonitorType; label: string }[] = [
     { value: "http", label: "HTTP" },
     { value: "tcp", label: "TCP" },
+    { value: "dns", label: "DNS" },
   ];
 
   return (

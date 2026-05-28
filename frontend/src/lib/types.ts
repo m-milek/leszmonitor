@@ -55,7 +55,7 @@ export interface Monitor extends Timestamps {
 const monitorStates = ["active", "paused"] as const;
 export type MonitorState = (typeof monitorStates)[number];
 
-const monitorTypes = ["http", "tcp"] as const;
+const monitorTypes = ["http", "tcp", "dns"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
 
 export const isValidMonitorType = (value: string): value is MonitorType => {
@@ -116,6 +116,13 @@ export const tcpMonitorConfigSchema = z.object({
   retryCount: z.number().min(0, "Retry count cannot be negative"),
 });
 
+const recordTypes = ["A", "AAAA", "CNAME", "MX", "TXT", "NS"] as const;
+export type DnsRecordType = (typeof recordTypes)[number];
+export const dnsMonitorConfigSchema = z.object({
+  hostname: z.string().min(1, "Hostname is required"),
+  recordType: z.enum(recordTypes),
+});
+
 const baseMonitorFields = {
   name: z.string({ message: "Name is required" }).min(1, "Name is required"),
   slug: z
@@ -144,9 +151,16 @@ const tcpMonitorSchema = z.object({
   probeConfig: tcpMonitorConfigSchema.optional(),
 });
 
+const dnsMonitorSchema = z.object({
+  ...baseMonitorFields,
+  type: z.literal("dns"),
+  probeConfig: dnsMonitorConfigSchema.optional(),
+});
+
 export const newMonitorSchema = z.discriminatedUnion("type", [
   httpMonitorSchema,
   tcpMonitorSchema,
+  dnsMonitorSchema,
 ]);
 
 export type MonitorFormValues = z.infer<typeof newMonitorSchema>;
@@ -181,6 +195,10 @@ export const defaultConfigs: Record<
     protocol: "tcp",
     timeout: 5000,
     retryCount: 3,
+  },
+  dns: {
+    hostname: "",
+    recordType: "A",
   },
 };
 

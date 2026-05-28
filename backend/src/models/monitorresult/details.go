@@ -17,6 +17,12 @@ type IMonitorResultDetails interface {
 	implDetails()
 }
 
+type DNSResultDetails struct {
+	ResolvedRecords []any `json:"resolvedRecords,omitempty"`
+}
+
 func (*HttpResultDetails) implDetails() {}
 
 func (*TCPResultDetails) implDetails() {}
+
+func (*DNSResultDetails) implDetails() {}

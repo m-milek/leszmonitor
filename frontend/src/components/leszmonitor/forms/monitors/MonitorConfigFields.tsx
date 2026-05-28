@@ -1,6 +1,7 @@
 import { HttpMonitorConfigFields } from "@/components/leszmonitor/forms/monitors/HttpMonitorConfigFields.tsx";
 import { TcpMonitorConfigFields } from "@/components/leszmonitor/forms/monitors/TcpMonitorConfigFields.tsx";
 import type { MonitorFormApi } from "@/hooks/useMonitorForm.ts";
+import { DnsMonitorConfigFields } from "@/components/leszmonitor/forms/monitors/DnsMonitorConfigFields.tsx";
 
 export function MonitorConfigFields({
   form,
@@ -14,6 +15,8 @@ export function MonitorConfigFields({
             return <HttpMonitorConfigFields form={form} />;
           case "tcp":
             return <TcpMonitorConfigFields form={form} />;
+          case "dns":
+            return <DnsMonitorConfigFields form={form} />;
           default:
             return null;
         }
