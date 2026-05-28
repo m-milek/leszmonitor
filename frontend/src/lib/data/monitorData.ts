@@ -107,11 +107,8 @@ export const updateMonitorState = async (
   return res.json();
 };
 
-export const deleteMonitor = async (projectId: string, monitorId: string) => {
-  await authFetch(
-    `${BACKEND_API_URL}/projects/${projectId}/monitors/${monitorId}`,
-    {
-      method: "DELETE",
-    },
-  );
+export const deleteMonitor = async (monitorId: string) => {
+  await authFetch(`${BACKEND_API_URL}/monitors/${monitorId}`, {
+    method: "DELETE",
+  });
 };

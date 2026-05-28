@@ -14,7 +14,7 @@ type IMonitorRepository interface {
 	GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error)
 	GetMonitorBySlug(ctx context.Context, slug string, projectID uuid.UUID) (*monitors.Monitor, error)
 	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error)
-	DeleteMonitorBySlug(ctx context.Context, slug string) (*uuid.UUID, error)
+	DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error)
 	InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error)
 	UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (interface{}, error)
 	GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error)
@@ -102,10 +102,10 @@ func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Moni
 	})
 }
 
-func (r *monitorRepository) DeleteMonitorBySlug(ctx context.Context, slug string) (*uuid.UUID, error) {
+func (r *monitorRepository) DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error) {
 	return dbWrap(ctx, "DeleteMonitor", func() (*uuid.UUID, error) {
 		var id uuid.UUID
-		err := r.pool.QueryRowxContext(ctx, `DELETE FROM monitors WHERE slug = $1 RETURNING id`, slug).Scan(&id)
+		err := r.pool.QueryRowxContext(ctx, `DELETE FROM monitors WHERE id = $1 RETURNING id`, monitorID.String()).Scan(&id)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound

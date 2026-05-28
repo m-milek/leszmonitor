@@ -84,7 +84,13 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *author
 		return authErr
 	}
 
-	deletedID, err := s.getDB().Monitors().DeleteMonitorBySlug(ctx, id)
+	monitorUUID, err := uuid.Parse(id)
+	if err != nil {
+		logger.Warn().Str("id", id).Msg("Invalid monitor ID format")
+		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor ID format: %w", err)}
+	}
+
+	deletedID, err := s.getDB().Monitors().DeleteMonitorByID(ctx, monitorUUID)
 	if err != nil {
 		logger.Error().Err(err).Str("id", id).Msg("Failed to delete monitor from database")
 		return &ServiceError{

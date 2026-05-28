@@ -8,6 +8,7 @@ import {
 } from "@/components/leszmonitor/forms/inputs/utils.ts";
 import type { DnsRecordType } from "@/lib/types.ts";
 import type { MonitorFormApi } from "@/hooks/useMonitorForm";
+import { LMListInput } from "@/components/leszmonitor/forms/inputs/LMListInput.tsx";
 
 const dnsRecordOptions = [
   { value: "A", label: "A" },
@@ -57,6 +58,23 @@ export function DnsMonitorConfigFields({
               }
               placeholder="Select Record Type"
               items={dnsRecordOptions}
+              isInvalid={isFieldInvalid(field)}
+              errorMessage={getFirstError(field)}
+            />
+          </Field>
+        )}
+      />
+
+      <form.Field
+        name="probeConfig.expectedRecordValues"
+        children={(field) => (
+          <Field>
+            <FieldLabel>Expected Record Values</FieldLabel>
+            <LMListInput
+              name={field.name}
+              value={field.state.value}
+              onChange={(value) => field.handleChange(value)}
+              placeholder="Record Value"
               isInvalid={isFieldInvalid(field)}
               errorMessage={getFirstError(field)}
             />

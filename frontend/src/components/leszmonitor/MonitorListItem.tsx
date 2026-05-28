@@ -26,14 +26,14 @@ export interface MonitorListItemProps {
 }
 
 export function MonitorListItem({
-                                  monitor,
-                                  projectId,
-                                  onDeleteMonitor,
-                                  navigateToEditMonitor
-                                }: Readonly<MonitorListItemProps>) {
+  monitor,
+  projectId,
+  onDeleteMonitor,
+  navigateToEditMonitor,
+}: Readonly<MonitorListItemProps>) {
   const { data: lastResultData } = useQuery({
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id],
-    queryFn: () => getLatestMonitorResultByMonitorId(monitor.id)
+    queryFn: () => getLatestMonitorResultByMonitorId(monitor.id),
   });
 
   const dotStatus = getDotStatus(lastResultData?.isSuccess);
@@ -65,7 +65,7 @@ export function MonitorListItem({
             <Button
               variant="ghost"
               size="icon-lg"
-              onClick={() => onDeleteMonitor(monitor.slug)}
+              onClick={() => onDeleteMonitor(monitor.id)}
             >
               <LucideTrash2 className="size-5 text-destructive" />
             </Button>

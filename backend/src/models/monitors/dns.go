@@ -27,30 +27,11 @@ const (
 )
 
 type DNSProbe struct {
-	Hostname       string        `json:"hostname"`
-	DNSServer      string        `json:"dnsServer,omitempty"`
-	RecordType     DNSRecordType `json:"recordType"`
-	ExpectedValues any           `json:"expectedValues"`
+	Hostname             string        `json:"hostname"`
+	DNSServer            string        `json:"dnsServer,omitempty"`
+	RecordType           DNSRecordType `json:"recordType"`
+	ExpectedRecordValues []string      `json:"expectedRecordValues"`
 }
-
-type DNSMXExpectedRecord struct {
-	Host     string `json:"host"`
-	Priority uint16 `json:"priority"`
-}
-
-type DNSSRVExpectedRecord struct {
-	Target   string `json:"target"`
-	Port     uint16 `json:"port"`
-	Priority uint16 `json:"priority"`
-	Weight   uint16 `json:"weight"`
-}
-
-type DNSAExpectedValues []string
-type DNSAAAAExpectedValues []string
-type DNSTXTExpectedValues []string
-type DNSMXExpectedValues []DNSMXExpectedRecord
-type DNSNSExpectedValues []string
-type DNSSRVExpectedValues []DNSSRVExpectedRecord
 
 type DNSCNAMEExpectedValues struct {
 	CNAME string `json:"cname"`
@@ -75,15 +56,15 @@ func earlyErrorWithErr(result monitorresult.IMonitorResult, logger *zerolog.Logg
 // checkExpected iterates over expected values and checks if each one is found in the resolved set.
 // toStr converts a resolved record to a string for comparison.
 // desc is used in error messages (e.g. "A", "AAAA", "TXT").
-func checkExpected[E any, R any](
+func checkExpected[R any](
 	result monitorresult.IMonitorResult,
 	logger *zerolog.Logger,
 	details *monitorresult.DNSResultDetails,
-	expectedValues []E,
+	expectedValues []string,
 	resolvedRecords []R,
 	recordToAny func(R) any,
-	matches func(R, E) bool,
-	notFoundMsg func(E) string,
+	matches func(R, string) bool,
+	notFoundMsg func(string) string,
 ) {
 	for _, r := range resolvedRecords {
 		details.ResolvedRecords = append(details.ResolvedRecords, recordToAny(r))
@@ -113,17 +94,17 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 	resolver := makeResolver(p.DNSServer)
 	rt := string(p.RecordType)
 
+	startTime := time.Now()
+	var endTime time.Time
+
 	switch p.RecordType {
 	case DNSRecordTypeA:
-		expectedValues, ok := p.ExpectedValues.(DNSAExpectedValues)
-		if !ok {
-			return earlyError(result, logger, "Invalid expected values for A record type", "Expected values type assertion failed for A record type")
-		}
 		ips, err := resolver.LookupIP(ctx, "ip4", p.Hostname)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup A records: %s", err.Error()), err, "A record lookup failed")
 		}
-		checkExpected(result, logger, details, expectedValues, ips,
+		checkExpected(result, logger, details, p.ExpectedRecordValues, ips,
 			func(ip net.IP) any { return ip.String() },
 			func(ip net.IP, expected string) bool { return ip.String() == expected },
 			func(expected string) string {
@@ -132,15 +113,12 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		)
 
 	case DNSRecordTypeAAAA:
-		expectedValues, ok := p.ExpectedValues.(DNSAAAAExpectedValues)
-		if !ok {
-			return earlyError(result, logger, "Invalid expected values for AAAA record type", "Expected values type assertion failed for AAAA record type")
-		}
 		ips, err := resolver.LookupIP(ctx, "ip6", p.Hostname)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup AAAA records: %s", err.Error()), err, "AAAA record lookup failed")
 		}
-		checkExpected(result, logger, details, expectedValues, ips,
+		checkExpected(result, logger, details, p.ExpectedRecordValues, ips,
 			func(ip net.IP) any { return ip.String() },
 			func(ip net.IP, expected string) bool { return ip.String() == expected },
 			func(expected string) string {
@@ -149,50 +127,40 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		)
 
 	case DNSRecordTypeCNAME:
-		expectedValues, ok := p.ExpectedValues.(DNSCNAMEExpectedValues)
-		if !ok {
-			return earlyError(result, logger, "Invalid expected values for CNAME record type", "Expected values type assertion failed for CNAME record type")
-		}
 		cname, err := resolver.LookupCNAME(ctx, p.Hostname)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup CNAME record: %s", err.Error()), err, "CNAME record lookup failed")
 		}
-		details.ResolvedRecords = append(details.ResolvedRecords, cname)
-		if cname != expectedValues.CNAME {
-			msg := fmt.Sprintf("Expected CNAME record with value %s not found", expectedValues.CNAME)
-			result.AddError(msg)
-			logger.Trace().Msg(msg)
-		}
+		checkExpected(result, logger, details, p.ExpectedRecordValues, []string{cname},
+			func(cname string) any { return cname },
+			func(cname string, expected string) bool { return cname == expected },
+			func(expected string) string {
+				return fmt.Sprintf("Expected CNAME record with value %s not found", expected)
+			},
+		)
 
 	case DNSRecordTypeMX:
-		expectedValues, ok := p.ExpectedValues.(DNSMXExpectedValues)
-		if !ok {
-			return earlyError(result, logger, "Invalid expected values for MX record type", "Expected values type assertion failed for MX record type")
-		}
 		mxRecords, err := resolver.LookupMX(ctx, p.Hostname)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup MX records: %s", err.Error()), err, "MX record lookup failed")
 		}
-		checkExpected(result, logger, details, expectedValues, mxRecords,
-			func(mx *net.MX) any { return mx },
-			func(mx *net.MX, expected DNSMXExpectedRecord) bool {
-				return mx.Host == expected.Host && mx.Pref == expected.Priority
-			},
-			func(expected DNSMXExpectedRecord) string {
-				return fmt.Sprintf("Expected MX record with host %s and priority %d not found", expected.Host, expected.Priority)
+		checkExpected(result, logger, details, p.ExpectedRecordValues, mxRecords,
+			func(mx *net.MX) any { return fmt.Sprintf("%s:%d", mx.Host, mx.Pref) },
+			func(mx *net.MX, expected string) bool { return fmt.Sprintf("%s:%d", mx.Host, mx.Pref) == expected },
+			func(expected string) string {
+				return fmt.Sprintf("Expected MX record with value %s not found", expected)
 			},
 		)
 
 	case DNSRecordTypeTXT:
-		expectedValues, ok := p.ExpectedValues.(DNSTXTExpectedValues)
-		if !ok {
-			return earlyError(result, logger, "Invalid expected values for TXT record type", "Expected values type assertion failed for TXT record type")
-		}
 		txtRecords, err := resolver.LookupTXT(ctx, p.Hostname)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup TXT records: %s", err.Error()), err, "TXT record lookup failed")
 		}
-		checkExpected(result, logger, details, expectedValues, txtRecords,
+		checkExpected(result, logger, details, p.ExpectedRecordValues, txtRecords,
 			func(txt string) any { return txt },
 			func(txt string, expected string) bool { return txt == expected },
 			func(expected string) string {
@@ -201,16 +169,13 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		)
 
 	case DNSRecordTypeNS:
-		expectedValues, ok := p.ExpectedValues.(DNSNSExpectedValues)
-		if !ok {
-			return earlyError(result, logger, "Invalid expected values for NS record type", "Expected values type assertion failed for NS record type")
-		}
 		nsRecords, err := resolver.LookupNS(ctx, p.Hostname)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup NS records: %s", err.Error()), err, "NS record lookup failed")
 		}
-		checkExpected(result, logger, details, expectedValues, nsRecords,
-			func(ns *net.NS) any { return ns },
+		checkExpected(result, logger, details, p.ExpectedRecordValues, nsRecords,
+			func(ns *net.NS) any { return ns.Host },
 			func(ns *net.NS, expected string) bool { return ns.Host == expected },
 			func(expected string) string {
 				return fmt.Sprintf("Expected NS record with value %s not found", expected)
@@ -218,11 +183,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		)
 
 	case DNSRecordTypeSRV:
-		expectedValues, ok := p.ExpectedValues.(DNSSRVExpectedValues)
-		if !ok {
-			return earlyError(result, logger, "Invalid expected values for SRV record type", "Expected values type assertion failed for SRV record type")
-		}
 		service, proto, name, err := splitSRVHostname(p.Hostname)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, err.Error(), err, "SRV record name parsing failed")
 		}
@@ -230,19 +192,23 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup SRV records: %s", err.Error()), err, "SRV record lookup failed")
 		}
-		checkExpected(result, logger, details, expectedValues, srvRecords,
-			func(srv *net.SRV) any { return srv },
-			func(srv *net.SRV, expected DNSSRVExpectedRecord) bool { return srvMatchesExpected(srv, expected) },
-			func(expected DNSSRVExpectedRecord) string {
-				return fmt.Sprintf("Expected SRV record with target %s and port %d not found", expected.Target, expected.Port)
+		checkExpected(result, logger, details, p.ExpectedRecordValues, srvRecords,
+			func(srv *net.SRV) any { return fmt.Sprintf("%s:%d", srv.Target, srv.Port) },
+			func(srv *net.SRV, expected string) bool {
+				return fmt.Sprintf("%s:%d", srv.Target, srv.Port) == expected
+			},
+			func(expected string) string {
+				return fmt.Sprintf("Expected SRV record with value %s not found", expected)
 			},
 		)
 
 	default:
 		result.AddError(fmt.Sprintf("Unsupported DNS record type: %s", rt))
-		logger.Trace().Msgf("Unsupported DNS record type: %s", rt)
+		logger.Error().Msgf("Unsupported DNS record type: %s", rt)
 		result.SetDuration(0)
 	}
+
+	result.SetDuration(endTime.Sub(startTime).Milliseconds())
 
 	return result
 }
@@ -254,35 +220,36 @@ func (p *DNSProbe) Validate() error {
 	if p.RecordType == "" {
 		return fmt.Errorf("record type cannot be empty")
 	}
+	if p.ExpectedRecordValues == nil {
+		return fmt.Errorf("expected values must be defined")
+	}
+
 	return nil
 }
 
-func makeResolver(DNSServer string) *net.Resolver {
+func makeResolver(dnsServer string) *net.Resolver {
+	if dnsServer == "" {
+		return net.DefaultResolver
+	}
+
+	// Handle case where port is already included
+	host, port, err := net.SplitHostPort(dnsServer)
+	if err != nil {
+		// No port present, default to 53
+		host = dnsServer
+		port = "53"
+	}
+	addr := net.JoinHostPort(host, port)
+
 	return &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 			d := net.Dialer{
-				Timeout: time.Millisecond * time.Duration(10000),
+				Timeout: 10 * time.Second,
 			}
-			return d.DialContext(ctx, "udp", DNSServer)
+			return d.DialContext(ctx, "udp", addr)
 		},
 	}
-}
-
-func srvMatchesExpected(record *net.SRV, expected DNSSRVExpectedRecord) bool {
-	if record.Target != expected.Target {
-		return false
-	}
-	if expected.Port != 0 && record.Port != expected.Port {
-		return false
-	}
-	if expected.Priority != 0 && record.Priority != expected.Priority {
-		return false
-	}
-	if expected.Weight != 0 && record.Weight != expected.Weight {
-		return false
-	}
-	return true
 }
 
 func splitSRVHostname(hostname string) (string, string, string, error) {

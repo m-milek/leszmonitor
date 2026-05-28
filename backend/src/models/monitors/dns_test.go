@@ -10,10 +10,10 @@ import (
 func TestDNSProbeRun(t *testing.T) {
 	t.Run("Runs A record probe", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "dns.google",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeA,
-			ExpectedValues: DNSAExpectedValues{"8.8.8.8"},
+			Hostname:             "dns.google",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeA,
+			ExpectedRecordValues: DNSAExpectedValues{"8.8.8.8"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -32,10 +32,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Runs AAAA record probe", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "dns.google",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeAAAA,
-			ExpectedValues: DNSAAAAExpectedValues{"2001:4860:4860::8888"},
+			Hostname:             "dns.google",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeAAAA,
+			ExpectedRecordValues: DNSAAAAExpectedValues{"2001:4860:4860::8888"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -54,10 +54,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Runs CNAME record probe", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "www.github.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeCNAME,
-			ExpectedValues: DNSCNAMEExpectedValues{CNAME: "github.com."},
+			Hostname:             "www.github.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeCNAME,
+			ExpectedRecordValues: DNSCNAMEExpectedValues{CNAME: "github.com."},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -79,7 +79,7 @@ func TestDNSProbeRun(t *testing.T) {
 			Hostname:   "gmail.com",
 			DNSServer:  "8.8.8.8:53",
 			RecordType: DNSRecordTypeMX,
-			ExpectedValues: DNSMXExpectedValues{
+			ExpectedRecordValues: DNSMXExpectedValues{
 				{Host: "gmail-smtp-in.l.google.com.", Priority: 5},
 			},
 		}
@@ -100,10 +100,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Runs TXT record probe", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "example.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeTXT,
-			ExpectedValues: DNSTXTExpectedValues{"v=spf1 -all"},
+			Hostname:             "example.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeTXT,
+			ExpectedRecordValues: DNSTXTExpectedValues{"v=spf1 -all"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -122,10 +122,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Runs NS record probe", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "google.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeNS,
-			ExpectedValues: DNSNSExpectedValues{"ns1.google.com."},
+			Hostname:             "google.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeNS,
+			ExpectedRecordValues: DNSNSExpectedValues{"ns1.google.com."},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -147,7 +147,7 @@ func TestDNSProbeRun(t *testing.T) {
 			Hostname:   "_minecraft._tcp.hypixel.net",
 			DNSServer:  "8.8.8.8:53",
 			RecordType: DNSRecordTypeSRV,
-			ExpectedValues: DNSSRVExpectedValues{
+			ExpectedRecordValues: DNSSRVExpectedValues{
 				{Target: "mc.hypixel.net.", Port: 25565, Priority: 0, Weight: 0},
 			},
 		}
@@ -168,10 +168,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails A record probe with wrong expected value", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "dns.google",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeA,
-			ExpectedValues: DNSAExpectedValues{"1.2.3.4"},
+			Hostname:             "dns.google",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeA,
+			ExpectedRecordValues: DNSAExpectedValues{"1.2.3.4"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -182,10 +182,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails A record probe with invalid expected values type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "dns.google",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeA,
-			ExpectedValues: "not-a-slice",
+			Hostname:             "dns.google",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeA,
+			ExpectedRecordValues: "not-a-slice",
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -196,10 +196,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails A record probe with unresolvable hostname", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "this.hostname.definitely.does.not.exist.invalid",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeA,
-			ExpectedValues: DNSAExpectedValues{"1.2.3.4"},
+			Hostname:             "this.hostname.definitely.does.not.exist.invalid",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeA,
+			ExpectedRecordValues: DNSAExpectedValues{"1.2.3.4"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -210,10 +210,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails A record probe with unreachable DNS server", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "dns.google",
-			DNSServer:      "192.0.2.1:53", // non-routable
-			RecordType:     DNSRecordTypeA,
-			ExpectedValues: DNSAExpectedValues{"8.8.8.8"},
+			Hostname:             "dns.google",
+			DNSServer:            "192.0.2.1:53", // non-routable
+			RecordType:           DNSRecordTypeA,
+			ExpectedRecordValues: DNSAExpectedValues{"8.8.8.8"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -224,10 +224,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails AAAA record probe with wrong expected value", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "dns.google",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeAAAA,
-			ExpectedValues: DNSAAAAExpectedValues{"::1"},
+			Hostname:             "dns.google",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeAAAA,
+			ExpectedRecordValues: DNSAAAAExpectedValues{"::1"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -238,10 +238,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails AAAA record probe with invalid expected values type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "dns.google",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeAAAA,
-			ExpectedValues: 12345,
+			Hostname:             "dns.google",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeAAAA,
+			ExpectedRecordValues: 12345,
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -252,10 +252,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails CNAME record probe with wrong expected value", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "www.github.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeCNAME,
-			ExpectedValues: DNSCNAMEExpectedValues{CNAME: "wrong.example.com."},
+			Hostname:             "www.github.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeCNAME,
+			ExpectedRecordValues: DNSCNAMEExpectedValues{CNAME: "wrong.example.com."},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -266,10 +266,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails CNAME record probe with invalid expected values type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "www.github.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeCNAME,
-			ExpectedValues: []string{"wrong"},
+			Hostname:             "www.github.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeCNAME,
+			ExpectedRecordValues: []string{"wrong"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -283,7 +283,7 @@ func TestDNSProbeRun(t *testing.T) {
 			Hostname:   "gmail.com",
 			DNSServer:  "8.8.8.8:53",
 			RecordType: DNSRecordTypeMX,
-			ExpectedValues: DNSMXExpectedValues{
+			ExpectedRecordValues: DNSMXExpectedValues{
 				{Host: "nonexistent-mx.example.com.", Priority: 5},
 			},
 		}
@@ -299,7 +299,7 @@ func TestDNSProbeRun(t *testing.T) {
 			Hostname:   "gmail.com",
 			DNSServer:  "8.8.8.8:53",
 			RecordType: DNSRecordTypeMX,
-			ExpectedValues: DNSMXExpectedValues{
+			ExpectedRecordValues: DNSMXExpectedValues{
 				{Host: "gmail-smtp-in.l.google.com.", Priority: 999},
 			},
 		}
@@ -312,10 +312,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails MX record probe with invalid expected values type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "gmail.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeMX,
-			ExpectedValues: "not-valid",
+			Hostname:             "gmail.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeMX,
+			ExpectedRecordValues: "not-valid",
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -326,10 +326,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails TXT record probe with wrong expected value", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "example.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeTXT,
-			ExpectedValues: DNSTXTExpectedValues{"this-txt-record-does-not-exist"},
+			Hostname:             "example.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeTXT,
+			ExpectedRecordValues: DNSTXTExpectedValues{"this-txt-record-does-not-exist"},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -340,10 +340,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails TXT record probe with invalid expected values type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "example.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeTXT,
-			ExpectedValues: 42,
+			Hostname:             "example.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeTXT,
+			ExpectedRecordValues: 42,
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -354,10 +354,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails NS record probe with wrong expected value", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "google.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeNS,
-			ExpectedValues: DNSNSExpectedValues{"ns99.fakens.example.com."},
+			Hostname:             "google.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeNS,
+			ExpectedRecordValues: DNSNSExpectedValues{"ns99.fakens.example.com."},
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -368,10 +368,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails NS record probe with invalid expected values type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "google.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeNS,
-			ExpectedValues: true,
+			Hostname:             "google.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeNS,
+			ExpectedRecordValues: true,
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -385,7 +385,7 @@ func TestDNSProbeRun(t *testing.T) {
 			Hostname:   "_minecraft._tcp.hypixel.net",
 			DNSServer:  "8.8.8.8:53",
 			RecordType: DNSRecordTypeSRV,
-			ExpectedValues: DNSSRVExpectedValues{
+			ExpectedRecordValues: DNSSRVExpectedValues{
 				{Target: "wrong.target.example.com.", Port: 25565},
 			},
 		}
@@ -401,7 +401,7 @@ func TestDNSProbeRun(t *testing.T) {
 			Hostname:   "_minecraft._tcp.hypixel.net",
 			DNSServer:  "8.8.8.8:53",
 			RecordType: DNSRecordTypeSRV,
-			ExpectedValues: DNSSRVExpectedValues{
+			ExpectedRecordValues: DNSSRVExpectedValues{
 				{Target: "mc.hypixel.net.", Port: 9999},
 			},
 		}
@@ -414,10 +414,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails SRV record probe with invalid expected values type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "_minecraft._tcp.hypixel.net",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordTypeSRV,
-			ExpectedValues: "invalid",
+			Hostname:             "_minecraft._tcp.hypixel.net",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordTypeSRV,
+			ExpectedRecordValues: "invalid",
 		}
 
 		result := probe.Run(t.Context(), uuid.New())
@@ -431,7 +431,7 @@ func TestDNSProbeRun(t *testing.T) {
 			Hostname:   "invalid-srv-hostname",
 			DNSServer:  "8.8.8.8:53",
 			RecordType: DNSRecordTypeSRV,
-			ExpectedValues: DNSSRVExpectedValues{
+			ExpectedRecordValues: DNSSRVExpectedValues{
 				{Target: "something.", Port: 80},
 			},
 		}
@@ -444,10 +444,10 @@ func TestDNSProbeRun(t *testing.T) {
 
 	t.Run("Fails with unsupported record type", func(t *testing.T) {
 		probe := DNSProbe{
-			Hostname:       "example.com",
-			DNSServer:      "8.8.8.8:53",
-			RecordType:     DNSRecordType("UNSUPPORTED"),
-			ExpectedValues: nil,
+			Hostname:             "example.com",
+			DNSServer:            "8.8.8.8:53",
+			RecordType:           DNSRecordType("UNSUPPORTED"),
+			ExpectedRecordValues: nil,
 		}
 
 		result := probe.Run(t.Context(), uuid.New())

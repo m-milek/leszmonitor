@@ -121,6 +121,7 @@ export type DnsRecordType = (typeof recordTypes)[number];
 export const dnsMonitorConfigSchema = z.object({
   hostname: z.string().min(1, "Hostname is required"),
   recordType: z.enum(recordTypes),
+  expectedRecordValues: z.array(z.any()).default([]),
 });
 
 const baseMonitorFields = {
@@ -199,6 +200,7 @@ export const defaultConfigs: Record<
   dns: {
     hostname: "",
     recordType: "A",
+    expectedRecordValues: [],
   },
 };
 
