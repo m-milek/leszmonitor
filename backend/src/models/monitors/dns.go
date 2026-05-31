@@ -37,47 +37,6 @@ type DNSCNAMEExpectedValues struct {
 	CNAME string `json:"cname"`
 }
 
-// earlyErrorWithErr is like earlyError but includes an error in the log.
-func earlyErrorWithErr(result monitorresult.IMonitorResult, logger *zerolog.Logger, userMsg string, err error, logMsg string) monitorresult.IMonitorResult {
-	result.AddError(userMsg)
-	logger.Trace().Err(err).Msg(logMsg)
-	result.SetDuration(0)
-	return result
-}
-
-// checkExpected iterates over expected values and checks if each one is found in the resolved set.
-// toStr converts a resolved record to a string for comparison.
-// desc is used in error messages (e.g. "A", "AAAA", "TXT").
-func checkExpected[R any](
-	result monitorresult.IMonitorResult,
-	logger *zerolog.Logger,
-	details *monitorresult.DNSResultDetails,
-	expectedValues []string,
-	resolvedRecords []R,
-	recordToAny func(R) any,
-	matches func(R, string) bool,
-	notFoundMsg func(string) string,
-) {
-	for _, r := range resolvedRecords {
-		details.ResolvedRecords = append(details.ResolvedRecords, recordToAny(r))
-	}
-
-	for _, expected := range expectedValues {
-		found := false
-		for _, r := range resolvedRecords {
-			if matches(r, expected) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			msg := notFoundMsg(expected)
-			result.AddFailure(msg)
-			logger.Trace().Msg(msg)
-		}
-	}
-}
-
 func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
 	logger := log.FromContext(ctx)
 	result := monitorresult.NewMonitorResult(monitorID, consts.DNSConfigType, true, false, 0, "", &monitorresult.DNSResultDetails{})
@@ -166,11 +125,11 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 
 	case DNSRecordTypeSRV:
 		service, proto, name, err := splitSRVHostname(p.Hostname)
-		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, err.Error(), err, "SRV record name parsing failed")
 		}
 		_, srvRecords, err := resolver.LookupSRV(ctx, service, proto, name)
+		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup SRV records: %s", err.Error()), err, "SRV record lookup failed")
 		}
@@ -188,6 +147,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		result.AddError(fmt.Sprintf("Unsupported DNS record type: %s", rt))
 		logger.Error().Msgf("Unsupported DNS record type: %s", rt)
 		result.SetDuration(0)
+		return result
 	}
 
 	result.SetDuration(endTime.Sub(startTime).Milliseconds())
@@ -201,6 +161,11 @@ func (p *DNSProbe) Validate() error {
 	}
 	if p.RecordType == "" {
 		return fmt.Errorf("record type cannot be empty")
+	}
+	switch p.RecordType {
+	case DNSRecordTypeA, DNSRecordTypeAAAA, DNSRecordTypeCNAME, DNSRecordTypeMX, DNSRecordTypeTXT, DNSRecordTypeNS, DNSRecordTypeSRV:
+	default:
+		return fmt.Errorf("unsupported record type: %s", p.RecordType)
 	}
 	if p.ExpectedRecordValues == nil {
 		return fmt.Errorf("expected values must be defined")
@@ -229,7 +194,7 @@ func makeResolver(dnsServer string) *net.Resolver {
 			d := net.Dialer{
 				Timeout: 10 * time.Second,
 			}
-			return d.DialContext(ctx, "udp", addr)
+			return d.DialContext(ctx, network, addr)
 		},
 	}
 }
@@ -256,4 +221,45 @@ func dnsIPNetwork(recordType DNSRecordType) string {
 	}
 
 	return "ip4"
+}
+
+// earlyErrorWithErr is like earlyError but includes an error in the log.
+func earlyErrorWithErr(result monitorresult.IMonitorResult, logger *zerolog.Logger, userMsg string, err error, logMsg string) monitorresult.IMonitorResult {
+	result.AddError(userMsg)
+	logger.Trace().Err(err).Msg(logMsg)
+	result.SetDuration(0)
+	return result
+}
+
+// checkExpected iterates over expected values and checks if each one is found in the resolved set.
+// toStr converts a resolved record to a string for comparison.
+// desc is used in error messages (e.g. "A", "AAAA", "TXT").
+func checkExpected[R any](
+	result monitorresult.IMonitorResult,
+	logger *zerolog.Logger,
+	details *monitorresult.DNSResultDetails,
+	expectedValues []string,
+	resolvedRecords []R,
+	recordToAny func(R) any,
+	matches func(R, string) bool,
+	notFoundMsg func(string) string,
+) {
+	for _, r := range resolvedRecords {
+		details.ResolvedRecords = append(details.ResolvedRecords, recordToAny(r))
+	}
+
+	for _, expected := range expectedValues {
+		found := false
+		for _, r := range resolvedRecords {
+			if matches(r, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			msg := notFoundMsg(expected)
+			result.AddFailure(msg)
+			logger.Trace().Msg(msg)
+		}
+	}
 }

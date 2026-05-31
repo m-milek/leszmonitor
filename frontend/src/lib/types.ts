@@ -116,13 +116,13 @@ export const tcpMonitorConfigSchema = z.object({
   retryCount: z.number().min(0, "Retry count cannot be negative"),
 });
 
-const recordTypes = ["A", "AAAA", "CNAME", "MX", "TXT", "NS"] as const;
+const recordTypes = ["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SRV"] as const;
 export type DnsRecordType = (typeof recordTypes)[number];
 export const dnsMonitorConfigSchema = z.object({
   hostname: z.string().min(1, "Hostname is required"),
   dnsServer: z.string().min(1, "DNS server address is required"),
   recordType: z.enum(recordTypes),
-  expectedRecordValues: z.array(z.any()).default([]),
+  expectedRecordValues: z.array(z.string()).default([]),
 });
 
 const baseMonitorFields = {
@@ -166,8 +166,6 @@ export const newMonitorSchema = z.discriminatedUnion("type", [
 ]);
 
 export type MonitorFormValues = z.infer<typeof newMonitorSchema>;
-export type HttpMonitorFormValues = z.infer<typeof httpMonitorSchema>;
-export type TcpMonitorFormValues = z.infer<typeof tcpMonitorSchema>;
 
 export const newMonitorSchemaDefaultValues = {
   name: "",
