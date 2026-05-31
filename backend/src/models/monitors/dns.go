@@ -37,14 +37,6 @@ type DNSCNAMEExpectedValues struct {
 	CNAME string `json:"cname"`
 }
 
-// earlyError sets duration to 0, adds the error message, logs it, and returns the result.
-func earlyError(result monitorresult.IMonitorResult, logger *zerolog.Logger, userMsg, logMsg string) monitorresult.IMonitorResult {
-	result.AddError(userMsg)
-	logger.Trace().Msg(logMsg)
-	result.SetDuration(0)
-	return result
-}
-
 // earlyErrorWithErr is like earlyError but includes an error in the log.
 func earlyErrorWithErr(result monitorresult.IMonitorResult, logger *zerolog.Logger, userMsg string, err error, logMsg string) monitorresult.IMonitorResult {
 	result.AddError(userMsg)
@@ -98,31 +90,21 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 	var endTime time.Time
 
 	switch p.RecordType {
-	case DNSRecordTypeA:
-		ips, err := resolver.LookupIP(ctx, "ip4", p.Hostname)
-		endTime = time.Now()
-		if err != nil {
-			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup A records: %s", err.Error()), err, "A record lookup failed")
-		}
-		checkExpected(result, logger, details, p.ExpectedRecordValues, ips,
-			func(ip net.IP) any { return ip.String() },
-			func(ip net.IP, expected string) bool { return ip.String() == expected },
-			func(expected string) string {
-				return fmt.Sprintf("Expected A record with value %s not found", expected)
-			},
-		)
-
-	case DNSRecordTypeAAAA:
-		ips, err := resolver.LookupIP(ctx, "ip6", p.Hostname)
+	case DNSRecordTypeA, DNSRecordTypeAAAA:
+		ips, err := resolver.LookupIP(ctx, dnsIPNetwork(p.RecordType), p.Hostname)
 		endTime = time.Now()
 		if err != nil {
 			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup AAAA records: %s", err.Error()), err, "AAAA record lookup failed")
 		}
+		expectedRecordType := "A"
+		if p.RecordType == DNSRecordTypeAAAA {
+			expectedRecordType = "AAAA"
+		}
 		checkExpected(result, logger, details, p.ExpectedRecordValues, ips,
 			func(ip net.IP) any { return ip.String() },
-			func(ip net.IP, expected string) bool { return ip.String() == expected },
+			func(ip net.IP, expectedValue string) bool { return ip.String() == expectedValue },
 			func(expected string) string {
-				return fmt.Sprintf("Expected AAAA record with value %s not found", expected)
+				return fmt.Sprintf("Expected %s record with value %s not found", expectedRecordType, expected)
 			},
 		)
 
@@ -266,4 +248,12 @@ func splitSRVHostname(hostname string) (string, string, string, error) {
 	}
 
 	return service, proto, name, nil
+}
+
+func dnsIPNetwork(recordType DNSRecordType) string {
+	if recordType == DNSRecordTypeAAAA {
+		return "ip6"
+	}
+
+	return "ip4"
 }

@@ -45,6 +45,23 @@ export function DnsMonitorConfigFields({
       />
 
       <form.Field
+        name="probeConfig.dnsServer"
+        children={(field) => (
+          <Field>
+            <FieldLabel>DNS Server Address</FieldLabel>
+            <LMInputField
+              name={field.name}
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              placeholder="1.1.1.1"
+              isInvalid={isFieldInvalid(field)}
+              errorMessage={getFirstError(field)}
+            />
+          </Field>
+        )}
+      />
+
+      <form.Field
         name="probeConfig.recordType"
         children={(field) => (
           <Field>
