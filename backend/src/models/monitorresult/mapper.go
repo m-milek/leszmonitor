@@ -26,6 +26,12 @@ func ParseResultDetails(monitorType consts.ProbeType, rawDetails []byte) (IMonit
 			return nil, fmt.Errorf("failed to parse TCP result details: %w", err)
 		}
 		return &details, nil
+	case consts.DNSConfigType:
+		var details DNSResultDetails
+		if err := json.Unmarshal(rawDetails, &details); err != nil {
+			return nil, fmt.Errorf("failed to parse DNS result details: %w", err)
+		}
+		return &details, nil
 	default:
 		return nil, fmt.Errorf("unknown monitor type for result details: %s", monitorType)
 	}

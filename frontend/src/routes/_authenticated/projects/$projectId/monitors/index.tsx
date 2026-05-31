@@ -29,7 +29,7 @@ function MonitorsComponent() {
   });
 
   const { mutateAsync: deleteMutation } = useMutation({
-    mutationFn: (monitorId: string) => deleteMonitor(projectId, monitorId),
+    mutationFn: (monitorId: string) => deleteMonitor(monitorId),
   });
 
   const navigate = Route.useNavigate();

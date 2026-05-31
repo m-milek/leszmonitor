@@ -156,8 +156,13 @@ func runMonitor(ctx context.Context, cancelSelf context.CancelFunc, monitor moni
 					logger.Error().Err(err).Str("id", monitor.ID.String()).Str("name", monitor.Name).Msgf("Error unmarshalling probe config")
 					return
 				}
+				err = probe.Validate()
+				if err != nil {
+					logger.Error().Err(err).Str("id", monitor.ID.String()).Str("name", monitor.Name).Msgf("Error validating probe config")
+					return
+				}
 				result := probe.Run(ctx, monitor.ID)
-				logger.Debug().Str("id", monitor.ID.String()).Str("name", monitor.Name).Any("monitor_result", result).Msg("Monitor result")
+				logger.Info().Str("id", monitor.ID.String()).Str("name", monitor.Name).Any("monitor_result", result).Msg("Monitor result")
 
 				events.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
 					Result:  result,

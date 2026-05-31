@@ -13,6 +13,8 @@ func mapProbeType(kind consts.ProbeType) Probe {
 		return &HttpProbe{}
 	case consts.TCPConfigType:
 		return &TCPProbe{}
+	case consts.DNSConfigType:
+		return &DNSProbe{}
 	default:
 		return nil
 	}
