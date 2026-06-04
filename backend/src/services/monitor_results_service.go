@@ -19,7 +19,7 @@ func newMonitorResultsService(service baseService) *MonitorResultsServiceT {
 	return &MonitorResultsServiceT{baseService: service}
 }
 
-var MonitorResultsService = newMonitorResultsService(newBaseService(newAuthorizationService(), "MonitorResultsService"))
+var MonitorResultsService = newMonitorResultsService(newBaseService(newAuthorizationService(), newAuditLogService(), "MonitorResultsService"))
 
 func (s *MonitorResultsServiceT) GetLatestMonitorResultByMonitorID(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitorID string) (monitorresult.IMonitorResult, *ServiceError) {
 	logger := s.getMethodLogger("GetLatestMonitorResultByMonitorID")

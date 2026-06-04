@@ -7,16 +7,18 @@ import (
 )
 
 type baseService struct {
-	authService   IProjectActionAuthorizer
-	serviceLogger zerolog.Logger
-	methodLoggers map[string]zerolog.Logger
+	authService     IProjectActionAuthorizer
+	auditLogService IAuditLogService
+	serviceLogger   zerolog.Logger
+	methodLoggers   map[string]zerolog.Logger
 }
 
-func newBaseService(authService IProjectActionAuthorizer, serviceName string) baseService {
+func newBaseService(authService IProjectActionAuthorizer, auditLogService IAuditLogService, serviceName string) baseService {
 	return baseService{
-		authService:   authService,
-		serviceLogger: log.NewServiceLogger(serviceName),
-		methodLoggers: make(map[string]zerolog.Logger),
+		authService:     authService,
+		auditLogService: auditLogService,
+		serviceLogger:   log.NewServiceLogger(serviceName),
+		methodLoggers:   make(map[string]zerolog.Logger),
 	}
 }
 

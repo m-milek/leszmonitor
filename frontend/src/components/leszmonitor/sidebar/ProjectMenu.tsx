@@ -3,6 +3,7 @@ import { SidebarMenu } from "@/components/ui/sidebar.tsx";
 import {
   LayoutDashboardIcon,
   LucideActivity,
+  LucideLogs,
   LucideNotebookText,
   LucideUsers,
 } from "lucide-react";
@@ -60,10 +61,7 @@ export const ProjectMenu = ({ projects }: ProjectMenuProps) => {
       className="border border-sidebar-border rounded-sm p-2 gap-2 bg-secondary"
       direction="column"
     >
-      <Select
-        value={project?.slug ?? ""}
-        onValueChange={onProjectSelect}
-      >
+      <Select value={project?.slug ?? ""} onValueChange={onProjectSelect}>
         <SelectTrigger className="w-full" withClearButton>
           <SelectValue placeholder="Select project" />
         </SelectTrigger>
@@ -96,6 +94,11 @@ export const ProjectMenu = ({ projects }: ProjectMenuProps) => {
             icon={<LucideUsers />}
             href={`/projects/${project.slug}/members`}
             label="Access"
+          />
+          <SidebarButton
+            icon={<LucideLogs />}
+            href={`/projects/${project.slug}/audit-log`}
+            label="Audit Log"
           />
         </SidebarMenu>
       )}

@@ -12,6 +12,11 @@ import (
 	"github.com/m-milek/leszmonitor/util"
 )
 
+type IAuditLogService interface {
+	GetEntries(ctx context.Context, userClaims *auth.UserClaims, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, *ServiceError)
+	Record(ctx context.Context, entry security.AuditLogEntry) error
+}
+
 // authorizationServiceT handles authorization-related operations.
 // It provides methods to authorize actions based on project membership and permissions.
 type auditLogServiceT struct {
@@ -23,6 +28,7 @@ func newAuditLogService() *auditLogServiceT {
 	return &auditLogServiceT{
 		baseService: baseService{
 			serviceLogger: log.NewServiceLogger("AuditLogService"),
+			authService:   newAuthorizationService(),
 		},
 	}
 }
@@ -42,6 +48,8 @@ func (s *auditLogServiceT) GetEntries(ctx context.Context, userClaims *auth.User
 		logger.Error().Err(dbErr).Msg("Failed to retrieve audit log entries")
 		return nil, newServiceError(http.StatusInternalServerError, dbErr)
 	}
+
+	logger.Trace().Int("entryCount", len(entries)).Msg("Successfully retrieved audit log entries")
 	return entries, nil
 }
 

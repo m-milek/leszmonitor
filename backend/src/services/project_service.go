@@ -22,7 +22,7 @@ func newProjectService(service baseService) *ProjectServiceT {
 	return &ProjectServiceT{baseService: service}
 }
 
-var ProjectService = newProjectService(newBaseService(newAuthorizationService(), "ProjectService"))
+var ProjectService = newProjectService(newBaseService(newAuthorizationService(), newAuditLogService(), "ProjectService"))
 
 type CreateProjectPayload struct {
 	Name        string `json:"name"`

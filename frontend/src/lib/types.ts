@@ -303,3 +303,27 @@ export interface ApiError {
   error: ErrorDetails;
   status: number;
 }
+
+export interface AuditLogEntry {
+  id: string;
+  username?: string;
+  projectId?: string;
+  resourceId?: string;
+  action: string;
+  isSuccess: boolean;
+  summary?: string;
+  before?: Record<string, unknown>;
+  after?: Record<string, unknown>;
+  traceId?: string;
+  createdAt: Date;
+}
+
+export interface AuditLogFilters {
+  username?: string;
+  projectId?: string;
+  resourceId?: string;
+  action?: string;
+  isSuccess?: boolean;
+  startDate?: Date;
+  endDate?: Date;
+}

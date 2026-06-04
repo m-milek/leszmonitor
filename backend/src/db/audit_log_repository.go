@@ -30,9 +30,9 @@ func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry secur
 	return dbWrap(ctx, "InsertAuditLogEntry", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
 		err := a.pool.GetContext(ctx, &monitor,
-			`INSERT INTO audit_logs (id, user_id, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at)
+			`INSERT INTO audit_logs (id, username, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-			entry.ID, entry.UserID, entry.ProjectID, entry.ResourceID, entry.Action, entry.IsSuccess, entry.Summary, entry.Before, entry.After, entry.TraceID, entry.CreatedAt,
+			entry.ID, entry.Username, entry.ProjectID, entry.ResourceID, entry.Action, entry.IsSuccess, entry.Summary, entry.Before, entry.After, entry.TraceID, entry.CreatedAt,
 		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -59,6 +59,10 @@ func (a auditLogRepository) GetAuditLogEntries(ctx context.Context, filter secur
 			conditions = append(conditions, "project_id = ?")
 			args = append(args, *filter.ProjectID)
 		}
+		if filter.ResourceID != nil {
+			conditions = append(conditions, "resource_id = ?")
+			args = append(args, *filter.ResourceID)
+		}
 		if filter.Action != nil {
 			conditions = append(conditions, "action = ?")
 			args = append(args, *filter.Action)
@@ -80,7 +84,7 @@ func (a auditLogRepository) GetAuditLogEntries(ctx context.Context, filter secur
 			args = append(args, *filter.EndDate)
 		}
 
-		query := `SELECT id, user_id, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at
+		query := `SELECT id, username, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at
 	          FROM audit_logs`
 		if len(conditions) > 0 {
 			query += " WHERE " + strings.Join(conditions, " AND ")

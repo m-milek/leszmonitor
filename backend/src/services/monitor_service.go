@@ -13,6 +13,7 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/security"
 )
 
 // MonitorServiceT handles monitor-related CRUD operations.
@@ -23,8 +24,9 @@ type MonitorServiceT struct {
 func newMonitorService() *MonitorServiceT {
 	return &MonitorServiceT{
 		baseService{
-			authService:   newAuthorizationService(),
-			serviceLogger: log.NewServiceLogger("MonitorService"),
+			authService:     newAuthorizationService(),
+			auditLogService: newAuditLogService(),
+			serviceLogger:   log.NewServiceLogger("MonitorService"),
 		},
 	}
 }
@@ -108,6 +110,22 @@ func (s *MonitorServiceT) DeleteMonitor(ctx context.Context, projectAuth *author
 		Status:  monitors.Deleted,
 		Monitor: nil,
 	})
+
+	err = s.auditLogService.Record(ctx, security.AuditLogEntry{
+		Username:   &projectAuth.Username,
+		ProjectID:  &projectAuth.ProjectID,
+		ResourceID: deletedID,
+		Action:     security.ActionDeleteMonitor,
+		IsSuccess:  true,
+		Summary:    fmt.Sprintf("Monitor with ID %s deleted", monitorUUID.String()),
+		Before:     nil,
+		After:      nil,
+		TraceID:    security.GetTraceIDFromContext(ctx),
+	})
+	if err != nil {
+		logger.Error().Err(err).Str("id", id).Msg("Failed to record audit log entry for monitor deletion")
+		return nil
+	}
 
 	logger.Info().Str("id", id).Msg("Monitor deleted")
 	return nil

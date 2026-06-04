@@ -17,7 +17,7 @@ func setupTestProjectService() (context.Context, *ProjectServiceT, *db.MockDB) {
 	}
 	db.Set(mockDB)
 
-	base := newBaseService(nil, "ProjectServiceTest")
+	base := newBaseService(nil, nil, "ProjectServiceTest")
 	svc := newProjectService(base)
 
 	return context.Background(), svc, mockDB
