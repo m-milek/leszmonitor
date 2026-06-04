@@ -12,6 +12,7 @@ import (
 // This interface allows for easy mocking in tests.
 type IProjectActionAuthorizer interface {
 	authorizeProjectAction(ctx context.Context, projectAuth *authorization.ProjectAuthorization, permissions ...models.Permission) (*models.Project, *ServiceError)
+	isInstanceAdmin(ctx context.Context, username string) (bool, error)
 }
 
 // MockAuthorizationService is a mock implementation of IProjectActionAuthorizer for testing.

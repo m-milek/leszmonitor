@@ -19,8 +19,8 @@ func SetUserInContext(ctx context.Context, claims *auth.UserClaims) context.Cont
 	return context.WithValue(ctx, userClaimsKey, claims)
 }
 
-// GetUserFromContext retrieves user claims from the request context.
-func GetUserFromContext(ctx context.Context) (*auth.UserClaims, bool) {
+// GetUserClaimsFromContext retrieves user claims from the request context.
+func GetUserClaimsFromContext(ctx context.Context) (*auth.UserClaims, bool) {
 	claims, ok := ctx.Value(userClaimsKey).(*auth.UserClaims)
 	return claims, ok
 }
@@ -28,7 +28,7 @@ func GetUserFromContext(ctx context.Context) (*auth.UserClaims, bool) {
 // ExtractUserOrRespond returns the user from context or writes a 401 response and returns nil, false.
 func ExtractUserOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request) (*auth.UserClaims, bool) {
 	logger := log.FromContext(ctx)
-	user, ok := GetUserFromContext(ctx)
+	user, ok := GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Warn().Msg("User claims not found in context")
 		util.RespondError(ctx, w, http.StatusUnauthorized, fmt.Errorf("user claims not found in context"))
@@ -38,7 +38,7 @@ func ExtractUserOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Re
 }
 
 func GetUsernameFromRequest(ctx context.Context) (*string, error) {
-	userClaims, ok := GetUserFromContext(ctx)
+	userClaims, ok := GetUserClaimsFromContext(ctx)
 	if !ok {
 		return nil, fmt.Errorf("user claims not found in context")
 	}

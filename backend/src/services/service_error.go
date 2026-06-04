@@ -11,3 +11,10 @@ type ServiceError struct {
 func (e ServiceError) Error() string {
 	return e.Err.Error()
 }
+
+func newServiceError(code int, err error) *ServiceError {
+	return &ServiceError{
+		Code: code,
+		Err:  err,
+	}
+}

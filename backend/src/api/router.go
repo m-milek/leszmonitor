@@ -45,6 +45,8 @@ func SetupRouters(
 	protectedRouter.HandleFunc("GET /api/v1/monitors/{monitorId}/results/latest", handlers.GetLatestMonitorResultByMonitorIDHandler)
 	protectedRouter.HandleFunc("GET /api/v1/monitors/{monitorId}/results", handlers.GetMonitorResultsByMonitorIDHandler)
 
+	protectedRouter.HandleFunc("GET /api/v1/auditlogs", handlers.GetAuditLogByQueryHandler)
+
 	// WebSocket
 	publicRouter.HandleFunc("GET /api/ws", handlers.WebSocketConnectionHandler)
 
