@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/security"
 	"github.com/m-milek/leszmonitor/util"
@@ -29,7 +30,7 @@ func newAuditLogRepository(base baseRepository) IAuditLogRepository {
 func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
 	return dbWrap(ctx, "InsertAuditLogEntry", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
-		err := a.pool.GetContext(ctx, &monitor,
+		err := sqlx.GetContext(ctx, a.pool, &monitor,
 			`INSERT INTO audit_logs (id, username, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 			entry.ID, entry.Username, entry.ProjectID, entry.ResourceID, entry.Action, entry.IsSuccess, entry.Summary, entry.Before, entry.After, entry.TraceID, entry.CreatedAt,
@@ -92,7 +93,7 @@ func (a auditLogRepository) GetAuditLogEntries(ctx context.Context, filter secur
 		query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
 		args = append(args, pagination.PerPage, pagination.Offset())
 
-		err := a.pool.SelectContext(context.Background(), &entries, query, args...)
+		err := sqlx.SelectContext(context.Background(), a.pool, &entries, query, args...)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}

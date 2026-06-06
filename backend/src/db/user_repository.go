@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/models"
 )
 
@@ -52,7 +53,7 @@ func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*mo
 func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		var user models.User
-		err := r.pool.GetContext(ctx, &user,
+		err := sqlx.GetContext(ctx, r.pool, &user,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE username=$1`,
 			username)
 		if err != nil {
@@ -68,7 +69,7 @@ func (r *UserRepository) GetUserByUsername(ctx context.Context, username string)
 func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByID", func() (*models.User, error) {
 		var user models.User
-		err := r.pool.GetContext(ctx, &user,
+		err := sqlx.GetContext(ctx, r.pool, &user,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE id=$1`,
 			id)
 		if err != nil {
@@ -84,7 +85,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*models
 func (r *UserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
 		var users []models.User
-		err := r.pool.SelectContext(ctx, &users,
+		err := sqlx.SelectContext(ctx, r.pool, &users,
 			`SELECT id, username, password_hash, created_at, updated_at FROM users`)
 		if err != nil {
 			return nil, err

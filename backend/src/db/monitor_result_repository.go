@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	consts "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
@@ -28,7 +29,7 @@ func (r *monitorResultRepository) GetMonitorResultsByMonitorID(ctx context.Conte
 	return dbWrap(ctx, "GetMonitorResultsByMonitorID", func() ([]monitorresult.IMonitorResult, error) {
 		var results []monitorresult.MonitorResult
 
-		err := r.pool.SelectContext(ctx, &results, `
+		err := sqlx.SelectContext(ctx, r.pool, &results, `
 			SELECT mr.id, mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
 			FROM monitor_results mr
 			JOIN monitors m ON m.id = mr.monitor_id
@@ -100,7 +101,7 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 	return dbWrap(ctx, "GetLatestMonitorResultByMonitorID", func() (monitorresult.IMonitorResult, error) {
 		var result monitorresult.MonitorResult
 
-		err := r.pool.GetContext(ctx, &result, `
+		err := sqlx.GetContext(ctx, r.pool, &result, `
             SELECT mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
             FROM monitor_results mr
             JOIN monitors m ON m.id = mr.monitor_id
