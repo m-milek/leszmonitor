@@ -139,6 +139,10 @@ const baseMonitorFields = {
   interval: z
     .number({ message: "Interval must be a number" })
     .min(1, "Interval must be at least 1 second"),
+  resultRetentionSeconds: z
+    .number({ message: "Retention period must be a number" })
+    .min(1, "Retention period must be at least 1 second")
+    .optional(),
 };
 
 const httpMonitorSchema = z.object({
@@ -173,6 +177,7 @@ export const newMonitorSchemaDefaultValues = {
   description: "",
   projectSlug: "",
   interval: 60,
+  resultRetentionSeconds: 43200,
 } satisfies Partial<MonitorFormValues>;
 
 export const defaultConfigs: Record<
@@ -312,8 +317,8 @@ export interface AuditLogEntry {
   action: string;
   isSuccess: boolean;
   summary?: string;
-  before?: Record<string, unknown>;
-  after?: Record<string, unknown>;
+  before?: string;
+  after?: string;
   traceId?: string;
   createdAt: Date;
 }

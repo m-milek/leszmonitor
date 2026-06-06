@@ -31,7 +31,6 @@ function RouteComponent() {
 
   return (
     <MainPanelContainer>
-      <pre>{JSON.stringify(logs, null, 2)}</pre>
       <AuditLogTable entries={logs ?? []} />
     </MainPanelContainer>
   );

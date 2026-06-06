@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/security"
 	"github.com/m-milek/leszmonitor/util"
 )
@@ -28,20 +27,16 @@ func newAuditLogRepository(base baseRepository) IAuditLogRepository {
 }
 
 func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
-	return dbWrap(ctx, "InsertAuditLogEntry", func() (*monitors.Monitor, error) {
-		var monitor monitors.Monitor
-		err := sqlx.GetContext(ctx, a.pool, &monitor,
+	return dbWrap(ctx, "InsertAuditLogEntry", func() (any, error) {
+		_, err := a.pool.ExecContext(ctx,
 			`INSERT INTO audit_logs (id, username, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 			entry.ID, entry.Username, entry.ProjectID, entry.ResourceID, entry.Action, entry.IsSuccess, entry.Summary, entry.Before, entry.After, entry.TraceID, entry.CreatedAt,
 		)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
-			}
 			return nil, err
 		}
-		return &monitor, nil
+		return nil, nil
 	})
 }
 

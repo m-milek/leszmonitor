@@ -75,16 +75,13 @@ export const updateMonitor = async (
   monitorId: string,
   monitorData: MonitorUpdatePayload,
 ) => {
-  const res = await authFetch(
-    `${BACKEND_API_URL}/projects/${monitorData.projectSlug}/monitors/${monitorId}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(monitorData),
+  const res = await authFetch(`${BACKEND_API_URL}/monitors/${monitorId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify(monitorData),
+  });
 
   return res.json();
 };

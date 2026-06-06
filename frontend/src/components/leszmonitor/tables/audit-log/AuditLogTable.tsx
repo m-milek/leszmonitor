@@ -13,10 +13,12 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { formatDate } from "@/lib/utils.ts";
 import { CheckCircle2, LucideDiff, XCircle } from "lucide-react";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog.tsx";
 import { ShortId } from "@/components/leszmonitor/tables/audit-log/ShortId.tsx";
 import { ResourceDiff } from "@/components/leszmonitor/tables/audit-log/ResourceDiff.tsx";
 import { Button } from "@/components/ui/button";
@@ -70,22 +72,29 @@ const columns: ColumnDef<AuditLogEntry>[] = [
   {
     header: "Diff",
     cell: ({ row }) =>
-      row.original.before && row.original.after ? (
-        <Popover>
-          <PopoverTrigger>
+      !row.original.before && !row.original.after ? (
+        <Button variant="ghost" disabled>
+          —
+        </Button>
+      ) : (
+        <Dialog>
+          <DialogTrigger asChild>
             <Button variant="ghost">
               <LucideDiff />
             </Button>
-          </PopoverTrigger>
-          <PopoverContent>
-            <ResourceDiff
-              before={row.original.before}
-              after={row.original.after}
-            />
-          </PopoverContent>
-        </Popover>
-      ) : (
-        <span>—</span>
+          </DialogTrigger>
+          <DialogContent className="max-w-[90vw] sm:max-w-[1200px] w-full max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Resource Diff</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <ResourceDiff
+                before={row.original.before}
+                after={row.original.after}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       ),
   },
   {
