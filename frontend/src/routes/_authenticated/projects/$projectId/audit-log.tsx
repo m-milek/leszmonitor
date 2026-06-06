@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { getAuditLogByFilter } from "@/lib/data/auditLogData.ts";
 import type { AuditLogFilters } from "@/lib/types.ts";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
-import { AuditLogTable } from "@/components/leszmonitor/tables/AuditLogTable.tsx";
+import { AuditLogTable } from "@/components/leszmonitor/tables/audit-log/AuditLogTable.tsx";
 
 export const Route = createFileRoute(
   "/_authenticated/projects/$projectId/audit-log",

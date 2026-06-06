@@ -11,26 +11,18 @@ import {
 } from "@/components/ui/table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { formatDate } from "@/lib/utils.ts";
-import { CheckCircle2, XCircle } from "lucide-react";
-import { cn } from "@/lib/utils.ts";
+import { CheckCircle2, LucideDiff, XCircle } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover.tsx";
+import { ShortId } from "@/components/leszmonitor/tables/audit-log/ShortId.tsx";
+import { ResourceDiff } from "@/components/leszmonitor/tables/audit-log/ResourceDiff.tsx";
+import { Button } from "@/components/ui/button";
 
 export interface AuditLogTableProps {
   entries: AuditLogEntry[];
-}
-
-function ShortId({
-  value,
-  className,
-}: {
-  value?: string | null;
-  className?: string;
-}) {
-  if (!value) return <span>—</span>;
-  return (
-    <code className={cn("text-muted-foreground", className)} title={value}>
-      {value.slice(0, 8)}…
-    </code>
-  );
 }
 
 const columns: ColumnDef<AuditLogEntry>[] = [
@@ -76,9 +68,25 @@ const columns: ColumnDef<AuditLogEntry>[] = [
     cell: ({ row }) => <ShortId value={row.original.resourceId} />,
   },
   {
-    accessorKey: "id",
-    header: "Log ID",
-    cell: ({ row }) => <ShortId value={row.original.id} />,
+    header: "Diff",
+    cell: ({ row }) =>
+      row.original.before && row.original.after ? (
+        <Popover>
+          <PopoverTrigger>
+            <Button variant="ghost">
+              <LucideDiff />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <ResourceDiff
+              before={row.original.before}
+              after={row.original.after}
+            />
+          </PopoverContent>
+        </Popover>
+      ) : (
+        <span>—</span>
+      ),
   },
   {
     accessorKey: "traceId",
