@@ -13,10 +13,8 @@ function AuthenticatedLayout() {
       <div className="flex h-screen w-full text-foreground">
         <AppSidebar />
         <div className="flex-1 flex flex-col bg-background overflow-hidden">
-          <ScrollArea className="h-full">
-            <main className="min-h-full">
-              <Outlet />
-            </main>
+          <ScrollArea className="h-full w-full max-w-full">
+            <Outlet />
           </ScrollArea>
         </div>
       </div>

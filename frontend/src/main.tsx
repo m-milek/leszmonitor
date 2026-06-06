@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { routeTree } from "./routeTree.gen";
 
@@ -8,9 +9,20 @@ import "./styles.css";
 import { ToasterProvider } from "@/components/leszmonitor/providers/ToasterProvider.tsx";
 // import reportWebVitals from "./reportWebVitals.ts";
 
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000, // 30s — tweak to taste
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 const router = createRouter({
   routeTree,
-  context: {},
+  context: {
+    queryClient,
+  },
   defaultPreload: "intent",
   scrollRestoration: true,
   defaultStructuralSharing: true,
@@ -28,9 +40,11 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <ToasterProvider>
-        <RouterProvider router={router} />
-      </ToasterProvider>
+      <QueryClientProvider client={queryClient}>
+        <ToasterProvider>
+          <RouterProvider router={router} />
+        </ToasterProvider>
+      </QueryClientProvider>
     </StrictMode>,
   );
 }

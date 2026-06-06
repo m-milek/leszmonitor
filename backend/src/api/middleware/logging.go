@@ -12,8 +12,11 @@ import (
 func Logger(ctx context.Context, next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx = context.WithValue(ctx, "request_id", uuid.New().String())
+
 		logger := log.FromContext(ctx).With().Str("request_id", uuid.New().String()).Logger()
 		ctx = log.WithContext(ctx, &logger)
+
 		r = r.WithContext(ctx)
 
 		logger.Trace().

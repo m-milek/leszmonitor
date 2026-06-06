@@ -2,16 +2,16 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ProjectRole } from "@/lib/types.ts";
 
-export function cn(...inputs: ClassValue[]) {
+export const cn = (...inputs: ClassValue[]): string => {
   return twMerge(clsx(inputs));
-}
+};
 
-export async function getLoginToken(): Promise<string | null> {
+export const getLoginToken = async (): Promise<string | null> => {
   const token = await cookieStore.get("LOGIN_TOKEN");
   return token?.value || null;
-}
+};
 
-export function formatDate(date: Date): string {
+export const formatDate = (date: Date): string => {
   return date.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -19,9 +19,9 @@ export function formatDate(date: Date): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
+};
 
-export function formatRole(role: ProjectRole): string {
+export const formatRole = (role: ProjectRole): string => {
   switch (role) {
     case ProjectRole.Viewer:
       return "Viewer";
@@ -34,4 +34,4 @@ export function formatRole(role: ProjectRole): string {
     default:
       return role;
   }
-}
+};

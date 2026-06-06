@@ -15,6 +15,7 @@ type MockDB struct {
 	MonitorsRepo       IMonitorRepository
 	ProjectsRepo       IProjectRepository
 	MonitorResultsRepo IMonitorResultRepository
+	AuditLogRepo       IAuditLogRepository
 	CloseFn            func()
 }
 
@@ -96,6 +97,11 @@ func (m *MockDB) Users() IUserRepository                   { return m.UsersRepo 
 func (m *MockDB) Monitors() IMonitorRepository             { return m.MonitorsRepo }
 func (m *MockDB) Projects() IProjectRepository             { return m.ProjectsRepo }
 func (m *MockDB) MonitorResults() IMonitorResultRepository { return m.MonitorResultsRepo }
+func (m *MockDB) AuditLog() IAuditLogRepository            { return m.AuditLogRepo }
+func (m *MockDB) WithTx(_ context.Context, fn func(tx DB) error) error {
+	// In tests, execute the function directly without a real transaction.
+	return fn(m)
+}
 func (m *MockDB) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()

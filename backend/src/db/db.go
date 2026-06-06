@@ -40,21 +40,25 @@ type DB interface {
 	Monitors() IMonitorRepository
 	Projects() IProjectRepository
 	MonitorResults() IMonitorResultRepository
+	AuditLog() IAuditLogRepository
+	WithTx(ctx context.Context, fn func(tx DB) error) error
 	Close()
 }
 
 // DBClient implements DB using an sqlx DB.
 type DBClient struct {
+	sqlxDB *sqlx.DB
 	dbPool
 	// cached repositories to avoid re-allocation on every getter call
 	users          IUserRepository
 	monitors       IMonitorRepository
 	projects       IProjectRepository
 	monitorResults IMonitorResultRepository
+	auditLog       IAuditLogRepository
 }
 
 type dbPool struct {
-	pool *sqlx.DB
+	pool sqlx.ExtContext
 }
 
 type dbResult[T any] struct {
@@ -66,9 +70,23 @@ type baseRepository struct {
 	dbPool
 }
 
-func newBaseRepository(pool *sqlx.DB) baseRepository {
+func newBaseRepository(pool sqlx.ExtContext) baseRepository {
 	return baseRepository{
 		dbPool: dbPool{pool: pool},
+	}
+}
+
+// newDBClientFromPool creates a DBClient wired to the given sqlx.ExtContext handle.
+// Used by both New (with *sqlx.DB) and WithTx (with *sqlx.Tx).
+func newDBClientFromPool(pool sqlx.ExtContext) *DBClient {
+	base := newBaseRepository(pool)
+	return &DBClient{
+		dbPool:         dbPool{pool: pool},
+		users:          newUserRepository(base),
+		monitors:       newMonitorRepository(base),
+		projects:       newProjectRepository(base),
+		monitorResults: newMonitorResultRepository(base),
+		auditLog:       newAuditLogRepository(base),
 	}
 }
 
@@ -78,9 +96,9 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	c := &DBClient{
-		dbPool: dbPool{pool: pool},
-	}
+
+	c := newDBClientFromPool(pool)
+	c.sqlxDB = pool
 
 	if err := c.initSchema(ctx, pool); err != nil {
 		pool.Close()
@@ -88,12 +106,6 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 	}
 
 	pool.SetMaxOpenConns(1)
-
-	// initialize and cache repositories once
-	c.users = newUserRepository(newBaseRepository(pool))
-	c.monitors = newMonitorRepository(newBaseRepository(pool))
-	c.projects = newProjectRepository(newBaseRepository(pool))
-	c.monitorResults = newMonitorResultRepository(newBaseRepository(pool))
 
 	return c, nil
 }
@@ -115,9 +127,11 @@ func (c *DBClient) initSchema(ctx context.Context, pool *sqlx.DB) error {
 	return nil
 }
 
-// Close closes the underlying connection pool.
+// Close closes the underlying connection pool. No-op for transaction-scoped clients.
 func (c *DBClient) Close() {
-	c.pool.Close()
+	if c.sqlxDB != nil {
+		c.sqlxDB.Close()
+	}
 }
 
 // dbWrap creates a child context with timeout and handles cancellation.
@@ -167,6 +181,7 @@ func (c *DBClient) Users() IUserRepository                   { return c.users }
 func (c *DBClient) Monitors() IMonitorRepository             { return c.monitors }
 func (c *DBClient) Projects() IProjectRepository             { return c.projects }
 func (c *DBClient) MonitorResults() IMonitorResultRepository { return c.monitorResults }
+func (c *DBClient) AuditLog() IAuditLogRepository            { return c.auditLog }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)

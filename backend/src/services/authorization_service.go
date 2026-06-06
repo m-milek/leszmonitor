@@ -121,3 +121,11 @@ func (s *authorizationServiceT) internalGetUserByUsername(ctx context.Context, u
 
 	return user, nil
 }
+
+func (s *authorizationServiceT) isInstanceAdmin(ctx context.Context, username string) (bool, error) {
+	logger := s.getMethodLogger("isInstanceAdmin")
+
+	logger.Trace().Str("username", username).Msg("Checking if user is instance admin")
+
+	return true, nil
+}

@@ -18,6 +18,7 @@ import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProjectsProjectIdRouteImport } from './routes/_authenticated/projects/$projectId'
 import { Route as AuthenticatedUserUsernameIndexRouteImport } from './routes/_authenticated/user/$username/index'
 import { Route as AuthenticatedProjectsProjectIdIndexRouteImport } from './routes/_authenticated/projects/$projectId/index'
+import { Route as AuthenticatedProjectsProjectIdAuditLogRouteImport } from './routes/_authenticated/projects/$projectId/audit-log'
 import { Route as AuthenticatedUserUsernameSettingsIndexRouteImport } from './routes/_authenticated/user/$username/settings/index'
 import { Route as AuthenticatedProjectsProjectIdMonitorsIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/index'
 import { Route as AuthenticatedProjectsProjectIdMembersIndexRouteImport } from './routes/_authenticated/projects/$projectId/members/index'
@@ -74,6 +75,12 @@ const AuthenticatedProjectsProjectIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
+const AuthenticatedProjectsProjectIdAuditLogRoute =
+  AuthenticatedProjectsProjectIdAuditLogRouteImport.update({
+    id: '/audit-log',
+    path: '/audit-log',
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
+  } as any)
 const AuthenticatedUserUsernameSettingsIndexRoute =
   AuthenticatedUserUsernameSettingsIndexRouteImport.update({
     id: '/user/$username/settings/',
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
   '/docs/': typeof AuthenticatedDocsIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
+  '/projects/$projectId/audit-log': typeof AuthenticatedProjectsProjectIdAuditLogRoute
   '/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
   '/projects/$projectId/dashboard/': typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterIndexRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
+  '/projects/$projectId/audit-log': typeof AuthenticatedProjectsProjectIdAuditLogRoute
   '/projects/$projectId': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/user/$username': typeof AuthenticatedUserUsernameIndexRoute
   '/projects/$projectId/dashboard': typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
+  '/_authenticated/projects/$projectId/audit-log': typeof AuthenticatedProjectsProjectIdAuditLogRoute
   '/_authenticated/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/_authenticated/user/$username/': typeof AuthenticatedUserUsernameIndexRoute
   '/_authenticated/projects/$projectId/dashboard/': typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/docs/'
     | '/projects/'
+    | '/projects/$projectId/audit-log'
     | '/projects/$projectId/'
     | '/user/$username/'
     | '/projects/$projectId/dashboard/'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/docs'
     | '/projects'
+    | '/projects/$projectId/audit-log'
     | '/projects/$projectId'
     | '/user/$username'
     | '/projects/$projectId/dashboard'
@@ -212,6 +224,7 @@ export interface FileRouteTypes {
     | '/_authenticated/projects/$projectId'
     | '/_authenticated/docs/'
     | '/_authenticated/projects/'
+    | '/_authenticated/projects/$projectId/audit-log'
     | '/_authenticated/projects/$projectId/'
     | '/_authenticated/user/$username/'
     | '/_authenticated/projects/$projectId/dashboard/'
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsProjectIdIndexRouteImport
       parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
+    '/_authenticated/projects/$projectId/audit-log': {
+      id: '/_authenticated/projects/$projectId/audit-log'
+      path: '/audit-log'
+      fullPath: '/projects/$projectId/audit-log'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdAuditLogRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
+    }
     '/_authenticated/user/$username/settings/': {
       id: '/_authenticated/user/$username/settings/'
       path: '/user/$username/settings'
@@ -347,6 +367,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedProjectsProjectIdRouteChildren {
+  AuthenticatedProjectsProjectIdAuditLogRoute: typeof AuthenticatedProjectsProjectIdAuditLogRoute
   AuthenticatedProjectsProjectIdIndexRoute: typeof AuthenticatedProjectsProjectIdIndexRoute
   AuthenticatedProjectsProjectIdDashboardIndexRoute: typeof AuthenticatedProjectsProjectIdDashboardIndexRoute
   AuthenticatedProjectsProjectIdMembersIndexRoute: typeof AuthenticatedProjectsProjectIdMembersIndexRoute
@@ -358,6 +379,8 @@ interface AuthenticatedProjectsProjectIdRouteChildren {
 
 const AuthenticatedProjectsProjectIdRouteChildren: AuthenticatedProjectsProjectIdRouteChildren =
   {
+    AuthenticatedProjectsProjectIdAuditLogRoute:
+      AuthenticatedProjectsProjectIdAuditLogRoute,
     AuthenticatedProjectsProjectIdIndexRoute:
       AuthenticatedProjectsProjectIdIndexRoute,
     AuthenticatedProjectsProjectIdDashboardIndexRoute:

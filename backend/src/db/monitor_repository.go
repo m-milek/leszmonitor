@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	monitors "github.com/m-milek/leszmonitor/models/monitors"
 )
 
@@ -33,7 +34,7 @@ func newMonitorRepository(repository baseRepository) IMonitorRepository {
 func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorsByProjectID", func() ([]monitors.Monitor, error) {
 		var allMonitors []monitors.Monitor
-		err := r.pool.SelectContext(ctx, &allMonitors,
+		err := sqlx.SelectContext(ctx, r.pool, &allMonitors,
 			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at, m.project_id
 			 FROM monitors m
 			 WHERE m.project_id = $1`,
@@ -51,7 +52,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string, projectID uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
-		err := r.pool.GetContext(ctx, &monitor,
+		err := sqlx.GetContext(ctx, r.pool, &monitor,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 
@@ -72,7 +73,7 @@ func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string, p
 func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
-		err := r.pool.GetContext(ctx, &monitor,
+		err := sqlx.GetContext(ctx, r.pool, &monitor,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.id = $1`, id)
@@ -89,7 +90,7 @@ func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*
 func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetAllMonitors", func() ([]monitors.Monitor, error) {
 		var allMonitors []monitors.Monitor
-		err := r.pool.SelectContext(ctx, &allMonitors,
+		err := sqlx.SelectContext(ctx, r.pool, &allMonitors,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m`)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -188,7 +189,7 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 func (r *monitorRepository) GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlugByProject", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
-		err := r.pool.GetContext(ctx, &monitor,
+		err := sqlx.GetContext(ctx, r.pool, &monitor,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 

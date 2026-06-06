@@ -22,7 +22,7 @@ func newUserService(base baseService) *UserServiceT {
 	return &UserServiceT{baseService: base}
 }
 
-var UserService = newUserService(newBaseService(newAuthorizationService(), "UserService"))
+var UserService = newUserService(newBaseService(newAuthorizationService(), newAuditLogService(), "UserService"))
 
 type UserRegisterPayload struct {
 	Username        string `json:"username"`

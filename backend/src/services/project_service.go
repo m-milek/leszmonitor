@@ -22,7 +22,7 @@ func newProjectService(service baseService) *ProjectServiceT {
 	return &ProjectServiceT{baseService: service}
 }
 
-var ProjectService = newProjectService(newBaseService(newAuthorizationService(), "ProjectService"))
+var ProjectService = newProjectService(newBaseService(newAuthorizationService(), newAuditLogService(), "ProjectService"))
 
 type CreateProjectPayload struct {
 	Name        string `json:"name"`
@@ -67,17 +67,20 @@ func (s *ProjectServiceT) CreateProject(ctx context.Context, ownerUsername strin
 		return nil, &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid project data: %w", err)}
 	}
 
-	if err = s.getDB().Projects().InsertProject(ctx, project); err != nil {
-		if errors.Is(err, db.ErrAlreadyExists) {
+	var created *models.Project
+	if txErr := s.getDB().WithTx(ctx, func(tx db.DB) error {
+		if err := tx.Projects().InsertProject(ctx, project); err != nil {
+			return err
+		}
+		var err error
+		created, err = tx.Projects().GetProjectBySlug(ctx, project.Slug)
+		return err
+	}); txErr != nil {
+		if errors.Is(txErr, db.ErrAlreadyExists) {
 			return nil, &ServiceError{Code: http.StatusConflict, Err: fmt.Errorf("project with slug %s already exists", project.Slug)}
 		}
-		logger.Error().Err(err).Msg("Failed to insert project")
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to create project: %w", err)}
-	}
-
-	created, err := s.getDB().Projects().GetProjectBySlug(ctx, project.Slug)
-	if err != nil {
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to fetch created project: %w", err)}
+		logger.Error().Err(txErr).Msg("Failed to insert project")
+		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to create project: %w", txErr)}
 	}
 
 	logger.Info().Str("projectId", project.Slug).Msg("Project created successfully")

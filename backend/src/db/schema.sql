@@ -98,3 +98,20 @@ CREATE TABLE IF NOT EXISTS monitor_results (
     FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_monitor_results_monitor_id_created ON monitor_results (monitor_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id          TEXT PRIMARY KEY,
+    username    TEXT,
+    project_id  TEXT,
+    resource_id TEXT,
+    action      TEXT    NOT NULL,
+    is_success  BOOLEAN NOT NULL,
+    summary     TEXT CHECK (summary IS NULL OR LENGTH(summary) <= 1000),
+    before      TEXT CHECK (before IS NULL OR JSON_VALID(before)), -- JSON string
+    after       TEXT CHECK (after IS NULL OR JSON_VALID(after)),   -- JSON string
+    trace_id    TEXT,
+
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_project_id_created ON audit_logs (project_id, created_at DESC);

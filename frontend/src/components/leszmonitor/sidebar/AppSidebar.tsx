@@ -13,7 +13,6 @@ import {
 import {
   LucideBookText,
   LucideHome,
-  LucideLogs,
   LucideSearch,
   LucideSettings,
   LucideUsers,
@@ -132,11 +131,6 @@ export const AppSidebar = () => {
                 icon={<LucideUsers />}
                 href={`/users`}
                 label="Users"
-              />
-              <SidebarButton
-                icon={<LucideLogs />}
-                href="/auditLog"
-                label="Audit Log"
               />
               <SidebarButton
                 icon={<LucideSettings />}

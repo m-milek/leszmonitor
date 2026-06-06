@@ -1,10 +1,19 @@
-import { Outlet, createRootRoute, redirect } from "@tanstack/react-router";
+import {
+  Outlet,
+  createRootRouteWithContext,
+  redirect,
+} from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
 import { Providers } from "@/components/leszmonitor/Providers.tsx";
 import { GlobalNotFound } from "@/components/leszmonitor/GlobalNotFound.tsx";
 import { isJwtValid } from "@/lib/jwt.ts";
 import { getCookie } from "@/lib/cookies.ts";
 
-export const Route = createRootRoute({
+export interface RouterContext {
+  queryClient: QueryClient;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <Providers>
       <Outlet />

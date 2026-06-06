@@ -54,7 +54,7 @@ func TestJwtAuth_ValidToken(t *testing.T) {
 	handler := JwtAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 
-		claims, ok := authorization.GetUserFromContext(r.Context())
+		claims, ok := authorization.GetUserClaimsFromContext(r.Context())
 		if !ok {
 			t.Fatal("expected claims in context, got nil")
 		}
