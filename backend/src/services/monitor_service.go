@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -72,24 +71,21 @@ func (s *MonitorService) CreateMonitor(ctx context.Context, projectAuth *authori
 			return createErr
 		}
 
-		monitorJSON, err := json.Marshal(monitorFromDB)
+		entry, err := security.NewAuditLogEntry(
+			ctx,
+			&projectAuth.Username,
+			&projectAuth.ProjectID,
+			&monitorFromDB.ID,
+			security.ActionCreateMonitor,
+			true,
+			fmt.Sprintf("Monitor with ID %s created", monitorFromDB.ID),
+			nil,
+			monitorFromDB,
+		)
 		if err != nil {
-			logger.Error().Err(err).Msg("Failed to marshal monitor for audit log")
-			return fmt.Errorf("failed to marshal monitor for audit log: %w", err)
+			logger.Error().Err(err).Msg("Failed to create audit log entry")
+			return fmt.Errorf("failed to create audit log entry: %w", err)
 		}
-
-		entry := security.AuditLogEntry{
-			Username:   &projectAuth.Username,
-			ProjectID:  &projectAuth.ProjectID,
-			ResourceID: &monitorFromDB.ID,
-			Action:     security.ActionCreateMonitor,
-			IsSuccess:  true,
-			Before:     nil,
-			After:      new(string(monitorJSON)),
-			Summary:    fmt.Sprintf("Monitor with ID %s created", monitorFromDB.ID),
-			TraceID:    security.GetTraceIDFromContext(ctx),
-		}
-		entry.BeforeCreate()
 
 		_, auditErr := tx.AuditLog().InsertAuditLogEntry(ctx, entry)
 		return auditErr
@@ -135,12 +131,6 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, projectAuth *authori
 		return NewInternalError("failed to retrieve monitor before deletion: %w", err)
 	}
 
-	monitorBeforeDeleteJSON, err := json.Marshal(monitorBeforeDelete)
-	if err != nil {
-		logger.Error().Err(err).Str("id", id).Msg("Failed to marshal monitor state before deletion for audit log")
-		return NewInternalError("failed to marshal monitor state before deletion for audit log: %w", err)
-	}
-
 	var deletedID *uuid.UUID
 	if txErr := s.db.WithTx(ctx, func(tx db.DB) error {
 		var err error
@@ -152,18 +142,20 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, projectAuth *authori
 			return db.ErrNotFound
 		}
 
-		entry := security.AuditLogEntry{
-			Username:   &projectAuth.Username,
-			ProjectID:  &projectAuth.ProjectID,
-			ResourceID: &monitorUUID,
-			Action:     security.ActionDeleteMonitor,
-			IsSuccess:  true,
-			Before:     new(string(monitorBeforeDeleteJSON)),
-			After:      nil,
-			Summary:    fmt.Sprintf("Monitor with ID %s deleted", monitorUUID.String()),
-			TraceID:    security.GetTraceIDFromContext(ctx),
+		entry, err := security.NewAuditLogEntry(
+			ctx,
+			&projectAuth.Username,
+			&projectAuth.ProjectID,
+			&monitorUUID,
+			security.ActionDeleteMonitor,
+			true,
+			fmt.Sprintf("Monitor with ID %s deleted", monitorUUID.String()),
+			monitorBeforeDelete,
+			nil,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create audit log entry: %w", err)
 		}
-		entry.BeforeCreate()
 
 		_, err = tx.AuditLog().InsertAuditLogEntry(ctx, entry)
 		return err
@@ -274,29 +266,20 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authori
 			return fmt.Errorf("failed to update monitor in database: %w", err)
 		}
 
-		beforeJSON, err := json.Marshal(existingMonitor)
+		entry, err := security.NewAuditLogEntry(
+			ctx,
+			&projectAuth.Username,
+			&projectAuth.ProjectID,
+			&monitor.ID,
+			security.ActionUpdateMonitor,
+			true,
+			fmt.Sprintf("Monitor with ID %s updated", monitor.ID),
+			existingMonitor,
+			monitor,
+		)
 		if err != nil {
-			logger.Error().Err(err).Str("id", monitor.ID.String()).Msg("Failed to marshal existing monitor state for audit log")
-			return fmt.Errorf("failed to marshal existing monitor state for audit log: %w", err)
+			return fmt.Errorf("failed to create audit log entry: %w", err)
 		}
-		afterJSON, err := json.Marshal(monitor)
-		if err != nil {
-			logger.Error().Err(err).Str("id", monitor.ID.String()).Msg("Failed to marshal updated monitor state for audit log")
-			return fmt.Errorf("failed to marshal updated monitor state for audit log: %w", err)
-		}
-
-		entry := security.AuditLogEntry{
-			Username:   &projectAuth.Username,
-			ProjectID:  &projectAuth.ProjectID,
-			ResourceID: &monitor.ID,
-			Action:     security.ActionUpdateMonitor,
-			IsSuccess:  true,
-			Before:     new(string(beforeJSON)),
-			After:      new(string(afterJSON)),
-			Summary:    fmt.Sprintf("Monitor with ID %s updated", monitor.ID),
-			TraceID:    security.GetTraceIDFromContext(ctx),
-		}
-		entry.BeforeCreate()
 
 		_, auditErr := tx.AuditLog().InsertAuditLogEntry(ctx, entry)
 

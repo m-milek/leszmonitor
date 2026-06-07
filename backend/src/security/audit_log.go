@@ -2,7 +2,9 @@ package security
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -44,6 +46,55 @@ type AuditLogEntry struct {
 func (a *AuditLogEntry) BeforeCreate() {
 	a.ID = uuid.New()
 	a.CreatedAt = time.Now().UTC()
+}
+
+// NewAuditLogEntry creates a new AuditLogEntry, handling JSON marshaling of before/after states,
+// capturing the TraceID from context, and calling BeforeCreate.
+func NewAuditLogEntry(
+	ctx context.Context,
+	username *string,
+	projectID *uuid.UUID,
+	resourceID *uuid.UUID,
+	action AuditLogAction,
+	isSuccess bool,
+	summary string,
+	before interface{},
+	after interface{},
+) (AuditLogEntry, error) {
+	var beforeStr *string
+	if before != nil {
+		b, err := json.Marshal(before)
+		if err != nil {
+			return AuditLogEntry{}, fmt.Errorf("failed to marshal 'before' state: %w", err)
+		}
+		s := string(b)
+		beforeStr = &s
+	}
+
+	var afterStr *string
+	if after != nil {
+		b, err := json.Marshal(after)
+		if err != nil {
+			return AuditLogEntry{}, fmt.Errorf("failed to marshal 'after' state: %w", err)
+		}
+		s := string(b)
+		afterStr = &s
+	}
+
+	entry := AuditLogEntry{
+		Username:   username,
+		ProjectID:  projectID,
+		ResourceID: resourceID,
+		Action:     action,
+		IsSuccess:  isSuccess,
+		Summary:    summary,
+		Before:     beforeStr,
+		After:      afterStr,
+		TraceID:    GetTraceIDFromContext(ctx),
+	}
+	entry.BeforeCreate()
+
+	return entry, nil
 }
 
 type AuditLogFilter struct {
