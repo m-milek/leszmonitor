@@ -9,30 +9,36 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
-	"github.com/rs/zerolog"
 )
 
-// authorizationServiceT handles authorization-related operations.
-// It provides methods to authorize actions based on project membership and permissions.
-type authorizationServiceT struct {
-	baseService
+// IAuthorizer defines the interface for authorization operations.
+// This interface allows for easy mocking in tests.
+type IAuthorizer interface {
+	authorizeProjectAction(ctx context.Context, projectAuth *authorization.ProjectAuthorization, permissions ...models.Permission) (*models.Project, *ServiceError)
+	isInstanceAdmin(ctx context.Context, username string) (bool, error)
 }
 
-// newAuthorizationService creates a new instance of authorizationServiceT.
-func newAuthorizationService() *authorizationServiceT {
-	return &authorizationServiceT{
-		baseService{
-			serviceLogger: log.NewServiceLogger("AuthorizationService"),
-			methodLoggers: make(map[string]zerolog.Logger),
-		},
+// AuthorizationService handles authorization-related operations.
+// It provides methods to authorize actions based on project membership and permissions.
+type AuthorizationService struct {
+	db db.DB
+}
+
+type AuthorizationServiceDeps struct {
+	DB db.DB
+}
+
+// NewAuthorizationService creates a new instance of authorizationServiceT.
+func NewAuthorizationService(deps AuthorizationServiceDeps) *AuthorizationService {
+	return &AuthorizationService{
+		db: deps.DB,
 	}
 }
 
-// authorizeProjectAction checks if a given user has the given permissions within the context of a specific project.
-func (s *authorizationServiceT) authorizeProjectAction(ctx context.Context, projectAuth *authorization.ProjectAuthorization, permissions ...models.Permission) (*models.Project, *ServiceError) {
-	logger := s.getMethodLogger("authorizeProjectAction")
+// AuthorizeProjectAction checks if a given user has the given permissions within the context of a specific project.
+func (s *AuthorizationService) authorizeProjectAction(ctx context.Context, projectAuth *authorization.ProjectAuthorization, permissions ...models.Permission) (*models.Project, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, "AuthorizationService", "AuthorizeProjectAction")
 
 	requestorUsername := projectAuth.Username
 
@@ -77,8 +83,8 @@ func (s *authorizationServiceT) authorizeProjectAction(ctx context.Context, proj
 }
 
 // internalGetProjectByID retrieves a project by its display ID without authorization checks.
-func (s *authorizationServiceT) internalGetProjectByID(ctx context.Context, projectID uuid.UUID) (*models.Project, *ServiceError) {
-	logger := s.getMethodLogger("internalGetProjectByID")
+func (s *AuthorizationService) internalGetProjectByID(ctx context.Context, projectID uuid.UUID) (*models.Project, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, "AuthorizationService", "internalGetProjectByID")
 
 	project, err := db.Get().Projects().GetProjectByID(ctx, projectID)
 	if err != nil {
@@ -100,8 +106,8 @@ func (s *authorizationServiceT) internalGetProjectByID(ctx context.Context, proj
 }
 
 // internalGetUserByUsername retrieves a user by username without authorization checks.
-func (s *authorizationServiceT) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
-	logger := s.getMethodLogger("internalGetUserByUsername")
+func (s *AuthorizationService) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, "AuthorizationService", "internalGetUserByUsername")
 
 	user, err := db.Get().Users().GetUserByUsername(ctx, username)
 	if err != nil {
@@ -122,8 +128,8 @@ func (s *authorizationServiceT) internalGetUserByUsername(ctx context.Context, u
 	return user, nil
 }
 
-func (s *authorizationServiceT) isInstanceAdmin(ctx context.Context, username string) (bool, error) {
-	logger := s.getMethodLogger("isInstanceAdmin")
+func (s *AuthorizationService) isInstanceAdmin(ctx context.Context, username string) (bool, error) {
+	logger := MethodLoggerFromContext(ctx, "AuthorizationService", "isInstanceAdmin")
 
 	logger.Trace().Str("username", username).Msg("Checking if user is instance admin")
 

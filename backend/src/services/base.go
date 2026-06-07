@@ -1,19 +1,21 @@
 package services
 
 import (
+	"context"
+
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/rs/zerolog"
 )
 
 type baseService struct {
-	authService     IProjectActionAuthorizer
-	auditLogService IAuditLogService
+	authService     IAuthorizer
+	auditLogService IAuditLogger
 	serviceLogger   zerolog.Logger
 	methodLoggers   map[string]zerolog.Logger
 }
 
-func newBaseService(authService IProjectActionAuthorizer, auditLogService IAuditLogService, serviceName string) baseService {
+func newBaseService(authService IAuthorizer, auditLogService IAuditLogger, serviceName string) baseService {
 	return baseService{
 		authService:     authService,
 		auditLogService: auditLogService,
@@ -41,4 +43,8 @@ func (s *baseService) getMethodLogger(methodName string) zerolog.Logger {
 	logger := s.serviceLogger.With().Str("method", methodName).Logger()
 	s.methodLoggers[methodName] = logger
 	return logger
+}
+
+func MethodLoggerFromContext(ctx context.Context, serviceName, methodName string) zerolog.Logger {
+	return log.FromContext(ctx).With().Str("service", serviceName).Str("method", methodName).Logger()
 }

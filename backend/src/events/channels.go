@@ -7,3 +7,9 @@ var MonitorLifecycleChannel = newEventBus[monitors.MonitorLifecycleMessage]("mon
 
 // MonitorRunChannel distributes monitor run events (e.g., tcp results) to subscribers.
 var MonitorRunChannel = newEventBus[monitors.MonitorRunMessage]("monitor_run")
+
+type BroadcastMonitorPublisher struct{}
+
+func (BroadcastMonitorPublisher) PublishLifecycle(msg monitors.MonitorLifecycleMessage) {
+	MonitorLifecycleChannel.Broadcast(msg)
+}

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTestProjectService() (context.Context, *ProjectServiceT, *db.MockDB) {
+func setupTestProjectService() (context.Context, *ProjectService, *db.MockDB) {
 	mockDB := &db.MockDB{
 		ProjectsRepo: new(db.MockProjectRepository),
 	}

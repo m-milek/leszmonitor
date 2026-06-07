@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"errors"
@@ -10,7 +10,17 @@ import (
 	util2 "github.com/m-milek/leszmonitor/util"
 )
 
-func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
+type MonitorResultsAPIController struct {
+	service services.IMonitorResultsService
+}
+
+func NewMonitorResultsAPIController(service services.IMonitorResultsService) MonitorResultsAPIController {
+	return MonitorResultsAPIController{
+		service: service,
+	}
+}
+
+func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	monitorID := r.PathValue("monitorId")
@@ -26,7 +36,7 @@ func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	result, err := services.MonitorResultsService.GetLatestMonitorResultByMonitorID(ctx, projectAuth, monitorID)
+	result, err := c.service.GetLatestMonitorResultByMonitorID(ctx, projectAuth, monitorID)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -35,7 +45,7 @@ func GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Req
 	util.RespondJSON(ctx, w, http.StatusOK, result)
 }
 
-func GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorResultsAPIController) GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	monitorID := r.PathValue("monitorId")
@@ -57,7 +67,7 @@ func GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	results, err := services.MonitorResultsService.GetMonitorResultsByMonitorID(ctx, projectAuth, monitorID, pagination)
+	results, err := c.service.GetMonitorResultsByMonitorID(ctx, projectAuth, monitorID, pagination)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return

@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/api"
+	"github.com/m-milek/leszmonitor/api/controllers"
 	"github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/services"
 	"github.com/m-milek/leszmonitor/workers"
 )
 
@@ -52,10 +54,53 @@ func main() {
 		logger.Fatal().Err(err).Msg("Failed to initialize SQLite connection")
 	}
 
+	db := db.Get()
+	authService := services.NewAuthorizationService(services.AuthorizationServiceDeps{
+		DB: db,
+	})
+
+	projectService := services.NewProjectService(services.ProjectServiceDeps{
+		DB:          db,
+		Auth:        authService,
+		UserService: nil,
+	})
+	userService := services.NewUserService(services.UserServiceDeps{
+		DB:             db,
+		Auth:           authService,
+		ProjectService: projectService,
+	})
+	projectService.UserService = userService
+	monitorService := services.NewMonitorService(services.MonitorServiceDeps{
+		DB:   db,
+		Auth: authService,
+	})
+	monitorResultService := services.NewMonitorResultsService(services.MonitorResultsServiceDeps{
+		DB:   db,
+		Auth: authService,
+	})
+	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
+		DB:          db,
+		AuthService: authService,
+	})
+
+	projectAPIController := controllers.NewProjectAPIController(projectService)
+	userAPIController := controllers.NewUserAPIController(userService)
+	monitorAPIController := controllers.NewMonitorAPIController(monitorService)
+	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
+	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
+
+	handlers := api.Handlers{
+		Project:        projectAPIController,
+		User:           userAPIController,
+		Monitor:        monitorAPIController,
+		MonitorResults: monitorResultsAPIController,
+		AuditLog:       auditLogAPIController,
+	}
+
 	// Start the server
 	serverConfig := api.DefaultServerConfig()
 	logger.Info().Msg("Starting API server...")
-	server, done, err := api.StartServer(appCtx, serverConfig, staticFiles)
+	server, done, err := api.StartServer(appCtx, serverConfig, staticFiles, handlers)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to start API server")
 		os.Exit(1)

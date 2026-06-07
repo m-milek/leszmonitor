@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"encoding/json"
@@ -12,11 +12,21 @@ import (
 	"github.com/m-milek/leszmonitor/services"
 )
 
+type MonitorAPIController struct {
+	service services.IMonitorService
+}
+
+func NewMonitorAPIController(service services.IMonitorService) MonitorAPIController {
+	return MonitorAPIController{
+		service: service,
+	}
+}
+
 const messageMonitorIDIsRequired = "Monitor ID is required"
 
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
-func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitor, err := decodeMonitorPayload(r)
 	if err != nil {
@@ -41,7 +51,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitorCreateResponse, serviceErr := services.MonitorService.CreateMonitor(ctx, projectAuth, monitor)
+	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, projectAuth, monitor)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
@@ -50,7 +60,7 @@ func CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusCreated, monitorCreateResponse)
 }
 
-func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
@@ -65,7 +75,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := services.MonitorService.DeleteMonitor(ctx, projectAuth, monitorID)
+	err := c.service.DeleteMonitor(ctx, projectAuth, monitorID)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -74,7 +84,7 @@ func DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondMessage(ctx, w, http.StatusOK, "Monitor deleted successfully")
 }
 
-func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorAPIController) GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
@@ -89,7 +99,7 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitor, err := services.MonitorService.GetMonitorByID(ctx, projectAuth, monitorID)
+	monitor, err := c.service.GetMonitorByID(ctx, projectAuth, monitorID)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -100,7 +110,7 @@ func GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 // UpdateMonitorHandler handles the update of an existing monitor.
 // TODO: Proper update mechanism, maybe custom payload so we can update only specific fields
-func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
@@ -132,7 +142,7 @@ func UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceErr := services.MonitorService.UpdateMonitor(ctx, projectAuth, monitor)
+	serviceErr := c.service.UpdateMonitor(ctx, projectAuth, monitor)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
@@ -171,7 +181,7 @@ func decodeMonitorPayload(r *http.Request) (monitors.Monitor, error) {
 	return monitor, nil
 }
 
-func GetMonitorByProjectSlugHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorAPIController) GetMonitorByProjectSlugHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
@@ -181,7 +191,7 @@ func GetMonitorByProjectSlugHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitor, err := services.MonitorService.GetMonitorsByProjectID(ctx, projectAuth)
+	monitor, err := c.service.GetMonitorsByProjectID(ctx, projectAuth)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -190,7 +200,7 @@ func GetMonitorByProjectSlugHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusOK, monitor)
 }
 
-func GetMonitorBySlugByProject(w http.ResponseWriter, request *http.Request) {
+func (c *MonitorAPIController) GetMonitorBySlugByProject(w http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 
 	monitorSlug := request.PathValue("monitorSlug")
@@ -206,7 +216,7 @@ func GetMonitorBySlugByProject(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	monitor, err := services.MonitorService.GetMonitorBySlugByProject(ctx, projectAuth, monitorSlug)
+	monitor, err := c.service.GetMonitorBySlugByProject(ctx, projectAuth, monitorSlug)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -219,7 +229,7 @@ type UpdateMonitorStatePayload struct {
 	NewState string `json:"newState"`
 }
 
-func UpdateMonitorStateByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
@@ -251,7 +261,7 @@ func UpdateMonitorStateByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceErr := services.MonitorService.UpdateMonitorStateByID(ctx, projectAuth, monitorUUID, monitors.MonitorState(payload.NewState))
+	serviceErr := c.service.UpdateMonitorStateByID(ctx, projectAuth, monitorUUID, monitors.MonitorState(payload.NewState))
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return

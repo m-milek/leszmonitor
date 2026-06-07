@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// setupTestUserService creates a new UserServiceT with a mock database for testing.
-func setupTestUserService() (context.Context, *UserServiceT, *db.MockDB) {
+// setupTestUserService creates a new UserService with a mock database for testing.
+func setupTestUserService() (context.Context, *UserService, *db.MockDB) {
 	authService := newAuthorizationService()
 	auditLogService := newAuditLogService()
 	ctx := context.Background()
@@ -23,7 +23,7 @@ func setupTestUserService() (context.Context, *UserServiceT, *db.MockDB) {
 	}
 	db.Set(mockDB)
 	base := newBaseService(authService, auditLogService, "UserServiceTest")
-	return ctx, newUserService(base), mockDB
+	return ctx, NewUserService(base), mockDB
 }
 
 func TestUserServiceT_RegisterUser(t *testing.T) {
