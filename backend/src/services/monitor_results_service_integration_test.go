@@ -1,50 +1,18 @@
 package services
 
 import (
-	"context"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func setupMonitorResultsIntegrationTest(t *testing.T) (context.Context, *MonitorResultsService, *ProjectService, *UserService, *models.User) {
-	ctx, projectService, userService, user := setupIntegrationTest(t)
-
-	service := NewMonitorResultsService(MonitorResultsServiceDeps{
-		DB:   db.Get(),
-		Auth: NewAuthorizationService(AuthorizationServiceDeps{DB: db.Get()}),
-	})
-
-	return ctx, service, projectService, userService, user
-}
-
-// Helper to directly insert a monitor and return it
-func insertTestMonitor(t *testing.T, ctx context.Context, projectID uuid.UUID) *monitors.Monitor {
-	payload := monitors.Monitor{
-		Name:        "Test Monitor",
-		Description: "Testing monitor results",
-		Interval:    60,
-		Type:        consts.HttpConfigType,
-		ProbeConfig: "{}",
-	}
-	payload.GenerateSlug()
-	monitor := monitors.InitializeFromPayload(payload, projectID)
-
-	inserted, dbErr := db.Get().Monitors().InsertMonitor(ctx, *monitor)
-	require.NoError(t, dbErr)
-	return inserted
-}
 
 func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 	t.Run("Successfully gets latest monitor result", func(t *testing.T) {

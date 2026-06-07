@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -14,17 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func setupAuditLogIntegrationTest(t *testing.T) (context.Context, AuditLogService, *ProjectService, *UserService, *models.User) {
-	ctx, projectService, userService, user := setupIntegrationTest(t)
-
-	auditLogService := NewAuditLogService(AuditLogServiceDeps{
-		DB:          db.Get(),
-		AuthService: NewAuthorizationService(AuthorizationServiceDeps{DB: db.Get()}),
-	})
-
-	return ctx, auditLogService, projectService, userService, user
-}
 
 func TestIntegration_AuditLogService_Record(t *testing.T) {
 	t.Run("Successfully records an audit log entry", func(t *testing.T) {

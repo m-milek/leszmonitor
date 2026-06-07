@@ -217,22 +217,26 @@ func (s *MonitorService) GetMonitorsByProjectID(ctx context.Context, projectAuth
 	return monitorsList, nil
 }
 
-// GetMonitorByID retrieves a specific monitor by its slug.
+// GetMonitorByID retrieves a specific monitor by its ID.
 func (s *MonitorService) GetMonitorByID(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string) (*monitors.Monitor, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "GetMonitorByID")
-	logger.Trace().Str("id", id).Msg("Retrieving monitor by slug")
+	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
 
 	_, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		return nil, authErr
 	}
 
-	// TODO fix - monitor ID uses slug - bug. This method is not used by the frontend
-	monitor, err := s.db.Monitors().GetMonitorBySlug(ctx, id, projectAuth.ProjectID)
+	monitorUUID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor ID format: %w", err)}
+	}
+
+	monitor, err := s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found in database")
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found", id)}
+			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with id %s not found", id)}
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor from database")
 		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}

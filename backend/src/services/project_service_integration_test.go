@@ -1,10 +1,7 @@
 package services
 
 import (
-	"context"
 	"net/http"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/google/uuid"
@@ -14,62 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// setupIntegrationTest initializes a temporary SQLite DB, sets up services, and registers a test user.
-func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *UserService, *models.User) {
-	ctx := context.Background()
-
-	os.Setenv("JWT_SECRET", "test_secret_key_1234567890123456")
-	os.Setenv("JWT_EXPIRY_HOURS", "24")
-
-	// Use a temporary directory for the sqlite file
-	tempDir := t.TempDir()
-	dbPath := filepath.Join(tempDir, "testdb.sqlite")
-
-	// DSN format for SQLite
-	dsn := "file:" + dbPath + "?_pragma=foreign_keys(1)"
-
-	realDB, err := db.New(ctx, dsn)
-	require.NoError(t, err)
-
-	// Set globally because parts of the system (like authorization) might still rely on db.Get()
-	db.Set(realDB)
-
-	t.Cleanup(func() {
-		realDB.Close()
-		db.Set(nil)
-	})
-
-	authService := NewAuthorizationService(AuthorizationServiceDeps{DB: realDB})
-
-	userService := NewUserService(UserServiceDeps{
-		DB:   realDB,
-		Auth: authService,
-	})
-
-	projectService := NewProjectService(ProjectServiceDeps{
-		DB:          realDB,
-		Auth:        authService,
-		UserService: userService,
-	})
-
-	userService.projectService = projectService
-
-	// Setup Phase: Create a real user in the DB
-	registerPayload := &UserRegisterPayload{
-		Username:        "integration_user",
-		Password:        "Password123!",
-		PasswordConfirm: "Password123!",
-	}
-	svcErr := userService.RegisterUser(ctx, registerPayload)
-	require.Nil(t, svcErr)
-
-	user, svcErr := userService.GetUserByUsername(ctx, "integration_user")
-	require.Nil(t, svcErr)
-	require.NotNil(t, user)
-
-	return ctx, projectService, userService, user
-}
 
 func TestIntegration_ProjectService_CreateProject(t *testing.T) {
 	t.Run("Successfully creates a project", func(t *testing.T) {
