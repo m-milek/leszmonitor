@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"net/http"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -17,6 +18,9 @@ import (
 // setupIntegrationTest initializes a temporary SQLite DB, sets up services, and registers a test user.
 func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *UserService, *models.User) {
 	ctx := context.Background()
+
+	os.Setenv("JWT_SECRET", "test_secret_key_1234567890123456")
+	os.Setenv("JWT_EXPIRY_HOURS", "24")
 
 	// Use a temporary directory for the sqlite file
 	tempDir := t.TempDir()
