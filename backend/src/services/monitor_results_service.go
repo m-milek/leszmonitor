@@ -39,17 +39,17 @@ func (s *MonitorResultsService) GetLatestMonitorResultByMonitorID(ctx context.Co
 	_, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		logger.Warn().Err(authErr).Msg("Unauthorized access to GetLatestMonitorResultByMonitorID")
-		return nil, &ServiceError{Code: 403, Err: authErr}
+		return nil, NewForbiddenError("unauthorized: %w", authErr)
 	}
 
 	result, err := s.db.MonitorResults().GetLatestMonitorResultByMonitorID(ctx, monitorID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Info().Str("monitorID", monitorID).Msg("No monitor result found for given monitor ID")
-			return nil, &ServiceError{Code: 404, Err: err}
+			return nil, NewNotFoundError("no monitor result found: %w", err)
 		}
 		logger.Error().Err(err).Msg("Failed to get latest monitor result by monitor ID")
-		return nil, &ServiceError{Code: 500, Err: err}
+		return nil, NewInternalError("failed to get latest monitor result: %w", err)
 	}
 
 	return result, nil
@@ -61,17 +61,17 @@ func (s *MonitorResultsService) GetMonitorResultsByMonitorID(ctx context.Context
 	_, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
 	if authErr != nil {
 		logger.Warn().Err(authErr).Msg("Unauthorized access to GetMonitorResultsByMonitorID")
-		return nil, &ServiceError{Code: 403, Err: authErr}
+		return nil, NewForbiddenError("unauthorized: %w", authErr)
 	}
 
 	results, err := s.db.MonitorResults().GetMonitorResultsByMonitorID(ctx, id, pagination)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Info().Str("monitorID", id).Msg("No monitor results found for given monitor ID")
-			return nil, &ServiceError{Code: 404, Err: err}
+			return nil, NewNotFoundError("no monitor results found: %w", err)
 		}
 		logger.Error().Err(err).Msg("Failed to get monitor results by monitor ID")
-		return nil, &ServiceError{Code: 500, Err: err}
+		return nil, NewInternalError("failed to get monitor results: %w", err)
 	}
 
 	return results, nil

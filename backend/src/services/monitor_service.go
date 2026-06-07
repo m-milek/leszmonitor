@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/authorization"
@@ -62,10 +61,7 @@ func (s *MonitorService) CreateMonitor(ctx context.Context, projectAuth *authori
 
 	if err := initializedMonitor.Validate(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid monitor configuration")
-		return nil, &ServiceError{
-			Code: http.StatusBadRequest,
-			Err:  fmt.Errorf("invalid monitor configuration: %w", err),
-		}
+		return nil, NewBadRequestError("invalid monitor configuration: %w", err)
 	}
 
 	var monitorFromDB *monitors.Monitor
@@ -100,10 +96,7 @@ func (s *MonitorService) CreateMonitor(ctx context.Context, projectAuth *authori
 	})
 	if txErr != nil {
 		logger.Error().Err(txErr).Msg("Failed to create monitor within transaction")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to create monitor within transaction: %w", txErr),
-		}
+		return nil, NewInternalError("failed to create monitor within transaction: %w", txErr)
 	}
 
 	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
@@ -129,23 +122,23 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, projectAuth *authori
 	monitorUUID, err := uuid.Parse(id)
 	if err != nil {
 		logger.Warn().Str("id", id).Msg("Invalid monitor ID format")
-		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor ID format: %w", err)}
+		return NewBadRequestError("invalid monitor ID format: %w", err)
 	}
 
 	monitorBeforeDelete, err := s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found in database")
-			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with ID %s not found", id)}
+			return NewNotFoundError("monitor with ID %s not found", id)
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor before deletion")
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor before deletion: %w", err)}
+		return NewInternalError("failed to retrieve monitor before deletion: %w", err)
 	}
 
 	monitorBeforeDeleteJSON, err := json.Marshal(monitorBeforeDelete)
 	if err != nil {
 		logger.Error().Err(err).Str("id", id).Msg("Failed to marshal monitor state before deletion for audit log")
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to marshal monitor state before deletion for audit log: %w", err)}
+		return NewInternalError("failed to marshal monitor state before deletion for audit log: %w", err)
 	}
 
 	var deletedID *uuid.UUID
@@ -176,13 +169,10 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, projectAuth *authori
 		return err
 	}); txErr != nil {
 		if errors.Is(txErr, db.ErrNotFound) {
-			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor not found or already deleted")}
+			return NewNotFoundError("monitor not found or already deleted")
 		}
 		logger.Error().Err(txErr).Str("id", id).Msg("Failed to delete monitor")
-		return &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to delete monitor: %w", txErr),
-		}
+		return NewInternalError("failed to delete monitor: %w", txErr)
 	}
 
 	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
@@ -208,10 +198,7 @@ func (s *MonitorService) GetMonitorsByProjectID(ctx context.Context, projectAuth
 	monitorsList, err := s.db.Monitors().GetMonitorsByProjectID(ctx, project.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("failed to retrieve monitors: %w", err),
-		}
+		return nil, NewInternalError("failed to retrieve monitors: %w", err)
 	}
 
 	return monitorsList, nil
@@ -229,22 +216,22 @@ func (s *MonitorService) GetMonitorByID(ctx context.Context, projectAuth *author
 
 	monitorUUID, err := uuid.Parse(id)
 	if err != nil {
-		return nil, &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor ID format: %w", err)}
+		return nil, NewBadRequestError("invalid monitor ID format: %w", err)
 	}
 
 	monitor, err := s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("id", id).Msg("Monitor not found in database")
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with id %s not found", id)}
+			return nil, NewNotFoundError("monitor with id %s not found", id)
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor from database")
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor: %w", err)}
+		return nil, NewInternalError("failed to retrieve monitor: %w", err)
 	}
 
 	if monitor.ProjectID != projectAuth.ProjectID {
 		logger.Warn().Str("id", id).Msg("Monitor does not belong to the authorized project")
-		return nil, &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with slug %s does not belong to the authorized project", id)}
+		return nil, NewForbiddenError("monitor with slug %s does not belong to the authorized project", id)
 	}
 
 	return monitor, nil
@@ -264,7 +251,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authori
 		existingMonitor, err := tx.Monitors().GetMonitorByID(ctx, monitor.ID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
-				return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with ID %s not found", monitor.ID)}
+				return NewNotFoundError("monitor with ID %s not found", monitor.ID)
 			}
 			logger.Error().Err(err).Str("id", monitor.ID.String()).Msg("Failed to retrieve existing monitor for update")
 			return fmt.Errorf("failed to retrieve existing monitor for update: %w", err)
@@ -272,14 +259,14 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authori
 
 		if existingMonitor.ProjectID != projectAuth.ProjectID {
 			logger.Warn().Str("id", monitor.ID.String()).Msg("Monitor does not belong to the authorized project")
-			return &ServiceError{Code: http.StatusForbidden, Err: fmt.Errorf("monitor with ID %s does not belong to the authorized project", monitor.ID)}
+			return NewForbiddenError("monitor with ID %s does not belong to the authorized project", monitor.ID)
 		}
 
 		monitor.State = existingMonitor.State
 		monitor.ProjectID = existingMonitor.ProjectID
 
 		if err := monitor.Validate(); err != nil {
-			return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor configuration: %w", err)}
+			return NewBadRequestError("invalid monitor configuration: %w", err)
 		}
 
 		_, err = tx.Monitors().UpdateMonitor(ctx, monitor)
@@ -320,7 +307,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authori
 			return serviceErr
 		}
 		logger.Error().Err(txErr).Str("id", monitor.ID.String()).Msg("Failed to update monitor within transaction")
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor within transaction: %w", txErr)}
+		return NewInternalError("failed to update monitor within transaction: %w", txErr)
 	}
 
 	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
@@ -345,9 +332,9 @@ func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, auth *au
 	monitor, err := s.db.Monitors().GetMonitorBySlugByProject(ctx, slug, auth.ProjectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with slug %s not found in project", slug)}
+			return nil, NewNotFoundError("monitor with slug %s not found in project", slug)
 		}
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor by slug and project: %w", err)}
+		return nil, NewInternalError("failed to retrieve monitor by slug and project: %w", err)
 	}
 
 	logger.Debug().Str("slug", slug).Str("projectID", auth.ProjectID.String()).Msg("Monitor retrieved by slug and project")
@@ -360,7 +347,7 @@ func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, auth *autho
 
 	if !monitors.IsValidMonitorState(string(state)) {
 		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Invalid monitor state provided")
-		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid monitor state: %s", state)}
+		return NewBadRequestError("invalid monitor state: %s", state)
 	}
 
 	_, authErr := s.auth.authorizeProjectAction(ctx, auth, models.PermissionMonitorEditor)
@@ -371,9 +358,9 @@ func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, auth *autho
 	monitor, err := s.db.Monitors().GetMonitorByID(ctx, monitorID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("monitor with ID %s not found", monitorID.String())}
+			return NewNotFoundError("monitor with ID %s not found", monitorID.String())
 		}
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to retrieve monitor for state update: %w", err)}
+		return NewInternalError("failed to retrieve monitor for state update: %w", err)
 	}
 
 	if monitor.State == state {
@@ -385,7 +372,7 @@ func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, auth *autho
 
 	_, updateErr := s.db.Monitors().UpdateMonitor(ctx, *monitor)
 	if updateErr != nil {
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to update monitor state in database: %w", updateErr)}
+		return NewInternalError("failed to update monitor state in database: %w", updateErr)
 	}
 
 	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{

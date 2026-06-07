@@ -3,8 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/authorization"
@@ -57,10 +55,7 @@ func (s *AuthorizationService) authorizeProjectAction(ctx context.Context, proje
 	// Is the requestor a member of that project?
 	if !project.IsMember(user.ID) {
 		logger.Warn().Str("username", requestorUsername).Str("project", project.Name).Msg("User is not a member of the project")
-		return nil, &ServiceError{
-			Code: http.StatusForbidden,
-			Err:  fmt.Errorf("user %s is not a member of project %s", requestorUsername, project.Name),
-		}
+		return nil, NewForbiddenError("user %s is not a member of project %s", requestorUsername, project.Name)
 	}
 
 	// What permissions does the requestor have in that project?
@@ -72,10 +67,7 @@ func (s *AuthorizationService) authorizeProjectAction(ctx context.Context, proje
 	// Does the requestor have the required permissions?
 	if !project.GetMember(user.ID).Role.HasPermissions(permissions...) {
 		logger.Warn().Str("username", requestorUsername).Str("project", project.Name).Strs("permissions", permissionIDs).Msg("User does not have required permissions for project")
-		return nil, &ServiceError{
-			Code: http.StatusForbidden,
-			Err:  fmt.Errorf("user %s does not have required permissions for project %s", requestorUsername, project.Name),
-		}
+		return nil, NewForbiddenError("user %s does not have required permissions for project %s", requestorUsername, project.Name)
 	}
 
 	logger.Trace().Str("username", requestorUsername).Str("project", project.Name).Strs("permissions", permissionIDs).Msg("User has required permissions for project")
@@ -90,16 +82,10 @@ func (s *AuthorizationService) internalGetProjectByID(ctx context.Context, proje
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("projectID", projectID.String()).Msg("Project not found")
-			return nil, &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("project %s not found", projectID),
-			}
+			return nil, NewNotFoundError("project %s not found", projectID)
 		}
 		logger.Error().Err(err).Str("projectID", projectID.String()).Msg("Error retrieving project")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("error retrieving project %s: %w", projectID, err),
-		}
+		return nil, NewInternalError("error retrieving project %s: %w", projectID, err)
 	}
 
 	return project, nil
@@ -113,16 +99,10 @@ func (s *AuthorizationService) internalGetUserByUsername(ctx context.Context, us
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("username", username).Msg("User not found")
-			return nil, &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  fmt.Errorf("user %s not found", username),
-			}
+			return nil, NewNotFoundError("user %s not found", username)
 		}
 		logger.Error().Err(err).Str("username", username).Msg("Error retrieving user")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("error retrieving user %s: %w", username, err),
-		}
+		return nil, NewInternalError("error retrieving user %s: %w", username, err)
 	}
 
 	return user, nil

@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/auth"
@@ -48,7 +47,7 @@ func (s *AuditLogService) GetEntries(ctx context.Context, userClaims *auth.UserC
 	entries, dbErr := s.db.AuditLog().GetAuditLogEntries(ctx, filter, pagination)
 	if dbErr != nil {
 		logger.Error().Err(dbErr).Msg("Failed to retrieve audit log entries")
-		return nil, newServiceError(http.StatusInternalServerError, dbErr)
+		return nil, NewInternalError("failed to retrieve audit log entries: %w", dbErr)
 	}
 
 	logger.Trace().Int("entryCount", len(entries)).Msg("Successfully retrieved audit log entries")
@@ -61,7 +60,7 @@ func (s *AuditLogService) authorizeReadAccess(ctx context.Context, claims *auth.
 	isInstanceAdmin, err := s.authService.isInstanceAdmin(ctx, claims.Username)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to check instance admin status for authorizeReadAccess")
-		return newServiceError(http.StatusInternalServerError, err)
+		return NewInternalError("failed to check admin status: %w", err)
 	}
 
 	if isInstanceAdmin {
@@ -71,7 +70,7 @@ func (s *AuditLogService) authorizeReadAccess(ctx context.Context, claims *auth.
 
 	if err := filter.ValidateForNonInstanceAdmin(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid filter for non-instance admin user in authorizeReadAccess")
-		return newServiceError(http.StatusBadRequest, err)
+		return NewBadRequestError("invalid filter: %w", err)
 	}
 
 	_, authErr := s.authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{

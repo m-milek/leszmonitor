@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/auth"
@@ -65,10 +64,7 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *ServiceE
 	users, err := s.db.Users().GetAllUsers(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error retrieving users")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("error retrieving users: %w", err),
-		}
+		return nil, NewInternalError("error retrieving users: %w", err)
 	}
 
 	return users, nil
@@ -88,10 +84,10 @@ func (s *UserService) internalGetUserByUsername(ctx context.Context, username st
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("username", username).Msg("User not found")
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", username)}
+			return nil, NewNotFoundError("user %s not found", username)
 		}
 		logger.Error().Err(err).Str("username", username).Msg("Error retrieving user")
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving user %s: %w", username, err)}
+		return nil, NewInternalError("error retrieving user %s: %w", username, err)
 	}
 
 	return user, nil
@@ -105,22 +101,22 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 	hashedPassword, err := hashPassword(payload.Password)
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to hash password")
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to hash password: %w", err)}
+		return NewInternalError("failed to hash password: %w", err)
 	}
 
 	userModel, err := models.NewUser(payload.Username, hashedPassword)
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
-		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid user data for %s: %w", payload.Username, err)}
+		return NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
 	}
 
 	_, err = s.db.Users().InsertUser(ctx, userModel)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			return &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("failed to register user")}
+			return NewUnauthorizedError("failed to register user")
 		}
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to register user %s: %w", payload.Username, err)}
+		return NewInternalError("failed to register user %s: %w", payload.Username, err)
 	}
 
 	logger.Trace().Str("username", payload.Username).Msg("User registered successfully")
@@ -145,19 +141,19 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid credentials")}
+			return nil, NewUnauthorizedError("invalid credentials")
 		}
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving user %s: %w", payload.Username, err)}
+		return nil, NewInternalError("error retrieving user %s: %w", payload.Username, err)
 	}
 
 	if err = checkPasswordHash(payload.Password, user.PasswordHash); err != nil {
-		return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid credentials")}
+		return nil, NewUnauthorizedError("invalid credentials")
 	}
 
 	jwtToken, err := auth.NewJwt(payload.Username)
 	if jwtToken == nil {
 		logger.Error().Str("username", payload.Username).Err(err).Msg("Failed to generate JWT token")
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to generate JWT token")}
+		return nil, NewInternalError("failed to generate JWT token")
 	}
 
 	return &LoginResponse{Jwt: *jwtToken}, nil
