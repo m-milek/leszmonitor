@@ -102,7 +102,7 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 		var result monitorresult.MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `
-            SELECT mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+            SELECT mr.id, mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
             FROM monitor_results mr
             JOIN monitors m ON m.id = mr.monitor_id
             WHERE mr.monitor_id = $1
