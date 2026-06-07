@@ -20,7 +20,7 @@ func setupTestAuthorizationService() (context.Context, *AuthorizationService, *d
 	}
 	db.Set(mockDB)
 
-	authService := newAuthorizationService()
+	authService := NewAuthorizationService(AuthorizationServiceDeps{DB: mockDB})
 
 	return context.Background(), authService, mockDB
 }

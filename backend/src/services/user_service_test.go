@@ -14,16 +14,21 @@ import (
 
 // setupTestUserService creates a new UserService with a mock database for testing.
 func setupTestUserService() (context.Context, *UserService, *db.MockDB) {
-	authService := newAuthorizationService()
-	auditLogService := newAuditLogService()
 	ctx := context.Background()
 	mockDB := &db.MockDB{
 		UsersRepo:    new(db.MockUserRepository),
 		ProjectsRepo: new(db.MockProjectRepository),
 	}
 	db.Set(mockDB)
-	base := newBaseService(authService, auditLogService, "UserServiceTest")
-	return ctx, NewUserService(base), mockDB
+
+	authService := NewAuthorizationService(AuthorizationServiceDeps{DB: mockDB})
+	projectService := NewProjectService(ProjectServiceDeps{DB: mockDB, Auth: authService})
+
+	return ctx, NewUserService(UserServiceDeps{
+		DB:             mockDB,
+		Auth:           authService,
+		ProjectService: projectService,
+	}), mockDB
 }
 
 func TestUserServiceT_RegisterUser(t *testing.T) {

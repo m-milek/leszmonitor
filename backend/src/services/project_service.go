@@ -75,7 +75,7 @@ type ChangeProjectMemberRolePayload struct {
 func (s *ProjectService) CreateProject(ctx context.Context, ownerUsername string, payload CreateProjectPayload) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "CreateProject")
 
-	user, err := db.Get().Users().GetUserByUsername(ctx, ownerUsername)
+	user, err := s.db.Users().GetUserByUsername(ctx, ownerUsername)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", ownerUsername)}
@@ -126,7 +126,7 @@ func (s *ProjectService) GetProjectByID(ctx context.Context, projectAuth *author
 func (s *ProjectService) GetProjects(ctx context.Context, requestorUsername string, usernameQuery string) ([]models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "GetProjects")
 
-	user, err := db.Get().Users().GetUserByUsername(ctx, requestorUsername)
+	user, err := s.db.Users().GetUserByUsername(ctx, requestorUsername)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", requestorUsername)}
@@ -203,7 +203,7 @@ func (s *ProjectService) AddUserToProject(ctx context.Context, projectAuth *auth
 		return authErr
 	}
 
-	user, err := db.Get().Users().GetUserByUsername(ctx, payload.Username)
+	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", payload.Username)}

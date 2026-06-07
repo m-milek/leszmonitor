@@ -86,7 +86,7 @@ func (s *AuthorizationService) authorizeProjectAction(ctx context.Context, proje
 func (s *AuthorizationService) internalGetProjectByID(ctx context.Context, projectID uuid.UUID) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, "AuthorizationService", "internalGetProjectByID")
 
-	project, err := db.Get().Projects().GetProjectByID(ctx, projectID)
+	project, err := s.db.Projects().GetProjectByID(ctx, projectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("projectID", projectID.String()).Msg("Project not found")
@@ -109,7 +109,7 @@ func (s *AuthorizationService) internalGetProjectByID(ctx context.Context, proje
 func (s *AuthorizationService) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, "AuthorizationService", "internalGetUserByUsername")
 
-	user, err := db.Get().Users().GetUserByUsername(ctx, username)
+	user, err := s.db.Users().GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("username", username).Msg("User not found")
