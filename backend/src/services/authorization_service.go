@@ -133,5 +133,5 @@ func (s *AuthorizationService) isInstanceAdmin(ctx context.Context, username str
 
 	logger.Trace().Str("username", username).Msg("Checking if user is instance admin")
 
-	return true, nil
+	return false, nil
 }

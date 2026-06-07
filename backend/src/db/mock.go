@@ -93,6 +93,10 @@ func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, pro
 	return args.Bool(0), args.Error(1)
 }
 
+func (r *MockProjectRepository) ChangeMemberRole(ctx context.Context, projectSlug string, userID uuid.UUID, newRole models.Role) (bool, error) {
+	args := r.Called(ctx, projectSlug, userID, newRole)
+	return args.Bool(0), args.Error(1)
+}
 func (m *MockDB) Users() IUserRepository                   { return m.UsersRepo }
 func (m *MockDB) Monitors() IMonitorRepository             { return m.MonitorsRepo }
 func (m *MockDB) Projects() IProjectRepository             { return m.ProjectsRepo }

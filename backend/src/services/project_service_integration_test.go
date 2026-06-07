@@ -292,3 +292,370 @@ func TestIntegration_ProjectService_DeleteProject(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
 }
+
+func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
+	t.Run("Successfully updates a project when user is editor", func(t *testing.T) {
+		ctx, projectService, _, user := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, user.Username, CreateProjectPayload{Name: "Old Name", Description: "Old Description"})
+		require.Nil(t, err)
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  user.Username,
+		}
+
+		payload := UpdateProjectPayload{
+			Name:        "New Name",
+			Description: "New Description",
+		}
+
+		updatedProject, svcErr := projectService.UpdateProject(ctx, auth, payload)
+		require.Nil(t, svcErr)
+		require.NotNil(t, updatedProject)
+
+		assert.Equal(t, "New Name", updatedProject.Name)
+		assert.Equal(t, "new-name", updatedProject.Slug)
+		assert.Equal(t, "New Description", updatedProject.Description)
+
+		// Verify it's actually updated in DB
+		dbProject, dbErr := db.Get().Projects().GetProjectBySlug(ctx, updatedProject.Slug)
+		require.NoError(t, dbErr)
+		assert.Equal(t, "New Name", dbProject.Name)
+		assert.Equal(t, "new-name", dbProject.Slug)
+		assert.Equal(t, "New Description", dbProject.Description)
+
+		// Verify old slug is no longer valid
+		_, dbErr = db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
+		require.ErrorIs(t, dbErr, db.ErrNotFound)
+	})
+
+	t.Run("Fails with 403 Forbidden when user is only a viewer", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Not Yours"})
+		require.Nil(t, err)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "viewer", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		viewer, _ := userService.GetUserByUsername(ctx, "viewer")
+
+		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: viewer.ID, Role: models.RoleViewer})
+		require.NoError(t, repoErr)
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  viewer.Username,
+		}
+
+		payload := UpdateProjectPayload{
+			Name:        "Hacked Name",
+			Description: "Hacked Description",
+		}
+
+		updatedProject, svcErr := projectService.UpdateProject(ctx, auth, payload)
+
+		require.NotNil(t, svcErr)
+		assert.Nil(t, updatedProject)
+		assert.Equal(t, http.StatusForbidden, svcErr.Code)
+
+		// Verify project remains unchanged in DB
+		dbProject, dbErr := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
+		require.NoError(t, dbErr)
+		assert.Equal(t, "Not Yours", dbProject.Name)
+	})
+
+	t.Run("Does not modify protected fields like ID, Members, or CreatedAt", func(t *testing.T) {
+		ctx, projectService, _, user := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, user.Username, CreateProjectPayload{Name: "Original", Description: "Original"})
+		require.Nil(t, err)
+
+		originalID := project.ID
+		originalCreatedAt := project.CreatedAt
+		originalMembers := project.Members
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  user.Username,
+		}
+
+		payload := UpdateProjectPayload{
+			Name:        "Modified",
+			Description: "Modified",
+		}
+
+		updatedProject, svcErr := projectService.UpdateProject(ctx, auth, payload)
+		require.Nil(t, svcErr)
+
+		// Verify service response didn't mutate protected fields
+		assert.Equal(t, originalID, updatedProject.ID)
+		assert.Equal(t, originalCreatedAt, updatedProject.CreatedAt)
+		assert.Equal(t, originalMembers, updatedProject.Members)
+
+		// Verify DB state didn't mutate protected fields
+		dbProject, dbErr := db.Get().Projects().GetProjectBySlug(ctx, updatedProject.Slug)
+		require.NoError(t, dbErr)
+		assert.Equal(t, originalID, dbProject.ID)
+		assert.Equal(t, originalCreatedAt, dbProject.CreatedAt)
+		assert.Equal(t, originalMembers, dbProject.Members)
+	})
+}
+
+func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
+	t.Run("Successfully adds a member when user is editor", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+		require.Nil(t, err)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := AddProjectMemberPayload{
+			Username: "newbie",
+			Role:     models.RoleViewer,
+		}
+
+		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		require.Nil(t, svcErr)
+
+		dbProject, _ := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
+		require.Len(t, dbProject.Members, 2)
+
+		newbieUser, _ := userService.GetUserByUsername(ctx, "newbie")
+		member := dbProject.GetMember(newbieUser.ID)
+		require.NotNil(t, member)
+		assert.Equal(t, models.RoleViewer, member.Role)
+	})
+
+	t.Run("Fails with 403 Forbidden when user is only a viewer", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+		require.Nil(t, err)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "viewer", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		viewer, _ := userService.GetUserByUsername(ctx, "viewer")
+		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: viewer.ID, Role: models.RoleViewer})
+		require.NoError(t, repoErr)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  viewer.Username,
+		}
+
+		payload := AddProjectMemberPayload{
+			Username: "newbie",
+			Role:     models.RoleViewer,
+		}
+
+		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusForbidden, svcErr.Code)
+	})
+
+	t.Run("Fails with 404 Not Found when target user does not exist", func(t *testing.T) {
+		ctx, projectService, _, owner := setupIntegrationTest(t)
+
+		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := AddProjectMemberPayload{
+			Username: "ghost",
+			Role:     models.RoleViewer,
+		}
+
+		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusNotFound, svcErr.Code)
+	})
+
+	t.Run("Fails with 409 Conflict when user is already a member", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := AddProjectMemberPayload{
+			Username: "newbie",
+			Role:     models.RoleViewer,
+		}
+
+		// First addition should succeed
+		require.Nil(t, projectService.AddUserToProject(ctx, auth, payload))
+
+		// Second addition should fail
+		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusConflict, svcErr.Code)
+	})
+}
+
+func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
+	t.Run("Successfully removes a member when user is editor", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+		require.Nil(t, err)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		newbie, _ := userService.GetUserByUsername(ctx, "newbie")
+		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
+		require.NoError(t, repoErr)
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := RemoveProjectMemberPayload{
+			Username: "newbie",
+		}
+
+		svcErr := projectService.RemoveUserFromProject(ctx, auth, payload)
+		require.Nil(t, svcErr)
+
+		dbProject, _ := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
+		require.Len(t, dbProject.Members, 1)
+	})
+
+	t.Run("Fails when trying to remove the project owner", func(t *testing.T) {
+		ctx, projectService, _, owner := setupIntegrationTest(t)
+
+		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := RemoveProjectMemberPayload{
+			Username: owner.Username,
+		}
+
+		svcErr := projectService.RemoveUserFromProject(ctx, auth, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
+	})
+
+	t.Run("Fails when trying to remove a user that is not a member", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := RemoveProjectMemberPayload{
+			Username: "random",
+		}
+
+		svcErr := projectService.RemoveUserFromProject(ctx, auth, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
+	})
+}
+
+func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
+	t.Run("Successfully changes role when user is admin", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+		require.Nil(t, err)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		newbie, _ := userService.GetUserByUsername(ctx, "newbie")
+		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
+		require.NoError(t, repoErr)
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := ChangeProjectMemberRolePayload{
+			Username: "newbie",
+			Role:     models.RoleMember,
+		}
+
+		svcErr := projectService.ChangeProjectMemberRole(ctx, auth, payload)
+		require.Nil(t, svcErr)
+
+		dbProject, _ := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
+		member := dbProject.GetMember(newbie.ID)
+		assert.Equal(t, models.RoleMember, member.Role)
+	})
+
+	t.Run("Fails with 403 Forbidden when user is only an editor", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+		require.Nil(t, err)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "editor", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		editor, _ := userService.GetUserByUsername(ctx, "editor")
+		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: editor.ID, Role: models.RoleMember})
+		require.NoError(t, repoErr)
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		newbie, _ := userService.GetUserByUsername(ctx, "newbie")
+		_, repoErr = db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
+		require.NoError(t, repoErr)
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  editor.Username,
+		}
+
+		payload := ChangeProjectMemberRolePayload{
+			Username: "newbie",
+			Role:     models.RoleAdmin,
+		}
+
+		svcErr := projectService.ChangeProjectMemberRole(ctx, auth, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusForbidden, svcErr.Code)
+	})
+
+	t.Run("Fails when trying to change role of a user that is not a member", func(t *testing.T) {
+		ctx, projectService, userService, owner := setupIntegrationTest(t)
+
+		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
+
+		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
+
+		auth := &authorization.ProjectAuthorization{
+			ProjectID: project.ID,
+			Username:  owner.Username,
+		}
+
+		payload := ChangeProjectMemberRolePayload{
+			Username: "random",
+			Role:     models.RoleMember,
+		}
+
+		svcErr := projectService.ChangeProjectMemberRole(ctx, auth, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
+	})
+}

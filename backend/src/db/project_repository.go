@@ -19,6 +19,7 @@ type IProjectRepository interface {
 	DeleteProject(ctx context.Context, projectSlug string) (bool, error)
 	AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error)
 	RemoveMemberFromProject(ctx context.Context, projectSlug string, userID uuid.UUID) (bool, error)
+	ChangeMemberRole(ctx context.Context, projectSlug string, userID uuid.UUID, newRole models.Role) (bool, error)
 }
 
 type projectRepository struct {
@@ -251,6 +252,35 @@ func (r *projectRepository) RemoveMemberFromProject(ctx context.Context, project
 		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM user_projects WHERE project_id = $1 AND user_id = $2`,
 			projectID, userID)
+		if err != nil {
+			return false, err
+		}
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return false, err
+		}
+		if rows == 0 {
+			return false, ErrNotFound
+		}
+		return true, nil
+	})
+}
+
+func (r *projectRepository) ChangeMemberRole(ctx context.Context, projectSlug string, userID uuid.UUID, newRole models.Role) (bool, error) {
+	return dbWrap(ctx, "ChangeMemberRole", func() (bool, error) {
+		var projectID uuid.UUID
+		err := r.pool.QueryRowxContext(ctx,
+			`SELECT id FROM projects WHERE slug = $1`, projectSlug).Scan(&projectID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return false, ErrNotFound
+			}
+			return false, err
+		}
+
+		result, err := r.pool.ExecContext(ctx,
+			`UPDATE user_projects SET role = $1 WHERE project_id = $2 AND user_id = $3`,
+			newRole, projectID, userID)
 		if err != nil {
 			return false, err
 		}
