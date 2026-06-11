@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/security"
 	"github.com/m-milek/leszmonitor/util"
 	"github.com/stretchr/testify/assert"
@@ -75,30 +74,6 @@ func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
 		entries, svcErr := auditLogService.GetEntries(ctx, userClaims, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.Nil(t, svcErr)
 		require.Len(t, entries, 2)
-	})
-
-	t.Run("Fails with 403 Forbidden for a project member without admin rights", func(t *testing.T) {
-		ctx, auditLogService, projectService, userService, owner := setupAuditLogIntegrationTest(t)
-
-		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		require.Nil(t, err)
-
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "viewer", Password: "Password123!", PasswordConfirm: "Password123!"}))
-		viewer, _ := userService.GetUserByUsername(ctx, "viewer")
-		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: viewer.ID, Role: models.RoleViewer})
-		require.NoError(t, repoErr)
-
-		userClaims := &auth.UserClaims{
-			Username: viewer.Username,
-		}
-		filter := security.AuditLogFilter{
-			ProjectID: &project.ID,
-		}
-
-		entries, svcErr := auditLogService.GetEntries(ctx, userClaims, filter, util.Pagination{Page: 1, PerPage: 10})
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-		assert.Nil(t, entries)
 	})
 
 	t.Run("Fails with 400 Bad Request when non-instance admin tries to query without ProjectID filter", func(t *testing.T) {

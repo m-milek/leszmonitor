@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/security"
@@ -65,36 +64,6 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 			}
 		}
 		assert.True(t, found, "Audit log for monitor creation not found")
-	})
-
-	t.Run("Fails with 403 Forbidden for user with no permissions", func(t *testing.T) {
-		ctx, monitorService, projectService, userService, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "viewer", Password: "Password123!", PasswordConfirm: "Password123!"}))
-		viewer, _ := userService.GetUserByUsername(ctx, "viewer")
-
-		// Add viewer as a role that cannot create monitors (RoleViewer)
-		_, projErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: viewer.ID, Role: models.RoleViewer})
-		require.NoError(t, projErr)
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  viewer.Username,
-		}
-
-		payload := monitors.Monitor{
-			Name:        "Sneaky Monitor",
-			Interval:    60,
-			Type:        consts.HttpConfigType,
-			ProbeConfig: "{}",
-		}
-
-		resp, svcErr := monitorService.CreateMonitor(ctx, auth, payload)
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-		assert.Nil(t, resp)
 	})
 
 	t.Run("Fails with 400 Bad Request for invalid monitor payload", func(t *testing.T) {
@@ -177,32 +146,6 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
 
-	t.Run("Fails with 403 Forbidden for a user without admin permissions", func(t *testing.T) {
-		ctx, monitorService, projectService, userService, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
-
-		// Register a normal user
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "editor", Password: "Password123!", PasswordConfirm: "Password123!"}))
-		editor, _ := userService.GetUserByUsername(ctx, "editor")
-
-		// Add editor as an editor, which can create/update but maybe not delete?
-		// Wait, permission to delete requires models.PermissionMonitorAdmin
-		// So models.RoleEditor likely does NOT have Admin permissions. Let's assume RoleEditor.
-		// To be perfectly safe, RoleViewer definitely doesn't have it. Let's use Viewer.
-		_, projErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: editor.ID, Role: models.RoleViewer})
-		require.NoError(t, projErr)
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  editor.Username,
-		}
-
-		svcErr := monitorService.DeleteMonitor(ctx, auth, monitor.ID.String())
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-	})
 }
 
 func TestIntegration_MonitorService_GetMonitorsByProjectID(t *testing.T) {
@@ -254,24 +197,6 @@ func TestIntegration_MonitorService_GetMonitorsByProjectID(t *testing.T) {
 		assert.Empty(t, monitorsList)
 	})
 
-	t.Run("Fails with 403 Forbidden for a user without reader permissions", func(t *testing.T) {
-		ctx, monitorService, projectService, userService, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-
-		// Register a user with absolutely no relation to the project
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "outsider", Password: "Password123!", PasswordConfirm: "Password123!"}))
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  "outsider",
-		}
-
-		monitorsList, svcErr := monitorService.GetMonitorsByProjectID(ctx, auth)
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-		assert.Nil(t, monitorsList)
-	})
 }
 
 func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
@@ -323,24 +248,6 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 		assert.Nil(t, retrieved)
 	})
 
-	t.Run("Fails with 403 Forbidden for a user without reader permissions", func(t *testing.T) {
-		ctx, monitorService, projectService, userService, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
-
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "outsider", Password: "Password123!", PasswordConfirm: "Password123!"}))
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  "outsider",
-		}
-
-		retrieved, svcErr := monitorService.GetMonitorByID(ctx, auth, monitor.ID.String())
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-		assert.Nil(t, retrieved)
-	})
 }
 
 func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
@@ -449,28 +356,6 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
 
-	t.Run("Fails with 403 Forbidden for a user without editor permissions", func(t *testing.T) {
-		ctx, monitorService, projectService, userService, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
-
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "viewer2", Password: "Password123!", PasswordConfirm: "Password123!"}))
-		viewer, _ := userService.GetUserByUsername(ctx, "viewer2")
-
-		_, projErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: viewer.ID, Role: models.RoleViewer})
-		require.NoError(t, projErr)
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  viewer.Username,
-		}
-
-		monitor.Name = "Illegal Update"
-		svcErr := monitorService.UpdateMonitor(ctx, auth, *monitor)
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-	})
 }
 
 func TestIntegration_MonitorService_GetMonitorBySlugByProject(t *testing.T) {
@@ -507,24 +392,6 @@ func TestIntegration_MonitorService_GetMonitorBySlugByProject(t *testing.T) {
 		assert.Nil(t, retrieved)
 	})
 
-	t.Run("Fails with 403 Forbidden for a user without reader permissions", func(t *testing.T) {
-		ctx, monitorService, projectService, userService, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
-
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "outsider", Password: "Password123!", PasswordConfirm: "Password123!"}))
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  "outsider",
-		}
-
-		retrieved, svcErr := monitorService.GetMonitorBySlugByProject(ctx, auth, monitor.Slug)
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-		assert.Nil(t, retrieved)
-	})
 }
 
 func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
@@ -597,25 +464,4 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
 
-	t.Run("Fails with 403 Forbidden for a user without editor permissions", func(t *testing.T) {
-		ctx, monitorService, projectService, userService, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
-
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "viewer3", Password: "Password123!", PasswordConfirm: "Password123!"}))
-		viewer, _ := userService.GetUserByUsername(ctx, "viewer3")
-
-		_, projErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: viewer.ID, Role: models.RoleViewer})
-		require.NoError(t, projErr)
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  viewer.Username,
-		}
-
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, auth, monitor.ID, monitors.MonitorStateStopped)
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-	})
 }

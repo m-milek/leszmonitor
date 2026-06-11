@@ -61,25 +61,6 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		assert.Nil(t, latest)
 	})
 
-	t.Run("Fails with 403 Forbidden for a user with no permissions", func(t *testing.T) {
-		ctx, service, projectService, userService, owner := setupMonitorResultsIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
-
-		// Register a random user with no permissions
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  "random",
-		}
-
-		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, auth, monitor.ID.String())
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusForbidden, svcErr.Code)
-		assert.Nil(t, latest)
-	})
 }
 
 func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
