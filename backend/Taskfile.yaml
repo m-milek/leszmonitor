@@ -8,6 +8,8 @@ vars:
 env:
   LOG_FILE_PATH: '{{.TASKFILE_DIR}}/.dev-logs/backend.log'
   LOG_LEVEL: 'TRACE'
+  INSTANCE_ADMIN_USERNAME: 'admin'
+  INSTANCE_ADMIN_PASSWORD: '123123'
 
 tasks:
   build:

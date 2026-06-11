@@ -62,14 +62,9 @@ func (h *ProjectAPIController) GetProjectsHandler(w http.ResponseWriter, r *http
 
 func (h *ProjectAPIController) GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.PathValue("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
-	project, err := h.service.GetProjectByID(ctx, projectAuth)
+	project, err := h.service.GetProjectBySlug(ctx, projectSlug)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -80,14 +75,9 @@ func (h *ProjectAPIController) GetProjectByIDHandler(w http.ResponseWriter, r *h
 
 func (h *ProjectAPIController) DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
-	err := h.service.DeleteProject(ctx, projectAuth)
+	err := h.service.DeleteProject(ctx, projectSlug)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -98,12 +88,7 @@ func (h *ProjectAPIController) DeleteProjectHandler(w http.ResponseWriter, r *ht
 
 func (h *ProjectAPIController) UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.UpdateProjectPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -111,7 +96,7 @@ func (h *ProjectAPIController) UpdateProjectHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	project, err := h.service.UpdateProject(ctx, projectAuth, payload)
+	project, err := h.service.UpdateProject(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -122,19 +107,14 @@ func (h *ProjectAPIController) UpdateProjectHandler(w http.ResponseWriter, r *ht
 
 func (h *ProjectAPIController) AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.PathValue("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.AddProjectMemberPayload
 	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := h.service.AddUserToProject(ctx, projectAuth, payload)
+	err := h.service.AddUserToProject(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -145,19 +125,14 @@ func (h *ProjectAPIController) AddProjectMemberHandler(w http.ResponseWriter, r 
 
 func (h *ProjectAPIController) RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.RemoveProjectMemberPayload
-	if util.DecodeJSONOrRespond(ctx, w, r, &payload) {
+	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := h.service.RemoveUserFromProject(ctx, projectAuth, payload)
+	err := h.service.RemoveUserFromProject(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -168,19 +143,14 @@ func (h *ProjectAPIController) RemoveProjectMemberHandler(w http.ResponseWriter,
 
 func (h *ProjectAPIController) ChangeProjectMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.ChangeProjectMemberRolePayload
-	if util.DecodeJSONOrRespond(ctx, w, r, &payload) {
+	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := h.service.ChangeProjectMemberRole(ctx, projectAuth, payload)
+	err := h.service.ChangeProjectMemberRole(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return

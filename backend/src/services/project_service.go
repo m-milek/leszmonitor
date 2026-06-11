@@ -4,40 +4,36 @@ import (
 	"context"
 	"errors"
 
-	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 )
 
 type IProjectService interface {
 	CreateProject(ctx context.Context, ownerUsername string, payload CreateProjectPayload) (*models.Project, *ServiceError)
-	GetProjectByID(ctx context.Context, projectAuth *authorization.ProjectAuthorization) (*models.Project, *ServiceError)
+	GetProjectBySlug(ctx context.Context, projectSlug string) (*models.Project, *ServiceError)
 	GetProjects(ctx context.Context, requestorUsername string, usernameQuery string) ([]models.Project, *ServiceError)
-	DeleteProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization) *ServiceError
-	UpdateProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload UpdateProjectPayload) (*models.Project, *ServiceError)
+	DeleteProject(ctx context.Context, projectSlug string) *ServiceError
+	UpdateProject(ctx context.Context, projectSlug string, payload UpdateProjectPayload) (*models.Project, *ServiceError)
 
-	AddUserToProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload AddProjectMemberPayload) *ServiceError
-	RemoveUserFromProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload RemoveProjectMemberPayload) *ServiceError
-	ChangeProjectMemberRole(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload ChangeProjectMemberRolePayload) *ServiceError
+	AddUserToProject(ctx context.Context, projectSlug string, payload AddProjectMemberPayload) *ServiceError
+	RemoveUserFromProject(ctx context.Context, projectSlug string, payload RemoveProjectMemberPayload) *ServiceError
+	ChangeProjectMemberRole(ctx context.Context, projectSlug string, payload ChangeProjectMemberRolePayload) *ServiceError
 }
 
 // ProjectService handles project-related CRUD operations including membership management.
 type ProjectService struct {
 	db          db.DB
-	auth        IAuthorizer
 	UserService IUserService // public so that we can do the circular dependency
 }
 
 type ProjectServiceDeps struct {
 	DB          db.DB
-	Auth        IAuthorizer
 	UserService IUserService
 }
 
 func NewProjectService(deps ProjectServiceDeps) *ProjectService {
 	return &ProjectService{
 		db:          deps.DB,
-		auth:        deps.Auth,
 		UserService: deps.UserService,
 	}
 }
@@ -107,13 +103,13 @@ func (s *ProjectService) CreateProject(ctx context.Context, ownerUsername string
 	return created, nil
 }
 
-// GetProjectByID retrieves a project by its slug, authorizing the requesting user.
-func (s *ProjectService) GetProjectByID(ctx context.Context, projectAuth *authorization.ProjectAuthorization) (*models.Project, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "GetProjectByID")
+// GetProjectBySlug retrieves a project by its slug.
+func (s *ProjectService) GetProjectBySlug(ctx context.Context, projectSlug string) (*models.Project, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "GetProjectBySlug")
 
-	project, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectReader)
-	if authErr != nil {
-		return nil, authErr
+	project, err := s.internalGetProjectBySlug(ctx, projectSlug)
+	if err != nil {
+		return nil, err
 	}
 
 	logger.Trace().Str("projectID", project.Slug).Msg("Retrieved project successfully")
@@ -147,13 +143,13 @@ func (s *ProjectService) GetProjects(ctx context.Context, requestorUsername stri
 	return projects, nil
 }
 
-// DeleteProject deletes a project. Requires ProjectAdmin permission.
-func (s *ProjectService) DeleteProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization) *ServiceError {
+// DeleteProject deletes a project.
+func (s *ProjectService) DeleteProject(ctx context.Context, projectSlug string) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "DeleteProject")
 
-	project, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectAdmin)
-	if authErr != nil {
-		return authErr
+	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	if getErr != nil {
+		return getErr
 	}
 
 	deleted, err := s.db.Projects().DeleteProject(ctx, project.Slug)
@@ -169,13 +165,13 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectAuth *authori
 	return nil
 }
 
-// UpdateProject updates a project's name/description. Requires ProjectEditor permission.
-func (s *ProjectService) UpdateProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload UpdateProjectPayload) (*models.Project, *ServiceError) {
+// UpdateProject updates a project's name/description.
+func (s *ProjectService) UpdateProject(ctx context.Context, projectSlug string, payload UpdateProjectPayload) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "UpdateProject")
 
-	oldProject, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectEditor)
-	if authErr != nil {
-		return nil, authErr
+	oldProject, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	if getErr != nil {
+		return nil, getErr
 	}
 
 	newProject := *oldProject
@@ -192,12 +188,12 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectAuth *authori
 	return &newProject, nil
 }
 
-// AddUserToProject adds a user to a project with a specified role. Requires ProjectEditor permission.
-func (s *ProjectService) AddUserToProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload AddProjectMemberPayload) *ServiceError {
+// AddUserToProject adds a user to a project with a specified role.
+func (s *ProjectService) AddUserToProject(ctx context.Context, projectSlug string, payload AddProjectMemberPayload) *ServiceError {
 
-	project, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectEditor)
-	if authErr != nil {
-		return authErr
+	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	if getErr != nil {
+		return getErr
 	}
 
 	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
@@ -228,13 +224,13 @@ func (s *ProjectService) AddUserToProject(ctx context.Context, projectAuth *auth
 	return nil
 }
 
-// RemoveUserFromProject removes a user from a project. Requires ProjectEditor permission.
-func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload RemoveProjectMemberPayload) *ServiceError {
+// RemoveUserFromProject removes a user from a project.
+func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug string, payload RemoveProjectMemberPayload) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "RemoveUserFromProject")
 
-	project, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectEditor)
-	if authErr != nil {
-		return authErr
+	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	if getErr != nil {
+		return getErr
 	}
 
 	user, serviceErr := s.UserService.GetUserByUsername(ctx, payload.Username)
@@ -262,13 +258,13 @@ func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectAuth 
 	return nil
 }
 
-// ChangeProjectMemberRole changes a member's role. Requires ProjectAdmin permission.
-func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectAuth *authorization.ProjectAuthorization, payload ChangeProjectMemberRolePayload) *ServiceError {
+// ChangeProjectMemberRole changes a member's role.
+func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectSlug string, payload ChangeProjectMemberRolePayload) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "ChangeProjectMemberRole")
 
-	project, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionProjectAdmin)
-	if authErr != nil {
-		return authErr
+	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	if getErr != nil {
+		return getErr
 	}
 
 	user, serviceErr := s.UserService.GetUserByUsername(ctx, payload.Username)

@@ -61,7 +61,6 @@ func main() {
 
 	projectService := services.NewProjectService(services.ProjectServiceDeps{
 		DB:          db,
-		Auth:        authService,
 		UserService: nil,
 	})
 	userService := services.NewUserService(services.UserServiceDeps{
@@ -89,12 +88,15 @@ func main() {
 	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
 	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
 
+	authzMiddlewareService := services.NewAuthzMiddlewareService(db)
+
 	handlers := api.Handlers{
-		Project:        projectAPIController,
-		User:           userAPIController,
-		Monitor:        monitorAPIController,
-		MonitorResults: monitorResultsAPIController,
-		AuditLog:       auditLogAPIController,
+		Project:                projectAPIController,
+		User:                   userAPIController,
+		Monitor:                monitorAPIController,
+		MonitorResults:         monitorResultsAPIController,
+		AuditLog:               auditLogAPIController,
+		AuthzMiddlewareService: authzMiddlewareService,
 	}
 
 	// Start the server

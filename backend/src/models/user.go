@@ -1,16 +1,21 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+
 	"github.com/google/uuid"
+	config "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/models/util"
 )
 
 // User represents a user in the system.
 type User struct {
-	ID           uuid.UUID `json:"id" db:"id"`
-	Username     string    `json:"username" db:"username"`
-	PasswordHash string    `json:"-" db:"password_hash"`
+	ID              uuid.UUID `json:"id" db:"id"`
+	Username        string    `json:"username" db:"username"`
+	PasswordHash    string    `json:"-" db:"password_hash"`
+	IsInstanceAdmin bool      `json:"isInstanceAdmin" db:"is_instance_admin"`
 	util.Timestamps
 }
 
@@ -37,4 +42,20 @@ func (u *User) Validate() error {
 		return fmt.Errorf("password hash cannot be empty")
 	}
 	return nil
+}
+
+func (u *User) MarshalJSON() ([]byte, error) {
+	type Alias User
+
+	return json.Marshal(&struct {
+		*Alias
+		IsInstanceAdmin bool `json:"isInstanceAdmin"`
+	}{
+		Alias:           (*Alias)(u),
+		IsInstanceAdmin: GetIsInstanceAdmin(*u),
+	})
+}
+
+func GetIsInstanceAdmin(user User) bool {
+	return user.Username == os.Getenv(config.InstanceAdminUsername)
 }

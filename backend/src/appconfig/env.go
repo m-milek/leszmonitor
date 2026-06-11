@@ -6,11 +6,13 @@ import (
 )
 
 const (
-	ApiPort        = "API_PORT"
-	LogLevel       = "LOG_LEVEL" // TRACE, DEBUG, INFO, WARN, ERROR
-	SqliteDbPath   = "SQLITE_DB_PATH"
-	JwtSecret      = "JWT_SECRET"
-	JwtExpiryHours = "JWT_EXPIRY_HOURS"
+	ApiPort               = "API_PORT"
+	LogLevel              = "LOG_LEVEL" // TRACE, DEBUG, INFO, WARN, ERROR
+	SqliteDbPath          = "SQLITE_DB_PATH"
+	JwtSecret             = "JWT_SECRET"
+	JwtExpiryHours        = "JWT_EXPIRY_HOURS"
+	InstanceAdminUsername = "INSTANCE_ADMIN_USERNAME"
+	InstanceAdminPassword = "INSTANCE_ADMIN_PASSWORD"
 )
 
 func Validate() error {
@@ -30,6 +32,14 @@ func Validate() error {
 
 	if os.Getenv(JwtExpiryHours) == "" {
 		missingVars = append(missingVars, JwtExpiryHours)
+	}
+
+	if os.Getenv(InstanceAdminUsername) == "" {
+		missingVars = append(missingVars, InstanceAdminUsername)
+	}
+
+	if os.Getenv(InstanceAdminPassword) == "" {
+		missingVars = append(missingVars, InstanceAdminPassword)
 	}
 
 	if len(missingVars) > 0 {

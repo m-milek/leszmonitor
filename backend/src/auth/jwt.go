@@ -16,13 +16,15 @@ import (
 // It includes standard claims and a custom Username field.
 type JwtClaims struct {
 	jwt.MapClaims
-	Username string `json:"username"`
-	Exp      int64  `json:"exp"`
+	Username        string `json:"username"`
+	IsInstanceAdmin bool   `json:"is_instance_admin"`
+	Exp             int64  `json:"exp"`
 }
 
 // UserClaims extends standard JWT claims with custom fields.
 type UserClaims struct {
-	Username string `json:"username"`
+	Username        string `json:"username"`
+	IsInstanceAdmin bool   `json:"is_instance_admin"`
 	jwt.RegisteredClaims
 }
 
@@ -93,7 +95,7 @@ func ValidateJwt(token string) (*UserClaims, error) {
 	return userClaims, nil
 }
 
-func NewJwt(username string) (*string, error) {
+func NewJwt(username string, isInstanceAdmin bool) (*string, error) {
 	expiryHours, err := strconv.Atoi(os.Getenv(config.JwtExpiryHours))
 	if err != nil {
 		return nil, fmt.Errorf("invalid JwtExpiryHours value: %w", err)
@@ -104,9 +106,10 @@ func NewJwt(username string) (*string, error) {
 	jwtToken := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"username": username,
-			"exp":      jwt.NewNumericDate(expiryDate),
-			"iat":      jwt.NewNumericDate(time.Now()),
+			"username":          username,
+			"is_instance_admin": isInstanceAdmin,
+			"exp":               jwt.NewNumericDate(expiryDate),
+			"iat":               jwt.NewNumericDate(time.Now()),
 		},
 	)
 	token, err := jwtToken.SignedString([]byte(os.Getenv(config.JwtSecret)))

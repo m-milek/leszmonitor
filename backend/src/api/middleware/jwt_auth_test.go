@@ -45,7 +45,7 @@ func TestJwtAuth_InvalidToken(t *testing.T) {
 func TestJwtAuth_ValidToken(t *testing.T) {
 	os.Setenv(config.JwtSecret, "test-secret")
 	os.Setenv(config.JwtExpiryHours, "1")
-	token, err := auth.NewJwt("testuser")
+	token, err := auth.NewJwt("testuser", false)
 	if err != nil {
 		t.Fatalf("failed to generate token: %v", err)
 	}

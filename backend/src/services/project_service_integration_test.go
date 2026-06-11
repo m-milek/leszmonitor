@@ -146,9 +146,9 @@ func TestIntegration_ProjectService_GetProjectByID(t *testing.T) {
 		require.Nil(t, svcErr)
 		require.NotNil(t, project)
 
-		projectAuth := authorization.ProjectAuthorization{ProjectID: project.ID, Username: "integration_user"}
+		_ = authorization.ProjectAuthorization{ProjectID: project.ID, Username: "integration_user"}
 
-		retrievedProject, getErr := projectService.GetProjectByID(ctx, &projectAuth)
+		retrievedProject, getErr := projectService.GetProjectBySlug(ctx, project.Slug)
 
 		assert.Nil(t, getErr)
 		require.NotNil(t, retrievedProject)
@@ -160,9 +160,9 @@ func TestIntegration_ProjectService_GetProjectByID(t *testing.T) {
 	t.Run("Fails with 404 when project doesn't exist", func(t *testing.T) {
 		ctx, projectService, _, _ := setupIntegrationTest(t)
 
-		projectAuth := authorization.ProjectAuthorization{ProjectID: uuid.New(), Username: "integration_user"}
+		_ = authorization.ProjectAuthorization{ProjectID: uuid.New(), Username: "integration_user"}
 
-		retrievedProject, getErr := projectService.GetProjectByID(ctx, &projectAuth)
+		retrievedProject, getErr := projectService.GetProjectBySlug(ctx, "nonexistent-project")
 
 		assert.Nil(t, retrievedProject)
 		require.NotNil(t, getErr)
@@ -177,12 +177,12 @@ func TestIntegration_ProjectService_DeleteProject(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, user.Username, CreateProjectPayload{Name: "To Be Deleted"})
 		require.Nil(t, err)
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  user.Username,
 		}
 
-		svcErr := projectService.DeleteProject(ctx, auth)
+		svcErr := projectService.DeleteProject(ctx, project.Slug)
 		require.Nil(t, svcErr)
 
 		// Verify it's actually deleted from DB
@@ -208,11 +208,11 @@ func TestIntegration_ProjectService_DeleteProject(t *testing.T) {
 		require.NoError(t, repoErr)
 
 		// Action: Attempt deletion as viewer
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  viewer.Username,
 		}
-		svcErr := projectService.DeleteProject(ctx, auth)
+		svcErr := projectService.DeleteProject(ctx, project.Slug)
 
 		// Assert: Verify forbidden error
 		require.NotNil(t, svcErr)
@@ -227,11 +227,11 @@ func TestIntegration_ProjectService_DeleteProject(t *testing.T) {
 	t.Run("Returns 404 Not Found when project does not exist", func(t *testing.T) {
 		ctx, projectService, _, user := setupIntegrationTest(t)
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: uuid.New(),
 			Username:  user.Username,
 		}
-		svcErr := projectService.DeleteProject(ctx, auth)
+		svcErr := projectService.DeleteProject(ctx, "nonexistent-project")
 
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
@@ -245,7 +245,7 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, user.Username, CreateProjectPayload{Name: "Old Name", Description: "Old Description"})
 		require.Nil(t, err)
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  user.Username,
 		}
@@ -255,7 +255,7 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 			Description: "New Description",
 		}
 
-		updatedProject, svcErr := projectService.UpdateProject(ctx, auth, payload)
+		updatedProject, svcErr := projectService.UpdateProject(ctx, project.Slug, payload)
 		require.Nil(t, svcErr)
 		require.NotNil(t, updatedProject)
 
@@ -287,7 +287,7 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: viewer.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  viewer.Username,
 		}
@@ -297,7 +297,7 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 			Description: "Hacked Description",
 		}
 
-		updatedProject, svcErr := projectService.UpdateProject(ctx, auth, payload)
+		updatedProject, svcErr := projectService.UpdateProject(ctx, project.Slug, payload)
 
 		require.NotNil(t, svcErr)
 		assert.Nil(t, updatedProject)
@@ -319,7 +319,7 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 		originalCreatedAt := project.CreatedAt
 		originalMembers := project.Members
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  user.Username,
 		}
@@ -329,7 +329,7 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 			Description: "Modified",
 		}
 
-		updatedProject, svcErr := projectService.UpdateProject(ctx, auth, payload)
+		updatedProject, svcErr := projectService.UpdateProject(ctx, project.Slug, payload)
 		require.Nil(t, svcErr)
 
 		// Verify service response didn't mutate protected fields
@@ -355,7 +355,7 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -365,7 +365,7 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 			Role:     models.RoleViewer,
 		}
 
-		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		svcErr := projectService.AddUserToProject(ctx, project.Slug, payload)
 		require.Nil(t, svcErr)
 
 		dbProject, _ := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
@@ -390,7 +390,7 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  viewer.Username,
 		}
@@ -400,7 +400,7 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 			Role:     models.RoleViewer,
 		}
 
-		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		svcErr := projectService.AddUserToProject(ctx, project.Slug, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusForbidden, svcErr.Code)
 	})
@@ -410,7 +410,7 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -420,7 +420,7 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 			Role:     models.RoleViewer,
 		}
 
-		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		svcErr := projectService.AddUserToProject(ctx, project.Slug, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
@@ -432,7 +432,7 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -443,10 +443,10 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 		}
 
 		// First addition should succeed
-		require.Nil(t, projectService.AddUserToProject(ctx, auth, payload))
+		require.Nil(t, projectService.AddUserToProject(ctx, project.Slug, payload))
 
 		// Second addition should fail
-		svcErr := projectService.AddUserToProject(ctx, auth, payload)
+		svcErr := projectService.AddUserToProject(ctx, project.Slug, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusConflict, svcErr.Code)
 	})
@@ -464,7 +464,7 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -473,7 +473,7 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 			Username: "newbie",
 		}
 
-		svcErr := projectService.RemoveUserFromProject(ctx, auth, payload)
+		svcErr := projectService.RemoveUserFromProject(ctx, project.Slug, payload)
 		require.Nil(t, svcErr)
 
 		dbProject, _ := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
@@ -485,7 +485,7 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -494,7 +494,7 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 			Username: owner.Username,
 		}
 
-		svcErr := projectService.RemoveUserFromProject(ctx, auth, payload)
+		svcErr := projectService.RemoveUserFromProject(ctx, project.Slug, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -506,7 +506,7 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -515,7 +515,7 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 			Username: "random",
 		}
 
-		svcErr := projectService.RemoveUserFromProject(ctx, auth, payload)
+		svcErr := projectService.RemoveUserFromProject(ctx, project.Slug, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -533,7 +533,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -543,7 +543,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 			Role:     models.RoleMember,
 		}
 
-		svcErr := projectService.ChangeProjectMemberRole(ctx, auth, payload)
+		svcErr := projectService.ChangeProjectMemberRole(ctx, project.Slug, payload)
 		require.Nil(t, svcErr)
 
 		dbProject, _ := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
@@ -567,7 +567,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 		_, repoErr = db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  editor.Username,
 		}
@@ -577,7 +577,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 			Role:     models.RoleAdmin,
 		}
 
-		svcErr := projectService.ChangeProjectMemberRole(ctx, auth, payload)
+		svcErr := projectService.ChangeProjectMemberRole(ctx, project.Slug, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusForbidden, svcErr.Code)
 	})
@@ -589,7 +589,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
 
-		auth := &authorization.ProjectAuthorization{
+		_ = &authorization.ProjectAuthorization{
 			ProjectID: project.ID,
 			Username:  owner.Username,
 		}
@@ -599,7 +599,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 			Role:     models.RoleMember,
 		}
 
-		svcErr := projectService.ChangeProjectMemberRole(ctx, auth, payload)
+		svcErr := projectService.ChangeProjectMemberRole(ctx, project.Slug, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})

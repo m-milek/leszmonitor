@@ -30,7 +30,6 @@ func setupTestProjectService() (context.Context, *ProjectService, *db.MockDB) {
 
 	svc := NewProjectService(ProjectServiceDeps{
 		DB:          mockDB,
-		Auth:        authService,
 		UserService: userService,
 	})
 

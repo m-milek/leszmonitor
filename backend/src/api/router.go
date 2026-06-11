@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/api/controllers"
+	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/models"
 )
 
 func SetupRouters(
@@ -22,14 +24,14 @@ func SetupRouters(
 	// Projects
 	protectedRouter.HandleFunc("GET /api/v1/projects", h.Project.GetProjectsHandler)
 	protectedRouter.HandleFunc("POST /api/v1/projects", h.Project.CreateProjectHandler)
-	protectedRouter.HandleFunc("GET /api/v1/projects/{projectSlug}", h.Project.GetProjectByIDHandler)
-	protectedRouter.HandleFunc("PATCH /api/v1/projects/{projectSlug}", h.Project.UpdateProjectHandler)
-	protectedRouter.HandleFunc("DELETE /api/v1/projects/{projectSlug}", h.Project.DeleteProjectHandler)
+	protectedRouter.HandleFunc("GET /api/v1/projects/{projectSlug}", middleware.RequireProjectPermission(h.AuthzMiddlewareService, models.PermissionProjectReader)(h.Project.GetProjectByIDHandler))
+	protectedRouter.HandleFunc("PATCH /api/v1/projects/{projectSlug}", middleware.RequireProjectPermission(h.AuthzMiddlewareService, models.PermissionProjectEditor)(h.Project.UpdateProjectHandler))
+	protectedRouter.HandleFunc("DELETE /api/v1/projects/{projectSlug}", middleware.RequireProjectPermission(h.AuthzMiddlewareService, models.PermissionProjectAdmin)(h.Project.DeleteProjectHandler))
 
 	// Project Members
-	protectedRouter.HandleFunc("POST /api/v1/projects/{projectSlug}/members", h.Project.AddProjectMemberHandler)
-	protectedRouter.HandleFunc("DELETE /api/v1/projects/{projectSlug}/members", h.Project.RemoveProjectMemberHandler)
-	protectedRouter.HandleFunc("PATCH /api/v1/projects/{projectSlug}/members/{userId}", h.Project.ChangeProjectMemberRoleHandler)
+	protectedRouter.HandleFunc("POST /api/v1/projects/{projectSlug}/members", middleware.RequireProjectPermission(h.AuthzMiddlewareService, models.PermissionProjectEditor)(h.Project.AddProjectMemberHandler))
+	protectedRouter.HandleFunc("DELETE /api/v1/projects/{projectSlug}/members", middleware.RequireProjectPermission(h.AuthzMiddlewareService, models.PermissionProjectEditor)(h.Project.RemoveProjectMemberHandler))
+	protectedRouter.HandleFunc("PATCH /api/v1/projects/{projectSlug}/members/{userId}", middleware.RequireProjectPermission(h.AuthzMiddlewareService, models.PermissionProjectAdmin)(h.Project.ChangeProjectMemberRoleHandler))
 
 	// Monitors
 	protectedRouter.HandleFunc("GET /api/v1/monitors", h.Monitor.GetMonitorByProjectSlugHandler)

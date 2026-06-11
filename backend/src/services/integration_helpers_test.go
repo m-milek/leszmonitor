@@ -39,16 +39,13 @@ func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *User
 		db.Set(nil)
 	})
 
-	authService := NewAuthorizationService(AuthorizationServiceDeps{DB: realDB})
-
 	userService := NewUserService(UserServiceDeps{
-		DB:   realDB,
-		Auth: authService,
+		DB: realDB,
 	})
 
 	projectService := NewProjectService(ProjectServiceDeps{
-		DB:          realDB,
-		Auth:        authService,
+		DB: realDB,
+
 		UserService: userService,
 	})
 

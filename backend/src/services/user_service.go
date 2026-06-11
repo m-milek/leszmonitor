@@ -106,7 +106,7 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 
 	userModel, err := models.NewUser(payload.Username, hashedPassword)
 	if err != nil {
-		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user Żdata")
 		return NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
 	}
 
@@ -127,7 +127,7 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 	})
 	if projectErr != nil {
 		logger.Error().Err(projectErr.Err).Msg("Failed to auto-create sandbox project for new user")
-		// We don't fail the registration if the sandbox fails
+		return NewInternalError("failed to create sandbox project for user %s: %w", payload.Username, projectErr.Err)
 	}
 
 	return nil
@@ -150,7 +150,7 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 		return nil, NewUnauthorizedError("invalid credentials")
 	}
 
-	jwtToken, err := auth.NewJwt(payload.Username)
+	jwtToken, err := auth.NewJwt(payload.Username, models.GetIsInstanceAdmin(*user))
 	if jwtToken == nil {
 		logger.Error().Str("username", payload.Username).Err(err).Msg("Failed to generate JWT token")
 		return nil, NewInternalError("failed to generate JWT token")
