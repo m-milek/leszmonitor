@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/auth"
@@ -13,16 +12,33 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// UserServiceT handles user-related operations such as registration, login, and retrieval.
-type UserServiceT struct {
-	baseService
+type IUserService interface {
+	GetAllUsers(ctx context.Context) ([]models.User, *ServiceError)
+	GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError)
+	RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError
+	Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError)
 }
 
-func newUserService(base baseService) *UserServiceT {
-	return &UserServiceT{baseService: base}
+type UserServiceDeps struct {
+	DB             db.DB
+	Auth           IAuthorizer
+	ProjectService IProjectService
 }
 
-var UserService = newUserService(newBaseService(newAuthorizationService(), newAuditLogService(), "UserService"))
+// UserService handles user-related operations such as registration, login, and retrieval.
+type UserService struct {
+	db             db.DB
+	auth           IAuthorizer
+	projectService IProjectService
+}
+
+func NewUserService(deps UserServiceDeps) *UserService {
+	return &UserService{
+		db:             deps.DB,
+		auth:           deps.Auth,
+		projectService: deps.ProjectService,
+	}
+}
 
 type UserRegisterPayload struct {
 	Username        string `json:"username"`
@@ -41,106 +57,103 @@ type LoginResponse struct {
 }
 
 // GetAllUsers retrieves all users from the database.
-func (s *UserServiceT) GetAllUsers(ctx context.Context) ([]models.User, *ServiceError) {
-	logger := s.getMethodLogger("GetAllUsers")
+func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, "UserService", "GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
-	users, err := s.getDB().Users().GetAllUsers(ctx)
+	users, err := s.db.Users().GetAllUsers(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error retrieving users")
-		return nil, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  fmt.Errorf("error retrieving users: %w", err),
-		}
+		return nil, NewInternalError("error retrieving users: %w", err)
 	}
 
 	return users, nil
 }
 
 // GetUserByUsername retrieves a user by their username.
-func (s *UserServiceT) GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
+func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
 	return s.internalGetUserByUsername(ctx, username)
 }
 
 // internalGetUserByUsername retrieves a user by their username without authorization checks.
-func (s *UserServiceT) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
-	logger := s.getMethodLogger("internalGetUserByUsername")
+func (s *UserService) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, "UserService", "internalGetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
-	user, err := s.getDB().Users().GetUserByUsername(ctx, username)
+	user, err := s.db.Users().GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("username", username).Msg("User not found")
-			return nil, &ServiceError{Code: http.StatusNotFound, Err: fmt.Errorf("user %s not found", username)}
+			return nil, NewNotFoundError("user %s not found", username)
 		}
 		logger.Error().Err(err).Str("username", username).Msg("Error retrieving user")
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving user %s: %w", username, err)}
+		return nil, NewInternalError("error retrieving user %s: %w", username, err)
 	}
 
 	return user, nil
 }
 
 // RegisterUser registers a new user with the provided payload.
-func (s *UserServiceT) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
-	logger := s.getMethodLogger("RegisterUser")
+func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
+	logger := MethodLoggerFromContext(ctx, "UserService", "RegisterUser")
 	logger.Trace().Str("username", payload.Username).Msg("Registering new user")
 
 	hashedPassword, err := hashPassword(payload.Password)
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to hash password")
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to hash password: %w", err)}
+		return NewInternalError("failed to hash password: %w", err)
 	}
 
 	userModel, err := models.NewUser(payload.Username, hashedPassword)
 	if err != nil {
-		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
-		return &ServiceError{Code: http.StatusBadRequest, Err: fmt.Errorf("invalid user data for %s: %w", payload.Username, err)}
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user Żdata")
+		return NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
 	}
 
-	_, err = s.getDB().Users().InsertUser(ctx, userModel)
+	_, err = s.db.Users().InsertUser(ctx, userModel)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			return &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("failed to register user")}
+			return NewUnauthorizedError("failed to register user")
 		}
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
-		return &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to register user %s: %w", payload.Username, err)}
+		return NewInternalError("failed to register user %s: %w", payload.Username, err)
 	}
 
 	logger.Trace().Str("username", payload.Username).Msg("User registered successfully")
 
-	_, projectErr := ProjectService.CreateProject(ctx, payload.Username, CreateProjectPayload{
+	_, projectErr := s.projectService.CreateProject(ctx, payload.Username, CreateProjectPayload{
 		Name:        fmt.Sprintf("%s's Sandbox", payload.Username),
 		Description: "Your default sandbox project",
 	})
 	if projectErr != nil {
 		logger.Error().Err(projectErr.Err).Msg("Failed to auto-create sandbox project for new user")
-		// We don't fail the registration if the sandbox fails
+		return NewInternalError("failed to create sandbox project for user %s: %w", payload.Username, projectErr.Err)
 	}
 
 	return nil
 }
 
 // Login authenticates a user and returns a JWT token if successful.
-func (s *UserServiceT) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
-	logger := s.getMethodLogger("Login")
+func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, "UserService", "Login")
 	logger.Info().Str("username", payload.Username).Msg("User login attempt")
 
-	user, err := s.getDB().Users().GetUserByUsername(ctx, payload.Username)
+	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid credentials")}
+			return nil, NewUnauthorizedError("invalid credentials")
 		}
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("error retrieving user %s: %w", payload.Username, err)}
+		return nil, NewInternalError("error retrieving user %s: %w", payload.Username, err)
 	}
 
 	if err = checkPasswordHash(payload.Password, user.PasswordHash); err != nil {
-		return nil, &ServiceError{Code: http.StatusUnauthorized, Err: fmt.Errorf("invalid credentials")}
+		return nil, NewUnauthorizedError("invalid credentials")
 	}
 
-	jwtToken, err := auth.NewJwt(payload.Username)
+	jwtToken, err := auth.NewJwt(payload.Username, models.GetIsInstanceAdmin(*user))
 	if jwtToken == nil {
 		logger.Error().Str("username", payload.Username).Err(err).Msg("Failed to generate JWT token")
-		return nil, &ServiceError{Code: http.StatusInternalServerError, Err: fmt.Errorf("failed to generate JWT token")}
+		return nil, NewInternalError("failed to generate JWT token")
 	}
 
 	return &LoginResponse{Jwt: *jwtToken}, nil

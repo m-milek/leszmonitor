@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"net/http"
@@ -10,7 +10,17 @@ import (
 	util2 "github.com/m-milek/leszmonitor/util"
 )
 
-func GetAuditLogByQueryHandler(w http.ResponseWriter, r *http.Request) {
+type AuditLogAPIController struct {
+	service services.AuditLogService
+}
+
+func NewAuditLogAPIController(service services.AuditLogService) AuditLogAPIController {
+	return AuditLogAPIController{
+		service: service,
+	}
+}
+
+func (c *AuditLogAPIController) GetAuditLogByQueryHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	pagination, paginationErr := util2.PaginationFromRequest(r)
@@ -30,7 +40,7 @@ func GetAuditLogByQueryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := services.AuditLogService.GetEntries(ctx, userClaims, *filters, *pagination)
+	results, err := c.service.GetEntries(ctx, userClaims, *filters, *pagination)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return

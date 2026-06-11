@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"fmt"
@@ -8,14 +8,24 @@ import (
 	"github.com/m-milek/leszmonitor/services"
 )
 
-func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
+type UserAPIController struct {
+	service services.IUserService
+}
+
+func NewUserAPIController(service services.IUserService) UserAPIController {
+	return UserAPIController{
+		service: service,
+	}
+}
+
+func (c *UserAPIController) UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var payload services.UserRegisterPayload
 	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := services.UserService.RegisterUser(ctx, &payload)
+	err := c.service.RegisterUser(ctx, &payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -24,14 +34,14 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondMessage(ctx, w, http.StatusOK, "")
 }
 
-func UserLoginHandler(w http.ResponseWriter, r *http.Request) {
+func (c *UserAPIController) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var payload services.LoginPayload
 	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	loginResponse, err := services.UserService.Login(ctx, payload)
+	loginResponse, err := c.service.Login(ctx, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -40,9 +50,9 @@ func UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusOK, loginResponse)
 }
 
-func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+func (c *UserAPIController) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	users, err := services.UserService.GetAllUsers(ctx)
+	users, err := c.service.GetAllUsers(ctx)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -51,7 +61,7 @@ func GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusOK, users)
 }
 
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
+func (c *UserAPIController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	username := r.PathValue("username")
 	if username == "" {
@@ -59,7 +69,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := services.UserService.GetUserByUsername(ctx, username)
+	user, err := c.service.GetUserByUsername(ctx, username)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return

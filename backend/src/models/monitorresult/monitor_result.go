@@ -60,7 +60,7 @@ func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSucce
 		Details:     details,
 	}
 	if errorMessage != "" {
-		res.ErrorDetails.ErrorMessage = errorMessage
+		res.ErrorDetails = &ErrorDetails{ErrorMessage: errorMessage}
 	}
 	return res
 }

@@ -8,6 +8,8 @@ vars:
 env:
   LOG_FILE_PATH: '{{.TASKFILE_DIR}}/.dev-logs/backend.log'
   LOG_LEVEL: 'TRACE'
+  INSTANCE_ADMIN_USERNAME: 'admin'
+  INSTANCE_ADMIN_PASSWORD: '123123'
 
 tasks:
   build:
@@ -67,6 +69,6 @@ tasks:
     desc: Run the back-end tests with coverage
     dir: '{{.BACKEND_SRC_DIR}}'
     cmds:
-      - cd {{.BACKEND_SRC_DIR}} && go test -coverprofile=coverage.out -v ./...
+      - cd {{.BACKEND_SRC_DIR}} && go test -coverpkg=./... -coverprofile=coverage.out -v ./...
     generates:
       - 'coverage.out'

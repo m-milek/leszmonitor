@@ -2,40 +2,41 @@ package services
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/auth"
+	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/security"
 	"github.com/m-milek/leszmonitor/util"
 )
 
-type IAuditLogService interface {
+type IAuditLogger interface {
 	GetEntries(ctx context.Context, userClaims *auth.UserClaims, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, *ServiceError)
 	Record(ctx context.Context, entry security.AuditLogEntry) error
 }
 
-// authorizationServiceT handles authorization-related operations.
-// It provides methods to authorize actions based on project membership and permissions.
-type auditLogServiceT struct {
-	baseService
+// AuditLogService provides methods to manage audit log entries, including retrieval and recording of actions for auditing purposes.
+type AuditLogService struct {
+	db          db.DB
+	authService IAuthorizer
 }
 
-// newAuthorizationService creates a new instance of authorizationServiceT.
-func newAuditLogService() *auditLogServiceT {
-	return &auditLogServiceT{
-		baseService: baseService{
-			serviceLogger: log.NewServiceLogger("AuditLogService"),
-			authService:   newAuthorizationService(),
-		},
+type AuditLogServiceDeps struct {
+	DB          db.DB
+	AuthService IAuthorizer
+}
+
+// NewAuditLogService creates a new instance of AuditLogService with the provided dependencies.
+func NewAuditLogService(deps AuditLogServiceDeps) AuditLogService {
+	return AuditLogService{
+		db:          deps.DB,
+		authService: deps.AuthService,
 	}
 }
 
-var AuditLogService = newAuditLogService()
-
-func (s *auditLogServiceT) GetEntries(ctx context.Context, userClaims *auth.UserClaims, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, *ServiceError) {
+func (s *AuditLogService) GetEntries(ctx context.Context, userClaims *auth.UserClaims, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, *ServiceError) {
 	logger := log.FromContext(ctx).With().Str("method", "GetEntries").Logger()
 
 	authErr := s.authorizeReadAccess(ctx, userClaims, filter)
@@ -43,23 +44,23 @@ func (s *auditLogServiceT) GetEntries(ctx context.Context, userClaims *auth.User
 		return nil, authErr
 	}
 
-	entries, dbErr := s.getDB().AuditLog().GetAuditLogEntries(ctx, filter, pagination)
+	entries, dbErr := s.db.AuditLog().GetAuditLogEntries(ctx, filter, pagination)
 	if dbErr != nil {
 		logger.Error().Err(dbErr).Msg("Failed to retrieve audit log entries")
-		return nil, newServiceError(http.StatusInternalServerError, dbErr)
+		return nil, NewInternalError("failed to retrieve audit log entries: %w", dbErr)
 	}
 
 	logger.Trace().Int("entryCount", len(entries)).Msg("Successfully retrieved audit log entries")
 	return entries, nil
 }
 
-func (s *auditLogServiceT) authorizeReadAccess(ctx context.Context, claims *auth.UserClaims, filter security.AuditLogFilter) *ServiceError {
-	logger := s.getMethodLogger("authorizeReadAccess")
+func (s *AuditLogService) authorizeReadAccess(ctx context.Context, claims *auth.UserClaims, filter security.AuditLogFilter) *ServiceError {
+	logger := MethodLoggerFromContext(ctx, "AuditLogService", "authorizeReadAccess")
 
 	isInstanceAdmin, err := s.authService.isInstanceAdmin(ctx, claims.Username)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to check instance admin status for authorizeReadAccess")
-		return newServiceError(http.StatusInternalServerError, err)
+		return NewInternalError("failed to check admin status: %w", err)
 	}
 
 	if isInstanceAdmin {
@@ -69,7 +70,7 @@ func (s *auditLogServiceT) authorizeReadAccess(ctx context.Context, claims *auth
 
 	if err := filter.ValidateForNonInstanceAdmin(); err != nil {
 		logger.Warn().Err(err).Msg("Invalid filter for non-instance admin user in authorizeReadAccess")
-		return newServiceError(http.StatusBadRequest, err)
+		return NewBadRequestError("invalid filter: %w", err)
 	}
 
 	_, authErr := s.authService.authorizeProjectAction(ctx, &authorization.ProjectAuthorization{
@@ -85,12 +86,12 @@ func (s *auditLogServiceT) authorizeReadAccess(ctx context.Context, claims *auth
 	return nil
 }
 
-func (s *auditLogServiceT) Record(ctx context.Context, entry security.AuditLogEntry) error {
+func (s *AuditLogService) Record(ctx context.Context, entry security.AuditLogEntry) error {
+	logger := MethodLoggerFromContext(ctx, "AuditLogService", "Record")
 	entry.BeforeCreate()
 
-	_, err := s.getDB().AuditLog().InsertAuditLogEntry(ctx, entry)
+	_, err := s.db.AuditLog().InsertAuditLogEntry(ctx, entry)
 	if err != nil {
-		logger := s.getMethodLogger("SaveAction")
 		logger.Error().Err(err).Msg("Failed to save audit log entry")
 		return err
 	}

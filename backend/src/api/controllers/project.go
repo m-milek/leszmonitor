@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"encoding/json"
@@ -9,7 +9,17 @@ import (
 	"github.com/m-milek/leszmonitor/services"
 )
 
-func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
+type ProjectAPIController struct {
+	service services.IProjectService
+}
+
+func NewProjectAPIController(service services.IProjectService) ProjectAPIController {
+	return ProjectAPIController{
+		service: service,
+	}
+}
+
+func (h *ProjectAPIController) CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var payload services.CreateProjectPayload
 	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
@@ -21,7 +31,7 @@ func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := services.ProjectService.CreateProject(ctx, userClaims.Username, payload)
+	project, err := h.service.CreateProject(ctx, userClaims.Username, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -30,7 +40,7 @@ func CreateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusCreated, project)
 }
 
-func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProjectAPIController) GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
@@ -41,7 +51,7 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	requestingUser := userClaims.Username
 	usernameQuery := r.URL.Query().Get("username")
 
-	projects, err := services.ProjectService.GetProjects(ctx, requestingUser, usernameQuery)
+	projects, err := h.service.GetProjects(ctx, requestingUser, usernameQuery)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -50,16 +60,11 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusOK, projects)
 }
 
-func GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProjectAPIController) GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.PathValue("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
-	project, err := services.ProjectService.GetProjectByID(ctx, projectAuth)
+	project, err := h.service.GetProjectBySlug(ctx, projectSlug)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -68,16 +73,11 @@ func GetProjectByIDHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusOK, project)
 }
 
-func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProjectAPIController) DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
-	err := services.ProjectService.DeleteProject(ctx, projectAuth)
+	err := h.service.DeleteProject(ctx, projectSlug)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -86,14 +86,9 @@ func DeleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondMessage(ctx, w, http.StatusOK, "Project deleted successfully")
 }
 
-func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProjectAPIController) UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.UpdateProjectPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -101,7 +96,7 @@ func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := services.ProjectService.UpdateProject(ctx, projectAuth, payload)
+	project, err := h.service.UpdateProject(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -110,21 +105,16 @@ func UpdateProjectHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(ctx, w, http.StatusOK, project)
 }
 
-func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProjectAPIController) AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.PathValue("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.AddProjectMemberPayload
 	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := services.ProjectService.AddUserToProject(ctx, projectAuth, payload)
+	err := h.service.AddUserToProject(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -133,21 +123,16 @@ func AddProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondMessage(ctx, w, http.StatusOK, "Member added to project successfully")
 }
 
-func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProjectAPIController) RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.RemoveProjectMemberPayload
-	if util.DecodeJSONOrRespond(ctx, w, r, &payload) {
+	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := services.ProjectService.RemoveUserFromProject(ctx, projectAuth, payload)
+	err := h.service.RemoveUserFromProject(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -156,21 +141,16 @@ func RemoveProjectMemberHandler(w http.ResponseWriter, r *http.Request) {
 	util.RespondMessage(ctx, w, http.StatusOK, "Member removed from project successfully")
 }
 
-func ChangeProjectMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ProjectAPIController) ChangeProjectMemberRoleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := r.PathValue("projectSlug")
 
 	var payload services.ChangeProjectMemberRolePayload
-	if util.DecodeJSONOrRespond(ctx, w, r, &payload) {
+	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
 
-	err := services.ProjectService.ChangeProjectMemberRole(ctx, projectAuth, payload)
+	err := h.service.ChangeProjectMemberRole(ctx, projectSlug, payload)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return

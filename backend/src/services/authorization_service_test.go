@@ -13,14 +13,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTestAuthorizationService() (context.Context, *authorizationServiceT, *db.MockDB) {
+func setupTestAuthorizationService() (context.Context, *AuthorizationService, *db.MockDB) {
 	mockDB := &db.MockDB{
 		UsersRepo:    new(db.MockUserRepository),
 		ProjectsRepo: new(db.MockProjectRepository),
 	}
 	db.Set(mockDB)
 
-	authService := newAuthorizationService()
+	authService := NewAuthorizationService(AuthorizationServiceDeps{DB: mockDB})
 
 	return context.Background(), authService, mockDB
 }
