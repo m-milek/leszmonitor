@@ -6,39 +6,34 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/events"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/security"
 )
 
 type IMonitorService interface {
-	CreateMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError)
-	DeleteMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string) *ServiceError
-	GetMonitorsByProjectID(ctx context.Context, projectAuth *authorization.ProjectAuthorization) ([]monitors.Monitor, *ServiceError)
-	GetMonitorByID(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string) (*monitors.Monitor, *ServiceError)
-	UpdateMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitor monitors.Monitor) *ServiceError
-	GetMonitorBySlugByProject(ctx context.Context, auth *authorization.ProjectAuthorization, slug string) (*monitors.Monitor, *ServiceError)
-	UpdateMonitorStateByID(ctx context.Context, auth *authorization.ProjectAuthorization, monitorID uuid.UUID, state monitors.MonitorState) *ServiceError
+	CreateMonitor(ctx context.Context, projectSlug string, username string, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError)
+	DeleteMonitor(ctx context.Context, username string, id string) *ServiceError
+	GetMonitorsByProjectSlug(ctx context.Context, projectSlug string) ([]monitors.Monitor, *ServiceError)
+	GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError)
+	UpdateMonitor(ctx context.Context, username string, monitor monitors.Monitor) *ServiceError
+	GetMonitorBySlugByProject(ctx context.Context, projectSlug string, slug string) (*monitors.Monitor, *ServiceError)
+	UpdateMonitorStateByID(ctx context.Context, username string, monitorID uuid.UUID, state monitors.MonitorState) *ServiceError
 }
 
 // MonitorService handles monitor-related CRUD operations.
 type MonitorService struct {
-	db   db.DB
-	auth IAuthorizer
+	db db.DB
 }
 
 type MonitorServiceDeps struct {
-	DB   db.DB
-	Auth IAuthorizer
+	DB db.DB
 }
 
 func NewMonitorService(deps MonitorServiceDeps) *MonitorService {
 	return &MonitorService{
-		db:   deps.DB,
-		auth: deps.Auth,
+		db: deps.DB,
 	}
 }
 
@@ -47,13 +42,13 @@ type MonitorCreateResponse struct {
 }
 
 // CreateMonitor creates a new monitor in the specified project.
-func (s *MonitorService) CreateMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorService) CreateMonitor(ctx context.Context, projectSlug string, username string, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "CreateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Creating new monitor")
 
-	project, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorEditor)
-	if authErr != nil {
-		return nil, authErr
+	project, err := s.db.Projects().GetProjectBySlug(ctx, projectSlug)
+	if err != nil {
+		return nil, NewInternalError("failed to find project: %w", err)
 	}
 
 	initializedMonitor := monitors.InitializeFromPayload(monitor, project.ID)
@@ -73,8 +68,8 @@ func (s *MonitorService) CreateMonitor(ctx context.Context, projectAuth *authori
 
 		entry, err := security.NewAuditLogEntry(
 			ctx,
-			&projectAuth.Username,
-			&projectAuth.ProjectID,
+			&username,
+			&project.ID,
 			&monitorFromDB.ID,
 			security.ActionCreateMonitor,
 			true,
@@ -106,14 +101,9 @@ func (s *MonitorService) CreateMonitor(ctx context.Context, projectAuth *authori
 }
 
 // DeleteMonitor deletes a monitor by its slug.
-func (s *MonitorService) DeleteMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string) *ServiceError {
+func (s *MonitorService) DeleteMonitor(ctx context.Context, username string, id string) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
-
-	_, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorAdmin)
-	if authErr != nil {
-		return authErr
-	}
 
 	monitorUUID, err := uuid.Parse(id)
 	if err != nil {
@@ -144,8 +134,8 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, projectAuth *authori
 
 		entry, err := security.NewAuditLogEntry(
 			ctx,
-			&projectAuth.Username,
-			&projectAuth.ProjectID,
+			&username,
+			&monitorBeforeDelete.ProjectID,
 			&monitorUUID,
 			security.ActionDeleteMonitor,
 			true,
@@ -177,14 +167,14 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, projectAuth *authori
 	return nil
 }
 
-// GetMonitorsByProjectID retrieves all monitors for the project in the provided ProjectAuth.
-func (s *MonitorService) GetMonitorsByProjectID(ctx context.Context, projectAuth *authorization.ProjectAuthorization) ([]monitors.Monitor, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, "MonitorService", "GetMonitorsByProjectID")
+// GetMonitorsByProjectSlug retrieves all monitors for the project.
+func (s *MonitorService) GetMonitorsByProjectSlug(ctx context.Context, projectSlug string) ([]monitors.Monitor, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, "MonitorService", "GetMonitorsByProjectSlug")
 	logger.Trace().Msg("Retrieving monitors for project")
 
-	project, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
-	if authErr != nil {
-		return nil, authErr
+	project, err := s.db.Projects().GetProjectBySlug(ctx, projectSlug)
+	if err != nil {
+		return nil, NewInternalError("failed to find project: %w", err)
 	}
 
 	monitorsList, err := s.db.Monitors().GetMonitorsByProjectID(ctx, project.ID)
@@ -197,14 +187,9 @@ func (s *MonitorService) GetMonitorsByProjectID(ctx context.Context, projectAuth
 }
 
 // GetMonitorByID retrieves a specific monitor by its ID.
-func (s *MonitorService) GetMonitorByID(ctx context.Context, projectAuth *authorization.ProjectAuthorization, id string) (*monitors.Monitor, *ServiceError) {
+func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "GetMonitorByID")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
-
-	_, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorReader)
-	if authErr != nil {
-		return nil, authErr
-	}
 
 	monitorUUID, err := uuid.Parse(id)
 	if err != nil {
@@ -221,23 +206,13 @@ func (s *MonitorService) GetMonitorByID(ctx context.Context, projectAuth *author
 		return nil, NewInternalError("failed to retrieve monitor: %w", err)
 	}
 
-	if monitor.ProjectID != projectAuth.ProjectID {
-		logger.Warn().Str("id", id).Msg("Monitor does not belong to the authorized project")
-		return nil, NewForbiddenError("monitor with slug %s does not belong to the authorized project", id)
-	}
-
 	return monitor, nil
 }
 
 // UpdateMonitor updates an existing monitor's configuration.
-func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authorization.ProjectAuthorization, monitor monitors.Monitor) *ServiceError {
+func (s *MonitorService) UpdateMonitor(ctx context.Context, username string, monitor monitors.Monitor) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "UpdateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
-
-	_, authErr := s.auth.authorizeProjectAction(ctx, projectAuth, models.PermissionMonitorEditor)
-	if authErr != nil {
-		return authErr
-	}
 
 	txErr := s.db.WithTx(ctx, func(tx db.DB) error {
 		existingMonitor, err := tx.Monitors().GetMonitorByID(ctx, monitor.ID)
@@ -247,11 +222,6 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authori
 			}
 			logger.Error().Err(err).Str("id", monitor.ID.String()).Msg("Failed to retrieve existing monitor for update")
 			return fmt.Errorf("failed to retrieve existing monitor for update: %w", err)
-		}
-
-		if existingMonitor.ProjectID != projectAuth.ProjectID {
-			logger.Warn().Str("id", monitor.ID.String()).Msg("Monitor does not belong to the authorized project")
-			return NewForbiddenError("monitor with ID %s does not belong to the authorized project", monitor.ID)
 		}
 
 		monitor.State = existingMonitor.State
@@ -268,8 +238,8 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authori
 
 		entry, err := security.NewAuditLogEntry(
 			ctx,
-			&projectAuth.Username,
-			&projectAuth.ProjectID,
+			&username,
+			&existingMonitor.ProjectID,
 			&monitor.ID,
 			security.ActionUpdateMonitor,
 			true,
@@ -303,16 +273,16 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, projectAuth *authori
 	return nil
 }
 
-func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, auth *authorization.ProjectAuthorization, slug string) (*monitors.Monitor, *ServiceError) {
+func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, projectSlug string, slug string) (*monitors.Monitor, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "GetMonitorBySlugByProject")
-	logger.Trace().Str("slug", slug).Str("projectID", auth.ProjectID.String()).Msg("Retrieving monitor by slug and project")
+	logger.Trace().Str("slug", slug).Msg("Retrieving monitor by slug and project")
 
-	_, authErr := s.auth.authorizeProjectAction(ctx, auth, models.PermissionMonitorReader)
-	if authErr != nil {
-		return nil, authErr
+	project, err := s.db.Projects().GetProjectBySlug(ctx, projectSlug)
+	if err != nil {
+		return nil, NewInternalError("failed to find project: %w", err)
 	}
 
-	monitor, err := s.db.Monitors().GetMonitorBySlugByProject(ctx, slug, auth.ProjectID)
+	monitor, err := s.db.Monitors().GetMonitorBySlugByProject(ctx, slug, project.ID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			return nil, NewNotFoundError("monitor with slug %s not found in project", slug)
@@ -320,22 +290,17 @@ func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, auth *au
 		return nil, NewInternalError("failed to retrieve monitor by slug and project: %w", err)
 	}
 
-	logger.Debug().Str("slug", slug).Str("projectID", auth.ProjectID.String()).Msg("Monitor retrieved by slug and project")
+	logger.Debug().Str("slug", slug).Msg("Monitor retrieved by slug and project")
 	return monitor, nil
 }
 
-func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, auth *authorization.ProjectAuthorization, monitorID uuid.UUID, state monitors.MonitorState) *ServiceError {
+func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, username string, monitorID uuid.UUID, state monitors.MonitorState) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "UpdateMonitorStateByID")
 	logger.Trace().Str("id", monitorID.String()).Str("newState", string(state)).Msg("Updating monitor state by ID")
 
 	if !monitors.IsValidMonitorState(string(state)) {
 		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Invalid monitor state provided")
 		return NewBadRequestError("invalid monitor state: %s", state)
-	}
-
-	_, authErr := s.auth.authorizeProjectAction(ctx, auth, models.PermissionMonitorEditor)
-	if authErr != nil {
-		return authErr
 	}
 
 	monitor, err := s.db.Monitors().GetMonitorByID(ctx, monitorID)

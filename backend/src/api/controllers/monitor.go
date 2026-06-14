@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -44,14 +45,17 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
 		return
 	}
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
+	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
+	projectSlug := r.URL.Query().Get("projectSlug")
+	if projectSlug == "" {
+		util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("project slug is required"))
+		return
+	}
 
-	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, projectAuth, monitor)
+	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, projectSlug, userClaims.Username, monitor)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
@@ -68,14 +72,12 @@ func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		MonitorID: monitorID,
-	})
+	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
-	err := c.service.DeleteMonitor(ctx, projectAuth, monitorID)
+	err := c.service.DeleteMonitor(ctx, userClaims.Username, monitorID)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -92,14 +94,7 @@ func (c *MonitorAPIController) GetMonitorByIDHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		MonitorID: monitorID,
-	})
-	if !ok {
-		return
-	}
-
-	monitor, err := c.service.GetMonitorByID(ctx, projectAuth, monitorID)
+	monitor, err := c.service.GetMonitorByID(ctx, monitorID)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -135,14 +130,12 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		MonitorID: monitorID,
-	})
+	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
-	serviceErr := c.service.UpdateMonitor(ctx, projectAuth, monitor)
+	serviceErr := c.service.UpdateMonitor(ctx, userClaims.Username, monitor)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
@@ -184,14 +177,13 @@ func decodeMonitorPayload(r *http.Request) (monitors.Monitor, error) {
 func (c *MonitorAPIController) GetMonitorByProjectSlugHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: r.URL.Query().Get("projectSlug"),
-	})
-	if !ok {
+	projectSlug := r.URL.Query().Get("projectSlug")
+	if projectSlug == "" {
+		util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("project slug is required"))
 		return
 	}
 
-	monitor, err := c.service.GetMonitorsByProjectID(ctx, projectAuth)
+	monitor, err := c.service.GetMonitorsByProjectSlug(ctx, projectSlug)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -209,14 +201,9 @@ func (c *MonitorAPIController) GetMonitorBySlugByProject(w http.ResponseWriter, 
 		return
 	}
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		ProjectSlug: request.PathValue("projectSlug"),
-	})
-	if !ok {
-		return
-	}
+	projectSlug := request.PathValue("projectSlug")
 
-	monitor, err := c.service.GetMonitorBySlugByProject(ctx, projectAuth, monitorSlug)
+	monitor, err := c.service.GetMonitorBySlugByProject(ctx, projectSlug, monitorSlug)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -254,14 +241,12 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		MonitorID: monitorID,
-	})
+	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
-	serviceErr := c.service.UpdateMonitorStateByID(ctx, projectAuth, monitorUUID, monitors.MonitorState(payload.NewState))
+	serviceErr := c.service.UpdateMonitorStateByID(ctx, userClaims.Username, monitorUUID, monitors.MonitorState(payload.NewState))
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return

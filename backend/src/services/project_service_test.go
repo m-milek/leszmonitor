@@ -20,12 +20,9 @@ func setupTestProjectService() (context.Context, *ProjectService, *db.MockDB) {
 	}
 	db.Set(mockDB)
 
-	authService := NewAuthorizationService(AuthorizationServiceDeps{DB: mockDB})
-
 	// We instantiate the real UserService for full DI testing if needed
 	userService := NewUserService(UserServiceDeps{
-		DB:   mockDB,
-		Auth: authService,
+		DB: mockDB,
 	})
 
 	svc := NewProjectService(ProjectServiceDeps{

@@ -71,8 +71,7 @@ func setupAuditLogIntegrationTest(t *testing.T) (context.Context, AuditLogServic
 	ctx, projectService, userService, user := setupIntegrationTest(t)
 
 	auditLogService := NewAuditLogService(AuditLogServiceDeps{
-		DB:          db.Get(),
-		AuthService: NewAuthorizationService(AuthorizationServiceDeps{DB: db.Get()}),
+		DB: db.Get(),
 	})
 
 	return ctx, auditLogService, projectService, userService, user
@@ -82,8 +81,7 @@ func setupMonitorResultsIntegrationTest(t *testing.T) (context.Context, *Monitor
 	ctx, projectService, userService, user := setupIntegrationTest(t)
 
 	service := NewMonitorResultsService(MonitorResultsServiceDeps{
-		DB:   db.Get(),
-		Auth: NewAuthorizationService(AuthorizationServiceDeps{DB: db.Get()}),
+		DB: db.Get(),
 	})
 
 	return ctx, service, projectService, userService, user
@@ -93,8 +91,7 @@ func setupMonitorIntegrationTest(t *testing.T) (context.Context, *MonitorService
 	ctx, projectService, userService, user := setupIntegrationTest(t)
 
 	monitorService := NewMonitorService(MonitorServiceDeps{
-		DB:   db.Get(),
-		Auth: NewAuthorizationService(AuthorizationServiceDeps{DB: db.Get()}),
+		DB: db.Get(),
 	})
 
 	return ctx, monitorService, projectService, userService, user
