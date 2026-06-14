@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
@@ -32,12 +31,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		_, err = db.Get().MonitorResults().InsertMonitorResult(ctx, res2)
 		require.NoError(t, err)
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
-		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, auth, monitor.ID.String())
+		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
 		require.Nil(t, svcErr)
 		require.NotNil(t, latest)
 		assert.Equal(t, res2.ID, latest.GetID())
@@ -50,12 +44,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
-		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, auth, monitor.ID.String())
+		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 		assert.Nil(t, latest)
@@ -77,13 +66,8 @@ func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		pag := &util.Pagination{Page: 1, PerPage: 10}
-		results, svcErr := service.GetMonitorResultsByMonitorID(ctx, auth, monitor.ID.String(), pag)
+		results, svcErr := service.GetMonitorResultsByMonitorID(ctx, monitor.ID.String(), pag)
 		require.Nil(t, svcErr)
 		require.Len(t, results, 3)
 	})

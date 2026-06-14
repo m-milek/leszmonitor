@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
@@ -146,8 +144,6 @@ func TestIntegration_ProjectService_GetProjectByID(t *testing.T) {
 		require.Nil(t, svcErr)
 		require.NotNil(t, project)
 
-		_ = authorization.ProjectAuthorization{ProjectID: project.ID, Username: "integration_user"}
-
 		retrievedProject, getErr := projectService.GetProjectBySlug(ctx, project.Slug)
 
 		assert.Nil(t, getErr)
@@ -159,8 +155,6 @@ func TestIntegration_ProjectService_GetProjectByID(t *testing.T) {
 
 	t.Run("Fails with 404 when project doesn't exist", func(t *testing.T) {
 		ctx, projectService, _, _ := setupIntegrationTest(t)
-
-		_ = authorization.ProjectAuthorization{ProjectID: uuid.New(), Username: "integration_user"}
 
 		retrievedProject, getErr := projectService.GetProjectBySlug(ctx, "nonexistent-project")
 
@@ -177,11 +171,6 @@ func TestIntegration_ProjectService_DeleteProject(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, user.Username, CreateProjectPayload{Name: "To Be Deleted"})
 		require.Nil(t, err)
 
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  user.Username,
-		}
-
 		svcErr := projectService.DeleteProject(ctx, project.Slug)
 		require.Nil(t, svcErr)
 
@@ -193,12 +182,8 @@ func TestIntegration_ProjectService_DeleteProject(t *testing.T) {
 	})
 
 	t.Run("Returns 404 Not Found when project does not exist", func(t *testing.T) {
-		ctx, projectService, _, user := setupIntegrationTest(t)
+		ctx, projectService, _, _ := setupIntegrationTest(t)
 
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: uuid.New(),
-			Username:  user.Username,
-		}
 		svcErr := projectService.DeleteProject(ctx, "nonexistent-project")
 
 		require.NotNil(t, svcErr)
@@ -212,11 +197,6 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 
 		project, err := projectService.CreateProject(ctx, user.Username, CreateProjectPayload{Name: "Old Name", Description: "Old Description"})
 		require.Nil(t, err)
-
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  user.Username,
-		}
 
 		payload := UpdateProjectPayload{
 			Name:        "New Name",
@@ -253,11 +233,6 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
 
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		payload := AddProjectMemberPayload{
 			Username: "newbie",
 			Role:     models.RoleViewer,
@@ -280,11 +255,6 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		payload := AddProjectMemberPayload{
 			Username: "ghost",
 			Role:     models.RoleViewer,
@@ -301,11 +271,6 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
-
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
 
 		payload := AddProjectMemberPayload{
 			Username: "newbie",
@@ -334,11 +299,6 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		payload := RemoveProjectMemberPayload{
 			Username: "newbie",
 		}
@@ -355,11 +315,6 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		payload := RemoveProjectMemberPayload{
 			Username: owner.Username,
 		}
@@ -375,11 +330,6 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
-
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
 
 		payload := RemoveProjectMemberPayload{
 			Username: "random",
@@ -403,11 +353,6 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		payload := ChangeProjectMemberRolePayload{
 			Username: "newbie",
 			Role:     models.RoleMember,
@@ -427,11 +372,6 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
-
-		_ = &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
 
 		payload := ChangeProjectMemberRolePayload{
 			Username: "random",

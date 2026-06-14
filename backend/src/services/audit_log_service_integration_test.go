@@ -1,11 +1,9 @@
 package services
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/security"
 	"github.com/m-milek/leszmonitor/util"
@@ -64,30 +62,12 @@ func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
 			IsSuccess: false,
 		})
 
-		userClaims := &auth.UserClaims{
-			Username: owner.Username,
-		}
 		filter := security.AuditLogFilter{
 			ProjectID: &project.ID,
 		}
 
-		entries, svcErr := auditLogService.GetEntries(ctx, userClaims, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, svcErr := auditLogService.GetEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.Nil(t, svcErr)
 		require.Len(t, entries, 2)
-	})
-
-	t.Run("Fails with 400 Bad Request when non-instance admin tries to query without ProjectID filter", func(t *testing.T) {
-		ctx, auditLogService, _, _, user := setupAuditLogIntegrationTest(t)
-
-		userClaims := &auth.UserClaims{
-			Username: user.Username,
-		}
-		filter := security.AuditLogFilter{}
-
-		entries, svcErr := auditLogService.GetEntries(ctx, userClaims, filter, util.Pagination{Page: 1, PerPage: 10})
-
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
-		assert.Nil(t, entries)
 	})
 }

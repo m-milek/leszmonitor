@@ -55,9 +55,6 @@ func main() {
 	}
 
 	db := db.Get()
-	authService := services.NewAuthorizationService(services.AuthorizationServiceDeps{
-		DB: db,
-	})
 
 	projectService := services.NewProjectService(services.ProjectServiceDeps{
 		DB:          db,
@@ -65,21 +62,17 @@ func main() {
 	})
 	userService := services.NewUserService(services.UserServiceDeps{
 		DB:             db,
-		Auth:           authService,
 		ProjectService: projectService,
 	})
 	projectService.UserService = userService
 	monitorService := services.NewMonitorService(services.MonitorServiceDeps{
-		DB:   db,
-		Auth: authService,
+		DB: db,
 	})
 	monitorResultService := services.NewMonitorResultsService(services.MonitorResultsServiceDeps{
-		DB:   db,
-		Auth: authService,
+		DB: db,
 	})
 	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
-		DB:          db,
-		AuthService: authService,
+		DB: db,
 	})
 
 	projectAPIController := controllers.NewProjectAPIController(projectService)

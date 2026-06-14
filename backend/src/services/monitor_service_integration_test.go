@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitors"
@@ -22,11 +21,6 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
 		require.Nil(t, err)
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		payload := monitors.Monitor{
 			Name:        "Ping API",
 			Description: "Pings our main API every minute",
@@ -36,13 +30,13 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		}
 		payload.GenerateSlug()
 
-		resp, svcErr := monitorService.CreateMonitor(ctx, auth, payload)
+		resp, svcErr := monitorService.CreateMonitor(ctx, project.Slug, owner.Username, payload)
 		require.Nil(t, svcErr)
 		require.NotNil(t, resp)
 		assert.NotEmpty(t, resp.MonitorID)
 
 		// Verify the monitor exists and fields match
-		monitorFromDB, svcErr := monitorService.GetMonitorByID(ctx, auth, resp.MonitorID)
+		monitorFromDB, svcErr := monitorService.GetMonitorByID(ctx, resp.MonitorID)
 		require.Nil(t, svcErr)
 		assert.Equal(t, "Ping API", monitorFromDB.Name)
 		assert.Equal(t, project.ID, monitorFromDB.ProjectID)
@@ -71,18 +65,13 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		payload := monitors.Monitor{
 			Name:     "",  // Empty name makes it invalid
 			Interval: -10, // Invalid interval
 			Type:     consts.HttpConfigType,
 		}
 
-		resp, svcErr := monitorService.CreateMonitor(ctx, auth, payload)
+		resp, svcErr := monitorService.CreateMonitor(ctx, project.Slug, owner.Username, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 		assert.Nil(t, resp)
@@ -96,20 +85,15 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
 		require.Nil(t, err)
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		// Insert a monitor to delete
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
 		// Delete it
-		svcErr := monitorService.DeleteMonitor(ctx, auth, monitor.ID.String())
+		svcErr := monitorService.DeleteMonitor(ctx, owner.Username, monitor.ID.String())
 		require.Nil(t, svcErr)
 
 		// Verify it's gone
-		_, getErr := monitorService.GetMonitorByID(ctx, auth, monitor.ID.String())
+		_, getErr := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		require.NotNil(t, getErr)
 		assert.Equal(t, http.StatusNotFound, getErr.Code)
 
@@ -134,14 +118,10 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		// Use a random UUID
-		svcErr := monitorService.DeleteMonitor(ctx, auth, uuid.New().String())
+		svcErr := monitorService.DeleteMonitor(ctx, owner.Username, uuid.New().String())
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
@@ -155,16 +135,11 @@ func TestIntegration_MonitorService_GetMonitorsByProjectID(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
 		require.Nil(t, err)
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
 		// Insert 2 monitors
 		m1 := insertTestMonitor(t, ctx, project.ID)
 		m2 := insertTestMonitor(t, ctx, project.ID)
 
-		monitorsList, svcErr := monitorService.GetMonitorsByProjectID(ctx, auth)
+		monitorsList, svcErr := monitorService.GetMonitorsByProjectSlug(ctx, project.Slug)
 		require.Nil(t, svcErr)
 		require.Len(t, monitorsList, 2)
 
@@ -187,12 +162,7 @@ func TestIntegration_MonitorService_GetMonitorsByProjectID(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Empty Project"})
 		require.Nil(t, err)
 
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
-
-		monitorsList, svcErr := monitorService.GetMonitorsByProjectID(ctx, auth)
+		monitorsList, svcErr := monitorService.GetMonitorsByProjectSlug(ctx, project.Slug)
 		require.Nil(t, svcErr)
 		assert.Empty(t, monitorsList)
 	})
@@ -204,14 +174,11 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		retrieved, svcErr := monitorService.GetMonitorByID(ctx, auth, monitor.ID.String())
+		retrieved, svcErr := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		require.Nil(t, svcErr)
 		require.NotNil(t, retrieved)
 		assert.Equal(t, monitor.ID, retrieved.ID)
@@ -221,13 +188,9 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_, _ = projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
 
-		retrieved, svcErr := monitorService.GetMonitorByID(ctx, auth, uuid.New().String())
+		retrieved, svcErr := monitorService.GetMonitorByID(ctx, uuid.New().String())
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 		assert.Nil(t, retrieved)
@@ -236,13 +199,9 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 	t.Run("Fails with 400 for invalid UUID format", func(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_, _ = projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
 
-		retrieved, svcErr := monitorService.GetMonitorByID(ctx, auth, "not-a-uuid")
+		retrieved, svcErr := monitorService.GetMonitorByID(ctx, "not-a-uuid")
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 		assert.Nil(t, retrieved)
@@ -255,10 +214,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
@@ -266,11 +222,11 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		monitor.Name = "Updated Name"
 		monitor.Interval = 120
 
-		svcErr := monitorService.UpdateMonitor(ctx, auth, *monitor)
+		svcErr := monitorService.UpdateMonitor(ctx, owner.Username, *monitor)
 		require.Nil(t, svcErr)
 
 		// Verify update in DB
-		updatedMonitor, _ := monitorService.GetMonitorByID(ctx, auth, monitor.ID.String())
+		updatedMonitor, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		assert.Equal(t, "Updated Name", updatedMonitor.Name)
 		assert.Equal(t, 120, updatedMonitor.Interval)
 
@@ -295,10 +251,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 		originalState := monitor.State
@@ -307,10 +260,10 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		monitor.ProjectID = uuid.New()
 		monitor.State = monitors.MonitorStateStopped
 
-		svcErr := monitorService.UpdateMonitor(ctx, auth, *monitor)
+		svcErr := monitorService.UpdateMonitor(ctx, owner.Username, *monitor)
 		require.Nil(t, svcErr)
 
-		updatedMonitor, _ := monitorService.GetMonitorByID(ctx, auth, monitor.ID.String())
+		updatedMonitor, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		assert.Equal(t, project.ID, updatedMonitor.ProjectID, "Project ID should not have been updated")
 		assert.Equal(t, originalState, updatedMonitor.State, "State should not have been updated via UpdateMonitor")
 	})
@@ -319,10 +272,6 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
 
 		fakeMonitor := monitors.Monitor{
 			ID:          uuid.New(),
@@ -334,7 +283,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 			ProbeConfig: "{}",
 		}
 
-		svcErr := monitorService.UpdateMonitor(ctx, auth, fakeMonitor)
+		svcErr := monitorService.UpdateMonitor(ctx, owner.Username, fakeMonitor)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
@@ -343,15 +292,12 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 		monitor.Name = "" // Invalid
 
-		svcErr := monitorService.UpdateMonitor(ctx, auth, *monitor)
+		svcErr := monitorService.UpdateMonitor(ctx, owner.Username, *monitor)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -363,14 +309,11 @@ func TestIntegration_MonitorService_GetMonitorBySlugByProject(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		retrieved, svcErr := monitorService.GetMonitorBySlugByProject(ctx, auth, monitor.Slug)
+		retrieved, svcErr := monitorService.GetMonitorBySlugByProject(ctx, project.Slug, monitor.Slug)
 		require.Nil(t, svcErr)
 		require.NotNil(t, retrieved)
 		assert.Equal(t, monitor.ID, retrieved.ID)
@@ -381,12 +324,9 @@ func TestIntegration_MonitorService_GetMonitorBySlugByProject(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
-		retrieved, svcErr := monitorService.GetMonitorBySlugByProject(ctx, auth, "does-not-exist")
+		retrieved, svcErr := monitorService.GetMonitorBySlugByProject(ctx, project.Slug, "does-not-exist")
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 		assert.Nil(t, retrieved)
@@ -399,17 +339,14 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, auth, monitor.ID, monitors.MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, owner.Username, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
 
-		retrieved, _ := monitorService.GetMonitorByID(ctx, auth, monitor.ID.String())
+		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		assert.Equal(t, monitors.MonitorStateStopped, retrieved.State)
 	})
 
@@ -417,20 +354,17 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, auth, monitor.ID, monitors.MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, owner.Username, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
 
-		svcErr = monitorService.UpdateMonitorStateByID(ctx, auth, monitor.ID, monitors.MonitorStateStopped)
+		svcErr = monitorService.UpdateMonitorStateByID(ctx, owner.Username, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
 
-		retrieved, _ := monitorService.GetMonitorByID(ctx, auth, monitor.ID.String())
+		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		assert.Equal(t, monitors.MonitorStateStopped, retrieved.State)
 	})
 
@@ -438,14 +372,11 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, auth, monitor.ID, monitors.MonitorState("invalid_state"))
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, owner.Username, monitor.ID, monitors.MonitorState("invalid_state"))
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -454,12 +385,9 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		auth := &authorization.ProjectAuthorization{
-			ProjectID: project.ID,
-			Username:  owner.Username,
-		}
+		_ = project
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, auth, uuid.New(), monitors.MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, owner.Username, uuid.New(), monitors.MonitorStateStopped)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})

@@ -21,21 +21,18 @@ type IUserService interface {
 
 type UserServiceDeps struct {
 	DB             db.DB
-	Auth           IAuthorizer
 	ProjectService IProjectService
 }
 
 // UserService handles user-related operations such as registration, login, and retrieval.
 type UserService struct {
 	db             db.DB
-	auth           IAuthorizer
 	projectService IProjectService
 }
 
 func NewUserService(deps UserServiceDeps) *UserService {
 	return &UserService{
 		db:             deps.DB,
-		auth:           deps.Auth,
 		projectService: deps.ProjectService,
 	}
 }

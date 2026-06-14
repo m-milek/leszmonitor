@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/services"
 	util2 "github.com/m-milek/leszmonitor/util"
 )
@@ -29,16 +28,9 @@ func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w
 		return
 	}
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		MonitorID: monitorID,
-	})
-	if !ok {
-		return
-	}
-
-	result, err := c.service.GetLatestMonitorResultByMonitorID(ctx, projectAuth, monitorID)
-	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
+	result, svcErr := c.service.GetLatestMonitorResultByMonitorID(ctx, monitorID)
+	if svcErr != nil {
+		util.RespondError(ctx, w, svcErr.Code, svcErr.Err)
 		return
 	}
 
@@ -60,16 +52,9 @@ func (c *MonitorResultsAPIController) GetMonitorResultsByMonitorIDHandler(w http
 		return
 	}
 
-	projectAuth, ok := authorization.NewOrRespond(ctx, w, authorization.Payload{
-		MonitorID: monitorID,
-	})
-	if !ok {
-		return
-	}
-
-	results, err := c.service.GetMonitorResultsByMonitorID(ctx, projectAuth, monitorID, pagination)
-	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
+	results, svcErr := c.service.GetMonitorResultsByMonitorID(ctx, monitorID, pagination)
+	if svcErr != nil {
+		util.RespondError(ctx, w, svcErr.Code, svcErr.Err)
 		return
 	}
 

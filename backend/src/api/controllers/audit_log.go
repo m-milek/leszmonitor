@@ -35,12 +35,12 @@ func (c *AuditLogAPIController) GetAuditLogByQueryHandler(w http.ResponseWriter,
 		return
 	}
 
-	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
-	results, err := c.service.GetEntries(ctx, userClaims, *filters, *pagination)
+	results, err := c.service.GetEntries(ctx, *filters, *pagination)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
