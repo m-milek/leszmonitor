@@ -16,6 +16,7 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/services"
 	"github.com/m-milek/leszmonitor/workers"
+	"github.com/m-milek/leszmonitor/workers/probes"
 )
 
 //go:embed all:static
@@ -25,7 +26,8 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		workers.StartUptimeWorker(ctx)
+		manager := probes.NewProbesManager(db.Get())
+		manager.Run(ctx)
 	}()
 	wg.Add(1)
 	go func() {
