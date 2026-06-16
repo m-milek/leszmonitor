@@ -119,12 +119,12 @@ func (m *HttpProbe) Validate() error {
 	return nil
 }
 
-// httpClient is needed for mocking HTTP requests in tests
-type httpClient interface {
+// httpRequestExecutor is needed for mocking HTTP requests in tests
+type httpRequestExecutor interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func newHttpClient() httpClient {
+func newHttpClient() httpRequestExecutor {
 	return &http.Client{
 		Timeout: 10 * time.Second, // Default timeout for HTTP requests
 	}
@@ -133,7 +133,7 @@ func newHttpClient() httpClient {
 var httpClientOrMock = newHttpClient()
 
 // Encapsulates request creation and execution.
-func (m *HttpProbe) executeRequest(httpClient *httpClient) (*http.Response, time.Duration, error) {
+func (m *HttpProbe) executeRequest(httpClient *httpRequestExecutor) (*http.Response, time.Duration, error) {
 	request, err := m.createRequest()
 
 	if err != nil {

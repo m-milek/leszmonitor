@@ -44,15 +44,6 @@ func NewBadRequestError(format string, args ...any) *ServiceError {
 	}
 }
 
-// NewForbiddenError creates a 403 Forbidden ServiceError.
-// It uses fmt.Errorf under the hood, so you can use %w to wrap existing errors.
-func NewForbiddenError(format string, args ...any) *ServiceError {
-	return &ServiceError{
-		Code: http.StatusForbidden,
-		Err:  fmt.Errorf(format, args...),
-	}
-}
-
 // NewUnauthorizedError creates a 401 Unauthorized ServiceError.
 // It uses fmt.Errorf under the hood, so you can use %w to wrap existing errors.
 func NewUnauthorizedError(format string, args ...any) *ServiceError {
@@ -70,3 +61,6 @@ func NewConflictError(format string, args ...any) *ServiceError {
 		Err:  fmt.Errorf(format, args...),
 	}
 }
+
+const FormatFailedToCreateAuditLog = "failed to create audit log: %s"
+const FormatUserIsNotAMemberOfProject = "user %s is not a member of project %s"

@@ -32,7 +32,7 @@ func assertDNSProbeRun(t *testing.T, probe DNSProbe, wantSuccess bool, timeout t
 
 	result := probe.Run(ctx, uuid.New())
 
-	if gotSuccess := result.GetIsSuccess(); gotSuccess != wantSuccess {
+	if result.GetIsSuccess() != wantSuccess {
 		if wantSuccess {
 			t.Fatalf("Expected success, got errors: %+v", result.GetErrorDetails())
 		}
