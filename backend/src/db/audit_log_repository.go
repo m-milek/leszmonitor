@@ -88,7 +88,7 @@ func (a auditLogRepository) GetAuditLogEntries(ctx context.Context, filter secur
 		query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
 		args = append(args, pagination.PerPage, pagination.Offset())
 
-		err := sqlx.SelectContext(context.Background(), a.pool, &entries, query, args...)
+		err := sqlx.SelectContext(ctx, a.pool, &entries, query, args...)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}

@@ -75,7 +75,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		}
 		checkExpected(result, logger, details, p.ExpectedRecordValues, []string{cname},
 			func(cname string) any { return cname },
-			func(cname string, expected string) bool { return cname == expected },
+			func(cname, expected string) bool { return cname == expected },
 			func(expected string) string {
 				return fmt.Sprintf("Expected CNAME record with value %s not found", expected)
 			},
@@ -103,7 +103,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		}
 		checkExpected(result, logger, details, p.ExpectedRecordValues, txtRecords,
 			func(txt string) any { return txt },
-			func(txt string, expected string) bool { return txt == expected },
+			func(txt, expected string) bool { return txt == expected },
 			func(expected string) string {
 				return fmt.Sprintf("Expected TXT record with value %s not found", expected)
 			},

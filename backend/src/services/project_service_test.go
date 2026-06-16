@@ -37,7 +37,7 @@ func setupTestProjectService() (context.Context, *ProjectService, *db.MockDB) {
 
 func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 	t.Run("Returns project successfully", func(t *testing.T) {
-		ctx, svc, mockDB := setupTestProjectService()
+		ctx, _, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
 		expected := &models.Project{Description: "Test Description"}
@@ -45,7 +45,7 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").Return(expected, nil)
 
-		project, err := svc.internalGetProjectBySlug(ctx, "test-project")
+		project, err := internalGetProjectBySlug(ctx, mockDB, "test-project")
 
 		assert.Nil(t, err)
 		assert.NotNil(t, project)
@@ -54,12 +54,12 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 	})
 
 	t.Run("Fails with 404 when project not found", func(t *testing.T) {
-		ctx, svc, mockDB := setupTestProjectService()
+		ctx, _, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "nonexistent").Return((*models.Project)(nil), db.ErrNotFound)
 
-		project, err := svc.internalGetProjectBySlug(ctx, "nonexistent")
+		project, err := internalGetProjectBySlug(ctx, mockDB, "nonexistent")
 
 		assert.Nil(t, project)
 		assert.NotNil(t, err)
@@ -68,12 +68,12 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 	})
 
 	t.Run("Fails with 500 when database returns error", func(t *testing.T) {
-		ctx, svc, mockDB := setupTestProjectService()
+		ctx, _, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").Return((*models.Project)(nil), errors.New("database error"))
 
-		project, err := svc.internalGetProjectBySlug(ctx, "test-project")
+		project, err := internalGetProjectBySlug(ctx, mockDB, "test-project")
 
 		assert.Nil(t, project)
 		assert.NotNil(t, err)

@@ -110,7 +110,7 @@ func main() {
 	logger.Info().Msg("Shutdown signal received")
 
 	// Create a timeout context for graceful shutdown
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, shutdownCancel := context.WithTimeout(appCtx, 10*time.Second)
 	defer shutdownCancel()
 
 	// Shutdown API server

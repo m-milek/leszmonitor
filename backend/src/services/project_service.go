@@ -107,7 +107,7 @@ func (s *ProjectService) CreateProject(ctx context.Context, ownerUsername string
 func (s *ProjectService) GetProjectBySlug(ctx context.Context, projectSlug string) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "GetProjectBySlug")
 
-	project, err := s.internalGetProjectBySlug(ctx, projectSlug)
+	project, err := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (s *ProjectService) GetProjects(ctx context.Context, requestorUsername stri
 func (s *ProjectService) DeleteProject(ctx context.Context, projectSlug string) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "DeleteProject")
 
-	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
 		return getErr
 	}
@@ -169,7 +169,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectSlug string) 
 func (s *ProjectService) UpdateProject(ctx context.Context, projectSlug string, payload UpdateProjectPayload) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "UpdateProject")
 
-	oldProject, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	oldProject, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
 		return nil, getErr
 	}
@@ -191,7 +191,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectSlug string, 
 // AddUserToProject adds a user to a project with a specified role.
 func (s *ProjectService) AddUserToProject(ctx context.Context, projectSlug string, payload AddProjectMemberPayload) *ServiceError {
 
-	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
 		return getErr
 	}
@@ -228,7 +228,7 @@ func (s *ProjectService) AddUserToProject(ctx context.Context, projectSlug strin
 func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug string, payload RemoveProjectMemberPayload) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "RemoveUserFromProject")
 
-	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
 		return getErr
 	}
@@ -262,7 +262,7 @@ func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug 
 func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectSlug string, payload ChangeProjectMemberRolePayload) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "ChangeProjectMemberRole")
 
-	project, getErr := s.internalGetProjectBySlug(ctx, projectSlug)
+	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
 		return getErr
 	}
@@ -294,10 +294,10 @@ func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectSlu
 	return nil
 }
 
-func (s *ProjectService) internalGetProjectBySlug(ctx context.Context, projectID string) (*models.Project, *ServiceError) {
+func internalGetProjectBySlug(ctx context.Context, dbClient db.DB, projectID string) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, ProjectServiceName, "internalGetProjectBySlug")
 
-	project, err := s.db.Projects().GetProjectBySlug(ctx, projectID)
+	project, err := dbClient.Projects().GetProjectBySlug(ctx, projectID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("projectID", projectID).Msg("Project not found")

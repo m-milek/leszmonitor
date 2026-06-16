@@ -277,9 +277,9 @@ func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, projectS
 	logger := MethodLoggerFromContext(ctx, "MonitorService", "GetMonitorBySlugByProject")
 	logger.Trace().Str("slug", slug).Msg("Retrieving monitor by slug and project")
 
-	project, err := s.db.Projects().GetProjectBySlug(ctx, projectSlug)
-	if err != nil {
-		return nil, NewInternalError("failed to find project: %w", err)
+	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
+	if getErr != nil {
+		return nil, getErr
 	}
 
 	monitor, err := s.db.Monitors().GetMonitorBySlugByProject(ctx, slug, project.ID)
