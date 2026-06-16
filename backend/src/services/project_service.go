@@ -240,7 +240,7 @@ func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug 
 
 	member := project.GetMember(user.ID)
 	if member == nil {
-		return NewBadRequestError("user %s is not a member of project %s", payload.Username, project.Slug)
+		return NewBadRequestError(FormatUserIsNotAMemberOfProject, payload.Username, project.Slug)
 	}
 	if member.Role == models.RoleOwner {
 		logger.Warn().Str("username", payload.Username).Msg("Cannot remove project owner")
@@ -252,7 +252,7 @@ func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug 
 		return NewInternalError("failed to remove user from project: %w", err)
 	}
 	if !removed {
-		return NewNotFoundError("user %s is not a member of project %s", payload.Username, project.Slug)
+		return NewNotFoundError(FormatUserIsNotAMemberOfProject, payload.Username, project.Slug)
 	}
 
 	return nil
@@ -273,7 +273,7 @@ func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectSlu
 	}
 
 	if !project.IsMember(user.ID) {
-		return NewBadRequestError("user %s is not a member of project %s", payload.Username, project.Slug)
+		return NewBadRequestError(FormatUserIsNotAMemberOfProject, payload.Username, project.Slug)
 	}
 
 	if err := payload.Role.Validate(); err != nil {

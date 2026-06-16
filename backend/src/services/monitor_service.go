@@ -78,8 +78,7 @@ func (s *MonitorService) CreateMonitor(ctx context.Context, projectSlug string, 
 			monitorFromDB,
 		)
 		if err != nil {
-			logger.Error().Err(err).Msg("Failed to create audit log entry")
-			return fmt.Errorf("failed to create audit log entry: %w", err)
+			return NewInternalError(FormatFailedToCreateAuditLog, err)
 		}
 
 		_, auditErr := tx.AuditLog().InsertAuditLogEntry(ctx, entry)
@@ -144,7 +143,7 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, username string, id 
 			nil,
 		)
 		if err != nil {
-			return fmt.Errorf("failed to create audit log entry: %w", err)
+			return NewInternalError(FormatFailedToCreateAuditLog, err)
 		}
 
 		_, err = tx.AuditLog().InsertAuditLogEntry(ctx, entry)
@@ -248,7 +247,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, username string, mon
 			monitor,
 		)
 		if err != nil {
-			return fmt.Errorf("failed to create audit log entry: %w", err)
+			return NewInternalError(FormatFailedToCreateAuditLog, err)
 		}
 
 		_, auditErr := tx.AuditLog().InsertAuditLogEntry(ctx, entry)

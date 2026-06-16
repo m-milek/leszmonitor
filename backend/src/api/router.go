@@ -16,7 +16,7 @@ func SetupRouters(
 	h Handlers,
 ) {
 	// Users
-	protectedRouter.HandleFunc("GET /api/v1/users", middleware.RequireInstanceAdmin()(h.User.GetAllUsersHandler))
+	protectedRouter.HandleFunc("GET /api/v1/users", h.User.GetAllUsersHandler)
 	protectedRouter.HandleFunc("GET /api/v1/users/{username}", middleware.RequireSelf("username")(h.User.GetUserHandler))
 	publicRouter.HandleFunc("POST /api/v1/auth/register", h.User.UserRegisterHandler)
 	publicRouter.HandleFunc("POST /api/v1/auth/login", h.User.UserLoginHandler)
