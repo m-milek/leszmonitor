@@ -13,10 +13,8 @@ services:
       SQLITE_DB_PATH: /data/leszmonitor.db
       JWT_SECRET: your_jwt_secret
       JWT_EXPIRY_HOURS: 24
-      LOG_FILE_PATH: /var/log/leszmonitor/app.log
       INSTANCE_ADMIN_USERNAME: admin
       INSTANCE_ADMIN_PASSWORD: 123123
     volumes:
       - ./backend/src/leszmonitor.db:/data/leszmonitor.db
-      - ./logs:/var/log/leszmonitor
     restart: unless-stopped

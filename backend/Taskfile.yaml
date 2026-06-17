@@ -4,12 +4,15 @@ vars:
   APP_NAME: 'leszmonitor'
   BACKEND_SRC_DIR: '{{.TASKFILE_DIR}}/src'
   BACKEND_BIN_DIR: '{{.TASKFILE_DIR}}/bin'
+  SQLITE_DB_PATH: '{{.BACKEND_SRC_DIR}}/leszmonitor.db'
+  DUMP_FILE_PATH: '{{.TASKFILE_DIR}}/db_dump.sql'
 
 env:
   LOG_FILE_PATH: '{{.TASKFILE_DIR}}/.dev-logs/backend.log'
   LOG_LEVEL: 'TRACE'
   INSTANCE_ADMIN_USERNAME: 'admin'
   INSTANCE_ADMIN_PASSWORD: '123123'
+  SQLITE_DB_PATH: '{{.SQLITE_DB_PATH}}'
 
 tasks:
   build:
@@ -30,7 +33,6 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
-      SQLITE_DB_PATH: ./leszmonitor.db
     cmds:
       - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
 
@@ -40,7 +42,6 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
-      SQLITE_DB_PATH: ./leszmonitor.db
     cmds:
       - cd {{.BACKEND_SRC_DIR}} && air -build.stop_on_error true
 
@@ -50,7 +51,6 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
-      SQLITE_DB_PATH: ./leszmonitor.db
     cmds:
       - "{{.BACKEND_BIN_DIR}}/{{.APP_NAME}}"
 
@@ -72,3 +72,17 @@ tasks:
       - cd {{.BACKEND_SRC_DIR}} && go test -coverpkg=./... -coverprofile=coverage.out -v ./...
     generates:
       - 'coverage.out'
+
+  db:dump:
+    desc: Dump the SQLite database to a file
+    dir: '{{.BACKEND_SRC_DIR}}'
+    cmds:
+      - sqlite3 {{.SQLITE_DB_PATH}} .dump > {{.DUMP_FILE_PATH}}
+    generates:
+      - '{{.DUMP_FILE_PATH}}'
+
+  db:restore:
+    desc: Restore the SQLite database from a dump file
+    dir: '{{.BACKEND_SRC_DIR}}'
+    cmds:
+      - sqlite3 {{.SQLITE_DB_PATH}} < {{.DUMP_FILE_PATH}}

@@ -144,5 +144,8 @@ jobs:
       - name: Initialize DB
         run: touch backend/src/leszmonitor.db
 
+      - name: Restore DB from dump
+        run: task backend:db:restore
+
       - name: Run end-to-end tests
         run: task frontend:test:e2e
