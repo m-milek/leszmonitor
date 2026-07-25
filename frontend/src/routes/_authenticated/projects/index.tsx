@@ -12,15 +12,19 @@ import {
   type ProjectInput,
 } from "@/lib/data/projectData.ts";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { NewProjectForm } from "@/components/leszmonitor/forms/NewProjectForm.tsx";
 import { ProjectsTable } from "@/components/leszmonitor/tables/ProjectsTable.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
+import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog.tsx";
 
 export const Route = createFileRoute("/_authenticated/projects/")({
   component: Projects,
@@ -57,27 +61,36 @@ function Projects() {
       <TypographyH1>Projects</TypographyH1>
       <Card>
         <CardHeader>
-          <TypographyH2>Create New Project</TypographyH2>
-        </CardHeader>
-        <CardContent>
-          <NewProjectForm
-            formId="project-form"
-            onSubmitProject={(value) => addProjectMutation.mutateAsync(value)}
-          />
-        </CardContent>
-        <CardFooter className="justify-end">
-          <Button
-            type="submit"
-            form="project-form"
-            disabled={addProjectMutation.isPending}
-          >
-            {addProjectMutation.isPending ? "Adding..." : "Add Project"}
-          </Button>
-        </CardFooter>
-      </Card>
-      <Card>
-        <CardHeader>
-          <TypographyH2>Your Projects</TypographyH2>
+          <Flex direction="row" className="justify-between items-center">
+            <TypographyH2>Your Projects</TypographyH2>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>Create Project</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Project</DialogTitle>
+                </DialogHeader>
+                <NewProjectForm
+                  formId="project-form"
+                  onSubmitProject={async (value) => {
+                    await addProjectMutation.mutateAsync(value);
+                  }}
+                />
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    form="project-form"
+                    disabled={addProjectMutation.isPending}
+                  >
+                    {addProjectMutation.isPending
+                      ? "Adding..."
+                      : "Create Project"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </Flex>
         </CardHeader>
         <CardContent>
           <ProjectsTable

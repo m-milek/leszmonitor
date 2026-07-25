@@ -83,7 +83,7 @@ const columns: ColumnDef<AuditLogEntry>[] = [
               <LucideDiff />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[90vw] sm:max-w-[1200px] w-full max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[90vw] sm:max-w-300 w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Resource Diff</DialogTitle>
             </DialogHeader>
