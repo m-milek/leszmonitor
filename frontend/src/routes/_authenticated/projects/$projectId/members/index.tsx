@@ -23,6 +23,15 @@ import {
 } from "@/lib/data/projectData.ts";
 import { fetchAllUsers } from "@/lib/data/userData.ts";
 import { AddMemberForm } from "@/components/leszmonitor/forms/AddMemberForm.tsx";
+import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog.tsx";
 
 export const Route = createFileRoute(
   "/_authenticated/projects/$projectId/members/",
@@ -76,35 +85,38 @@ function ProjectMembersRoute() {
       <TypographyH1>Manage Members</TypographyH1>
       <Card>
         <CardHeader>
-          <TypographyH2>Add Members</TypographyH2>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <AddMemberForm
-            formId="add-member-form"
-            onSubmitMember={async (value) => {
-              await addMemberMutation.mutateAsync(value);
-            }}
-            validUsernames={validUsernames}
-          />
-        </CardContent>
-        <CardFooter className="justify-end">
-          <Button
-            type="submit"
-            form="add-member-form"
-            disabled={addMemberMutation.isPending}
-          >
-            {addMemberMutation.isPending ? "Adding..." : "Add Member"}
-          </Button>
-        </CardFooter>
-      </Card>
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between">
+          <Flex direction="row" className="justify-between">
             <TypographyH2>
               {project.members.length}{" "}
               {project.members.length === 1 ? "Member" : "Members"}
             </TypographyH2>
-          </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>Add Member</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Member</DialogTitle>
+                </DialogHeader>
+                <AddMemberForm
+                  formId="add-member-form"
+                  onSubmitMember={async (value) => {
+                    await addMemberMutation.mutateAsync(value);
+                  }}
+                  validUsernames={validUsernames}
+                />
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    form="add-member-form"
+                    disabled={addMemberMutation.isPending}
+                  >
+                    {addMemberMutation.isPending ? "Adding..." : "Submit"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </Flex>
           <Input
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search members..."
