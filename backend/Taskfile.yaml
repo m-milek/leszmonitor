@@ -43,7 +43,7 @@ tasks:
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
     cmds:
-      - cd {{.BACKEND_SRC_DIR}} && air -build.stop_on_error true
+      - cd {{.BACKEND_SRC_DIR}} && $(go env GOPATH)/bin/air -build.stop_on_error true
 
   docker:run:
     desc: Run the Docker image

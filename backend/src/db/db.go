@@ -90,7 +90,7 @@ func newDBClientFromPool(pool sqlx.ExtContext) *DBClient {
 	}
 }
 
-// New creates a new DB client using the provided DSN. It pings the DB and ensures the schema exists.
+// New creates a new DB client using the provided DSN.
 func New(ctx context.Context, dsn string) (*DBClient, error) {
 	pool, err := sqlx.ConnectContext(ctx, "sqlite", dsn)
 	if err != nil {
@@ -236,6 +236,7 @@ func InitFromEnv(ctx context.Context) error {
 func setupSQLiteConfig(dsn string) string {
 	pragmas := []string{
 		"_pragma=journal_mode(WAL)",
+		"_pragma=synchronous(NORMAL)",
 		"_pragma=busy_timeout(5000)",
 		"_pragma=foreign_keys(1)",
 	}
