@@ -7,7 +7,6 @@ import {
   LucideNotebookText,
   LucideUsers,
 } from "lucide-react";
-import { SidebarButton } from "@/components/leszmonitor/sidebar/AppSidebar.tsx";
 import {
   Select,
   SelectContent,
@@ -18,6 +17,7 @@ import {
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAppStore } from "@/lib/store.ts";
+import { SidebarButton } from "@/components/leszmonitor/sidebar/SidebarButton.tsx";
 
 export interface ProjectMenuProps {
   projects: Project[];

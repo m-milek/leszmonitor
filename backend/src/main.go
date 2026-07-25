@@ -125,4 +125,7 @@ func main() {
 	// Wait for all goroutines to finish
 	wg.Wait()
 	logger.Info().Msg("All processes terminated successfully")
+
+	db.Close()
+	logger.Info().Msg("Database connection closed")
 }

@@ -6,8 +6,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx";
 
 import {
@@ -22,46 +20,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
-import { Link } from "@tanstack/react-router";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
 import { fetchUser } from "@/lib/data/userData.ts";
 import { getProjects } from "@/lib/data/projectData.ts";
 import { AppSidebarHeader } from "@/components/leszmonitor/sidebar/AppSidebarHeader.tsx";
 import { ProjectMenu } from "@/components/leszmonitor/sidebar/ProjectMenu.tsx";
-
-interface SidebarButtonProps {
-  icon: React.ReactNode;
-  href: string;
-  label: string;
-  variant?: "default" | "primary";
-}
-
-export const SidebarButton = ({
-  icon,
-  href,
-  label,
-  variant = "default",
-}: SidebarButtonProps) => {
-  const onClick = () => {
-    console.log("navigating to", href);
-  };
-
-  const className =
-    variant === "primary"
-      ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground cursor-pointer"
-      : "cursor-pointer";
-
-  return (
-    <SidebarMenuItem>
-      <Link to={href} className="flex items-center space-x-2 cursor-pointer">
-        <SidebarMenuButton onClick={onClick} className={className}>
-          {icon}
-          <span>{label}</span>
-        </SidebarMenuButton>
-      </Link>
-    </SidebarMenuItem>
-  );
-};
+import { SidebarButton } from "@/components/leszmonitor/sidebar/SidebarButton.tsx";
 
 export const AppSidebar = () => {
   const { username, setUsername, user, setUser } = useAppStore();

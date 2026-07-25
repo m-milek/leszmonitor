@@ -1,8 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Test Backend" type="GoTestRunConfiguration" factoryName="Go Test">
+  <configuration default="false" name="Run API" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="leszmonitor" />
     <working_directory value="$PROJECT_DIR$/backend/src" />
-    <go_parameters value="-i -v" />
+    <envs>
+      <env name="API_PORT" value="7001" />
+      <env name="JWT_SECRET" value="your_jwt_secret" />
+      <env name="SQLITE_DB_PATH" value="./leszmonitor.db" />
+      <env name="JWT_EXPIRY_HOURS" value="24" />
+    </envs>
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
       <option name="IS_SUBST" value="false" />
@@ -16,9 +21,7 @@
     <kind value="DIRECTORY" />
     <package value="github.com/m-milek/leszmonitor" />
     <directory value="$PROJECT_DIR$/backend/src" />
-    <filePath value="$PROJECT_DIR$" />
-    <framework value="gotest" />
-    <pattern value="./..." />
+    <filePath value="$PROJECT_DIR$/backend/src/" />
     <method v="2" />
   </configuration>
 </component>
