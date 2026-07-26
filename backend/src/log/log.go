@@ -17,21 +17,21 @@ type Config struct {
 }
 
 func New() zerolog.Logger {
-	level, err := zerolog.ParseLevel(appconfig.LogLevel)
+	level, err := zerolog.ParseLevel(strings.ToLower(os.Getenv(appconfig.LogLevel)))
 	if err != nil {
 		level = zerolog.TraceLevel
 	}
 
 	zerolog.SetGlobalLevel(level)
 
+	if strings.ToLower(os.Getenv(appconfig.LogFormat)) == "json" {
+		return zerolog.New(os.Stdout).Level(level).With().Timestamp().Caller().Logger()
+	}
+
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	output.FormatLevel = formatLogLevel
 
 	return zerolog.New(output).Level(level).With().Timestamp().Caller().Logger()
-}
-
-func NewServiceLogger(serviceName string) zerolog.Logger {
-	return New().With().Str("service", serviceName).Logger()
 }
 
 func FromContext(ctx context.Context) *zerolog.Logger {

@@ -7,6 +7,7 @@ import (
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/auth"
+	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"golang.org/x/crypto/bcrypt"
@@ -55,7 +56,7 @@ type LoginResponse struct {
 
 // GetAllUsers retrieves all users from the database.
 func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, "UserService", "GetAllUsers")
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
 	users, err := s.db.Users().GetAllUsers(ctx)
@@ -64,6 +65,7 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *ServiceE
 		return nil, NewInternalError("error retrieving users: %w", err)
 	}
 
+	logger.Debug().Int("count", len(users)).Msg("Successfully retrieved all users")
 	return users, nil
 }
 
@@ -74,25 +76,26 @@ func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*
 
 // internalGetUserByUsername retrieves a user by their username without authorization checks.
 func (s *UserService) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, "UserService", "internalGetUserByUsername")
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "internalGetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("username", username).Msg("User not found")
+			logger.Error().Str("username", username).Msg("User not found")
 			return nil, NewNotFoundError("user %s not found", username)
 		}
 		logger.Error().Err(err).Str("username", username).Msg("Error retrieving user")
 		return nil, NewInternalError("error retrieving user %s: %w", username, err)
 	}
 
+	logger.Debug().Str("username", username).Msg("Successfully retrieved user")
 	return user, nil
 }
 
 // RegisterUser registers a new user with the provided payload.
 func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, "UserService", "RegisterUser")
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "RegisterUser")
 	logger.Trace().Str("username", payload.Username).Msg("Registering new user")
 
 	hashedPassword, err := hashPassword(payload.Password)
@@ -127,23 +130,27 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 		return NewInternalError("failed to create sandbox project for user %s: %w", payload.Username, projectErr.Err)
 	}
 
+	logger.Debug().Str("username", payload.Username).Msg("User registration fully completed")
 	return nil
 }
 
 // Login authenticates a user and returns a JWT token if successful.
 func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, "UserService", "Login")
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "Login")
 	logger.Info().Str("username", payload.Username).Msg("User login attempt")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
+			logger.Error().Str("username", payload.Username).Msg("User not found for login")
 			return nil, NewUnauthorizedError("invalid credentials")
 		}
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Error retrieving user for login")
 		return nil, NewInternalError("error retrieving user %s: %w", payload.Username, err)
 	}
 
 	if err = checkPasswordHash(payload.Password, user.PasswordHash); err != nil {
+		logger.Error().Str("username", payload.Username).Msg("Invalid password for login")
 		return nil, NewUnauthorizedError("invalid credentials")
 	}
 
@@ -153,6 +160,7 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 		return nil, NewInternalError("failed to generate JWT token")
 	}
 
+	logger.Debug().Str("username", payload.Username).Msg("Login successful")
 	return &LoginResponse{Jwt: *jwtToken}, nil
 }
 

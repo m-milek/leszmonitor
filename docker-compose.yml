@@ -10,6 +10,7 @@ services:
     environment:
       API_PORT: 7001
       LOG_LEVEL: TRACE
+      LOG_FORMAT: json
       SQLITE_DB_PATH: /data/leszmonitor.db
       JWT_SECRET: your_jwt_secret
       JWT_EXPIRY_HOURS: 24

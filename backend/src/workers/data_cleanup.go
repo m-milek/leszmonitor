@@ -29,8 +29,14 @@ func StartDataCleanupWorker(ctx context.Context) {
 
 			if err != nil {
 				logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
-				return
+				continue
 			}
+
+			if len(allMonitors) == 0 {
+				logger.Trace().Msg("No monitors found for data cleanup")
+				continue
+			}
+
 			logger.Debug().Msgf("Starting data cleanup for %d monitors", len(allMonitors))
 			for _, monitor := range allMonitors {
 				_, err := db.Get().MonitorResults().DeleteMonitorResultsOlderThanDuration(ctx, monitor.ID, time.Duration(monitor.ResultRetentionSeconds)*time.Second)
