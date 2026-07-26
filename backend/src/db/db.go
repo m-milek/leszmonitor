@@ -167,9 +167,9 @@ func dbWrap[T any](ctx context.Context, operationName string, operation func() (
 	result, err := fun()
 
 	if err != nil && !errors.Is(err, ErrNotFound) {
-		logger.Error().Err(err).Msgf("DB operation %s failed", operationName)
+		logger.Error().Err(err).Dur("duration_ms", result.Duration).Msgf("DB operation %s failed", operationName)
 	} else if err == nil {
-		logger.Trace().Dur("duration", result.Duration).Any("result", result.Result).Msgf("DB operation %s completed", operationName)
+		logger.Trace().Dur("duration_ms", result.Duration).Msgf("DB operation %s completed", operationName)
 	}
 
 	return result.Result, err

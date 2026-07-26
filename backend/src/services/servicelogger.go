@@ -8,5 +8,5 @@ import (
 )
 
 func MethodLoggerFromContext(ctx context.Context, serviceName, methodName string) zerolog.Logger {
-	return log.FromContext(ctx).With().Str("service", serviceName).Str("method", methodName).Logger()
+	return log.FromContext(ctx).With().Str("service", serviceName).Str("fn", methodName).Logger()
 }

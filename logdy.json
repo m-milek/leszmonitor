@@ -1,0 +1,86 @@
+{
+  "name": "main",
+  "columns": [
+    {
+      "id": "225603",
+      "name": "level",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content['level'] }\n}",
+      "idx": 2,
+      "width": 88,
+      "faceted": true
+    },
+    {
+      "id": "480590",
+      "name": "message",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content['message'] }\n}",
+      "idx": 3,
+      "width": 386,
+      "faceted": false
+    },
+    {
+      "id": "268396",
+      "name": "request_id",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content[\"request_id\"] }\n}",
+      "faceted": false,
+      "idx": 6,
+      "width": 150
+    },
+    {
+      "id": "534425",
+      "name": "component",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content['component'] }\n}",
+      "idx": 1,
+      "width": 131,
+      "faceted": true
+    },
+    {
+      "id": "253397",
+      "name": "method",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content[\"method\"] }\n}",
+      "faceted": true,
+      "idx": 7,
+      "width": 150
+    },
+    {
+      "id": "315859",
+      "name": "path",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content['path'] }\n}",
+      "idx": 4,
+      "width": 229,
+      "faceted": false
+    },
+    {
+      "id": "349147",
+      "name": "time",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content['time'] }\n}",
+      "idx": 5,
+      "width": 159,
+      "faceted": false
+    },
+    {
+      "id": "771062",
+      "name": "caller",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content['caller'] }\n}",
+      "idx": 6,
+      "width": 137,
+      "hidden": true
+    },
+    {
+      "id": "594070",
+      "name": "fn",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content[\"fn\"] }\n}",
+      "faceted": false,
+      "idx": 8,
+      "width": 150,
+      "hidden": false
+    }
+  ],
+  "settings": {
+    "leftColWidth": 300,
+    "drawerColWidth": 716,
+    "maxMessages": 1000,
+    "middlewares": [],
+    "entriesOrder": "desc",
+    "correlationIdField": "request_id"
+  }
+}
