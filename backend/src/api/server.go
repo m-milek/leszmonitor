@@ -6,10 +6,13 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/logdyhq/logdy-core/logdy"
 	"github.com/m-milek/leszmonitor/api/middleware"
+	appconfig "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/util"
 	"github.com/rs/cors"
@@ -41,8 +44,26 @@ func createServer(ctx context.Context, config ServerConfig, staticFiles embed.FS
 	logger := log.FromContext(ctx).With().Str("component", "api_server").Logger()
 	ctx = log.WithContext(ctx, &logger)
 
+	var protectedLogdy http.Handler
+	if strings.ToLower(os.Getenv(appconfig.EnableLogdy)) != "false" {
+		logger.Info().Msg("Initializing Logdy at /_logdy")
+		logdyMux := http.NewServeMux()
+		logdyLogger := logdy.InitializeLogdy(logdy.Config{
+			HttpPathPrefix: "_logdy",
+			UiPass:         os.Getenv(appconfig.InstanceAdminPassword),
+			ConfigFilePath: os.Getenv(appconfig.LogdyConfigFilePath),
+		}, logdyMux)
+		log.LogdyGlobalWriter.Logger = logdyLogger
+		protectedLogdy = logdyMux
+	}
+
 	combinedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
+
+		if protectedLogdy != nil && (strings.HasPrefix(path, "/_logdy/") || path == "/_logdy") {
+			protectedLogdy.ServeHTTP(w, r)
+			return
+		}
 
 		if !strings.HasPrefix(path, "/api/") {
 			publicRouter.ServeHTTP(w, r)
@@ -73,6 +94,7 @@ func createServer(ctx context.Context, config ServerConfig, staticFiles embed.FS
 	handler := c.Handler(combinedHandler)
 
 	handler = middleware.Logger(ctx, handler)
+	handler = middleware.Recoverer(ctx, handler)
 
 	server := &http.Server{
 		Addr:         net.JoinHostPort(config.Host, config.Port),

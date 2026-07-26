@@ -2,14 +2,40 @@ package log
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/logdyhq/logdy-core/logdy"
 	appconfig "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 )
+
+var LogdyGlobalWriter *logdyWriter
+
+type logdyWriter struct {
+	Logger logdy.Logdy
+}
+
+func (w *logdyWriter) Write(p []byte) (int, error) {
+	if w.Logger != nil {
+		var fields logdy.Fields
+		if err := json.Unmarshal(p, &fields); err == nil {
+			w.Logger.Log(fields)
+		} else {
+			w.Logger.LogString(string(p))
+		}
+	}
+	return len(p), nil
+}
+
+func init() {
+	LogdyGlobalWriter = &logdyWriter{}
+}
 
 type Config struct {
 	Level       zerolog.Level
@@ -17,21 +43,25 @@ type Config struct {
 }
 
 func New() zerolog.Logger {
-	level, err := zerolog.ParseLevel(appconfig.LogLevel)
+	level, err := zerolog.ParseLevel(strings.ToLower(os.Getenv(appconfig.LogLevel)))
 	if err != nil {
 		level = zerolog.TraceLevel
 	}
 
 	zerolog.SetGlobalLevel(level)
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
-	output.FormatLevel = formatLogLevel
+	var baseOutput io.Writer
+	if strings.ToLower(os.Getenv(appconfig.LogFormat)) == "json" {
+		baseOutput = os.Stdout
+	} else {
+		output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+		output.FormatLevel = formatLogLevel
+		baseOutput = output
+	}
 
-	return zerolog.New(output).Level(level).With().Timestamp().Caller().Logger()
-}
-
-func NewServiceLogger(serviceName string) zerolog.Logger {
-	return New().With().Str("service", serviceName).Logger()
+	multi := zerolog.MultiLevelWriter(baseOutput, LogdyGlobalWriter)
+	return zerolog.New(multi).Level(level).With().Timestamp().Caller().Logger()
 }
 
 func FromContext(ctx context.Context) *zerolog.Logger {

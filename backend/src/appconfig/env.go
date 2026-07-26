@@ -7,12 +7,15 @@ import (
 
 const (
 	ApiPort               = "API_PORT"
-	LogLevel              = "LOG_LEVEL" // TRACE, DEBUG, INFO, WARN, ERROR
+	LogLevel              = "LOG_LEVEL"  // TRACE, DEBUG, INFO, WARN, ERROR
+	LogFormat             = "LOG_FORMAT" // JSON or CONSOLE
 	SqliteDbPath          = "SQLITE_DB_PATH"
 	JwtSecret             = "JWT_SECRET"
 	JwtExpiryHours        = "JWT_EXPIRY_HOURS"
 	InstanceAdminUsername = "INSTANCE_ADMIN_USERNAME"
 	InstanceAdminPassword = "INSTANCE_ADMIN_PASSWORD"
+	EnableLogdy           = "ENABLE_LOGDY"
+	LogdyConfigFilePath   = "LOGDY_CONFIG_FILE_PATH"
 )
 
 func Validate() error {

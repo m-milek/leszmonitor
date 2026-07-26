@@ -93,10 +93,10 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 		_ = conn.Close()
 	}()
 
-	logger := log.FromContext(ctx).With().Str("remoteAddr", conn.RemoteAddr().String()).Str("component", "websocket_worker").Logger()
+	logger := log.FromContext(ctx).With().Str("remote_addr", conn.RemoteAddr().String()).Str("component", "websocket_worker").Logger()
 	ctx = log.WithContext(ctx, &logger)
 
-	logger.Info().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection established")
+	logger.Info().Any("remote_addr", conn.RemoteAddr()).Msg("WebSocket connection established")
 
 	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
@@ -107,7 +107,7 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 		return
 	}
 
-	logger.Info().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection authenticated successfully")
+	logger.Info().Any("remote_addr", conn.RemoteAddr()).Msg("WebSocket connection authenticated successfully")
 
 	conn.SetReadDeadline(time.Time{})
 	conn.SetWriteDeadline(time.Time{})
@@ -136,10 +136,10 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 	for {
 		select {
 		case <-authCtx.Done():
-			logger.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed due to context cancellation")
+			logger.Warn().Any("remote_addr", conn.RemoteAddr()).Msg("WebSocket connection closed due to context cancellation")
 			return
 		case <-disconnected:
-			logger.Warn().Any("remoteAddr", conn.RemoteAddr()).Msg("WebSocket connection closed by client")
+			logger.Warn().Any("remote_addr", conn.RemoteAddr()).Msg("WebSocket connection closed by client")
 			return
 		case runMsg := <-monitorRunChannel:
 			logger.Trace().Msg("Received monitor run event, sending notification to WebSocket client")

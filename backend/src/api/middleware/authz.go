@@ -80,6 +80,24 @@ func RequireInstanceAdmin() func(http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// RequireInstanceAdminHandler checks if the user is an instance admin, accepting an http.Handler.
+func RequireInstanceAdminHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+		if !ok {
+			return
+		}
+
+		if !userClaims.IsInstanceAdmin {
+			util.RespondError(ctx, w, http.StatusForbidden, fmt.Errorf("requires instance admin privileges"))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RequireSelf checks if the authenticated user matches the username parameter in the URL.
 func RequireSelf(usernameParam string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
