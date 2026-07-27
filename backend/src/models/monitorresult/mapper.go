@@ -2,20 +2,23 @@ package monitorresult
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	consts "github.com/m-milek/leszmonitor/models/consts"
 )
 
-// ParseResultDetails parses the raw JSON details based on the monitorType
+var ErrEmptyDetails = errors.New("empty details")
+
+// ParseResultDetails parses the raw JSON details based on the monitorType.
 func ParseResultDetails(monitorType consts.ProbeType, rawDetails []byte) (IMonitorResultDetails, error) {
 	if len(rawDetails) == 0 || string(rawDetails) == "null" {
-		return nil, nil
+		return nil, ErrEmptyDetails
 	}
 
 	switch monitorType {
-	case consts.HttpConfigType:
-		var details HttpResultDetails
+	case consts.HTTPConfigType:
+		var details HTTPResultDetails
 		if err := json.Unmarshal(rawDetails, &details); err != nil {
 			return nil, fmt.Errorf("failed to parse HTTP result details: %w", err)
 		}

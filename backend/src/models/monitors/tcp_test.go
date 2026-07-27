@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // MockDialer is a mock implementation of the dialer interface used for testing.
@@ -67,7 +68,7 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 	return args.Error(0)
 }
 
-// Setup function for tests
+// Setup function for tests.
 func setupTCPProbe() *TCPProbe {
 	monitor, err := NewTCPProbe("example.com", 80, "tcp", 5000, 3)
 	monitor.dialAddressFunc = dialAddressFunc // Use the global function for testing
@@ -82,14 +83,14 @@ func TestTCPMonitor_Validate(t *testing.T) {
 	t.Run("Valid Configuration", func(t *testing.T) {
 		probe := setupTCPProbe()
 		err := probe.Validate()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("Empty Host", func(t *testing.T) {
 		probe := setupTCPProbe()
 		probe.Host = ""
 		err := probe.Validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "host cannot be empty")
 	})
 
@@ -97,7 +98,7 @@ func TestTCPMonitor_Validate(t *testing.T) {
 		probe := setupTCPProbe()
 		probe.RetryCount = 0
 		err := probe.Validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "count must be greater than zero")
 	})
 
@@ -105,7 +106,7 @@ func TestTCPMonitor_Validate(t *testing.T) {
 		probe := setupTCPProbe()
 		probe.Protocol = "invalid"
 		err := probe.Validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid protocol")
 	})
 
@@ -122,7 +123,7 @@ func TestTCPMonitor_Validate(t *testing.T) {
 		probe := setupTCPProbe()
 		probe.Timeout = -1
 		err := probe.Validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "timeout must be greater than zero")
 	})
 
@@ -130,7 +131,7 @@ func TestTCPMonitor_Validate(t *testing.T) {
 		probe := setupTCPProbe()
 		probe.Timeout = 60001 // Exceeds the limit of 60 seconds (60000ms)
 		err := probe.Validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "timeout must not exceed 60 seconds")
 	})
 
@@ -138,12 +139,12 @@ func TestTCPMonitor_Validate(t *testing.T) {
 		probe := setupTCPProbe()
 		probe.Timeout = 0
 		err := probe.Validate()
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "timeout must be greater than zero")
 	})
 }
 
-// Test the dialAddress function
+// Test the dialAddress function.
 func TestTCPAddress(t *testing.T) {
 	// This is a bit tricky to test without making actual network calls
 	// We'll use a known reliable service for a simple integration test
@@ -157,7 +158,7 @@ func TestTCPAddress(t *testing.T) {
 		// The test might fail if port 80 is not open on localhost
 		// This is more of an integration test than a unit test
 		if success {
-			assert.True(t, duration > 0)
+			assert.Positive(t, duration)
 		}
 	})
 
@@ -172,7 +173,7 @@ func TestTCPAddress(t *testing.T) {
 	})
 }
 
-// Test the Run method with mocked network calls
+// Test the Run method with mocked network calls.
 func TestTCPMonitor_Run(t *testing.T) {
 	// Save the original function and restore it after tests
 	originalDialAddress := dialAddress

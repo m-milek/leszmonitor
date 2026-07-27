@@ -12,8 +12,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ProbesManager supervises the set of live monitor runners.
-type ProbesManager struct {
+// Manager supervises the set of live monitor runners.
+type Manager struct {
 	mu     sync.RWMutex
 	db     db.DB
 	probes map[uuid.UUID]*probeRunner
@@ -21,17 +21,17 @@ type ProbesManager struct {
 	logger zerolog.Logger
 }
 
-// NewProbesManager returns a pointer: ProbesManager holds a sync.RWMutex and must
+// NewManager returns a pointer: Manager holds a sync.RWMutex and must
 // never be copied (go vet copylocks).
-func NewProbesManager(database db.DB) *ProbesManager {
-	return &ProbesManager{
+func NewManager(database db.DB) *Manager {
+	return &Manager{
 		db:     database,
 		probes: make(map[uuid.UUID]*probeRunner),
 		exited: make(chan uuid.UUID, 100),
 	}
 }
 
-func (w *ProbesManager) Run(ctx context.Context) {
+func (w *Manager) Run(ctx context.Context) {
 	w.logger = log.FromContext(ctx).With().Str("component", "probes_worker").Logger()
 
 	w.logger.Info().Msg("Starting probes worker...")
@@ -63,7 +63,7 @@ func (w *ProbesManager) Run(ctx context.Context) {
 	}
 }
 
-func (w *ProbesManager) dispatch(ctx context.Context, msg monitors.MonitorLifecycleMessage) {
+func (w *Manager) dispatch(ctx context.Context, msg monitors.MonitorLifecycleMessage) {
 	switch msg.Status {
 	case monitors.Created:
 		if msg.Monitor != nil {
@@ -83,7 +83,7 @@ func (w *ProbesManager) dispatch(ctx context.Context, msg monitors.MonitorLifecy
 	}
 }
 
-func (w *ProbesManager) start(ctx context.Context, monitor monitors.Monitor) {
+func (w *Manager) start(ctx context.Context, monitor monitors.Monitor) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -112,7 +112,7 @@ func (w *ProbesManager) start(ctx context.Context, monitor monitors.Monitor) {
 }
 
 // stop cancels a running probe and removes it.
-func (w *ProbesManager) stop(id uuid.UUID) {
+func (w *Manager) stop(id uuid.UUID) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -127,14 +127,14 @@ func (w *ProbesManager) stop(id uuid.UUID) {
 }
 
 // remove drops a probe that has already exited on its own.
-func (w *ProbesManager) remove(id uuid.UUID) {
+func (w *Manager) remove(id uuid.UUID) {
 	w.mu.Lock()
 	delete(w.probes, id)
 	w.mu.Unlock()
 }
 
 // get returns a probeRunner for a given monitor uuid.UUID.
-func (w *ProbesManager) get(id uuid.UUID) *probeRunner {
+func (w *Manager) get(id uuid.UUID) *probeRunner {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return w.probes[id]
@@ -142,7 +142,7 @@ func (w *ProbesManager) get(id uuid.UUID) *probeRunner {
 
 // notifyExit sends a message to the worker's main loop that a probe has exited on its own and can be removed from the map.
 // This is used for self-termination when a probe detects an invalid configuration and fails.
-func (w *ProbesManager) notifyExit(ctx context.Context, id uuid.UUID) {
+func (w *Manager) notifyExit(ctx context.Context, id uuid.UUID) {
 	select {
 	case w.exited <- id:
 	case <-ctx.Done():
@@ -150,7 +150,7 @@ func (w *ProbesManager) notifyExit(ctx context.Context, id uuid.UUID) {
 }
 
 // ActiveCount returns the number of currently active probes.
-func (w *ProbesManager) ActiveCount() int {
+func (w *Manager) ActiveCount() int {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return len(w.probes)

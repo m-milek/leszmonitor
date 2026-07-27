@@ -8,7 +8,7 @@ import (
 // WithTx executes fn inside a database transaction. If fn returns nil,
 // the transaction is committed. If fn returns an error or panics,
 // the transaction is rolled back. Nested transactions are not supported.
-func (c *DBClient) WithTx(ctx context.Context, fn func(tx DB) error) error {
+func (c *Client) WithTx(ctx context.Context, fn func(tx DB) error) error {
 	if c.sqlxDB == nil {
 		return fmt.Errorf("nested transactions are not supported")
 	}
@@ -18,7 +18,7 @@ func (c *DBClient) WithTx(ctx context.Context, fn func(tx DB) error) error {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	txClient := newDBClientFromPool(tx)
+	txClient := newClientFromPool(tx)
 
 	defer func() {
 		if p := recover(); p != nil {

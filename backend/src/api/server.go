@@ -35,7 +35,12 @@ func DefaultServerConfig() ServerConfig {
 }
 
 // createServer sets up the HTTP server with public and protected routes, applying necessary middleware.
-func createServer(ctx context.Context, config ServerConfig, staticFiles embed.FS, handlers Handlers) (*http.Server, error) {
+func createServer(
+	ctx context.Context,
+	config ServerConfig,
+	staticFiles embed.FS,
+	handlers Handlers,
+) (*http.Server, error) {
 	publicRouter := http.NewServeMux()
 	protectedRouter := http.NewServeMux()
 
@@ -106,7 +111,12 @@ func createServer(ctx context.Context, config ServerConfig, staticFiles embed.FS
 }
 
 // StartServer initializes and starts the HTTP server based on the provided configuration.
-func StartServer(ctx context.Context, config ServerConfig, staticFiles embed.FS, handlers Handlers) (*http.Server, chan struct{}, error) {
+func StartServer(
+	ctx context.Context,
+	config ServerConfig,
+	staticFiles embed.FS,
+	handlers Handlers,
+) (*http.Server, chan struct{}, error) {
 	logger := log.FromContext(ctx).With().Str("component", "api_server").Logger()
 
 	server, err := createServer(ctx, config, staticFiles, handlers)

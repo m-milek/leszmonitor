@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/consts"
 )
 
 func mapProbeType(kind consts.ProbeType) Probe {
 	switch kind {
-	case consts.HttpConfigType:
-		return &HttpProbe{}
+	case consts.HTTPConfigType:
+		return &HTTPProbe{}
 	case consts.TCPConfigType:
 		return &TCPProbe{}
 	case consts.DNSConfigType:

@@ -14,13 +14,23 @@ import (
 )
 
 type IMonitorService interface {
-	CreateMonitor(ctx context.Context, projectSlug string, username string, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError)
+	CreateMonitor(
+		ctx context.Context,
+		projectSlug string,
+		username string,
+		monitor monitors.Monitor,
+	) (*MonitorCreateResponse, *ServiceError)
 	DeleteMonitor(ctx context.Context, username string, id string) *ServiceError
 	GetMonitorsByProjectSlug(ctx context.Context, projectSlug string) ([]monitors.Monitor, *ServiceError)
 	GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError)
 	UpdateMonitor(ctx context.Context, username string, monitor monitors.Monitor) *ServiceError
 	GetMonitorBySlugByProject(ctx context.Context, projectSlug string, slug string) (*monitors.Monitor, *ServiceError)
-	UpdateMonitorStateByID(ctx context.Context, username string, monitorID uuid.UUID, state monitors.MonitorState) *ServiceError
+	UpdateMonitorStateByID(
+		ctx context.Context,
+		username string,
+		monitorID uuid.UUID,
+		state monitors.MonitorState,
+	) *ServiceError
 }
 
 // MonitorService handles monitor-related CRUD operations.
@@ -43,9 +53,18 @@ type MonitorCreateResponse struct {
 }
 
 // CreateMonitor creates a new monitor in the specified project.
-func (s *MonitorService) CreateMonitor(ctx context.Context, projectSlug string, username string, monitor monitors.Monitor) (*MonitorCreateResponse, *ServiceError) {
+func (s *MonitorService) CreateMonitor(
+	ctx context.Context,
+	projectSlug string,
+	username string,
+	monitor monitors.Monitor,
+) (*MonitorCreateResponse, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "CreateMonitor")
-	logger.Trace().Str("projectSlug", projectSlug).Interface("monitor", monitor).Str("username", username).Msg("Creating monitor")
+	logger.Trace().
+		Str("projectSlug", projectSlug).
+		Interface("monitor", monitor).
+		Str("username", username).
+		Msg("Creating monitor")
 
 	project, err := s.db.Projects().GetProjectBySlug(ctx, projectSlug)
 	if err != nil {
@@ -177,7 +196,10 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, username string, id 
 }
 
 // GetMonitorsByProjectSlug retrieves all monitors for the project.
-func (s *MonitorService) GetMonitorsByProjectSlug(ctx context.Context, projectSlug string) ([]monitors.Monitor, *ServiceError) {
+func (s *MonitorService) GetMonitorsByProjectSlug(
+	ctx context.Context,
+	projectSlug string,
+) ([]monitors.Monitor, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorsByProjectSlug")
 	logger.Trace().Str("projectSlug", projectSlug).Msg("Retrieving monitors by project slug")
 
@@ -193,7 +215,10 @@ func (s *MonitorService) GetMonitorsByProjectSlug(ctx context.Context, projectSl
 		return nil, NewInternalError("failed to retrieve monitors: %w", err)
 	}
 
-	logger.Debug().Str("projectSlug", projectSlug).Int("monitorCount", len(monitorsList)).Msg("Monitors retrieved successfully")
+	logger.Debug().
+		Str("projectSlug", projectSlug).
+		Int("monitorCount", len(monitorsList)).
+		Msg("Monitors retrieved successfully")
 	return monitorsList, nil
 }
 
@@ -242,7 +267,11 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, username string, mon
 		monitor.ProjectID = existingMonitor.ProjectID
 
 		if err := monitor.Validate(); err != nil {
-			logger.Error().Err(err).Str("id", monitor.ID.String()).Interface("monitor", monitor).Msg("Invalid monitor configuration")
+			logger.Error().
+				Err(err).
+				Str("id", monitor.ID.String()).
+				Interface("monitor", monitor).
+				Msg("Invalid monitor configuration")
 			return NewBadRequestError("invalid monitor configuration: %w", err)
 		}
 
@@ -264,21 +293,28 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, username string, mon
 			monitor,
 		)
 		if err != nil {
-			logger.Error().Err(err).Str("id", monitor.ID.String()).Msg("Failed to create audit log entry for monitor update")
+			logger.Error().
+				Err(err).
+				Str("id", monitor.ID.String()).
+				Msg("Failed to create audit log entry for monitor update")
 			return NewInternalError(FormatFailedToCreateAuditLog, err)
 		}
 
 		_, auditErr := tx.AuditLog().InsertAuditLogEntry(ctx, entry)
 
 		if auditErr != nil {
-			logger.Error().Err(auditErr).Str("id", monitor.ID.String()).Msg("Failed to insert audit log entry for monitor update")
+			logger.Error().
+				Err(auditErr).
+				Str("id", monitor.ID.String()).
+				Msg("Failed to insert audit log entry for monitor update")
 			return NewInternalError("failed to insert audit log entry for monitor update: %w", auditErr)
 		}
 
 		return nil
 	})
 	if txErr != nil {
-		if serviceErr, ok := txErr.(*ServiceError); ok {
+		serviceErr := &ServiceError{}
+		if errors.As(txErr, &serviceErr) {
 			return serviceErr
 		}
 		logger.Error().Err(txErr).Str("id", monitor.ID.String()).Msg("Failed to update monitor within transaction")
@@ -295,13 +331,21 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, username string, mon
 	return nil
 }
 
-func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, projectSlug string, slug string) (*monitors.Monitor, *ServiceError) {
+func (s *MonitorService) GetMonitorBySlugByProject(
+	ctx context.Context,
+	projectSlug string,
+	slug string,
+) (*monitors.Monitor, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorBySlugByProject")
 	logger.Trace().Str("slug", slug).Msg("Retrieving monitor by slug and project")
 
 	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
-		logger.Error().Err(getErr).Str("slug", slug).Str("projectSlug", projectSlug).Msg("Failed to retrieve project by slug")
+		logger.Error().
+			Err(getErr).
+			Str("slug", slug).
+			Str("projectSlug", projectSlug).
+			Msg("Failed to retrieve project by slug")
 		return nil, getErr
 	}
 
@@ -311,7 +355,11 @@ func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, projectS
 			logger.Error().Str("slug", slug).Str("projectSlug", projectSlug).Msg("Monitor not found in project")
 			return nil, NewNotFoundError("monitor with slug %s not found in project", slug)
 		}
-		logger.Error().Err(err).Str("slug", slug).Str("projectSlug", projectSlug).Msg("Failed to retrieve monitor by slug and project")
+		logger.Error().
+			Err(err).
+			Str("slug", slug).
+			Str("projectSlug", projectSlug).
+			Msg("Failed to retrieve monitor by slug and project")
 		return nil, NewInternalError("failed to retrieve monitor by slug and project: %w", err)
 	}
 
@@ -319,7 +367,12 @@ func (s *MonitorService) GetMonitorBySlugByProject(ctx context.Context, projectS
 	return monitor, nil
 }
 
-func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, username string, monitorID uuid.UUID, state monitors.MonitorState) *ServiceError {
+func (s *MonitorService) UpdateMonitorStateByID(
+	ctx context.Context,
+	username string,
+	monitorID uuid.UUID,
+	state monitors.MonitorState,
+) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "UpdateMonitorStateByID")
 	logger.Trace().Str("id", monitorID.String()).Str("newState", string(state)).Msg("Updating monitor state by ID")
 
@@ -339,7 +392,10 @@ func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, username st
 	}
 
 	if monitor.State == state {
-		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Nothing to update in monitor, no update needed")
+		logger.Warn().
+			Str("id", monitorID.String()).
+			Str("state", string(state)).
+			Msg("Nothing to update in monitor, no update needed")
 		return nil
 	}
 
@@ -347,7 +403,11 @@ func (s *MonitorService) UpdateMonitorStateByID(ctx context.Context, username st
 
 	_, updateErr := s.db.Monitors().UpdateMonitor(ctx, *monitor)
 	if updateErr != nil {
-		logger.Error().Err(updateErr).Str("id", monitorID.String()).Str("newState", string(state)).Msg("Failed to update monitor state in database")
+		logger.Error().
+			Err(updateErr).
+			Str("id", monitorID.String()).
+			Str("newState", string(state)).
+			Msg("Failed to update monitor state in database")
 		return NewInternalError("failed to update monitor state in database: %w", updateErr)
 	}
 

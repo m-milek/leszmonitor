@@ -13,17 +13,17 @@ import (
 )
 
 type Monitor struct {
-	ID                     uuid.UUID        `json:"id" db:"id"`                                           // ID is the unique identifier for the monitor, generated as a UUID
-	Slug                   string           `json:"slug" db:"slug"`                                       // Slug is unique in the project
-	ProjectID              uuid.UUID        `json:"projectId" db:"project_id"`                            // ProjectID is used to associate the monitor with a project
-	Name                   string           `json:"name" db:"name"`                                       // Name of the monitor
-	Description            string           `json:"description" db:"description"`                         // Description of the monitor
-	Interval               int              `json:"interval" db:"interval"`                               // Interval determines how often to run the monitor in seconds
-	Type                   shared.ProbeType `json:"type" db:"kind"`                                       // Type of the monitor (http, tcp, etc.)
-	ProbeConfig            string           `json:"probeConfig" db:"config"`                              // JSON string containing the specific configuration for the monitor type
-	ResultRetentionSeconds int              `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
-	State                  MonitorState     `json:"state" db:"state"`                                     // State indicates whether the monitor is currently running or stopped
 	util2.Timestamps
+	ID                     uuid.UUID        `json:"id"                     db:"id"`                       // ID is the unique identifier for the monitor, generated as a UUID
+	Slug                   string           `json:"slug"                   db:"slug"`                     // Slug is unique in the project
+	ProjectID              uuid.UUID        `json:"projectId"              db:"project_id"`               // ProjectID is used to associate the monitor with a project
+	Name                   string           `json:"name"                   db:"name"`                     // Name of the monitor
+	Description            string           `json:"description"            db:"description"`              // Description of the monitor
+	Interval               int              `json:"interval"               db:"interval"`                 // Interval determines how often to run the monitor in seconds
+	Type                   shared.ProbeType `json:"type"                   db:"kind"`                     // Type of the monitor (http, tcp, etc.)
+	ProbeConfig            string           `json:"probeConfig"            db:"config"`                   // JSON string containing the specific configuration for the monitor type
+	ResultRetentionSeconds int              `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
+	State                  MonitorState     `json:"state"                  db:"state"`                    // State indicates whether the monitor is currently running or stopped
 }
 
 type Probe interface {

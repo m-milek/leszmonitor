@@ -78,10 +78,18 @@ func TestIntegration_ProjectService_GetProjects(t *testing.T) {
 	t.Run("Returns all projects for a user when no query is provided", func(t *testing.T) {
 		ctx, projectService, _, user1 := setupIntegrationTest(t)
 
-		p1, err := projectService.CreateProject(ctx, user1.Username, CreateProjectPayload{Name: "P1", Description: "D1"})
+		p1, err := projectService.CreateProject(
+			ctx,
+			user1.Username,
+			CreateProjectPayload{Name: "P1", Description: "D1"},
+		)
 		require.Nil(t, err)
 
-		p2, err := projectService.CreateProject(ctx, user1.Username, CreateProjectPayload{Name: "P2", Description: "D2"})
+		p2, err := projectService.CreateProject(
+			ctx,
+			user1.Username,
+			CreateProjectPayload{Name: "P2", Description: "D2"},
+		)
 		require.Nil(t, err)
 
 		projects, err := projectService.GetProjects(ctx, user1.Username, "")
@@ -100,19 +108,39 @@ func TestIntegration_ProjectService_GetProjects(t *testing.T) {
 	t.Run("Filters projects by shared member username", func(t *testing.T) {
 		ctx, projectService, userService, user1 := setupIntegrationTest(t)
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "user2", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		require.Nil(
+			t,
+			userService.RegisterUser(
+				ctx,
+				&UserRegisterPayload{Username: "user2", Password: "Password123!", PasswordConfirm: "Password123!"},
+			),
+		)
 		user2, _ := userService.GetUserByUsername(ctx, "user2")
 
-		_, err := projectService.CreateProject(ctx, user1.Username, CreateProjectPayload{Name: "Only User1", Description: "D1"})
+		_, err := projectService.CreateProject(
+			ctx,
+			user1.Username,
+			CreateProjectPayload{Name: "Only User1", Description: "D1"},
+		)
 		require.Nil(t, err)
 
-		p2, err := projectService.CreateProject(ctx, user1.Username, CreateProjectPayload{Name: "Shared Project", Description: "D2"})
+		p2, err := projectService.CreateProject(
+			ctx,
+			user1.Username,
+			CreateProjectPayload{Name: "Shared Project", Description: "D2"},
+		)
 		require.Nil(t, err)
 
-		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, p2.Slug, &models.ProjectMember{ID: user2.ID, Role: models.RoleViewer})
+		_, repoErr := db.Get().
+			Projects().
+			AddMemberToProject(ctx, p2.Slug, &models.ProjectMember{ID: user2.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
-		_, err = projectService.CreateProject(ctx, user2.Username, CreateProjectPayload{Name: "Only User2", Description: "D3"})
+		_, err = projectService.CreateProject(
+			ctx,
+			user2.Username,
+			CreateProjectPayload{Name: "Only User2", Description: "D3"},
+		)
 		require.Nil(t, err)
 
 		projects, err := projectService.GetProjects(ctx, user1.Username, "user2")
@@ -176,8 +204,8 @@ func TestIntegration_ProjectService_DeleteProject(t *testing.T) {
 
 		// Verify it's actually deleted from DB
 		deletedProject, dbErr := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
-		require.NotNil(t, dbErr)
-		assert.ErrorIs(t, dbErr, db.ErrNotFound)
+		require.Error(t, dbErr)
+		require.ErrorIs(t, dbErr, db.ErrNotFound)
 		assert.Nil(t, deletedProject)
 	})
 
@@ -195,7 +223,11 @@ func TestIntegration_ProjectService_UpdateProject(t *testing.T) {
 	t.Run("Successfully updates a project when user is editor", func(t *testing.T) {
 		ctx, projectService, _, user := setupIntegrationTest(t)
 
-		project, err := projectService.CreateProject(ctx, user.Username, CreateProjectPayload{Name: "Old Name", Description: "Old Description"})
+		project, err := projectService.CreateProject(
+			ctx,
+			user.Username,
+			CreateProjectPayload{Name: "Old Name", Description: "Old Description"},
+		)
 		require.Nil(t, err)
 
 		payload := UpdateProjectPayload{
@@ -231,7 +263,13 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 		require.Nil(t, err)
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		require.Nil(
+			t,
+			userService.RegisterUser(
+				ctx,
+				&UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"},
+			),
+		)
 
 		payload := AddProjectMemberPayload{
 			Username: "newbie",
@@ -270,7 +308,13 @@ func TestIntegration_ProjectService_AddUserToProject(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		require.Nil(
+			t,
+			userService.RegisterUser(
+				ctx,
+				&UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"},
+			),
+		)
 
 		payload := AddProjectMemberPayload{
 			Username: "newbie",
@@ -294,9 +338,17 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 		require.Nil(t, err)
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		require.Nil(
+			t,
+			userService.RegisterUser(
+				ctx,
+				&UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"},
+			),
+		)
 		newbie, _ := userService.GetUserByUsername(ctx, "newbie")
-		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
+		_, repoErr := db.Get().
+			Projects().
+			AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
 		payload := RemoveProjectMemberPayload{
@@ -329,7 +381,13 @@ func TestIntegration_ProjectService_RemoveUserFromProject(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		require.Nil(
+			t,
+			userService.RegisterUser(
+				ctx,
+				&UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"},
+			),
+		)
 
 		payload := RemoveProjectMemberPayload{
 			Username: "random",
@@ -348,9 +406,17 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 		require.Nil(t, err)
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		require.Nil(
+			t,
+			userService.RegisterUser(
+				ctx,
+				&UserRegisterPayload{Username: "newbie", Password: "Password123!", PasswordConfirm: "Password123!"},
+			),
+		)
 		newbie, _ := userService.GetUserByUsername(ctx, "newbie")
-		_, repoErr := db.Get().Projects().AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
+		_, repoErr := db.Get().
+			Projects().
+			AddMemberToProject(ctx, project.Slug, &models.ProjectMember{ID: newbie.ID, Role: models.RoleViewer})
 		require.NoError(t, repoErr)
 
 		payload := ChangeProjectMemberRolePayload{
@@ -371,7 +437,13 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"}))
+		require.Nil(
+			t,
+			userService.RegisterUser(
+				ctx,
+				&UserRegisterPayload{Username: "random", Password: "Password123!", PasswordConfirm: "Password123!"},
+			),
+		)
 
 		payload := ChangeProjectMemberRolePayload{
 			Username: "random",

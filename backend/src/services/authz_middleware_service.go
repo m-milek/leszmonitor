@@ -11,9 +11,21 @@ import (
 )
 
 type IAuthzMiddlewareService interface {
-	CheckProjectPermissionBySlug(ctx context.Context, username, projectSlug string, permission models.Permission) (bool, error)
-	CheckProjectPermissionByID(ctx context.Context, username, projectID string, permission models.Permission) (bool, error)
-	CheckMonitorPermissionByID(ctx context.Context, username, monitorID string, permission models.Permission) (bool, error)
+	CheckProjectPermissionBySlug(
+		ctx context.Context,
+		username, projectSlug string,
+		permission models.Permission,
+	) (bool, error)
+	CheckProjectPermissionByID(
+		ctx context.Context,
+		username, projectID string,
+		permission models.Permission,
+	) (bool, error)
+	CheckMonitorPermissionByID(
+		ctx context.Context,
+		username, monitorID string,
+		permission models.Permission,
+	) (bool, error)
 }
 
 type AuthzMiddlewareService struct {
@@ -24,7 +36,11 @@ func NewAuthzMiddlewareService(db db.DB) IAuthzMiddlewareService {
 	return &AuthzMiddlewareService{db: db}
 }
 
-func (s *AuthzMiddlewareService) CheckProjectPermissionBySlug(ctx context.Context, username, projectSlug string, permission models.Permission) (bool, error) {
+func (s *AuthzMiddlewareService) CheckProjectPermissionBySlug(
+	ctx context.Context,
+	username, projectSlug string,
+	permission models.Permission,
+) (bool, error) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckProjectPermissionBySlug")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, username)
@@ -48,16 +64,28 @@ func (s *AuthzMiddlewareService) CheckProjectPermissionBySlug(ctx context.Contex
 	}
 
 	if !project.IsMember(user.ID) {
-		logger.Debug().Str("username", username).Str("projectSlug", projectSlug).Msg("User is not a member of the project")
+		logger.Debug().
+			Str("username", username).
+			Str("projectSlug", projectSlug).
+			Msg("User is not a member of the project")
 		return false, nil
 	}
 
 	hasPermission := project.GetMember(user.ID).Role.HasPermissions(permission)
-	logger.Debug().Str("username", username).Str("projectSlug", projectSlug).Interface("permission", permission).Bool("hasPermission", hasPermission).Msg("Checked project permission successfully")
+	logger.Debug().
+		Str("username", username).
+		Str("projectSlug", projectSlug).
+		Interface("permission", permission).
+		Bool("hasPermission", hasPermission).
+		Msg("Checked project permission successfully")
 	return hasPermission, nil
 }
 
-func (s *AuthzMiddlewareService) CheckProjectPermissionByID(ctx context.Context, username, projectID string, permission models.Permission) (bool, error) {
+func (s *AuthzMiddlewareService) CheckProjectPermissionByID(
+	ctx context.Context,
+	username, projectID string,
+	permission models.Permission,
+) (bool, error) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckProjectPermissionByID")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, username)
@@ -92,11 +120,20 @@ func (s *AuthzMiddlewareService) CheckProjectPermissionByID(ctx context.Context,
 	}
 
 	hasPermission := project.GetMember(user.ID).Role.HasPermissions(permission)
-	logger.Debug().Str("username", username).Str("projectID", projectID).Interface("permission", permission).Bool("hasPermission", hasPermission).Msg("Checked project permission successfully")
+	logger.Debug().
+		Str("username", username).
+		Str("projectID", projectID).
+		Interface("permission", permission).
+		Bool("hasPermission", hasPermission).
+		Msg("Checked project permission successfully")
 	return hasPermission, nil
 }
 
-func (s *AuthzMiddlewareService) CheckMonitorPermissionByID(ctx context.Context, username, monitorID string, permission models.Permission) (bool, error) {
+func (s *AuthzMiddlewareService) CheckMonitorPermissionByID(
+	ctx context.Context,
+	username, monitorID string,
+	permission models.Permission,
+) (bool, error) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckMonitorPermissionByID")
 
 	parsedUUID, err := uuid.Parse(monitorID)
@@ -140,6 +177,11 @@ func (s *AuthzMiddlewareService) CheckMonitorPermissionByID(ctx context.Context,
 	}
 
 	hasPermission := project.GetMember(user.ID).Role.HasPermissions(permission)
-	logger.Debug().Str("username", username).Str("monitorID", monitorID).Interface("permission", permission).Bool("hasPermission", hasPermission).Msg("Checked monitor permission successfully")
+	logger.Debug().
+		Str("username", username).
+		Str("monitorID", monitorID).
+		Interface("permission", permission).
+		Bool("hasPermission", hasPermission).
+		Msg("Checked monitor permission successfully")
 	return hasPermission, nil
 }

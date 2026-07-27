@@ -1,6 +1,6 @@
 package monitorresult
 
-type HttpResultDetails struct {
+type HTTPResultDetails struct {
 	StatusCode    int               `json:"statusCode"`
 	Headers       map[string]string `json:"headers,omitempty"`
 	Body          string            `json:"body,omitempty"`
@@ -13,8 +13,7 @@ type TCPResultDetails struct {
 	LatencyMs int64 `json:"latencyMs"`
 }
 
-type IMonitorResultDetails interface {
-}
+type IMonitorResultDetails any
 
 type DNSResultDetails struct {
 	ResolvedRecords []any `json:"resolvedRecords,omitempty"`

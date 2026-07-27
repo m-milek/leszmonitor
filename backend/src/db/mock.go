@@ -68,12 +68,18 @@ func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug uuid.UU
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) GetProjectsByQuery(ctx context.Context, query GetProjectsQuery) ([]models.Project, error) {
+func (r *MockProjectRepository) GetProjectsByQuery(
+	ctx context.Context,
+	query GetProjectsQuery,
+) ([]models.Project, error) {
 	args := r.Called(ctx, query)
 	return args.Get(0).([]models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error) {
+func (r *MockProjectRepository) UpdateProject(
+	ctx context.Context,
+	oldProject, newProject *models.Project,
+) (bool, error) {
 	args := r.Called(ctx, oldProject, newProject)
 	return args.Bool(0), args.Error(1)
 }
@@ -83,17 +89,30 @@ func (r *MockProjectRepository) DeleteProject(ctx context.Context, projectSlug s
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error) {
+func (r *MockProjectRepository) AddMemberToProject(
+	ctx context.Context,
+	projectSlug string,
+	member *models.ProjectMember,
+) (bool, error) {
 	args := r.Called(ctx, projectSlug, member)
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID uuid.UUID) (bool, error) {
+func (r *MockProjectRepository) RemoveMemberFromProject(
+	ctx context.Context,
+	projectSlug string,
+	userID uuid.UUID,
+) (bool, error) {
 	args := r.Called(ctx, projectSlug, userID)
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) ChangeMemberRole(ctx context.Context, projectSlug string, userID uuid.UUID, newRole models.Role) (bool, error) {
+func (r *MockProjectRepository) ChangeMemberRole(
+	ctx context.Context,
+	projectSlug string,
+	userID uuid.UUID,
+	newRole models.Role,
+) (bool, error) {
 	args := r.Called(ctx, projectSlug, userID, newRole)
 	return args.Bool(0), args.Error(1)
 }

@@ -6,6 +6,7 @@ import (
 	shared "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func createTestBaseMonitor() Monitor {
@@ -15,7 +16,7 @@ func createTestBaseMonitor() Monitor {
 		Name:                   name,
 		Description:            "Test Description",
 		Interval:               60,
-		Type:                   shared.HttpConfigType,
+		Type:                   shared.HTTPConfigType,
 		ResultRetentionSeconds: 60,
 		State:                  MonitorStateActive,
 	}
@@ -24,14 +25,14 @@ func createTestBaseMonitor() Monitor {
 func TestBaseMonitorValidateSuccess(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	err := monitor.Validate()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestBaseMonitorValidateEmptyName(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	monitor.Name = ""
 	err := monitor.Validate()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "name cannot be empty")
 }
 
@@ -39,7 +40,7 @@ func TestBaseMonitorValidateZeroInterval(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	monitor.Interval = 0
 	err := monitor.Validate()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "interval must be greater than zero")
 }
 
@@ -47,7 +48,7 @@ func TestBaseMonitorValidateNegativeInterval(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	monitor.Interval = -10
 	err := monitor.Validate()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "interval must be greater than zero")
 }
 
@@ -55,7 +56,7 @@ func TestBaseMonitorValidateEmptyType(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	monitor.Type = ""
 	err := monitor.Validate()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "type cannot be empty")
 }
 
@@ -63,7 +64,7 @@ func TestBaseMonitorValidateZeroResultRetentionSeconds(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	monitor.ResultRetentionSeconds = 0
 	err := monitor.Validate()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "result retention period must be greater than zero")
 }
 
@@ -71,7 +72,7 @@ func TestBaseMonitorValidateNegativeResultRetentionSeconds(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	monitor.ResultRetentionSeconds = -10
 	err := monitor.Validate()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "result retention period must be greater than zero")
 }
 
@@ -79,7 +80,7 @@ func TestBaseMonitorValidateInvalidState(t *testing.T) {
 	monitor := createTestBaseMonitor()
 	monitor.State = "invalid_state"
 	err := monitor.Validate()
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "state must be either 'running' or 'stopped'")
 }
 

@@ -12,7 +12,7 @@ import (
 func RespondJSON(ctx context.Context, w http.ResponseWriter, statusCode int, data any) {
 	logger := log.FromContext(ctx)
 
-	w.Header().Set(constants.HttpHeaderContentType, constants.HttpContentTypeJSON)
+	w.Header().Set(constants.HTTPHeaderContentType, constants.HTTPContentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -30,7 +30,7 @@ type errorResponse struct {
 
 func RespondMessage(ctx context.Context, w http.ResponseWriter, statusCode int, message string) {
 	logger := log.FromContext(ctx)
-	w.Header().Set(constants.HttpHeaderContentType, constants.HttpContentTypeJSON)
+	w.Header().Set(constants.HTTPHeaderContentType, constants.HTTPContentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	response := simpleResponse{Message: message}
@@ -44,7 +44,7 @@ func RespondError(ctx context.Context, w http.ResponseWriter, statusCode int, er
 	logger := log.FromContext(ctx)
 	logger.Error().Err(err).Msg("Responding with error")
 
-	w.Header().Set(constants.HttpHeaderContentType, constants.HttpContentTypeJSON)
+	w.Header().Set(constants.HTTPHeaderContentType, constants.HTTPContentTypeJSON)
 	w.WriteHeader(statusCode)
 
 	message := err.Error()
@@ -65,7 +65,7 @@ func RespondError(ctx context.Context, w http.ResponseWriter, statusCode int, er
 }
 
 // DecodeJSONOrRespond decodes JSON from the request body into v, or writes a 400 response and returns false.
-func DecodeJSONOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request, v interface{}) bool {
+func DecodeJSONOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request, v any) bool {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(v); err != nil {

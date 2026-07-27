@@ -1,9 +1,9 @@
 package constants
 
-const HttpHeaderContentType = "Content-Type"
-const HttpHeaderCacheControl = "Cache-Control"
+const HTTPHeaderContentType = "Content-Type"
+const HTTPHeaderCacheControl = "Cache-Control"
 
-const HttpContentTypeJSON = "application/json"
+const HTTPContentTypeJSON = "application/json"
 
 const (
 	ServiceNameMonitor         = "MonitorService"

@@ -467,4 +467,5 @@ linters:
           - goconst
           - gosec
           - noctx
+          - testpackage
           - wrapcheck

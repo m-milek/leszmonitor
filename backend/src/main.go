@@ -11,7 +11,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/api"
 	"github.com/m-milek/leszmonitor/api/controllers"
-	"github.com/m-milek/leszmonitor/appconfig"
+	config "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/services"
@@ -23,17 +23,13 @@ import (
 var staticFiles embed.FS
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		manager := probes.NewProbesManager(db.Get())
+	wg.Go(func() {
+		manager := probes.NewManager(db.Get())
 		manager.Run(ctx)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		workers.StartDataCleanupWorker(ctx)
-	}()
+	})
 }
 
 func main() {

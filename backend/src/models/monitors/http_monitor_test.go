@@ -13,6 +13,7 @@ import (
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHttpProbeFromReader(t *testing.T) {
@@ -22,12 +23,12 @@ func TestHttpProbeFromReader(t *testing.T) {
 		"expectedStatusCodes": [200]
 	}`
 
-	probe, err := ProbeFromJSON(jsonInput, _const.HttpConfigType)
+	probe, err := ProbeFromJSON(jsonInput, _const.HTTPConfigType)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, probe)
 
-	httpMonitor, ok := probe.(*HttpProbe)
+	httpMonitor, ok := probe.(*HTTPProbe)
 	assert.True(t, ok)
 	assert.Equal(t, "http://example.com", httpMonitor.URL)
 }
@@ -35,9 +36,9 @@ func TestHttpProbeFromReader(t *testing.T) {
 func TestHttpMonitorFromReaderInvalidJSON(t *testing.T) {
 	jsonInput := `invalid json`
 
-	monitor, err := ProbeFromJSON(jsonInput, _const.HttpConfigType)
+	monitor, err := ProbeFromJSON(jsonInput, _const.HTTPConfigType)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, monitor)
 }
 
@@ -48,13 +49,13 @@ func TestHttpMonitorFromReaderMissingType(t *testing.T) {
 
 	monitor, err := ProbeFromJSON(jsonInput, "")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, monitor)
 }
 
 func TestHttpConfigValidate(t *testing.T) {
 	t.Run("Valid config", func(t *testing.T) {
-		config := HttpProbe{
+		config := HTTPProbe{
 			Method:              "GET",
 			URL:                 "http://example.com",
 			ExpectedStatusCodes: []int{200},
@@ -63,86 +64,86 @@ func TestHttpConfigValidate(t *testing.T) {
 	})
 
 	t.Run("Empty URL", func(t *testing.T) {
-		config := HttpProbe{
+		config := HTTPProbe{
 			Method:              "GET",
 			URL:                 "",
 			ExpectedStatusCodes: []int{200},
 		}
-		assert.Error(t, config.Validate())
+		require.Error(t, config.Validate())
 		assert.Contains(t, config.Validate().Error(), "URL cannot be empty")
 	})
 
 	t.Run("Invalid URL", func(t *testing.T) {
-		config := HttpProbe{
+		config := HTTPProbe{
 			Method:              "GET",
 			URL:                 "invalid-url",
 			ExpectedStatusCodes: []int{200},
 		}
-		assert.Error(t, config.Validate())
+		require.Error(t, config.Validate())
 		assert.Contains(t, config.Validate().Error(), "invalid URL")
 	})
 
 	t.Run("Empty Method", func(t *testing.T) {
-		config := HttpProbe{
+		config := HTTPProbe{
 			Method:              "",
 			URL:                 "http://example.com",
 			ExpectedStatusCodes: []int{200},
 		}
-		assert.Error(t, config.Validate())
+		require.Error(t, config.Validate())
 		assert.Contains(t, config.Validate().Error(), "method cannot be empty")
 	})
 
 	t.Run("Invalid Method", func(t *testing.T) {
-		config := HttpProbe{
+		config := HTTPProbe{
 			Method:              "INVALID",
 			URL:                 "http://example.com",
 			ExpectedStatusCodes: []int{200},
 		}
-		assert.Error(t, config.Validate())
+		require.Error(t, config.Validate())
 		assert.Contains(t, config.Validate().Error(), "invalid HTTP method")
 	})
 
 	t.Run("Invalid Body Regex", func(t *testing.T) {
-		config := HttpProbe{
+		config := HTTPProbe{
 			Method:              "GET",
 			URL:                 "http://example.com",
 			ExpectedStatusCodes: []int{200},
 			ExpectedBodyRegex:   "[invalid-regex",
 		}
-		assert.Error(t, config.Validate())
+		require.Error(t, config.Validate())
 		assert.Contains(t, config.Validate().Error(), "invalid body regex")
 	})
 }
 
 func TestHttpMonitorRunSuccess(t *testing.T) {
-	mockHttpClient := &MockHTTPClient{}
+	mockHTTPClient := &MockHTTPClient{}
 
-	probe := setupTestHttpProbe()
+	probe := setupTestHTTPProbe()
 
 	successResponse := createMockResponse(200, "success", map[string]string{
 		"Content-Type": "application/json",
 	})
 
-	mockHttpClient.On("Do", mock.Anything).Return(successResponse, nil).Once()
-	httpClientOrMock = mockHttpClient
+	mockHTTPClient.On("Do", mock.Anything).Return(successResponse, nil).Once()
+	httpClientOrMock = mockHTTPClient
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
 	assert.True(t, response.GetIsSuccess())
 	assert.Empty(t, response.GetErrorDetails().Errors)
 
-	details, ok := response.GetDetails().(*monitorresult.HttpResultDetails)
+	details, ok := response.GetDetails().(*monitorresult.HTTPResultDetails)
 	assert.True(t, ok)
 	assert.Equal(t, 200, details.StatusCode)
 	assert.Empty(t, response.GetErrorDetails().Failures)
 
-	mockHttpClient.AssertExpectations(t)
+	mockHTTPClient.AssertExpectations(t)
 }
 
 func TestHttpMonitorRunFailure(t *testing.T) {
 	mockClient := new(MockHTTPClient)
 
-	probe := setupTestHttpProbe()
+	probe := setupTestHTTPProbe()
 
 	failedResponse := createMockResponse(404, "not found", map[string]string{
 		"Content-Type": "text/plain",
@@ -163,7 +164,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 func TestHttpMonitorRunError(t *testing.T) {
 	mockClient := new(MockHTTPClient)
 
-	probe := setupTestHttpProbe()
+	probe := setupTestHTTPProbe()
 
 	mockClient.On("Do", mock.Anything).Return(nil, errors.New("connection refused")).Once()
 	httpClientOrMock = mockClient
@@ -180,7 +181,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	mockClient := new(MockHTTPClient)
 
-	probe := setupTestHttpProbe()
+	probe := setupTestHTTPProbe()
 	probe.ExpectedBodyRegex = "success"
 	probe.ExpectedHeaders = map[string]string{"X-Test": "Value"}
 
@@ -232,7 +233,7 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
-// createMockResponse creates a mock http.Response for testing.
+// createMockResponse creates a mock [http.Response] for testing.
 func createMockResponse(statusCode int, body string, headers map[string]string) *http.Response {
 	header := make(http.Header)
 	for k, v := range headers {
@@ -246,9 +247,9 @@ func createMockResponse(statusCode int, body string, headers map[string]string) 
 	}
 }
 
-// setupTestHttpProbe returns a default HttpProbe for testing.
-func setupTestHttpProbe() *HttpProbe {
-	return &HttpProbe{
+// setupTestHTTPProbe returns a default HTTPProbe for testing.
+func setupTestHTTPProbe() *HTTPProbe {
+	return &HTTPProbe{
 		Method:              "GET",
 		URL:                 "http://example.com",
 		ExpectedStatusCodes: []int{200},

@@ -2,6 +2,7 @@ package monitorresult
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
 
 	"github.com/google/uuid"
@@ -11,17 +12,17 @@ import (
 func TestParseResultDetails(t *testing.T) {
 	t.Run("HTTP details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"statusCode": 200}`)
-		details, err := ParseResultDetails(consts.HttpConfigType, rawJSON)
+		details, err := ParseResultDetails(consts.HTTPConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
-		httpDetails, ok := details.(*HttpResultDetails)
+		httpDetails, ok := details.(*HTTPResultDetails)
 		if !ok {
-			t.Fatalf("expected HttpResultDetails, got %T", details)
+			t.Fatalf("expected HTTPResultDetails, got %T", details)
 		}
 
-		if httpDetails.StatusCode != 200 {
+		if httpDetails.StatusCode != http.StatusOK {
 			t.Errorf("expected 200, got %d", httpDetails.StatusCode)
 		}
 	})
@@ -48,12 +49,12 @@ func TestMonitorResultJSON(t *testing.T) {
 	t.Run("Marshal", func(t *testing.T) {
 		original := NewMonitorResult(
 			uuid.New(),
-			consts.HttpConfigType,
+			consts.HTTPConfigType,
 			true,
 			false,
 			100,
 			"",
-			&HttpResultDetails{StatusCode: 200},
+			&HTTPResultDetails{StatusCode: 200},
 		)
 
 		data, err := json.Marshal(original)

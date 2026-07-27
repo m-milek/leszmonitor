@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	ApiPort               = "API_PORT"
+	APIPort               = "API_PORT"
 	LogLevel              = "LOG_LEVEL"  // TRACE, DEBUG, INFO, WARN, ERROR
 	LogFormat             = "LOG_FORMAT" // JSON or CONSOLE
-	SqliteDbPath          = "SQLITE_DB_PATH"
+	SqliteDBPath          = "SQLITE_DB_PATH"
 	JwtSecret             = "JWT_SECRET"
 	JwtExpiryHours        = "JWT_EXPIRY_HOURS"
 	InstanceAdminUsername = "INSTANCE_ADMIN_USERNAME"
@@ -21,12 +21,12 @@ const (
 func Validate() error {
 	var missingVars []string
 
-	if os.Getenv(ApiPort) == "" {
-		missingVars = append(missingVars, ApiPort)
+	if os.Getenv(APIPort) == "" {
+		missingVars = append(missingVars, APIPort)
 	}
 
-	if os.Getenv(SqliteDbPath) == "" {
-		missingVars = append(missingVars, SqliteDbPath)
+	if os.Getenv(SqliteDBPath) == "" {
+		missingVars = append(missingVars, SqliteDBPath)
 	}
 
 	if os.Getenv(JwtSecret) == "" {

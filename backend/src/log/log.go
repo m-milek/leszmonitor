@@ -78,7 +78,7 @@ func WithContext(ctx context.Context, logger *zerolog.Logger) context.Context {
 	return logger.WithContext(ctx)
 }
 
-func formatLogLevel(i interface{}) string {
+func formatLogLevel(i any) string {
 	level := strings.ToUpper(fmt.Sprintf("%s", i))
 
 	if i == nil {

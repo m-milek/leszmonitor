@@ -17,7 +17,7 @@ type IMonitorRepository interface {
 	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error)
 	DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error)
 	InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error)
-	UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (interface{}, error)
+	UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (any, error)
 	GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error)
 }
 
@@ -31,14 +31,21 @@ func newMonitorRepository(repository baseRepository) IMonitorRepository {
 	}
 }
 
-func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.Monitor, error) {
+func (r *monitorRepository) GetMonitorsByProjectID(
+	ctx context.Context,
+	projectID uuid.UUID,
+) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorsByProjectID", func() ([]monitors.Monitor, error) {
 		var allMonitors []monitors.Monitor
-		err := sqlx.SelectContext(ctx, r.pool, &allMonitors,
+		err := sqlx.SelectContext(
+			ctx,
+			r.pool,
+			&allMonitors,
 			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at, m.project_id
 			 FROM monitors m
 			 WHERE m.project_id = $1`,
-			projectID)
+			projectID,
+		)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
@@ -49,10 +56,17 @@ func (r *monitorRepository) GetMonitorsByProjectID(ctx context.Context, projectI
 	})
 }
 
-func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string, projectID uuid.UUID) (*monitors.Monitor, error) {
+func (r *monitorRepository) GetMonitorBySlug(
+	ctx context.Context,
+	slug string,
+	projectID uuid.UUID,
+) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
-		err := sqlx.GetContext(ctx, r.pool, &monitor,
+		err := sqlx.GetContext(
+			ctx,
+			r.pool,
+			&monitor,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 
@@ -73,10 +87,15 @@ func (r *monitorRepository) GetMonitorBySlug(ctx context.Context, slug string, p
 func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
-		err := sqlx.GetContext(ctx, r.pool, &monitor,
+		err := sqlx.GetContext(
+			ctx,
+			r.pool,
+			&monitor,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
-			 WHERE m.id = $1`, id)
+			 WHERE m.id = $1`,
+			id,
+		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound
@@ -90,9 +109,13 @@ func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*
 func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetAllMonitors", func() ([]monitors.Monitor, error) {
 		var allMonitors []monitors.Monitor
-		err := sqlx.SelectContext(ctx, r.pool, &allMonitors,
+		err := sqlx.SelectContext(
+			ctx,
+			r.pool,
+			&allMonitors,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
-			 FROM monitors m`)
+			 FROM monitors m`,
+		)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
@@ -106,7 +129,8 @@ func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Moni
 func (r *monitorRepository) DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error) {
 	return dbWrap(ctx, "DeleteMonitor", func() (*uuid.UUID, error) {
 		var id uuid.UUID
-		err := r.pool.QueryRowxContext(ctx, `DELETE FROM monitors WHERE id = $1 RETURNING id`, monitorID.String()).Scan(&id)
+		err := r.pool.QueryRowxContext(ctx, `DELETE FROM monitors WHERE id = $1 RETURNING id`, monitorID.String()).
+			Scan(&id)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, ErrNotFound
@@ -126,7 +150,8 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			id = uuid.New()
 		}
 
-		_, err := r.pool.ExecContext(ctx,
+		_, err := r.pool.ExecContext(
+			ctx,
 			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, result_retention_seconds, state, config)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			id,
@@ -186,10 +211,17 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 	})
 }
 
-func (r *monitorRepository) GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error) {
+func (r *monitorRepository) GetMonitorBySlugByProject(
+	ctx context.Context,
+	slug string,
+	id uuid.UUID,
+) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlugByProject", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
-		err := sqlx.GetContext(ctx, r.pool, &monitor,
+		err := sqlx.GetContext(
+			ctx,
+			r.pool,
+			&monitor,
 			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 

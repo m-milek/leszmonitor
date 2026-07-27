@@ -29,14 +29,14 @@ func newSPAHandler(staticFiles embed.FS) http.Handler {
 
 		// Set cache headers based on file type
 		if strings.HasPrefix(relativePath, "assets/") {
-			w.Header().Set(constants.HttpHeaderCacheControl, "public, max-age=31536000, immutable")
+			w.Header().Set(constants.HTTPHeaderCacheControl, "public, max-age=31536000, immutable")
 		} else if relativePath != "" && relativePath != "." {
-			w.Header().Set(constants.HttpHeaderCacheControl, "no-cache, no-store, must-revalidate")
+			w.Header().Set(constants.HTTPHeaderCacheControl, "no-cache, no-store, must-revalidate")
 		}
 
 		// Try to serve the file directly
 		if relativePath == "" || relativePath == "." || relativePath == "index.html" {
-			w.Header().Set(constants.HttpHeaderContentType, "text/html; charset=utf-8")
+			w.Header().Set(constants.HTTPHeaderContentType, "text/html; charset=utf-8")
 			fileServer.ServeHTTP(w, r)
 			return
 		}
@@ -53,8 +53,8 @@ func newSPAHandler(staticFiles embed.FS) http.Handler {
 		// (but don't intercept explicit asset 404s)
 		if !strings.Contains(relativePath, ".") {
 			// No file extension, likely a route
-			w.Header().Set(constants.HttpHeaderContentType, "text/html; charset=utf-8")
-			w.Header().Set(constants.HttpHeaderCacheControl, "no-cache, no-store, must-revalidate")
+			w.Header().Set(constants.HTTPHeaderContentType, "text/html; charset=utf-8")
+			w.Header().Set(constants.HTTPHeaderCacheControl, "no-cache, no-store, must-revalidate")
 			http.ServeFileFS(w, r, staticRoot, "index.html")
 			return
 		}

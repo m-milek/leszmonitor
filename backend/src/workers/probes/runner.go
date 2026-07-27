@@ -97,7 +97,7 @@ func (r *probeRunner) applyUpdate(update monitors.Monitor, ticker *time.Ticker) 
 	}
 }
 
-// runCheck executes the monitor's check and handles the result
+// runCheck executes the monitor's check and handles the result.
 func (r *probeRunner) runCheck(ctx context.Context) {
 	if r.monitor.State != monitors.MonitorStateActive {
 		r.logger.Trace().Str("state", string(r.monitor.State)).Msg("Skipping run - not active")

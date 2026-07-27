@@ -46,6 +46,7 @@ type UserRegisterPayload struct {
 
 type LoginPayload struct {
 	jwt2.MapClaims
+
 	Username string `json:"username"`
 	Password string `json:"password"`
 }

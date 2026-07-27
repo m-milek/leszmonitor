@@ -43,7 +43,8 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 		expected := &models.Project{Description: "Test Description"}
 		expected.SlugFromName.Init("test-project")
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").Return(expected, nil)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").
+			Return(expected, nil)
 
 		project, err := internalGetProjectBySlug(ctx, mockDB, "test-project")
 
@@ -57,7 +58,8 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 		ctx, _, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "nonexistent").Return((*models.Project)(nil), db.ErrNotFound)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "nonexistent").
+			Return((*models.Project)(nil), db.ErrNotFound)
 
 		project, err := internalGetProjectBySlug(ctx, mockDB, "nonexistent")
 
@@ -71,7 +73,8 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 		ctx, _, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").Return((*models.Project)(nil), errors.New("database error"))
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").
+			Return((*models.Project)(nil), errors.New("database error"))
 
 		project, err := internalGetProjectBySlug(ctx, mockDB, "test-project")
 
@@ -102,8 +105,10 @@ func TestProjectService_CreateProject(t *testing.T) {
 		expectedProject.SlugFromName.Init(payload.Name)
 
 		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, ownerUsername).Return(mockUser, nil)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("InsertProject", ctx, mock.AnythingOfType("*models.Project")).Return(nil)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, expectedProject.Slug).Return(expectedProject, nil)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("InsertProject", ctx, mock.AnythingOfType("*models.Project")).
+			Return(nil)
+		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, expectedProject.Slug).
+			Return(expectedProject, nil)
 
 		project, err := svc.CreateProject(ctx, ownerUsername, payload)
 
@@ -123,7 +128,6 @@ func TestProjectService_GetProjectByID(t *testing.T) {
 		// ctx, svc, mockDB := setupTestProjectService()
 		// defer db.Set(nil)
 
-		assert.True(t, true)
 	})
 }
 
@@ -132,7 +136,6 @@ func TestProjectService_GetProjects(t *testing.T) {
 		// ctx, svc, mockDB := setupTestProjectService()
 		// defer db.Set(nil)
 
-		assert.True(t, true)
 	})
 }
 
@@ -141,7 +144,6 @@ func TestProjectService_DeleteProject(t *testing.T) {
 		// ctx, svc, mockDB := setupTestProjectService()
 		// defer db.Set(nil)
 
-		assert.True(t, true)
 	})
 }
 
@@ -150,7 +152,6 @@ func TestProjectService_UpdateProject(t *testing.T) {
 		// ctx, svc, mockDB := setupTestProjectService()
 		// defer db.Set(nil)
 
-		assert.True(t, true)
 	})
 }
 
@@ -159,7 +160,6 @@ func TestProjectService_AddUserToProject(t *testing.T) {
 		// ctx, svc, mockDB := setupTestProjectService()
 		// defer db.Set(nil)
 
-		assert.True(t, true)
 	})
 }
 
@@ -168,7 +168,6 @@ func TestProjectService_RemoveUserFromProject(t *testing.T) {
 		// ctx, svc, mockDB := setupTestProjectService()
 		// defer db.Set(nil)
 
-		assert.True(t, true)
 	})
 }
 
@@ -177,6 +176,5 @@ func TestProjectService_ChangeProjectMemberRole(t *testing.T) {
 		// ctx, svc, mockDB := setupTestProjectService()
 		// defer db.Set(nil)
 
-		assert.True(t, true)
 	})
 }

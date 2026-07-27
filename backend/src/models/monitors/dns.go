@@ -39,7 +39,15 @@ type DNSCNAMEExpectedValues struct {
 
 func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
 	logger := log.FromContext(ctx)
-	result := monitorresult.NewMonitorResult(monitorID, consts.DNSConfigType, true, false, 0, "", &monitorresult.DNSResultDetails{})
+	result := monitorresult.NewMonitorResult(
+		monitorID,
+		consts.DNSConfigType,
+		true,
+		false,
+		0,
+		"",
+		&monitorresult.DNSResultDetails{},
+	)
 	details := result.GetDetails().(*monitorresult.DNSResultDetails)
 
 	resolver := makeResolver(p.DNSServer)
@@ -53,13 +61,19 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		ips, err := resolver.LookupIP(ctx, dnsIPNetwork(p.RecordType), p.Hostname)
 		endTime = time.Now()
 		if err != nil {
-			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup AAAA records: %s", err.Error()), err, "AAAA record lookup failed")
+			return earlyErrorWithErr(
+				&result,
+				logger,
+				fmt.Sprintf("Failed to lookup AAAA records: %s", err.Error()),
+				err,
+				"AAAA record lookup failed",
+			)
 		}
 		expectedRecordType := "A"
 		if p.RecordType == DNSRecordTypeAAAA {
 			expectedRecordType = "AAAA"
 		}
-		checkExpected(result, logger, details, p.ExpectedRecordValues, ips,
+		checkExpected(&result, logger, details, p.ExpectedRecordValues, ips,
 			func(ip net.IP) any { return ip.String() },
 			func(ip net.IP, expectedValue string) bool { return ip.String() == expectedValue },
 			func(expected string) string {
@@ -71,9 +85,15 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		cname, err := resolver.LookupCNAME(ctx, p.Hostname)
 		endTime = time.Now()
 		if err != nil {
-			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup CNAME record: %s", err.Error()), err, "CNAME record lookup failed")
+			return earlyErrorWithErr(
+				&result,
+				logger,
+				fmt.Sprintf("Failed to lookup CNAME record: %s", err.Error()),
+				err,
+				"CNAME record lookup failed",
+			)
 		}
-		checkExpected(result, logger, details, p.ExpectedRecordValues, []string{cname},
+		checkExpected(&result, logger, details, p.ExpectedRecordValues, []string{cname},
 			func(cname string) any { return cname },
 			func(cname, expected string) bool { return cname == expected },
 			func(expected string) string {
@@ -85,9 +105,15 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		mxRecords, err := resolver.LookupMX(ctx, p.Hostname)
 		endTime = time.Now()
 		if err != nil {
-			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup MX records: %s", err.Error()), err, "MX record lookup failed")
+			return earlyErrorWithErr(
+				&result,
+				logger,
+				fmt.Sprintf("Failed to lookup MX records: %s", err.Error()),
+				err,
+				"MX record lookup failed",
+			)
 		}
-		checkExpected(result, logger, details, p.ExpectedRecordValues, mxRecords,
+		checkExpected(&result, logger, details, p.ExpectedRecordValues, mxRecords,
 			func(mx *net.MX) any { return fmt.Sprintf("%s:%d", mx.Host, mx.Pref) },
 			func(mx *net.MX, expected string) bool { return fmt.Sprintf("%s:%d", mx.Host, mx.Pref) == expected },
 			func(expected string) string {
@@ -99,9 +125,15 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		txtRecords, err := resolver.LookupTXT(ctx, p.Hostname)
 		endTime = time.Now()
 		if err != nil {
-			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup TXT records: %s", err.Error()), err, "TXT record lookup failed")
+			return earlyErrorWithErr(
+				&result,
+				logger,
+				fmt.Sprintf("Failed to lookup TXT records: %s", err.Error()),
+				err,
+				"TXT record lookup failed",
+			)
 		}
-		checkExpected(result, logger, details, p.ExpectedRecordValues, txtRecords,
+		checkExpected(&result, logger, details, p.ExpectedRecordValues, txtRecords,
 			func(txt string) any { return txt },
 			func(txt, expected string) bool { return txt == expected },
 			func(expected string) string {
@@ -113,9 +145,15 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		nsRecords, err := resolver.LookupNS(ctx, p.Hostname)
 		endTime = time.Now()
 		if err != nil {
-			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup NS records: %s", err.Error()), err, "NS record lookup failed")
+			return earlyErrorWithErr(
+				&result,
+				logger,
+				fmt.Sprintf("Failed to lookup NS records: %s", err.Error()),
+				err,
+				"NS record lookup failed",
+			)
 		}
-		checkExpected(result, logger, details, p.ExpectedRecordValues, nsRecords,
+		checkExpected(&result, logger, details, p.ExpectedRecordValues, nsRecords,
 			func(ns *net.NS) any { return ns.Host },
 			func(ns *net.NS, expected string) bool { return ns.Host == expected },
 			func(expected string) string {
@@ -126,14 +164,20 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 	case DNSRecordTypeSRV:
 		service, proto, name, err := splitSRVHostname(p.Hostname)
 		if err != nil {
-			return earlyErrorWithErr(result, logger, err.Error(), err, "SRV record name parsing failed")
+			return earlyErrorWithErr(&result, logger, err.Error(), err, "SRV record name parsing failed")
 		}
 		_, srvRecords, err := resolver.LookupSRV(ctx, service, proto, name)
 		endTime = time.Now()
 		if err != nil {
-			return earlyErrorWithErr(result, logger, fmt.Sprintf("Failed to lookup SRV records: %s", err.Error()), err, "SRV record lookup failed")
+			return earlyErrorWithErr(
+				&result,
+				logger,
+				fmt.Sprintf("Failed to lookup SRV records: %s", err.Error()),
+				err,
+				"SRV record lookup failed",
+			)
 		}
-		checkExpected(result, logger, details, p.ExpectedRecordValues, srvRecords,
+		checkExpected(&result, logger, details, p.ExpectedRecordValues, srvRecords,
 			func(srv *net.SRV) any { return fmt.Sprintf("%s:%d", srv.Target, srv.Port) },
 			func(srv *net.SRV, expected string) bool {
 				return fmt.Sprintf("%s:%d", srv.Target, srv.Port) == expected
@@ -147,12 +191,12 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		result.AddError(fmt.Sprintf("Unsupported DNS record type: %s", rt))
 		logger.Error().Msgf("Unsupported DNS record type: %s", rt)
 		result.SetDuration(0)
-		return result
+		return &result
 	}
 
 	result.SetDuration(endTime.Sub(startTime).Milliseconds())
 
-	return result
+	return &result
 }
 
 func (p *DNSProbe) Validate() error {
@@ -163,7 +207,13 @@ func (p *DNSProbe) Validate() error {
 		return fmt.Errorf("record type cannot be empty")
 	}
 	switch p.RecordType {
-	case DNSRecordTypeA, DNSRecordTypeAAAA, DNSRecordTypeCNAME, DNSRecordTypeMX, DNSRecordTypeTXT, DNSRecordTypeNS, DNSRecordTypeSRV:
+	case DNSRecordTypeA,
+		DNSRecordTypeAAAA,
+		DNSRecordTypeCNAME,
+		DNSRecordTypeMX,
+		DNSRecordTypeTXT,
+		DNSRecordTypeNS,
+		DNSRecordTypeSRV:
 	default:
 		return fmt.Errorf("unsupported record type: %s", p.RecordType)
 	}
@@ -224,7 +274,13 @@ func dnsIPNetwork(recordType DNSRecordType) string {
 }
 
 // earlyErrorWithErr is like earlyError but includes an error in the log.
-func earlyErrorWithErr(result monitorresult.IMonitorResult, logger *zerolog.Logger, userMsg string, err error, logMsg string) monitorresult.IMonitorResult {
+func earlyErrorWithErr(
+	result monitorresult.IMonitorResult,
+	logger *zerolog.Logger,
+	userMsg string,
+	err error,
+	logMsg string,
+) monitorresult.IMonitorResult {
 	result.AddError(userMsg)
 	logger.Trace().Err(err).Msg(logMsg)
 	result.SetDuration(0)

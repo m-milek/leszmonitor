@@ -30,22 +30,17 @@ const (
 )
 
 type AuditLogEntry struct {
-	ID         uuid.UUID      `json:"id" db:"id"`
-	Username   *string        `json:"username,omitempty" db:"username"` /// "system" if the action was performed by the system (e.g. scheduled task)
-	ProjectID  *uuid.UUID     `json:"projectId,omitempty" db:"project_id"`
+	ID         uuid.UUID      `json:"id"                   db:"id"`
+	Username   *string        `json:"username,omitempty"   db:"username"` /// "system" if the action was performed by the system (e.g. scheduled task)
+	ProjectID  *uuid.UUID     `json:"projectId,omitempty"  db:"project_id"`
 	ResourceID *uuid.UUID     `json:"resourceId,omitempty" db:"resource_id"` // ID of the resource that was acted upon, e.g. monitor ID, project ID, etc. Can be empty if not applicable.
-	Action     AuditLogAction `json:"action" db:"action"`
-	IsSuccess  bool           `json:"isSuccess" db:"is_success"`
-	Summary    string         `json:"summary,omitempty" db:"summary"`
-	Before     *string        `json:"before,omitempty" db:"before"`    // JSON string representing the state of the resource before the action. Can be empty if not applicable.
-	After      *string        `json:"after,omitempty" db:"after"`      // JSON string representing the state of the resource after the action. Can be empty if not applicable.
-	TraceID    *string        `json:"traceId,omitempty" db:"trace_id"` // Trace ID for correlating with other logs/traces. Can be empty if not applicable.
-	CreatedAt  time.Time      `json:"createdAt" db:"created_at"`
-}
-
-func (a *AuditLogEntry) BeforeCreate() {
-	a.ID = uuid.New()
-	a.CreatedAt = time.Now().UTC()
+	Action     AuditLogAction `json:"action"               db:"action"`
+	IsSuccess  bool           `json:"isSuccess"            db:"is_success"`
+	Summary    string         `json:"summary,omitempty"    db:"summary"`
+	Before     *string        `json:"before,omitempty"     db:"before"`   // JSON string representing the state of the resource before the action. Can be empty if not applicable.
+	After      *string        `json:"after,omitempty"      db:"after"`    // JSON string representing the state of the resource after the action. Can be empty if not applicable.
+	TraceID    *string        `json:"traceId,omitempty"    db:"trace_id"` // Trace ID for correlating with other logs/traces. Can be empty if not applicable.
+	CreatedAt  time.Time      `json:"createdAt"            db:"created_at"`
 }
 
 // NewAuditLogEntry creates a new AuditLogEntry, handling JSON marshaling of before/after states,
@@ -58,8 +53,8 @@ func NewAuditLogEntry(
 	action AuditLogAction,
 	isSuccess bool,
 	summary string,
-	before interface{},
-	after interface{},
+	before any,
+	after any,
 ) (AuditLogEntry, error) {
 	var beforeStr *string
 	if before != nil {
@@ -95,6 +90,11 @@ func NewAuditLogEntry(
 	entry.BeforeCreate()
 
 	return entry, nil
+}
+
+func (a *AuditLogEntry) BeforeCreate() {
+	a.ID = uuid.New()
+	a.CreatedAt = time.Now().UTC()
 }
 
 type AuditLogFilter struct {
