@@ -87,23 +87,19 @@ func (s *MonitorService) CreateMonitor(
 			return createErr
 		}
 
-		entry, err := security.NewAuditLogEntry(
-			ctx,
-			&username,
-			&project.ID,
-			&monitorFromDB.ID,
-			security.ActionCreateMonitor,
-			true,
-			fmt.Sprintf("Monitor with ID %s created", monitorFromDB.ID),
-			nil,
-			monitorFromDB,
-		)
-		if err != nil {
-			return NewInternalError(FormatFailedToCreateAuditLog, err)
+		auditErr := tx.AuditLog().Record(ctx, security.AuditLogParams{
+			Username:   &username,
+			ProjectID:  &project.ID,
+			ResourceID: &monitorFromDB.ID,
+			Action:     security.ActionCreateMonitor,
+			IsSuccess:  true,
+			Summary:    fmt.Sprintf("Monitor with ID %s created", monitorFromDB.ID),
+			After:      monitorFromDB,
+		})
+		if auditErr != nil {
+			return NewInternalError(FormatFailedToCreateAuditLog, auditErr)
 		}
-
-		_, auditErr := tx.AuditLog().InsertAuditLogEntry(ctx, entry)
-		return auditErr
+		return nil
 	})
 	if txErr != nil {
 		logger.Error().Err(txErr).Msg("Failed to create monitor within transaction")
@@ -152,23 +148,19 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, username string, id 
 			return db.ErrNotFound
 		}
 
-		entry, err := security.NewAuditLogEntry(
-			ctx,
-			&username,
-			&monitorBeforeDelete.ProjectID,
-			&monitorUUID,
-			security.ActionDeleteMonitor,
-			true,
-			fmt.Sprintf("Monitor with ID %s deleted", monitorUUID.String()),
-			monitorBeforeDelete,
-			nil,
-		)
+		err = tx.AuditLog().Record(ctx, security.AuditLogParams{
+			Username:   &username,
+			ProjectID:  &monitorBeforeDelete.ProjectID,
+			ResourceID: &monitorUUID,
+			Action:     security.ActionDeleteMonitor,
+			IsSuccess:  true,
+			Summary:    fmt.Sprintf("Monitor with ID %s deleted", monitorUUID.String()),
+			Before:     monitorBeforeDelete,
+		})
 		if err != nil {
 			logger.Error().Err(err).Str("id", id).Msg("Failed to create audit log entry for monitor deletion")
 			return NewInternalError(FormatFailedToCreateAuditLog, err)
 		}
-
-		_, err = tx.AuditLog().InsertAuditLogEntry(ctx, entry)
 
 		if err != nil {
 			logger.Error().Err(err).Str("id", id).Msg("Failed to insert audit log entry for monitor deletion")
@@ -281,26 +273,23 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, username string, mon
 			return fmt.Errorf("failed to update monitor in database: %w", err)
 		}
 
-		entry, err := security.NewAuditLogEntry(
-			ctx,
-			&username,
-			&existingMonitor.ProjectID,
-			&monitor.ID,
-			security.ActionUpdateMonitor,
-			true,
-			fmt.Sprintf("Monitor with ID %s updated", monitor.ID),
-			existingMonitor,
-			monitor,
-		)
-		if err != nil {
+		auditErr := tx.AuditLog().Record(ctx, security.AuditLogParams{
+			Username:   &username,
+			ProjectID:  &existingMonitor.ProjectID,
+			ResourceID: &monitor.ID,
+			Action:     security.ActionUpdateMonitor,
+			IsSuccess:  true,
+			Summary:    fmt.Sprintf("Monitor with ID %s updated", monitor.ID),
+			Before:     existingMonitor,
+			After:      monitor,
+		})
+		if auditErr != nil {
 			logger.Error().
-				Err(err).
+				Err(auditErr).
 				Str("id", monitor.ID.String()).
 				Msg("Failed to create audit log entry for monitor update")
-			return NewInternalError(FormatFailedToCreateAuditLog, err)
+			return NewInternalError(FormatFailedToCreateAuditLog, auditErr)
 		}
-
-		_, auditErr := tx.AuditLog().InsertAuditLogEntry(ctx, entry)
 
 		if auditErr != nil {
 			logger.Error().

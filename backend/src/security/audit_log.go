@@ -43,49 +43,56 @@ type AuditLogEntry struct {
 	CreatedAt  time.Time      `json:"createdAt"            db:"created_at"`
 }
 
+// AuditLogParams encapsulates the parameters needed to create a new audit log entry.
+type AuditLogParams struct {
+	Username   *string
+	ProjectID  *uuid.UUID
+	ResourceID *uuid.UUID
+	Action     AuditLogAction
+	IsSuccess  bool
+	Summary    string
+	Before     any
+	After      any
+}
+
 // NewAuditLogEntry creates a new AuditLogEntry, handling JSON marshaling of before/after states,
 // capturing the TraceID from context, and calling BeforeCreate.
 func NewAuditLogEntry(
 	ctx context.Context,
-	username *string,
-	projectID *uuid.UUID,
-	resourceID *uuid.UUID,
-	action AuditLogAction,
-	isSuccess bool,
-	summary string,
-	before any,
-	after any,
+	params AuditLogParams,
 ) (AuditLogEntry, error) {
 	var beforeStr *string
-	if before != nil {
-		b, err := json.Marshal(before)
+	if params.Before != nil {
+		b, err := json.Marshal(params.Before)
 		if err != nil {
-			return AuditLogEntry{}, fmt.Errorf("failed to marshal 'before' state: %w", err)
+			return AuditLogEntry{}, fmt.Errorf("failed to marshal before state: %w", err)
 		}
-		s := string(b)
-		beforeStr = &s
+		str := string(b)
+		beforeStr = &str
 	}
 
 	var afterStr *string
-	if after != nil {
-		b, err := json.Marshal(after)
+	if params.After != nil {
+		b, err := json.Marshal(params.After)
 		if err != nil {
-			return AuditLogEntry{}, fmt.Errorf("failed to marshal 'after' state: %w", err)
+			return AuditLogEntry{}, fmt.Errorf("failed to marshal after state: %w", err)
 		}
-		s := string(b)
-		afterStr = &s
+		str := string(b)
+		afterStr = &str
 	}
 
+	traceID, _ := ctx.Value("X-Trace-Id").(string)
+
 	entry := AuditLogEntry{
-		Username:   username,
-		ProjectID:  projectID,
-		ResourceID: resourceID,
-		Action:     action,
-		IsSuccess:  isSuccess,
-		Summary:    summary,
+		Username:   params.Username,
+		ProjectID:  params.ProjectID,
+		ResourceID: params.ResourceID,
+		Action:     params.Action,
+		IsSuccess:  params.IsSuccess,
+		Summary:    params.Summary,
 		Before:     beforeStr,
 		After:      afterStr,
-		TraceID:    GetTraceIDFromContext(ctx),
+		TraceID:    &traceID,
 	}
 	entry.BeforeCreate()
 

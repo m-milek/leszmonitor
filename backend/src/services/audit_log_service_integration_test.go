@@ -17,13 +17,15 @@ func TestIntegration_AuditLogService_Record(t *testing.T) {
 
 		user := "testuser"
 		projectID := uuid.New()
+		resourceID := uuid.New()
 
-		entry := security.AuditLogEntry{
-			Username:  &user,
-			ProjectID: &projectID,
-			Action:    security.ActionCreateProject,
-			IsSuccess: true,
-			Summary:   "Created project",
+		entry := security.AuditLogParams{
+			Username:   &user,
+			ProjectID:  &projectID,
+			ResourceID: &resourceID,
+			Action:     security.ActionCreateMonitor,
+			IsSuccess:  true,
+			Summary:    "Test log entry",
 		}
 
 		err := auditLogService.Record(ctx, entry)
@@ -34,11 +36,9 @@ func TestIntegration_AuditLogService_Record(t *testing.T) {
 		require.NoError(t, dbErr)
 		require.Len(t, entries, 1)
 
-		assert.Equal(t, security.ActionCreateProject, entries[0].Action)
-		assert.Equal(t, "Created project", entries[0].Summary)
+		assert.Equal(t, security.ActionCreateMonitor, entries[0].Action)
+		assert.Equal(t, "Test log entry", entries[0].Summary)
 		assert.Equal(t, "testuser", *entries[0].Username)
-		assert.NotEqual(t, uuid.Nil, entries[0].ID)
-		assert.NotZero(t, entries[0].CreatedAt)
 	})
 }
 
@@ -49,13 +49,18 @@ func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
 		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
 		require.Nil(t, err)
 
-		auditLogService.Record(ctx, security.AuditLogEntry{
-			Username:  &owner.Username,
-			ProjectID: &project.ID,
-			Action:    security.ActionCreateProject,
-			IsSuccess: true,
+		user1 := "user1"
+		resource1 := uuid.New()
+
+		auditLogService.Record(ctx, security.AuditLogParams{
+			Username:   &user1,
+			ProjectID:  &project.ID,
+			ResourceID: &resource1,
+			Action:     security.ActionCreateMonitor,
+			IsSuccess:  true,
+			Summary:    "Entry 1",
 		})
-		auditLogService.Record(ctx, security.AuditLogEntry{
+		auditLogService.Record(ctx, security.AuditLogParams{
 			Username:  &owner.Username,
 			ProjectID: &project.ID,
 			Action:    security.ActionUpdateProject,

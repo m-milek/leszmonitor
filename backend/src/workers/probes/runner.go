@@ -123,11 +123,6 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 	result := probe.Run(ctx, r.monitor.ID)
 	r.logger.Info().Any("monitor_result", result).Msg("Monitor result")
 
-	events.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
-		Result:  result,
-		Monitor: r.monitor,
-	})
-
 	if !result.GetIsSuccess() {
 		d := result.GetErrorDetails()
 		if d.ErrorMessage != "" || len(d.Errors) > 0 {
@@ -146,4 +141,9 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 	if _, err := r.db.MonitorResults().InsertMonitorResult(ctx, result); err != nil {
 		r.logger.Error().Err(err).Msg("Failed to insert monitor result")
 	}
+
+	events.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
+		Result:  result,
+		Monitor: r.monitor,
+	})
 }
