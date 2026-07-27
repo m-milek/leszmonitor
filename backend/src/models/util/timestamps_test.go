@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTimestamps_MarshalJSON_FieldTagsAndNullableUpdatedAt(t *testing.T) {
@@ -19,7 +20,7 @@ func TestTimestamps_MarshalJSON_FieldTagsAndNullableUpdatedAt(t *testing.T) {
 	}
 
 	b, err := json.Marshal(ts)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expected := fmt.Sprintf("{\"createdAt\":\"%s\",\"updatedAt\":null}", expectedCreated)
 	assert.Equal(t, expected, string(b))

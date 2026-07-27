@@ -10,7 +10,11 @@ import (
 )
 
 type IAuditLogger interface {
-	GetEntries(ctx context.Context, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, *ServiceError)
+	GetEntries(
+		ctx context.Context,
+		filter security.AuditLogFilter,
+		pagination util.Pagination,
+	) ([]security.AuditLogEntry, *ServiceError)
 	Record(ctx context.Context, entry security.AuditLogEntry) error
 }
 
@@ -30,7 +34,11 @@ func NewAuditLogService(deps AuditLogServiceDeps) AuditLogService {
 	}
 }
 
-func (s *AuditLogService) GetEntries(ctx context.Context, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, *ServiceError) {
+func (s *AuditLogService) GetEntries(
+	ctx context.Context,
+	filter security.AuditLogFilter,
+	pagination util.Pagination,
+) ([]security.AuditLogEntry, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "GetEntries")
 	logger.Trace().Interface("filter", filter).Interface("pagination", pagination).Msg("Retrieving audit log entries")
 

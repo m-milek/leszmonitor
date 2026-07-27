@@ -11,8 +11,15 @@ import (
 )
 
 type IMonitorResultsService interface {
-	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, *ServiceError)
-	GetMonitorResultsByMonitorID(ctx context.Context, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, *ServiceError)
+	GetLatestMonitorResultByMonitorID(
+		ctx context.Context,
+		monitorID string,
+	) (monitorresult.IMonitorResult, *ServiceError)
+	GetMonitorResultsByMonitorID(
+		ctx context.Context,
+		id string,
+		pagination *util.Pagination,
+	) ([]monitorresult.IMonitorResult, *ServiceError)
 }
 
 type MonitorResultsService struct {
@@ -29,7 +36,10 @@ func NewMonitorResultsService(deps MonitorResultsServiceDeps) *MonitorResultsSer
 	}
 }
 
-func (s *MonitorResultsService) GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, *ServiceError) {
+func (s *MonitorResultsService) GetLatestMonitorResultByMonitorID(
+	ctx context.Context,
+	monitorID string,
+) (monitorresult.IMonitorResult, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitorResults, "GetLatestMonitorResultByMonitorID")
 	logger.Trace().Str("monitorID", monitorID).Msg("Retrieving latest monitor result by monitor ID")
 
@@ -47,9 +57,16 @@ func (s *MonitorResultsService) GetLatestMonitorResultByMonitorID(ctx context.Co
 	return result, nil
 }
 
-func (s *MonitorResultsService) GetMonitorResultsByMonitorID(ctx context.Context, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, *ServiceError) {
+func (s *MonitorResultsService) GetMonitorResultsByMonitorID(
+	ctx context.Context,
+	id string,
+	pagination *util.Pagination,
+) ([]monitorresult.IMonitorResult, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitorResults, "GetMonitorResultsByMonitorID")
-	logger.Trace().Str("monitorID", id).Interface("pagination", pagination).Msg("Retrieving monitor results by monitor ID")
+	logger.Trace().
+		Str("monitorID", id).
+		Interface("pagination", pagination).
+		Msg("Retrieving monitor results by monitor ID")
 
 	results, err := s.db.MonitorResults().GetMonitorResultsByMonitorID(ctx, id, pagination)
 	if err != nil {

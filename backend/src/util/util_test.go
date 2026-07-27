@@ -1,9 +1,10 @@
 package util
 
 import (
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSliceContains(t *testing.T) {
@@ -45,12 +46,22 @@ func TestSliceMinMax(t *testing.T) {
 
 func TestGetUnixTimestamp(t *testing.T) {
 	timestamp := GetUnixTimestamp()
-	assert.Greater(t, timestamp, int64(0), "Unix timestamp should be greater than 0")
-	assert.GreaterOrEqual(t, len(strconv.FormatInt(timestamp, 10)), 10, "Unix timestamp should be at least 10 digits long")
+	assert.Positive(t, timestamp, "Unix timestamp should be greater than 0")
+	assert.GreaterOrEqual(
+		t,
+		len(strconv.FormatInt(timestamp, 10)),
+		10,
+		"Unix timestamp should be at least 10 digits long",
+	)
 }
 
 func TestGetUnixTimestampMillis(t *testing.T) {
 	timestamp := GetUnixTimestampMillis()
-	assert.Greater(t, timestamp, int64(0), "Unix timestamp in milliseconds should be greater than 0")
-	assert.GreaterOrEqual(t, len(strconv.FormatInt(timestamp, 10)), 13, "Unix timestamp in milliseconds should be at least 13 digits long")
+	assert.Positive(t, timestamp, "Unix timestamp in milliseconds should be greater than 0")
+	assert.GreaterOrEqual(
+		t,
+		len(strconv.FormatInt(timestamp, 10)),
+		13,
+		"Unix timestamp in milliseconds should be at least 13 digits long",
+	)
 }

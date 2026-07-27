@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
 )
@@ -31,20 +31,45 @@ type TCPProbe struct {
 	dialAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
 }
 
+func NewTCPProbe(host string, port int, protocol string, timeout, retryCount int) (*TCPProbe, error) {
+	probe := &TCPProbe{
+		Host:            host,
+		Port:            port,
+		Protocol:        protocol,
+		Timeout:         timeout,
+		RetryCount:      retryCount,
+		dialAddressFunc: dialAddress,
+	}
+
+	if err := probe.Validate(); err != nil {
+		return nil, fmt.Errorf("failed to create TCPConfig: %w", err)
+	}
+
+	return probe, nil
+}
+
 func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
-	result := monitorresult.NewMonitorResult(monitorID, consts.TCPConfigType, true, false, 0, "", &monitorresult.TCPResultDetails{})
+	result := monitorresult.NewMonitorResult(
+		monitorID,
+		consts.TCPConfigType,
+		true,
+		false,
+		0,
+		"",
+		&monitorresult.TCPResultDetails{},
+	)
 	details := result.GetDetails().(*monitorresult.TCPResultDetails)
 
 	portString := strconv.Itoa(m.Port)
 	address := net.JoinHostPort(m.Host, portString)
 
 	details.Tries++
-	for i := 0; i < m.RetryCount; i++ {
+	for i := range m.RetryCount {
 		success, duration := dialAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Millisecond)
 		if success {
 			result.SetDuration(duration.Milliseconds())
 			details.LatencyMs = duration.Milliseconds()
-			return result
+			return &result
 		}
 		if i < m.RetryCount-1 {
 			details.Tries++
@@ -54,7 +79,7 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 
 	result.AddFailure(fmt.Sprintf("Failed to connect to %s after %d tries", address, m.RetryCount))
 
-	return result
+	return &result
 }
 
 func (m *TCPProbe) Validate() error {
@@ -80,23 +105,6 @@ func (m *TCPProbe) Validate() error {
 	}
 
 	return nil
-}
-
-func NewTCPProbe(host string, port int, protocol string, timeout, retryCount int) (*TCPProbe, error) {
-	probe := &TCPProbe{
-		Host:            host,
-		Port:            port,
-		Protocol:        protocol,
-		Timeout:         timeout,
-		RetryCount:      retryCount,
-		dialAddressFunc: dialAddress,
-	}
-
-	if err := probe.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to create TCPConfig: %w", err)
-	}
-
-	return probe, nil
 }
 
 // dialAddressFunc is a function variable that can be replaced for testing purposes.

@@ -66,8 +66,18 @@ func TestPaginationFromRequest(t *testing.T) {
 		{"per_page parameter only", "http://example.com/api?per_page=50", &Pagination{Page: 1, PerPage: 50}, false},
 		{"both parameters", "http://example.com/api?page=5&per_page=30", &Pagination{Page: 5, PerPage: 30}, false},
 		{"empty page parameter uses default", "http://example.com/api?page=", &Pagination{Page: 1, PerPage: 20}, false},
-		{"empty per_page parameter uses default", "http://example.com/api?per_page=", &Pagination{Page: 1, PerPage: 20}, false},
-		{"extra parameters ignored", "http://example.com/api?page=2&per_page=10&sort=name", &Pagination{Page: 2, PerPage: 10}, false},
+		{
+			"empty per_page parameter uses default",
+			"http://example.com/api?per_page=",
+			&Pagination{Page: 1, PerPage: 20},
+			false,
+		},
+		{
+			"extra parameters ignored",
+			"http://example.com/api?page=2&per_page=10&sort=name",
+			&Pagination{Page: 2, PerPage: 10},
+			false,
+		},
 		{"invalid page parameter", "http://example.com/api?page=abc", nil, true},
 		{"invalid per_page parameter", "http://example.com/api?per_page=xyz", nil, true},
 		{"page 0 fails validation", "http://example.com/api?page=0", nil, true},
@@ -77,7 +87,7 @@ func TestPaginationFromRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", tt.url, nil)
+			req, _ := http.NewRequest(http.MethodGet, tt.url, nil)
 			got, err := PaginationFromRequest(req)
 
 			if (err != nil) != tt.expectErr {

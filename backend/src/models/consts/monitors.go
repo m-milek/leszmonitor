@@ -2,8 +2,10 @@ package consts
 
 type ProbeType string
 
+type HTTPResultDetailsType string
+
 var (
-	HttpConfigType ProbeType = "http"
+	HTTPConfigType ProbeType = "http"
 	TCPConfigType  ProbeType = "tcp"
 	DNSConfigType  ProbeType = "dns"
 )

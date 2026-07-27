@@ -25,7 +25,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 			Name:        "Ping API",
 			Description: "Pings our main API every minute",
 			Interval:    60,
-			Type:        consts.HttpConfigType,
+			Type:        consts.HTTPConfigType,
 			ProbeConfig: "{}",
 		}
 		payload.GenerateSlug()
@@ -40,7 +40,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		require.Nil(t, svcErr)
 		assert.Equal(t, "Ping API", monitorFromDB.Name)
 		assert.Equal(t, project.ID, monitorFromDB.ProjectID)
-		assert.Equal(t, consts.HttpConfigType, monitorFromDB.Type)
+		assert.Equal(t, consts.HTTPConfigType, monitorFromDB.Type)
 		assert.Equal(t, "ping-api", monitorFromDB.Slug)
 
 		// Verify audit log was created
@@ -68,7 +68,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		payload := monitors.Monitor{
 			Name:     "",  // Empty name makes it invalid
 			Interval: -10, // Invalid interval
-			Type:     consts.HttpConfigType,
+			Type:     consts.HTTPConfigType,
 		}
 
 		resp, svcErr := monitorService.CreateMonitor(ctx, project.Slug, owner.Username, payload)
@@ -125,7 +125,6 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
-
 }
 
 func TestIntegration_MonitorService_GetMonitorsByProjectID(t *testing.T) {
@@ -166,7 +165,6 @@ func TestIntegration_MonitorService_GetMonitorsByProjectID(t *testing.T) {
 		require.Nil(t, svcErr)
 		assert.Empty(t, monitorsList)
 	})
-
 }
 
 func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
@@ -206,7 +204,6 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 		assert.Nil(t, retrieved)
 	})
-
 }
 
 func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
@@ -279,7 +276,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 			Name:        "Fake",
 			Description: "Fake",
 			Interval:    60,
-			Type:        consts.HttpConfigType,
+			Type:        consts.HTTPConfigType,
 			ProbeConfig: "{}",
 		}
 
@@ -301,7 +298,6 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
-
 }
 
 func TestIntegration_MonitorService_GetMonitorBySlugByProject(t *testing.T) {
@@ -331,7 +327,6 @@ func TestIntegration_MonitorService_GetMonitorBySlugByProject(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 		assert.Nil(t, retrieved)
 	})
-
 }
 
 func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
@@ -376,7 +371,12 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, owner.Username, monitor.ID, monitors.MonitorState("invalid_state"))
+		svcErr := monitorService.UpdateMonitorStateByID(
+			ctx,
+			owner.Username,
+			monitor.ID,
+			monitors.MonitorState("invalid_state"),
+		)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -391,5 +391,4 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
-
 }

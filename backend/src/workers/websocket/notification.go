@@ -20,6 +20,7 @@ type baseNotification struct {
 
 type monitorRunNotification struct {
 	baseNotification
+
 	MonitorID string                       `json:"monitorId"`
 	Response  monitorresult.IMonitorResult `json:"response"`
 }

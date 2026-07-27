@@ -15,17 +15,29 @@ import (
 )
 
 type IMonitorResultRepository interface {
-	InsertMonitorResult(ctx context.Context, result monitorresult.IMonitorResult) (interface{}, error)
+	InsertMonitorResult(ctx context.Context, result monitorresult.IMonitorResult) (any, error)
 	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, error)
-	GetMonitorResultsByMonitorID(ctx context.Context, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, error)
-	DeleteMonitorResultsOlderThanDuration(ctx context.Context, monitorID uuid.UUID, duration time.Duration) (int64, error)
+	GetMonitorResultsByMonitorID(
+		ctx context.Context,
+		id string,
+		pagination *util.Pagination,
+	) ([]monitorresult.IMonitorResult, error)
+	DeleteMonitorResultsOlderThanDuration(
+		ctx context.Context,
+		monitorID uuid.UUID,
+		duration time.Duration,
+	) (int64, error)
 }
 
 type monitorResultRepository struct {
 	baseRepository
 }
 
-func (r *monitorResultRepository) GetMonitorResultsByMonitorID(ctx context.Context, id string, pagination *util.Pagination) ([]monitorresult.IMonitorResult, error) {
+func (r *monitorResultRepository) GetMonitorResultsByMonitorID(
+	ctx context.Context,
+	id string,
+	pagination *util.Pagination,
+) ([]monitorresult.IMonitorResult, error) {
 	return dbWrap(ctx, "GetMonitorResultsByMonitorID", func() ([]monitorresult.IMonitorResult, error) {
 		var results []monitorresult.MonitorResult
 
@@ -64,23 +76,27 @@ func newMonitorResultRepository(repository baseRepository) IMonitorResultReposit
 	}
 }
 
-func (r *monitorResultRepository) InsertMonitorResult(ctx context.Context, result monitorresult.IMonitorResult) (interface{}, error) {
-	return dbWrap(ctx, "InsertMonitorResult", func() (interface{}, error) {
-		detailsJson, err := json.Marshal(result.GetDetails())
+func (r *monitorResultRepository) InsertMonitorResult(
+	ctx context.Context,
+	result monitorresult.IMonitorResult,
+) (any, error) {
+	return dbWrap(ctx, "InsertMonitorResult", func() (any, error) {
+		detailsJSON, err := json.Marshal(result.GetDetails())
 		if err != nil {
 			return nil, err
 		}
 
-		var errorDetailsJson []byte
+		var errorDetailsJSON []byte
 		if ed := result.GetErrorDetails(); ed.ErrorMessage != "" || len(ed.Errors) > 0 || len(ed.Failures) > 0 {
 			var err error
-			errorDetailsJson, err = json.Marshal(ed)
+			errorDetailsJSON, err = json.Marshal(ed)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		_, err = r.pool.ExecContext(ctx,
+		_, err = r.pool.ExecContext(
+			ctx,
 			`INSERT INTO monitor_results (id, monitor_id, is_success, is_manually_triggered, duration_ms, error_details, details, created_at) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			result.GetID(),
@@ -88,8 +104,8 @@ func (r *monitorResultRepository) InsertMonitorResult(ctx context.Context, resul
 			result.GetIsSuccess(),
 			result.GetIsManuallyTriggered(),
 			result.GetDurationMs(),
-			errorDetailsJson,
-			detailsJson,
+			errorDetailsJSON,
+			detailsJSON,
 			result.GetCreatedAt(),
 		)
 
@@ -97,7 +113,10 @@ func (r *monitorResultRepository) InsertMonitorResult(ctx context.Context, resul
 	})
 }
 
-func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, error) {
+func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(
+	ctx context.Context,
+	monitorID string,
+) (monitorresult.IMonitorResult, error) {
 	return dbWrap(ctx, "GetLatestMonitorResultByMonitorID", func() (monitorresult.IMonitorResult, error) {
 		var result monitorresult.MonitorResult
 
@@ -124,7 +143,11 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(ctx context.
 	})
 }
 
-func (r *monitorResultRepository) DeleteMonitorResultsOlderThanDuration(ctx context.Context, monitorID uuid.UUID, duration time.Duration) (int64, error) {
+func (r *monitorResultRepository) DeleteMonitorResultsOlderThanDuration(
+	ctx context.Context,
+	monitorID uuid.UUID,
+	duration time.Duration,
+) (int64, error) {
 	return dbWrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
 		cutoffTime := time.Now().Add(-duration).Format(time.RFC3339)
 		result, err := r.pool.ExecContext(ctx,
@@ -142,7 +165,7 @@ func (r *monitorResultRepository) DeleteMonitorResultsOlderThanDuration(ctx cont
 
 func processResultDetails(result monitorresult.MonitorResult) error {
 	details, err := monitorresult.ParseResultDetails(consts.ProbeType(result.MonitorType), result.DetailsJSON)
-	if err != nil {
+	if err != nil && !errors.Is(err, monitorresult.ErrEmptyDetails) {
 		return err
 	}
 	result.Details = details

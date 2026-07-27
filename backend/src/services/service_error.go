@@ -12,13 +12,7 @@ type ServiceError struct {
 	Err  error
 }
 
-// Error implements the error interface for ServiceError.
-func (e ServiceError) Error() string {
-	return e.Err.Error()
-}
-
-// NewNotFoundError creates a 404 Not Found ServiceError.
-// It uses fmt.Errorf under the hood, so you can use %w to wrap existing errors.
+// NewNotFoundError creates a 404 Not Found ServiceError. It uses [fmt.Errorf] under the hood, so you can use %w to wrap existing errors.
 func NewNotFoundError(format string, args ...any) *ServiceError {
 	return &ServiceError{
 		Code: http.StatusNotFound,
@@ -26,8 +20,7 @@ func NewNotFoundError(format string, args ...any) *ServiceError {
 	}
 }
 
-// NewInternalError creates a 500 Internal Server Error ServiceError.
-// It uses fmt.Errorf under the hood, so you can use %w to wrap existing errors.
+// NewInternalError creates a 500 Internal Server Error ServiceError. It uses [fmt.Errorf] under the hood, so you can use %w to wrap existing errors.
 func NewInternalError(format string, args ...any) *ServiceError {
 	return &ServiceError{
 		Code: http.StatusInternalServerError,
@@ -35,8 +28,7 @@ func NewInternalError(format string, args ...any) *ServiceError {
 	}
 }
 
-// NewBadRequestError creates a 400 Bad Request ServiceError.
-// It uses fmt.Errorf under the hood, so you can use %w to wrap existing errors.
+// NewBadRequestError creates a 400 Bad Request ServiceError. It uses [fmt.Errorf] under the hood, so you can use %w to wrap existing errors.
 func NewBadRequestError(format string, args ...any) *ServiceError {
 	return &ServiceError{
 		Code: http.StatusBadRequest,
@@ -44,8 +36,7 @@ func NewBadRequestError(format string, args ...any) *ServiceError {
 	}
 }
 
-// NewUnauthorizedError creates a 401 Unauthorized ServiceError.
-// It uses fmt.Errorf under the hood, so you can use %w to wrap existing errors.
+// NewUnauthorizedError creates a 401 Unauthorized ServiceError. It uses [fmt.Errorf] under the hood, so you can use %w to wrap existing errors.
 func NewUnauthorizedError(format string, args ...any) *ServiceError {
 	return &ServiceError{
 		Code: http.StatusUnauthorized,
@@ -53,13 +44,17 @@ func NewUnauthorizedError(format string, args ...any) *ServiceError {
 	}
 }
 
-// NewConflictError creates a 409 Conflict ServiceError.
-// It uses fmt.Errorf under the hood, so you can use %w to wrap existing errors.
+// NewConflictError creates a 409 Conflict ServiceError. It uses [fmt.Errorf] under the hood, so you can use %w to wrap existing errors.
 func NewConflictError(format string, args ...any) *ServiceError {
 	return &ServiceError{
 		Code: http.StatusConflict,
 		Err:  fmt.Errorf(format, args...),
 	}
+}
+
+// Error implements the error interface for ServiceError.
+func (e ServiceError) Error() string {
+	return e.Err.Error()
 }
 
 const FormatFailedToCreateAuditLog = "failed to create audit log: %s"

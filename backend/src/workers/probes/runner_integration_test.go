@@ -43,7 +43,8 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 	}
 
 	// Verify that the result was inserted in the DB
-	results, err := realDB.MonitorResults().GetMonitorResultsByMonitorID(ctx, monitor.ID.String(), &util.Pagination{Page: 1, PerPage: 10})
+	results, err := realDB.MonitorResults().
+		GetMonitorResultsByMonitorID(ctx, monitor.ID.String(), &util.Pagination{Page: 1, PerPage: 10})
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, len(results), 1)
 }

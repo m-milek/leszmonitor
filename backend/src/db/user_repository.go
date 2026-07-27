@@ -34,9 +34,12 @@ func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*mo
 		}
 
 		var createdUser models.User
-		err := r.pool.QueryRowxContext(ctx,
+		err := r.pool.QueryRowxContext(
+			ctx,
 			`INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3) RETURNING id, username, password_hash, created_at, updated_at`,
-			user.ID, user.Username, user.PasswordHash,
+			user.ID,
+			user.Username,
+			user.PasswordHash,
 		).StructScan(&createdUser)
 
 		if err != nil {

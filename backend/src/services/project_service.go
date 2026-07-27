@@ -10,15 +10,28 @@ import (
 )
 
 type IProjectService interface {
-	CreateProject(ctx context.Context, ownerUsername string, payload CreateProjectPayload) (*models.Project, *ServiceError)
+	CreateProject(
+		ctx context.Context,
+		ownerUsername string,
+		payload CreateProjectPayload,
+	) (*models.Project, *ServiceError)
+
 	GetProjectBySlug(ctx context.Context, projectSlug string) (*models.Project, *ServiceError)
 	GetProjects(ctx context.Context, requestorUsername string, usernameQuery string) ([]models.Project, *ServiceError)
 	DeleteProject(ctx context.Context, projectSlug string) *ServiceError
-	UpdateProject(ctx context.Context, projectSlug string, payload UpdateProjectPayload) (*models.Project, *ServiceError)
+	UpdateProject(
+		ctx context.Context,
+		projectSlug string,
+		payload UpdateProjectPayload,
+	) (*models.Project, *ServiceError)
 
 	AddUserToProject(ctx context.Context, projectSlug string, payload AddProjectMemberPayload) *ServiceError
 	RemoveUserFromProject(ctx context.Context, projectSlug string, payload RemoveProjectMemberPayload) *ServiceError
-	ChangeProjectMemberRole(ctx context.Context, projectSlug string, payload ChangeProjectMemberRolePayload) *ServiceError
+	ChangeProjectMemberRole(
+		ctx context.Context,
+		projectSlug string,
+		payload ChangeProjectMemberRolePayload,
+	) *ServiceError
 }
 
 // ProjectService handles project-related CRUD operations including membership management.
@@ -65,7 +78,11 @@ type ChangeProjectMemberRolePayload struct {
 }
 
 // CreateProject creates a new project owned by the authenticated user.
-func (s *ProjectService) CreateProject(ctx context.Context, ownerUsername string, payload CreateProjectPayload) (*models.Project, *ServiceError) {
+func (s *ProjectService) CreateProject(
+	ctx context.Context,
+	ownerUsername string,
+	payload CreateProjectPayload,
+) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "CreateProject")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, ownerUsername)
@@ -120,7 +137,11 @@ func (s *ProjectService) GetProjectBySlug(ctx context.Context, projectSlug strin
 }
 
 // GetProjects returns all projects the authenticated user is a member of.
-func (s *ProjectService) GetProjects(ctx context.Context, requestorUsername string, usernameQuery string) ([]models.Project, *ServiceError) {
+func (s *ProjectService) GetProjects(
+	ctx context.Context,
+	requestorUsername string,
+	usernameQuery string,
+) ([]models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "GetProjects")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, requestorUsername)
@@ -144,7 +165,11 @@ func (s *ProjectService) GetProjects(ctx context.Context, requestorUsername stri
 		return nil, NewInternalError("failed to get projects: %w", err)
 	}
 
-	logger.Debug().Int("count", len(projects)).Str("requestingUser", requestorUsername).Str("userQuery", usernameQuery).Msg("Retrieved projects for user successfully")
+	logger.Debug().
+		Int("count", len(projects)).
+		Str("requestingUser", requestorUsername).
+		Str("userQuery", usernameQuery).
+		Msg("Retrieved projects for user successfully")
 	return projects, nil
 }
 
@@ -172,7 +197,11 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectSlug string) 
 }
 
 // UpdateProject updates a project's name/description.
-func (s *ProjectService) UpdateProject(ctx context.Context, projectSlug string, payload UpdateProjectPayload) (*models.Project, *ServiceError) {
+func (s *ProjectService) UpdateProject(
+	ctx context.Context,
+	projectSlug string,
+	payload UpdateProjectPayload,
+) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "UpdateProject")
 
 	oldProject, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
@@ -195,7 +224,11 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectSlug string, 
 }
 
 // AddUserToProject adds a user to a project with a specified role.
-func (s *ProjectService) AddUserToProject(ctx context.Context, projectSlug string, payload AddProjectMemberPayload) *ServiceError {
+func (s *ProjectService) AddUserToProject(
+	ctx context.Context,
+	projectSlug string,
+	payload AddProjectMemberPayload,
+) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "AddUserToProject")
 
 	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
@@ -227,19 +260,29 @@ func (s *ProjectService) AddUserToProject(ctx context.Context, projectSlug strin
 	_, err = s.db.Projects().AddMemberToProject(ctx, project.Slug, member)
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
-			logger.Error().Str("username", payload.Username).Str("projectSlug", project.Slug).Msg("User is already a member of project")
+			logger.Error().
+				Str("username", payload.Username).
+				Str("projectSlug", project.Slug).
+				Msg("User is already a member of project")
 			return NewConflictError("user %s is already a member of project %s", payload.Username, project.Slug)
 		}
 		logger.Error().Err(err).Msg("Failed to add user to project")
 		return NewInternalError("failed to add user to project: %w", err)
 	}
 
-	logger.Debug().Str("username", payload.Username).Str("projectSlug", project.Slug).Msg("User added to project successfully")
+	logger.Debug().
+		Str("username", payload.Username).
+		Str("projectSlug", project.Slug).
+		Msg("User added to project successfully")
 	return nil
 }
 
 // RemoveUserFromProject removes a user from a project.
-func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug string, payload RemoveProjectMemberPayload) *ServiceError {
+func (s *ProjectService) RemoveUserFromProject(
+	ctx context.Context,
+	projectSlug string,
+	payload RemoveProjectMemberPayload,
+) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "RemoveUserFromProject")
 
 	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
@@ -254,7 +297,10 @@ func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug 
 
 	member := project.GetMember(user.ID)
 	if member == nil {
-		logger.Error().Str("username", payload.Username).Str("projectSlug", project.Slug).Msg("User is not a member of project")
+		logger.Error().
+			Str("username", payload.Username).
+			Str("projectSlug", project.Slug).
+			Msg("User is not a member of project")
 		return NewBadRequestError(FormatUserIsNotAMemberOfProject, payload.Username, project.Slug)
 	}
 	if member.Role == models.RoleOwner {
@@ -268,16 +314,26 @@ func (s *ProjectService) RemoveUserFromProject(ctx context.Context, projectSlug 
 		return NewInternalError("failed to remove user from project: %w", err)
 	}
 	if !removed {
-		logger.Error().Str("username", payload.Username).Str("projectSlug", project.Slug).Msg("User is not a member of project")
+		logger.Error().
+			Str("username", payload.Username).
+			Str("projectSlug", project.Slug).
+			Msg("User is not a member of project")
 		return NewNotFoundError(FormatUserIsNotAMemberOfProject, payload.Username, project.Slug)
 	}
 
-	logger.Debug().Str("username", payload.Username).Str("projectSlug", project.Slug).Msg("User removed from project successfully")
+	logger.Debug().
+		Str("username", payload.Username).
+		Str("projectSlug", project.Slug).
+		Msg("User removed from project successfully")
 	return nil
 }
 
 // ChangeProjectMemberRole changes a member's role.
-func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectSlug string, payload ChangeProjectMemberRolePayload) *ServiceError {
+func (s *ProjectService) ChangeProjectMemberRole(
+	ctx context.Context,
+	projectSlug string,
+	payload ChangeProjectMemberRolePayload,
+) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "ChangeProjectMemberRole")
 
 	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
@@ -291,7 +347,10 @@ func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectSlu
 	}
 
 	if !project.IsMember(user.ID) {
-		logger.Error().Str("username", payload.Username).Str("projectSlug", project.Slug).Msg("User is not a member of project")
+		logger.Error().
+			Str("username", payload.Username).
+			Str("projectSlug", project.Slug).
+			Msg("User is not a member of project")
 		return NewBadRequestError(FormatUserIsNotAMemberOfProject, payload.Username, project.Slug)
 	}
 
@@ -311,7 +370,11 @@ func (s *ProjectService) ChangeProjectMemberRole(ctx context.Context, projectSlu
 		return NewInternalError("failed to update project with new role: %w", err)
 	}
 
-	logger.Debug().Str("username", payload.Username).Str("projectSlug", project.Slug).Str("role", string(payload.Role)).Msg("User role changed successfully")
+	logger.Debug().
+		Str("username", payload.Username).
+		Str("projectSlug", project.Slug).
+		Str("role", string(payload.Role)).
+		Msg("User role changed successfully")
 	return nil
 }
 

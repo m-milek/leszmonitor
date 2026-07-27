@@ -10,11 +10,11 @@ import (
 // Project is the top-level organizational unit. Projects have multiple members with
 // different roles and own all monitors directly.
 type Project struct {
-	ID uuid.UUID `json:"id" db:"id"` // ID is the UUID of the project - database primary key
 	util.SlugFromName
+	util.Timestamps
+	ID          uuid.UUID       `json:"id"          db:"id"`          // ID is the UUID of the project - database primary key
 	Description string          `json:"description" db:"description"` // Description of the project
 	Members     []ProjectMember `json:"members"`                      // Members of the project
-	util.Timestamps
 }
 
 // NewProject creates a new Project instance with the given name, description, and owner UUID.

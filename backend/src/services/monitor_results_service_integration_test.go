@@ -21,14 +21,14 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
 		// Insert 2 results
-		res1 := monitorresult.NewMonitorResult(monitor.ID, consts.HttpConfigType, true, false, 100, "", nil)
+		res1 := monitorresult.NewMonitorResult(monitor.ID, consts.HTTPConfigType, true, false, 100, "", nil)
 		res1.CreatedAt = time.Now().Add(-10 * time.Minute).Format(time.RFC3339)
-		_, err := db.Get().MonitorResults().InsertMonitorResult(ctx, res1)
+		_, err := db.Get().MonitorResults().InsertMonitorResult(ctx, &res1)
 		require.NoError(t, err)
 
-		res2 := monitorresult.NewMonitorResult(monitor.ID, consts.HttpConfigType, false, false, 200, "failed", nil)
+		res2 := monitorresult.NewMonitorResult(monitor.ID, consts.HTTPConfigType, false, false, 200, "failed", nil)
 		res2.CreatedAt = time.Now().Add(-5 * time.Minute).Format(time.RFC3339)
-		_, err = db.Get().MonitorResults().InsertMonitorResult(ctx, res2)
+		_, err = db.Get().MonitorResults().InsertMonitorResult(ctx, &res2)
 		require.NoError(t, err)
 
 		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
@@ -49,7 +49,6 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 		assert.Nil(t, latest)
 	})
-
 }
 
 func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
@@ -60,9 +59,9 @@ func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
 		// Insert 3 results
-		for i := 0; i < 3; i++ {
-			res := monitorresult.NewMonitorResult(monitor.ID, consts.HttpConfigType, true, false, int64(100+i), "", nil)
-			_, err := db.Get().MonitorResults().InsertMonitorResult(ctx, res)
+		for i := range 3 {
+			res := monitorresult.NewMonitorResult(monitor.ID, consts.HTTPConfigType, true, false, int64(100+i), "", nil)
+			_, err := db.Get().MonitorResults().InsertMonitorResult(ctx, &res)
 			require.NoError(t, err)
 		}
 

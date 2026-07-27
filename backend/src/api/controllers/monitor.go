@@ -246,7 +246,12 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	serviceErr := c.service.UpdateMonitorStateByID(ctx, userClaims.Username, monitorUUID, monitors.MonitorState(payload.NewState))
+	serviceErr := c.service.UpdateMonitorStateByID(
+		ctx,
+		userClaims.Username,
+		monitorUUID,
+		monitors.MonitorState(payload.NewState),
+	)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return

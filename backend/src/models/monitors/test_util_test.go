@@ -1,7 +1,7 @@
 package monitors
 
 //
-//import (
+// import (
 //	"github.com/google/uuid"
 //	shared "github.com/m-milek/leszmonitor/models/consts"
 //	"github.com/m-milek/leszmonitor/util"
@@ -19,7 +19,7 @@ package monitors
 //	Type        shared.ProbeType
 //
 //	// Config fields
-//	HttpConfig *HttpProbe
+//	HTTPConfig *HttpProbe
 //	TCPConfig  *TCPProbe
 //}
 //
@@ -33,7 +33,7 @@ package monitors
 //		Description: "Test monitor description",
 //		Interval:    60,
 //		ProjectID:   "test_owner",
-//		Type:        shared.HttpConfigType,
+//		Type:        shared.HTTPConfigType,
 //		HttpConfig: &HttpProbe{
 //			Method:              "GET",
 //			URL:                 "https://example.com",
@@ -44,7 +44,7 @@ package monitors
 //
 //// AsHttp configures the monitor as an HTTP monitor
 //func (t *TestMonitor) AsHttp() *TestMonitor {
-//	t.Type = shared.HttpConfigType
+//	t.Type = shared.HTTPConfigType
 //	if t.HttpConfig == nil {
 //		t.HttpConfig = &HttpProbe{
 //			Method:              "GET",
@@ -84,7 +84,7 @@ package monitors
 //	}
 //
 //	switch t.Type {
-//	case shared.HttpConfigType:
+//	case shared.HTTPConfigType:
 //		return &HttpMonitor{
 //			BaseMonitor: base,
 //			Config:      *t.HttpConfig,

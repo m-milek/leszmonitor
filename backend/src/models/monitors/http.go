@@ -13,12 +13,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/log"
-	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
 )
 
-type HttpProbe struct {
+type HTTPProbe struct {
 	Method               string            `json:"method"`
 	URL                  string            `json:"url"`
 	Headers              map[string]string `json:"headers"`
@@ -31,18 +31,36 @@ type HttpProbe struct {
 	ExpectedResponseTime *int              `json:"expectedResponseTime"` // in milliseconds
 }
 
-func (m *HttpProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
+const httpTimeout = 10 * time.Second
+
+func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
 	logger := log.FromContext(ctx)
-	result := monitorresult.NewMonitorResult(monitorID, consts.HttpConfigType, true, false, 0, "", &monitorresult.HttpResultDetails{})
-	details := result.GetDetails().(*monitorresult.HttpResultDetails)
+	result := monitorresult.NewMonitorResult(
+		monitorID,
+		consts.HTTPConfigType,
+		true,
+		false,
+		0,
+		"",
+		&monitorresult.HTTPResultDetails{},
+	)
+	details, castErr := result.GetDetails().(*monitorresult.HTTPResultDetails)
+	if !castErr {
+		logger.Error().Msg("Failed to cast monitor result details to HTTPResultDetails")
+		result.AddError("Internal error: failed to process monitor result details")
+		return &result
+	}
 
 	httpResponse, elapsed, err := m.executeRequest(&httpClientOrMock)
+	if httpResponse != nil {
+		defer httpResponse.Body.Close()
+	}
 
 	result.SetDuration(elapsed.Milliseconds())
 	if err != nil {
 		result.AddError(fmt.Sprintf("HTTP request failed: %s", err.Error()))
 		logger.Trace().Err(err).Msg("HTTP request execution failed")
-		return result
+		return &result
 	}
 
 	details.StatusCode = httpResponse.StatusCode
@@ -63,17 +81,17 @@ func (m *HttpProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.
 		}
 	}
 
-	m.checkStatusCode(httpResponse, result, details)
-	m.checkResponseTime(elapsed, result, details)
-	m.checkResponseHeaders(httpResponse, result, details)
-	m.checkResponseBody(httpResponse, result, details)
+	m.checkStatusCode(httpResponse, &result)
+	m.checkResponseTime(elapsed, &result)
+	m.checkResponseHeaders(httpResponse, &result)
+	m.checkResponseBody(httpResponse, &result)
 
-	return result
+	return &result
 }
 
 // Validate checks if the HTTP monitor configuration is valid
 // It ensures that required fields are set and that the URL is properly formatted.
-func (m *HttpProbe) Validate() error {
+func (m *HTTPProbe) Validate() error {
 	if m.URL == "" {
 		return fmt.Errorf("URL cannot be empty")
 	}
@@ -97,12 +115,12 @@ func (m *HttpProbe) Validate() error {
 		}
 	}
 
-	parsedUrl, err := url.Parse(m.URL)
-	if err != nil || parsedUrl.Scheme == "" || parsedUrl.Host == "" {
+	parsedURL, err := url.Parse(m.URL)
+	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
 		return fmt.Errorf("invalid URL format: %s", m.URL)
 	}
 
-	if parsedUrl.Scheme != "http" && parsedUrl.Scheme != "https" {
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
 		return fmt.Errorf("URL scheme must be either http or https: %s", m.URL)
 	}
 
@@ -119,21 +137,21 @@ func (m *HttpProbe) Validate() error {
 	return nil
 }
 
-// httpRequestExecutor is needed for mocking HTTP requests in tests
+// httpRequestExecutor is needed for mocking HTTP requests in tests.
 type httpRequestExecutor interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func newHttpClient() httpRequestExecutor {
+func newHTTPClient() httpRequestExecutor {
 	return &http.Client{
-		Timeout: 10 * time.Second, // Default timeout for HTTP requests
+		Timeout: httpTimeout,
 	}
 }
 
-var httpClientOrMock = newHttpClient()
+var httpClientOrMock = newHTTPClient()
 
 // Encapsulates request creation and execution.
-func (m *HttpProbe) executeRequest(httpClient *httpRequestExecutor) (*http.Response, time.Duration, error) {
+func (m *HTTPProbe) executeRequest(httpClient *httpRequestExecutor) (*http.Response, time.Duration, error) {
 	request, err := m.createRequest()
 
 	if err != nil {
@@ -153,28 +171,45 @@ func (m *HttpProbe) executeRequest(httpClient *httpRequestExecutor) (*http.Respo
 	return response, elapsed, nil
 }
 
-func (m *HttpProbe) checkStatusCode(response *http.Response, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
+func (m *HTTPProbe) checkStatusCode(
+	response *http.Response,
+	result monitorresult.IMonitorResult,
+) {
 	if m.ExpectedStatusCodes == nil {
 		return
 	}
 
 	if !util.SliceContains(m.ExpectedStatusCodes, response.StatusCode) {
-		failureMsg := fmt.Sprintf("Unexpected status code: got %d, expected one of %v", response.StatusCode, m.ExpectedStatusCodes)
+		failureMsg := fmt.Sprintf(
+			"Unexpected status code: got %d, expected one of %v",
+			response.StatusCode,
+			m.ExpectedStatusCodes,
+		)
 		result.AddFailure(failureMsg)
 	}
 }
 
-func (m *HttpProbe) checkResponseTime(elapsed time.Duration, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
+func (m *HTTPProbe) checkResponseTime(
+	elapsed time.Duration,
+	result monitorresult.IMonitorResult,
+) {
 	if m.ExpectedResponseTime == nil {
 		return
 	}
 	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTime) {
-		failureMsg := fmt.Sprintf("Response time exceeded: got %dms, expected <= %dms", elapsed.Milliseconds(), *m.ExpectedResponseTime)
+		failureMsg := fmt.Sprintf(
+			"Response time exceeded: got %dms, expected <= %dms",
+			elapsed.Milliseconds(),
+			*m.ExpectedResponseTime,
+		)
 		result.AddFailure(failureMsg)
 	}
 }
 
-func (m *HttpProbe) checkResponseHeaders(response *http.Response, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
+func (m *HTTPProbe) checkResponseHeaders(
+	response *http.Response,
+	result monitorresult.IMonitorResult,
+) {
 	if len(m.ExpectedHeaders) == 0 {
 		return
 	}
@@ -188,7 +223,10 @@ func (m *HttpProbe) checkResponseHeaders(response *http.Response, result monitor
 	}
 }
 
-func (m *HttpProbe) checkResponseBody(response *http.Response, result monitorresult.IMonitorResult, details *monitorresult.HttpResultDetails) {
+func (m *HTTPProbe) checkResponseBody(
+	response *http.Response,
+	result monitorresult.IMonitorResult,
+) {
 	if m.ExpectedBodyRegex == "" {
 		return
 	}
@@ -208,23 +246,23 @@ func (m *HttpProbe) checkResponseBody(response *http.Response, result monitorres
 		return
 	}
 
-	matches := regex.Match([]byte(responseBody))
+	matches := regex.MatchString(responseBody)
 	if !matches {
 		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
 		result.AddFailure(failureMsg)
 	}
 }
 
-// createRequest constructs an HTTP request based on the monitor's configuration
-func (m *HttpProbe) createRequest() (*http.Request, error) {
-	parsedUrl, err := url.Parse(m.URL)
+// createRequest constructs an HTTP request based on the monitor's configuration.
+func (m *HTTPProbe) createRequest() (*http.Request, error) {
+	parsedURL, err := url.Parse(m.URL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid URL: %s", m.URL)
 	}
 
 	req := http.Request{
 		Method: m.Method,
-		URL:    parsedUrl,
+		URL:    parsedURL,
 		Header: make(http.Header),
 	}
 
@@ -241,7 +279,7 @@ func (m *HttpProbe) createRequest() (*http.Request, error) {
 	return &req, nil
 }
 
-// Helper function to read response body while preserving it
+// Helper function to read response body while preserving it.
 func readResponseBody(response *http.Response) (string, error) {
 	if response.Body == nil {
 		return "", nil

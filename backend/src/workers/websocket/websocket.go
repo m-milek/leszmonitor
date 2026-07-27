@@ -93,7 +93,11 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 		_ = conn.Close()
 	}()
 
-	logger := log.FromContext(ctx).With().Str("remote_addr", conn.RemoteAddr().String()).Str("component", "websocket_worker").Logger()
+	logger := log.FromContext(ctx).
+		With().
+		Str("remote_addr", conn.RemoteAddr().String()).
+		Str("component", "websocket_worker").
+		Logger()
 	ctx = log.WithContext(ctx, &logger)
 
 	logger.Info().Any("remote_addr", conn.RemoteAddr()).Msg("WebSocket connection established")
@@ -136,7 +140,9 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 	for {
 		select {
 		case <-authCtx.Done():
-			logger.Warn().Any("remote_addr", conn.RemoteAddr()).Msg("WebSocket connection closed due to context cancellation")
+			logger.Warn().
+				Any("remote_addr", conn.RemoteAddr()).
+				Msg("WebSocket connection closed due to context cancellation")
 			return
 		case <-disconnected:
 			logger.Warn().Any("remote_addr", conn.RemoteAddr()).Msg("WebSocket connection closed by client")

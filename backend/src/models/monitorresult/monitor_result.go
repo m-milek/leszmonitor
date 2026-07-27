@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/consts"
 )
 
 type IMonitorResult interface {
@@ -29,25 +29,34 @@ type ErrorDetails struct {
 }
 
 type baseMonitorResult struct {
-	ID                  uuid.UUID     `json:"id"                  db:"id"`
-	MonitorID           uuid.UUID     `json:"monitorId"           db:"monitor_id"`
-	IsSuccess           bool          `json:"isSuccess"           db:"is_success"`
-	IsManuallyTriggered bool          `json:"isManuallyTriggered" db:"is_manually_triggered"`
-	DurationMs          int64         `json:"durationMs"          db:"duration_ms"`
-	ErrorDetailsJSON    []byte        `json:"-"                   db:"error_details"`
+	ID                  uuid.UUID     `json:"id"                     db:"id"`
+	MonitorID           uuid.UUID     `json:"monitorId"              db:"monitor_id"`
+	IsSuccess           bool          `json:"isSuccess"              db:"is_success"`
+	IsManuallyTriggered bool          `json:"isManuallyTriggered"    db:"is_manually_triggered"`
+	DurationMs          int64         `json:"durationMs"             db:"duration_ms"`
+	ErrorDetailsJSON    []byte        `json:"-"                      db:"error_details"`
 	ErrorDetails        *ErrorDetails `json:"errorDetails,omitempty" db:"-"`
-	CreatedAt           string        `json:"createdAt"           db:"created_at"`
+	CreatedAt           string        `json:"createdAt"              db:"created_at"`
 }
 
 type MonitorResult struct {
 	baseMonitorResult
+
 	MonitorType string                `json:"monitorType" db:"kind"`
 	DetailsJSON []byte                `json:"-"           db:"details"`
 	Details     IMonitorResultDetails `json:"details"     db:"-"`
 }
 
-func NewMonitorResult(monitorID uuid.UUID, monitorType consts.ProbeType, isSuccess bool, isManuallyTriggered bool, durationMs int64, errorMessage string, details IMonitorResultDetails) *MonitorResult {
-	res := &MonitorResult{
+func NewMonitorResult(
+	monitorID uuid.UUID,
+	monitorType consts.ProbeType,
+	isSuccess bool,
+	isManuallyTriggered bool,
+	durationMs int64,
+	errorMessage string,
+	details IMonitorResultDetails,
+) MonitorResult {
+	res := MonitorResult{
 		baseMonitorResult: baseMonitorResult{
 			ID:                  uuid.New(),
 			MonitorID:           monitorID,

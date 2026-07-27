@@ -48,7 +48,7 @@ func (r *projectRepository) loadMembers(ctx context.Context, project *models.Pro
 }
 
 func (r *projectRepository) InsertProject(ctx context.Context, project *models.Project) error {
-	_, err := dbWrap(ctx, "InsertProject", func() (*any, error) {
+	_, err := dbWrap(ctx, "InsertProject", func() (struct{}, error) {
 		if project.ID == uuid.Nil {
 			project.ID = uuid.New()
 		}
@@ -59,9 +59,9 @@ func (r *projectRepository) InsertProject(ctx context.Context, project *models.P
 			project.ID, project.Slug, project.Name, project.Description)
 		if err := row.Scan(&projectID); err != nil {
 			if isUniqueViolation(err) {
-				return nil, ErrAlreadyExists
+				return struct{}{}, ErrAlreadyExists
 			}
-			return nil, err
+			return struct{}{}, err
 		}
 		project.ID = projectID
 
@@ -70,10 +70,10 @@ func (r *projectRepository) InsertProject(ctx context.Context, project *models.P
 			`INSERT INTO user_projects (project_id, user_id, role) VALUES ($1, $2, $3)`,
 			projectID, project.Members[0].ID, project.Members[0].Role)
 		if err != nil {
-			return nil, err
+			return struct{}{}, err
 		}
 
-		return nil, nil
+		return struct{}{}, nil
 	})
 	if isUniqueViolation(err) {
 		return ErrAlreadyExists
@@ -208,7 +208,11 @@ func (r *projectRepository) DeleteProject(ctx context.Context, projectSlug strin
 	})
 }
 
-func (r *projectRepository) AddMemberToProject(ctx context.Context, projectSlug string, member *models.ProjectMember) (bool, error) {
+func (r *projectRepository) AddMemberToProject(
+	ctx context.Context,
+	projectSlug string,
+	member *models.ProjectMember,
+) (bool, error) {
 	return dbWrap(ctx, "AddMemberToProject", func() (bool, error) {
 		var projectID uuid.UUID
 		err := r.pool.QueryRowxContext(ctx,
@@ -237,7 +241,11 @@ func (r *projectRepository) AddMemberToProject(ctx context.Context, projectSlug 
 	})
 }
 
-func (r *projectRepository) RemoveMemberFromProject(ctx context.Context, projectSlug string, userID uuid.UUID) (bool, error) {
+func (r *projectRepository) RemoveMemberFromProject(
+	ctx context.Context,
+	projectSlug string,
+	userID uuid.UUID,
+) (bool, error) {
 	return dbWrap(ctx, "RemoveMemberFromProject", func() (bool, error) {
 		var projectID uuid.UUID
 		err := r.pool.QueryRowxContext(ctx,
@@ -266,7 +274,12 @@ func (r *projectRepository) RemoveMemberFromProject(ctx context.Context, project
 	})
 }
 
-func (r *projectRepository) ChangeMemberRole(ctx context.Context, projectSlug string, userID uuid.UUID, newRole models.Role) (bool, error) {
+func (r *projectRepository) ChangeMemberRole(
+	ctx context.Context,
+	projectSlug string,
+	userID uuid.UUID,
+	newRole models.Role,
+) (bool, error) {
 	return dbWrap(ctx, "ChangeMemberRole", func() (bool, error) {
 		var projectID uuid.UUID
 		err := r.pool.QueryRowxContext(ctx,

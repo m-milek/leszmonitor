@@ -13,7 +13,11 @@ import (
 
 type IAuditLogRepository interface {
 	InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error)
-	GetAuditLogEntries(ctx context.Context, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, error)
+	GetAuditLogEntries(
+		ctx context.Context,
+		filter security.AuditLogFilter,
+		pagination util.Pagination,
+	) ([]security.AuditLogEntry, error)
 }
 
 type auditLogRepository struct {
@@ -28,10 +32,21 @@ func newAuditLogRepository(base baseRepository) IAuditLogRepository {
 
 func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
 	return dbWrap(ctx, "InsertAuditLogEntry", func() (any, error) {
-		_, err := a.pool.ExecContext(ctx,
+		_, err := a.pool.ExecContext(
+			ctx,
 			`INSERT INTO audit_logs (id, username, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-			entry.ID, entry.Username, entry.ProjectID, entry.ResourceID, entry.Action, entry.IsSuccess, entry.Summary, entry.Before, entry.After, entry.TraceID, entry.CreatedAt,
+			entry.ID,
+			entry.Username,
+			entry.ProjectID,
+			entry.ResourceID,
+			entry.Action,
+			entry.IsSuccess,
+			entry.Summary,
+			entry.Before,
+			entry.After,
+			entry.TraceID,
+			entry.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -40,12 +55,16 @@ func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry secur
 	})
 }
 
-func (a auditLogRepository) GetAuditLogEntries(ctx context.Context, filter security.AuditLogFilter, pagination util.Pagination) ([]security.AuditLogEntry, error) {
+func (a auditLogRepository) GetAuditLogEntries(
+	ctx context.Context,
+	filter security.AuditLogFilter,
+	pagination util.Pagination,
+) ([]security.AuditLogEntry, error) {
 	return dbWrap(ctx, "GetAuditLogEntries", func() ([]security.AuditLogEntry, error) {
 		var (
 			entries    []security.AuditLogEntry
 			conditions []string
-			args       []interface{}
+			args       []any
 		)
 		if filter.UserID != nil {
 			conditions = append(conditions, "user_id = ?")

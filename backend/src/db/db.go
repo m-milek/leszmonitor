@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/appconfig"
+	config "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/log"
 
-	// Blank import to initialize the SQLite driver
+	// Blank import to initialize the SQLite driver.
 	_ "modernc.org/sqlite"
 )
 
@@ -45,10 +45,10 @@ type DB interface {
 	Close()
 }
 
-// DBClient implements DB using an sqlx DB.
-type DBClient struct {
-	sqlxDB *sqlx.DB
+// Client implements DB using an sqlx DB.
+type Client struct {
 	dbPool
+	sqlxDB *sqlx.DB
 	// cached repositories to avoid re-allocation on every getter call
 	users          IUserRepository
 	monitors       IMonitorRepository
@@ -76,11 +76,11 @@ func newBaseRepository(pool sqlx.ExtContext) baseRepository {
 	}
 }
 
-// newDBClientFromPool creates a DBClient wired to the given sqlx.ExtContext handle.
+// newClientFromPool creates a Client wired to the given sqlx.ExtContext handle.
 // Used by both New (with *sqlx.DB) and WithTx (with *sqlx.Tx).
-func newDBClientFromPool(pool sqlx.ExtContext) *DBClient {
+func newClientFromPool(pool sqlx.ExtContext) *Client {
 	base := newBaseRepository(pool)
-	return &DBClient{
+	return &Client{
 		dbPool:         dbPool{pool: pool},
 		users:          newUserRepository(base),
 		monitors:       newMonitorRepository(base),
@@ -91,13 +91,13 @@ func newDBClientFromPool(pool sqlx.ExtContext) *DBClient {
 }
 
 // New creates a new DB client using the provided DSN.
-func New(ctx context.Context, dsn string) (*DBClient, error) {
+func New(ctx context.Context, dsn string) (*Client, error) {
 	pool, err := sqlx.ConnectContext(ctx, "sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	c := newDBClientFromPool(pool)
+	c := newClientFromPool(pool)
 	c.sqlxDB = pool
 
 	if err := c.initSchema(ctx, pool); err != nil {
@@ -111,7 +111,7 @@ func New(ctx context.Context, dsn string) (*DBClient, error) {
 }
 
 // initSchema reads the database schema from a file and executes it to set up the database structure.
-func (c *DBClient) initSchema(ctx context.Context, pool *sqlx.DB) error {
+func (c *Client) initSchema(ctx context.Context, pool *sqlx.DB) error {
 	logger := log.FromContext(ctx)
 	dbSchemaContent, err := dbSchema.ReadFile("schema.sql")
 	if err != nil {
@@ -128,7 +128,7 @@ func (c *DBClient) initSchema(ctx context.Context, pool *sqlx.DB) error {
 }
 
 // Close closes the underlying connection pool. No-op for transaction-scoped clients.
-func (c *DBClient) Close() {
+func (c *Client) Close() {
 	if c.sqlxDB != nil {
 		c.sqlxDB.Close()
 	}
@@ -177,15 +177,15 @@ func dbWrap[T any](ctx context.Context, operationName string, operation func() (
 
 // Repository getters (return interfaces for mocking)
 
-func (c *DBClient) Users() IUserRepository                   { return c.users }
-func (c *DBClient) Monitors() IMonitorRepository             { return c.monitors }
-func (c *DBClient) Projects() IProjectRepository             { return c.projects }
-func (c *DBClient) MonitorResults() IMonitorResultRepository { return c.monitorResults }
-func (c *DBClient) AuditLog() IAuditLogRepository            { return c.auditLog }
+func (c *Client) Users() IUserRepository                   { return c.users }
+func (c *Client) Monitors() IMonitorRepository             { return c.monitors }
+func (c *Client) Projects() IProjectRepository             { return c.projects }
+func (c *Client) MonitorResults() IMonitorResultRepository { return c.monitorResults }
+func (c *Client) AuditLog() IAuditLogRepository            { return c.auditLog }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)
-// --------------------------
+// --------------------------.
 var (
 	instance DB
 	instMu   sync.RWMutex
@@ -218,7 +218,7 @@ func InitFromEnv(ctx context.Context) error {
 
 	logger.Info().Msg("Connecting to SQLite...")
 
-	uri := os.Getenv(config.SqliteDbPath)
+	uri := os.Getenv(config.SqliteDBPath)
 	if uri == "" {
 		logger.Fatal().Msg("SQLite DB path is not defined")
 	}

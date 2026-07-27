@@ -7,6 +7,7 @@ import (
 )
 
 func TestIDFromString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -43,7 +44,9 @@ func TestIDFromString(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := SlugFromString(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})

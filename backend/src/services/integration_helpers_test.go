@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -18,8 +17,8 @@ import (
 func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *UserService, *models.User) {
 	ctx := context.Background()
 
-	os.Setenv("JWT_SECRET", "test_secret_key_1234567890123456")
-	os.Setenv("JWT_EXPIRY_HOURS", "24")
+	t.Setenv("JWT_SECRET", "test_secret_key_1234567890123456")
+	t.Setenv("JWT_EXPIRY_HOURS", "24")
 
 	// Use a temporary directory for the sqlite file
 	tempDir := t.TempDir()
@@ -67,7 +66,9 @@ func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *User
 	return ctx, projectService, userService, user
 }
 
-func setupAuditLogIntegrationTest(t *testing.T) (context.Context, AuditLogService, *ProjectService, *UserService, *models.User) {
+func setupAuditLogIntegrationTest(
+	t *testing.T,
+) (context.Context, AuditLogService, *ProjectService, *UserService, *models.User) {
 	ctx, projectService, userService, user := setupIntegrationTest(t)
 
 	auditLogService := NewAuditLogService(AuditLogServiceDeps{
@@ -77,7 +78,9 @@ func setupAuditLogIntegrationTest(t *testing.T) (context.Context, AuditLogServic
 	return ctx, auditLogService, projectService, userService, user
 }
 
-func setupMonitorResultsIntegrationTest(t *testing.T) (context.Context, *MonitorResultsService, *ProjectService, *UserService, *models.User) {
+func setupMonitorResultsIntegrationTest(
+	t *testing.T,
+) (context.Context, *MonitorResultsService, *ProjectService, *UserService, *models.User) {
 	ctx, projectService, userService, user := setupIntegrationTest(t)
 
 	service := NewMonitorResultsService(MonitorResultsServiceDeps{
@@ -87,7 +90,9 @@ func setupMonitorResultsIntegrationTest(t *testing.T) (context.Context, *Monitor
 	return ctx, service, projectService, userService, user
 }
 
-func setupMonitorIntegrationTest(t *testing.T) (context.Context, *MonitorService, *ProjectService, *UserService, *models.User) {
+func setupMonitorIntegrationTest(
+	t *testing.T,
+) (context.Context, *MonitorService, *ProjectService, *UserService, *models.User) {
 	ctx, projectService, userService, user := setupIntegrationTest(t)
 
 	monitorService := NewMonitorService(MonitorServiceDeps{
@@ -97,13 +102,13 @@ func setupMonitorIntegrationTest(t *testing.T) (context.Context, *MonitorService
 	return ctx, monitorService, projectService, userService, user
 }
 
-// insertTestMonitor is a helper to directly insert a monitor and return it
+// insertTestMonitor is a helper to directly insert a monitor and return it.
 func insertTestMonitor(t *testing.T, ctx context.Context, projectID uuid.UUID) *monitors.Monitor {
 	payload := monitors.Monitor{
 		Name:        "Test Monitor " + uuid.New().String(),
 		Description: "Testing monitor results",
 		Interval:    60,
-		Type:        consts.HttpConfigType,
+		Type:        consts.HTTPConfigType,
 		ProbeConfig: "{}",
 	}
 	payload.GenerateSlug()

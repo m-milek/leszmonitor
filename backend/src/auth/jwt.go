@@ -9,13 +9,14 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/appconfig"
+	config "github.com/m-milek/leszmonitor/appconfig"
 )
 
 // JwtClaims represents the claims stored in a Leszmonitor JWT token.
 // It includes standard claims and a custom Username field.
 type JwtClaims struct {
 	jwt.MapClaims
+
 	Username        string `json:"username"`
 	IsInstanceAdmin bool   `json:"is_instance_admin"`
 	Exp             int64  `json:"exp"`
@@ -23,9 +24,9 @@ type JwtClaims struct {
 
 // UserClaims extends standard JWT claims with custom fields.
 type UserClaims struct {
+	jwt.RegisteredClaims
 	Username        string `json:"username"`
 	IsInstanceAdmin bool   `json:"is_instance_admin"`
-	jwt.RegisteredClaims
 }
 
 // jwtFromRequest extracts the JWT token from the Authorization header of the HTTP request.
@@ -45,7 +46,7 @@ func jwtFromRequest(r *http.Request) (string, error) {
 
 func decodeJwtClaims(jwtString string) (JwtClaims, error) {
 	claims := JwtClaims{}
-	token, err := jwt.ParseWithClaims(jwtString, &claims, func(_ *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(jwtString, &claims, func(_ *jwt.Token) (any, error) {
 		return []byte(os.Getenv(config.JwtSecret)), nil
 	})
 
@@ -68,7 +69,7 @@ func ValidateJwt(token string) (*UserClaims, error) {
 
 	claims := &UserClaims{}
 
-	parsedJwt, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+	parsedJwt, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}

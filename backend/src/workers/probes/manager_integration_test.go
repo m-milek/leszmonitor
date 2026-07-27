@@ -1,7 +1,6 @@
 package probes
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -12,13 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestIntegration_ProbesManager_Lifecycle(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func TestIntegration_Manager_Lifecycle(t *testing.T) {
+	ctx := t.Context()
 
 	_, realDB, monitor := setupFullDB(t)
 
-	manager := NewProbesManager(realDB)
+	manager := NewManager(realDB)
 	go manager.Run(ctx)
 
 	// Wait for DB loading to finish

@@ -12,11 +12,11 @@ import (
 
 // User represents a user in the system.
 type User struct {
-	ID              uuid.UUID `json:"id" db:"id"`
-	Username        string    `json:"username" db:"username"`
-	PasswordHash    string    `json:"-" db:"password_hash"`
-	IsInstanceAdmin bool      `json:"isInstanceAdmin" db:"is_instance_admin"`
 	util.Timestamps
+	ID              uuid.UUID `json:"id"              db:"id"`
+	Username        string    `json:"username"        db:"username"`
+	PasswordHash    string    `json:"-"               db:"password_hash"`
+	IsInstanceAdmin bool      `json:"isInstanceAdmin" db:"is_instance_admin"`
 }
 
 // NewUser creates a new User instance with the provided username, password, and email.
@@ -49,6 +49,7 @@ func (u *User) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		*Alias
+
 		IsInstanceAdmin bool `json:"isInstanceAdmin"`
 	}{
 		Alias:           (*Alias)(u),
