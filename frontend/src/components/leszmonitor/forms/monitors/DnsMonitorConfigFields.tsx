@@ -1,5 +1,5 @@
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
 import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
 import {
@@ -30,7 +30,7 @@ export function DnsMonitorConfigFields({
       <form.Field
         name="probeConfig.hostname"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Hostname</FieldLabel>
             <LMInputField
               name={field.name}
@@ -47,7 +47,7 @@ export function DnsMonitorConfigFields({
       <form.Field
         name="probeConfig.dnsServer"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>DNS Server Address</FieldLabel>
             <LMInputField
               name={field.name}
@@ -64,7 +64,7 @@ export function DnsMonitorConfigFields({
       <form.Field
         name="probeConfig.recordType"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Record Type</FieldLabel>
             <LMSelect
               id={field.name}
@@ -85,8 +85,8 @@ export function DnsMonitorConfigFields({
       <form.Field
         name="probeConfig.expectedRecordValues"
         children={(field) => (
-          <Field>
-            <FieldLabel>Expected Record Values</FieldLabel>
+          <Field id={field.name}>
+            <FieldTitle>Expected Record Values</FieldTitle>
             <LMListInput
               name={field.name}
               value={field.state.value}

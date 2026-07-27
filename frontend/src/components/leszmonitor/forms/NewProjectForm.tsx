@@ -1,5 +1,5 @@
 import z from "zod";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { useState } from "react";
 import { isSlugValid, slugFromString } from "@/lib/slugFromString.ts";
 import { useForm } from "@tanstack/react-form";
@@ -78,7 +78,7 @@ export function NewProjectForm({
             },
           }}
           children={(field) => (
-            <Field>
+            <Field id={field.name}>
               <FieldLabel>Project Name</FieldLabel>
               <LMInputField
                 name={field.name}
@@ -92,7 +92,7 @@ export function NewProjectForm({
           )}
         />
         <Flex direction="row" className="gap-2 items-center">
-          <FieldLabel>Use Custom Slug</FieldLabel>
+          <FieldTitle>Use Custom Slug</FieldTitle>
           <Switch
             checked={useCustomSlug}
             onCheckedChange={onUseCustomSlugChanged}
@@ -102,7 +102,7 @@ export function NewProjectForm({
         <form.Field
           name="slug"
           children={(field) => (
-            <Field>
+            <Field id={field.name}>
               <FieldLabel>Slug</FieldLabel>
               <LMInputField
                 name={field.name}
@@ -119,7 +119,7 @@ export function NewProjectForm({
         <form.Field
           name="description"
           children={(field) => (
-            <Field>
+            <Field id={field.name}>
               <FieldLabel>Description (Optional)</FieldLabel>
               <LMTextareaField
                 name={field.name}

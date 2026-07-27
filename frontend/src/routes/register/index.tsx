@@ -116,8 +116,8 @@ function RegisterComponent() {
                 <form.Field
                   name="username"
                   children={(field) => (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                    <Field id={field.name}>
+                      <FieldLabel>Username</FieldLabel>
                       <LMInputField
                         name={field.name}
                         type="text"
@@ -132,8 +132,8 @@ function RegisterComponent() {
                 <form.Field
                   name="password"
                   children={(field) => (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                    <Field id={field.name}>
+                      <FieldLabel>Password</FieldLabel>
                       <LMInputField
                         name={field.name}
                         type="password"
@@ -149,8 +149,8 @@ function RegisterComponent() {
                 <form.Field
                   name="passwordConfirm"
                   children={(field) => (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>
+                    <Field id={field.name}>
+                      <FieldLabel>
                         Confirm your password
                       </FieldLabel>
                       <LMInputField

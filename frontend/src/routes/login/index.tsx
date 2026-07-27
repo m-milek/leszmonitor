@@ -102,8 +102,8 @@ function RouteComponent() {
                 <form.Field
                   name="username"
                   children={(field) => (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                    <Field id={field.name}>
+                      <FieldLabel>Username</FieldLabel>
                       <LMInputField
                         name={field.name}
                         type="text"
@@ -118,8 +118,8 @@ function RouteComponent() {
                 <form.Field
                   name="password"
                   children={(field) => (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                    <Field id={field.name}>
+                      <FieldLabel>Password</FieldLabel>
                       <LMInputField
                         name={field.name}
                         type="password"

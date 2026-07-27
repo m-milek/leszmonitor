@@ -61,8 +61,8 @@ export function AddMemberForm({
           name="username"
           children={(field) => {
             return (
-              <Field>
-                <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+              <Field id={field.name}>
+                <FieldLabel>Username</FieldLabel>
                 <LMCombobox
                   items={validUsernames}
                   value={field.state.value}
@@ -82,8 +82,8 @@ export function AddMemberForm({
           name="role"
           children={(field) => {
             return (
-              <Field>
-                <FieldLabel htmlFor={field.name}>Role</FieldLabel>
+              <Field id={field.name}>
+                <FieldLabel>Role</FieldLabel>
                 <LMSelect
                   value={field.state.value}
                   onValueChange={(value) =>

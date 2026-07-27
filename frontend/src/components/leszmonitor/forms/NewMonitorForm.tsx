@@ -7,7 +7,7 @@ import {
   type MonitorType,
   newMonitorSchemaDefaultValues,
 } from "@/lib/types.ts";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
@@ -123,7 +123,7 @@ export function MonitorForm({
             }}
             children={(field) => {
               return (
-                <Field>
+                <Field id={field.name}>
                   <FieldLabel>Type</FieldLabel>
                   <LMSelect
                     id={field.name}
@@ -153,7 +153,7 @@ export function MonitorForm({
               },
             }}
             children={(field) => (
-              <Field>
+              <Field id={field.name}>
                 <FieldLabel>Name</FieldLabel>
                 <LMInputField
                   name={field.name}
@@ -167,7 +167,7 @@ export function MonitorForm({
             )}
           />
           <Flex direction="row" className="gap-2 items-center">
-            <FieldLabel>Use Custom Slug</FieldLabel>
+            <FieldTitle>Use Custom Slug</FieldTitle>
             <Switch
               checked={useCustomSlug}
               onCheckedChange={onUseCustomSlugChanged}
@@ -177,7 +177,7 @@ export function MonitorForm({
           <form.Field
             name="slug"
             children={(field) => (
-              <Field>
+              <Field id={field.name}>
                 <FieldLabel>Slug</FieldLabel>
                 <LMInputField
                   name={field.name}
@@ -193,7 +193,7 @@ export function MonitorForm({
           <form.Field
             name="description"
             children={(field) => (
-              <Field>
+              <Field id={field.name}>
                 <FieldLabel>Description</FieldLabel>
                 <LMTextareaField
                   name={field.name}
@@ -208,7 +208,7 @@ export function MonitorForm({
           <form.Field
             name="interval"
             children={(field) => (
-              <Field>
+              <Field id={field.name}>
                 <FieldLabel>Interval (s)</FieldLabel>
                 <LMInputField
                   name={field.name}
