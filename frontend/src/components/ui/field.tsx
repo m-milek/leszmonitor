@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { createContext, useContext, useMemo } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -76,19 +76,24 @@ const fieldVariants = cva(
   }
 )
 
+const FieldContext = createContext<string | undefined>(undefined)
+
 function Field({
   className,
   orientation = "vertical",
+  id,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
   return (
-    <div
-      role="group"
-      data-slot="field"
-      data-orientation={orientation}
-      className={cn(fieldVariants({ orientation }), className)}
-      {...props}
-    />
+    <FieldContext.Provider value={id}>
+      <div
+        role="group"
+        data-slot="field"
+        data-orientation={orientation}
+        className={cn(fieldVariants({ orientation }), className)}
+        {...props}
+      />
+    </FieldContext.Provider>
   )
 }
 
@@ -107,11 +112,14 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
 
 function FieldLabel({
   className,
+  htmlFor,
   ...props
 }: React.ComponentProps<typeof Label>) {
+  const fieldId = useContext(FieldContext)
   return (
     <Label
       data-slot="field-label"
+      htmlFor={htmlFor ?? fieldId}
       className={cn(
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border [&>*]:data-[slot=field]:p-4",

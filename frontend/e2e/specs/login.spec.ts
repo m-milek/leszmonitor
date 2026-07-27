@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import test from "../fixtures/leszmonitorFixture";
+import test from "../fixtures/leszmonitorFixture.ts";
 
 test.describe("Login", () => {
   test("Displays app title", async ({ page }) => {
@@ -9,6 +9,7 @@ test.describe("Login", () => {
   });
 
   test("Good credentials allow to log in", async ({ page, auth }) => {
+    await page.context().clearCookies();
     await page.goto("/login");
 
     await page.getByLabel("Username").fill(auth.username);
@@ -20,6 +21,7 @@ test.describe("Login", () => {
   });
 
   test("Bad credentials don't log in", async ({ page }) => {
+    await page.context().clearCookies();
     await page.goto("/login");
 
     await page.getByLabel("Username").fill("wrong");

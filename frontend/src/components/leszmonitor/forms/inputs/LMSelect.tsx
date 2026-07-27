@@ -37,6 +37,7 @@ export function LMSelect(props: Readonly<LMSelectProps>) {
         message={props.errorMessage ?? ""}
       >
         <SelectTrigger
+          id={props.id}
           className={cn(
             props.className,
             props.isInvalid && "border-destructive focus:ring-destructive",

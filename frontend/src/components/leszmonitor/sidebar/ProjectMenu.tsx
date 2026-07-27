@@ -62,7 +62,7 @@ export const ProjectMenu = ({ projects }: ProjectMenuProps) => {
       direction="column"
     >
       <Select value={project?.slug ?? ""} onValueChange={onProjectSelect}>
-        <SelectTrigger className="w-full" withClearButton>
+        <SelectTrigger id="project-selector" className="w-full" withClearButton>
           <SelectValue placeholder="Select project" />
         </SelectTrigger>
         <SelectContent className="w-full" position="popper">

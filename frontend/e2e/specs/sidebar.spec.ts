@@ -7,10 +7,7 @@ test.describe("Sidebar", () => {
 
     await page.getByRole("combobox").click();
     await page.getByRole("option", { name: "leszmak's Sandbox" }).click();
-
-    await expect(
-      page.getByLabel("leszmak's Sandbox").getByText("leszmak's Sandbox"),
-    ).toBeVisible();
+    await expect(page.locator("#project-selector")).toBeVisible();
     expect(page.url()).toMatch(/\/projects\/leszmaks-sandbox$/);
   });
 

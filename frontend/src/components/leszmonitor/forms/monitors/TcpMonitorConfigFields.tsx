@@ -25,7 +25,7 @@ export function TcpMonitorConfigFields({
       <form.Field
         name="probeConfig.host"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Host</FieldLabel>
             <LMInputField
               name={field.name}
@@ -42,7 +42,7 @@ export function TcpMonitorConfigFields({
       <form.Field
         name="probeConfig.port"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Port</FieldLabel>
             <LMInputField
               name={field.name}
@@ -61,7 +61,7 @@ export function TcpMonitorConfigFields({
       <form.Field
         name="probeConfig.protocol"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Protocol</FieldLabel>
             <LMSelect
               id={field.name}
@@ -82,7 +82,7 @@ export function TcpMonitorConfigFields({
       <form.Field
         name="probeConfig.timeout"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Timeout (ms)</FieldLabel>
             <LMInputField
               name={field.name}
@@ -101,7 +101,7 @@ export function TcpMonitorConfigFields({
       <form.Field
         name="probeConfig.retryCount"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Retry Count</FieldLabel>
             <LMInputField
               name={field.name}

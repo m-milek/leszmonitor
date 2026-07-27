@@ -1,5 +1,5 @@
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
 import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
 import { LMTextareaField } from "@/components/leszmonitor/forms/inputs/LMTextareaField.tsx";
@@ -35,7 +35,7 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.url"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>URL</FieldLabel>
             <LMInputField
               name={field.name}
@@ -52,7 +52,7 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.method"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Method</FieldLabel>
             <LMSelect
               id={field.name}
@@ -71,7 +71,7 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.body"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Request Body</FieldLabel>
             <LMTextareaField
               name={field.name}
@@ -89,8 +89,8 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.headers"
         children={(field) => (
-          <Field>
-            <FieldLabel>Request Headers</FieldLabel>
+          <Field id={field.name}>
+            <FieldTitle>Request Headers</FieldTitle>
             <LMKeyValueInput
               name={field.name}
               value={field.state.value}
@@ -109,9 +109,10 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.expectedStatusCodes"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Expected Status Codes</FieldLabel>
             <LMMultiSelect
+              id={field.name}
               name={field.name}
               options={statusCodes}
               value={
@@ -132,7 +133,7 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.expectedResponseTimeMs"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Expected Response Time (ms)</FieldLabel>
             <LMInputField
               name={field.name}
@@ -155,7 +156,7 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.expectedBodyRegex"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <FieldLabel>Expected Body Pattern (RegExp)</FieldLabel>
             <LMInputField
               name={field.name}
@@ -172,8 +173,8 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.expectedHeaders"
         children={(field) => (
-          <Field>
-            <FieldLabel>Expected Response Headers</FieldLabel>
+          <Field id={field.name}>
+            <FieldTitle>Expected Response Headers</FieldTitle>
             <LMKeyValueInput
               name={field.name}
               value={field.state.value}
@@ -192,7 +193,7 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.saveResponseBody"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <Flex direction="row" className="justify-between">
               <FieldLabel>Save Response Body</FieldLabel>
               <LMSwitch
@@ -209,7 +210,7 @@ export function HttpMonitorConfigFields({
       <form.Field
         name="probeConfig.saveResponseHeaders"
         children={(field) => (
-          <Field>
+          <Field id={field.name}>
             <Flex direction="row" className="justify-between">
               <FieldLabel>Save Response Headers</FieldLabel>
               <LMSwitch

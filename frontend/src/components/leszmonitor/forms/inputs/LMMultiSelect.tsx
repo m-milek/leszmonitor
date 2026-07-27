@@ -14,6 +14,7 @@ import {
 import React from "react";
 
 export interface LMMultiSelectProps {
+  id?: string;
   value?: string[];
   onChange: (value: string[]) => void;
   options: string[];
@@ -45,6 +46,7 @@ export function LMMultiSelect(props: Readonly<LMMultiSelectProps>) {
                   <ComboboxChip key={value}>{value}</ComboboxChip>
                 ))}
                 <ComboboxChipsInput
+                  id={props.id}
                   placeholder={
                     shouldDisplayPlaceholder ? props.placeholder : ""
                   }
