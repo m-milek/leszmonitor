@@ -43,6 +43,7 @@ const registerFormSchema = z
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Passwords don't match",
+    path: ["passwordConfirm"],
   });
 
 function RegisterComponent() {

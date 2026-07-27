@@ -17,7 +17,7 @@ test.describe("Sidebar", () => {
   test("Home icon navigates to project list", async ({ page }) => {
     await page.goto("/projects/leszmaks-sandbox");
 
-    await page.getByRole("button", { name: "Home" }).click();
+    await page.getByRole("link", { name: "Home" }).click();
 
     await expect(page.getByText("Your Projects")).toBeVisible();
     expect(page.url()).toMatch(/\/projects$/);
