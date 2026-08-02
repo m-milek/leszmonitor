@@ -14,19 +14,21 @@ import (
 type AuditLogAction string
 
 const (
-	ActionCreateProject  AuditLogAction = "project.create"
-	ActionUpdateProject  AuditLogAction = "project.update"
-	ActionDeleteProject  AuditLogAction = "project.delete"
-	ActionCreateMonitor  AuditLogAction = "monitor.create"
-	ActionUpdateMonitor  AuditLogAction = "monitor.update"
-	ActionDeleteMonitor  AuditLogAction = "monitor.delete"
-	ActionCreateUser     AuditLogAction = "user.create"
-	ActionUpdateUser     AuditLogAction = "user.update"
-	ActionDeleteUser     AuditLogAction = "user.delete"
-	ActionLogin          AuditLogAction = "auth.login"
-	ActionLogout         AuditLogAction = "auth.logout"
-	ActionFailedLogin    AuditLogAction = "auth.failed_login"
-	ActionPasswordChange AuditLogAction = "auth.password_change"
+	ActionCreateProject       AuditLogAction = "project.create"
+	ActionUpdateProject       AuditLogAction = "project.update"
+	ActionDeleteProject       AuditLogAction = "project.delete"
+	ActionAddProjectMember    AuditLogAction = "project.member.add"
+	ActionRemoveProjectMember AuditLogAction = "project.member.remove"
+	ActionUpdateProjectMember AuditLogAction = "project.member.update"
+	ActionCreateMonitor       AuditLogAction = "monitor.create"
+	ActionUpdateMonitor       AuditLogAction = "monitor.update"
+	ActionDeleteMonitor       AuditLogAction = "monitor.delete"
+	ActionCreateUser          AuditLogAction = "user.create"
+	ActionUpdateUser          AuditLogAction = "user.update"
+	ActionDeleteUser          AuditLogAction = "user.delete"
+	ActionLogin               AuditLogAction = "auth.login"
+	ActionFailedLogin         AuditLogAction = "auth.failed_login"
+	ActionPasswordChange      AuditLogAction = "auth.password_change"
 )
 
 type AuditLogEntry struct {

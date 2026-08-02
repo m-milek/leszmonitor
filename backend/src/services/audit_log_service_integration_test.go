@@ -73,6 +73,6 @@ func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
 
 		entries, svcErr := auditLogService.GetEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.Nil(t, svcErr)
-		require.Len(t, entries, 2)
+		require.Len(t, entries, 3)
 	})
 }

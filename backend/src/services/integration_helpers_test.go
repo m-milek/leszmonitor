@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/api/authorization"
+	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/consts"
@@ -62,6 +64,10 @@ func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *User
 	user, svcErr := userService.GetUserByUsername(ctx, "integration_user")
 	require.Nil(t, svcErr)
 	require.NotNil(t, user)
+
+	ctx = authorization.SetUserInContext(ctx, &auth.UserClaims{
+		Username: user.Username,
+	})
 
 	return ctx, projectService, userService, user
 }

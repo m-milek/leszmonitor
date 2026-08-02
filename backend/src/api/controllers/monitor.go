@@ -45,7 +45,7 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
 		return
 	}
-	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
@@ -55,7 +55,7 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, projectSlug, userClaims.Username, monitor)
+	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, projectSlug, monitor)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
@@ -72,12 +72,11 @@ func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
-
-	err := c.service.DeleteMonitor(ctx, userClaims.Username, monitorID)
+	err := c.service.DeleteMonitor(ctx, monitorID)
 	if err != nil {
 		util.RespondError(ctx, w, err.Code, err.Err)
 		return
@@ -130,12 +129,12 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
-	serviceErr := c.service.UpdateMonitor(ctx, userClaims.Username, monitor)
+	serviceErr := c.service.UpdateMonitor(ctx, monitor)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
@@ -241,14 +240,13 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok = authorization.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
 	serviceErr := c.service.UpdateMonitorStateByID(
 		ctx,
-		userClaims.Username,
 		monitorUUID,
 		monitors.MonitorState(payload.NewState),
 	)
