@@ -18,6 +18,7 @@ type IAuditLogRepository interface {
 		filter security.AuditLogFilter,
 		pagination util.Pagination,
 	) ([]security.AuditLogEntry, error)
+	Record(ctx context.Context, params security.AuditLogParams) error
 }
 
 type auditLogRepository struct {
@@ -53,6 +54,15 @@ func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry secur
 		}
 		return nil, nil
 	})
+}
+
+func (a auditLogRepository) Record(ctx context.Context, params security.AuditLogParams) error {
+	entry, err := security.NewAuditLogEntry(ctx, params)
+	if err != nil {
+		return err
+	}
+	_, err = a.InsertAuditLogEntry(ctx, entry)
+	return err
 }
 
 func (a auditLogRepository) GetAuditLogEntries(

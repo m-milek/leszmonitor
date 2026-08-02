@@ -3,10 +3,13 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/security"
 )
 
 type IProjectService interface {
@@ -101,15 +104,28 @@ func (s *ProjectService) CreateProject(
 		return nil, NewBadRequestError("invalid project data: %w", err)
 	}
 
-	var created *models.Project
-	if txErr := s.db.WithTx(ctx, func(tx db.DB) error {
+	created, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Project, *security.AuditLogParams, error) {
 		if err := tx.Projects().InsertProject(ctx, project); err != nil {
-			return err
+			return nil, nil, err
 		}
-		var err error
-		created, err = tx.Projects().GetProjectBySlug(ctx, project.Slug)
-		return err
-	}); txErr != nil {
+
+		createdProject, err := tx.Projects().GetProjectBySlug(ctx, project.Slug)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		params := &security.AuditLogParams{
+			Username:  &ownerUsername,
+			ProjectID: &createdProject.ID,
+			Action:    security.ActionCreateProject,
+			IsSuccess: true,
+			Summary:   fmt.Sprintf("Project %s created", createdProject.Name),
+			After:     createdProject,
+		}
+
+		return createdProject, params, nil
+	})
+	if txErr != nil {
 		if errors.Is(txErr, db.ErrAlreadyExists) {
 			logger.Error().Str("slug", project.Slug).Msg("Project with slug already exists")
 			return nil, NewConflictError("project with slug %s already exists", project.Slug)
@@ -177,15 +193,44 @@ func (s *ProjectService) GetProjects(
 func (s *ProjectService) DeleteProject(ctx context.Context, projectSlug string) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "DeleteProject")
 
+	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	if !ok {
+		logger.Error().Msg("User claims not found in context")
+		return NewUnauthorizedError("user claims not found in context")
+	}
+
 	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
 		return getErr
 	}
 
-	deleted, err := s.db.Projects().DeleteProject(ctx, project.Slug)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to delete project")
-		return NewInternalError("failed to delete project: %w", err)
+	deleted, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (bool, *security.AuditLogParams, error) {
+		deleted, err := tx.Projects().DeleteProject(ctx, project.Slug)
+		if err != nil {
+			return false, nil, err
+		}
+		if !deleted {
+			return false, nil, db.ErrNotFound
+		}
+
+		params := &security.AuditLogParams{
+			Username:  &userClaims.Username,
+			ProjectID: &project.ID,
+			Action:    security.ActionDeleteProject,
+			IsSuccess: true,
+			Summary:   fmt.Sprintf("Project %s deleted", project.Name),
+			Before:    project,
+		}
+
+		return true, params, nil
+	})
+	if txErr != nil {
+		if errors.Is(txErr, db.ErrNotFound) {
+			logger.Error().Str("projectID", project.Slug).Msg("Project not found for deletion")
+			return NewNotFoundError("project %s not found", project.Slug)
+		}
+		logger.Error().Err(txErr).Msg("Failed to delete project")
+		return NewInternalError("failed to delete project: %w", txErr)
 	}
 	if !deleted {
 		logger.Error().Str("projectID", project.Slug).Msg("Project not found for deletion")
@@ -204,6 +249,12 @@ func (s *ProjectService) UpdateProject(
 ) (*models.Project, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameProject, "UpdateProject")
 
+	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	if !ok {
+		logger.Error().Msg("User claims not found in context")
+		return nil, NewUnauthorizedError("user claims not found in context")
+	}
+
 	oldProject, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
 	if getErr != nil {
 		return nil, getErr
@@ -214,9 +265,31 @@ func (s *ProjectService) UpdateProject(
 	newProject.Description = payload.Description
 	newProject.SlugFromName.Init(newProject.Name)
 
-	if _, err := s.db.Projects().UpdateProject(ctx, oldProject, &newProject); err != nil {
-		logger.Error().Err(err).Msg("Failed to update project")
-		return nil, NewInternalError("failed to update project: %w", err)
+	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Project, *security.AuditLogParams, error) {
+		if _, err := tx.Projects().UpdateProject(ctx, oldProject, &newProject); err != nil {
+			return nil, nil, err
+		}
+
+		updatedProject, err := tx.Projects().GetProjectBySlug(ctx, newProject.Slug)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		params := &security.AuditLogParams{
+			Username:  &userClaims.Username,
+			ProjectID: &updatedProject.ID,
+			Action:    security.ActionUpdateProject,
+			IsSuccess: true,
+			Summary:   fmt.Sprintf("Project %s updated", updatedProject.Name),
+			Before:    oldProject,
+			After:     updatedProject,
+		}
+
+		return updatedProject, params, nil
+	})
+	if txErr != nil {
+		logger.Error().Err(txErr).Msg("Failed to update project")
+		return nil, NewInternalError("failed to update project: %w", txErr)
 	}
 
 	logger.Debug().Str("projectID", oldProject.Slug).Msg("Project updated successfully")
@@ -257,7 +330,28 @@ func (s *ProjectService) AddUserToProject(
 		return NewInternalError("failed to create member: %w", err)
 	}
 
-	_, err = s.db.Projects().AddMemberToProject(ctx, project.Slug, member)
+	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	if !ok {
+		logger.Error().Msg("User claims not found in context")
+		return NewUnauthorizedError("user claims not found in context")
+	}
+
+	err = db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*security.AuditLogParams, error) {
+		_, err := tx.Projects().AddMemberToProject(ctx, project.Slug, member)
+		if err != nil {
+			return nil, err
+		}
+
+		params := &security.AuditLogParams{
+			Username:  &userClaims.Username,
+			ProjectID: &project.ID,
+			Action:    security.ActionAddProjectMember,
+			IsSuccess: true,
+			Summary:   fmt.Sprintf("User %s added to project %s with role %s", payload.Username, project.Name, payload.Role),
+			After:     member,
+		}
+		return params, nil
+	})
 	if err != nil {
 		if errors.Is(err, db.ErrAlreadyExists) {
 			logger.Error().
@@ -308,7 +402,31 @@ func (s *ProjectService) RemoveUserFromProject(
 		return NewBadRequestError("cannot remove the project owner")
 	}
 
-	removed, err := s.db.Projects().RemoveMemberFromProject(ctx, project.Slug, user.ID)
+	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	if !ok {
+		logger.Error().Msg("User claims not found in context")
+		return NewUnauthorizedError("user claims not found in context")
+	}
+
+	removed, err := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (bool, *security.AuditLogParams, error) {
+		removed, err := tx.Projects().RemoveMemberFromProject(ctx, project.Slug, user.ID)
+		if err != nil {
+			return false, nil, err
+		}
+		if !removed {
+			return false, nil, nil
+		}
+
+		params := &security.AuditLogParams{
+			Username:  &userClaims.Username,
+			ProjectID: &project.ID,
+			Action:    security.ActionRemoveProjectMember,
+			IsSuccess: true,
+			Summary:   fmt.Sprintf("User %s removed from project %s", payload.Username, project.Name),
+			Before:    *member,
+		}
+		return true, params, nil
+	})
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to remove user from project")
 		return NewInternalError("failed to remove user from project: %w", err)
@@ -359,12 +477,36 @@ func (s *ProjectService) ChangeProjectMemberRole(
 		return NewBadRequestError("invalid role: %w", err)
 	}
 
+	oldMember := *project.GetMember(user.ID)
+
 	if err := project.ChangeMemberRole(user.ID, payload.Role); err != nil {
 		logger.Error().Err(err).Msg("Error changing role")
 		return NewInternalError("error changing role: %w", err)
 	}
 
-	_, err := s.db.Projects().ChangeMemberRole(ctx, project.Slug, user.ID, payload.Role)
+	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	if !ok {
+		logger.Error().Msg("User claims not found in context")
+		return NewUnauthorizedError("user claims not found in context")
+	}
+
+	err := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*security.AuditLogParams, error) {
+		_, err := tx.Projects().ChangeMemberRole(ctx, project.Slug, user.ID, payload.Role)
+		if err != nil {
+			return nil, err
+		}
+
+		params := &security.AuditLogParams{
+			Username:  &userClaims.Username,
+			ProjectID: &project.ID,
+			Action:    security.ActionUpdateProjectMember,
+			IsSuccess: true,
+			Summary:   fmt.Sprintf("User %s role changed to %s in project %s", payload.Username, payload.Role, project.Name),
+			Before:    oldMember,
+			After:     *project.GetMember(user.ID),
+		}
+		return params, nil
+	})
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to update project with new role")
 		return NewInternalError("failed to update project with new role: %w", err)

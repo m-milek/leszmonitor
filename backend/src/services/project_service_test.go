@@ -17,6 +17,7 @@ func setupTestProjectService() (context.Context, *ProjectService, *db.MockDB) {
 	mockDB := &db.MockDB{
 		UsersRepo:    new(db.MockUserRepository),
 		ProjectsRepo: new(db.MockProjectRepository),
+		AuditLogRepo: new(db.MockAuditLogRepository),
 	}
 	db.Set(mockDB)
 
@@ -109,6 +110,8 @@ func TestProjectService_CreateProject(t *testing.T) {
 			Return(nil)
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, expectedProject.Slug).
 			Return(expectedProject, nil)
+		mockDB.AuditLogRepo.(*db.MockAuditLogRepository).On("Record", ctx, mock.AnythingOfType("security.AuditLogParams")).
+			Return(nil)
 
 		project, err := svc.CreateProject(ctx, ownerUsername, payload)
 
@@ -120,6 +123,7 @@ func TestProjectService_CreateProject(t *testing.T) {
 
 		mockDB.UsersRepo.(*db.MockUserRepository).AssertExpectations(t)
 		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
+		mockDB.AuditLogRepo.(*db.MockAuditLogRepository).AssertExpectations(t)
 	})
 }
 

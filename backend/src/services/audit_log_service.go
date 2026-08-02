@@ -15,7 +15,7 @@ type IAuditLogger interface {
 		filter security.AuditLogFilter,
 		pagination util.Pagination,
 	) ([]security.AuditLogEntry, *ServiceError)
-	Record(ctx context.Context, entry security.AuditLogEntry) error
+	Record(ctx context.Context, params security.AuditLogParams) error
 }
 
 // AuditLogService provides methods to manage audit log entries, including retrieval and recording of actions for auditing purposes.
@@ -52,13 +52,11 @@ func (s *AuditLogService) GetEntries(
 	return entries, nil
 }
 
-func (s *AuditLogService) Record(ctx context.Context, entry security.AuditLogEntry) error {
+func (s *AuditLogService) Record(ctx context.Context, params security.AuditLogParams) error {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "Record")
-	logger.Trace().Interface("entry", entry).Msg("Recording audit log entry")
+	logger.Trace().Interface("params", params).Msg("Recording audit log entry")
 
-	entry.BeforeCreate()
-
-	_, err := s.db.AuditLog().InsertAuditLogEntry(ctx, entry)
+	err := s.db.AuditLog().Record(ctx, params)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to save audit log entry")
 		return err

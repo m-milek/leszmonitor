@@ -10,6 +10,7 @@ import (
 	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/security"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -107,17 +108,33 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 
 	userModel, err := models.NewUser(payload.Username, hashedPassword)
 	if err != nil {
-		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user Żdata")
+		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
 		return NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
 	}
 
-	_, err = s.db.Users().InsertUser(ctx, userModel)
-	if err != nil {
-		if errors.Is(err, db.ErrAlreadyExists) {
+	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *security.AuditLogParams, error) {
+		u, err := tx.Users().InsertUser(ctx, userModel)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		params := &security.AuditLogParams{
+			Username:   &payload.Username,
+			ResourceID: &u.ID,
+			Action:     security.ActionCreateUser,
+			IsSuccess:  true,
+			Summary:    fmt.Sprintf("User %s registered", u.Username),
+			After:      u,
+		}
+
+		return u, params, nil
+	})
+	if txErr != nil {
+		if errors.Is(txErr, db.ErrAlreadyExists) {
 			return NewUnauthorizedError("failed to register user")
 		}
-		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to create user in database")
-		return NewInternalError("failed to register user %s: %w", payload.Username, err)
+		logger.Error().Err(txErr).Str("username", payload.Username).Msg("Failed to create user in database")
+		return NewInternalError("failed to register user %s: %w", payload.Username, txErr)
 	}
 
 	logger.Trace().Str("username", payload.Username).Msg("User registered successfully")
@@ -144,6 +161,14 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("username", payload.Username).Msg("User not found for login")
+
+			_ = s.db.AuditLog().Record(ctx, security.AuditLogParams{
+				Username:  &payload.Username,
+				Action:    security.ActionFailedLogin,
+				IsSuccess: false,
+				Summary:   fmt.Sprintf("Failed login attempt for unknown user: %s", payload.Username),
+			})
+
 			return nil, NewUnauthorizedError("invalid credentials")
 		}
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Error retrieving user for login")
@@ -152,6 +177,15 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 
 	if err = checkPasswordHash(payload.Password, user.PasswordHash); err != nil {
 		logger.Error().Str("username", payload.Username).Msg("Invalid password for login")
+
+		_ = s.db.AuditLog().Record(ctx, security.AuditLogParams{
+			Username:   &payload.Username,
+			ResourceID: &user.ID,
+			Action:     security.ActionFailedLogin,
+			IsSuccess:  false,
+			Summary:    fmt.Sprintf("Failed login attempt for user: %s", payload.Username),
+		})
+
 		return nil, NewUnauthorizedError("invalid credentials")
 	}
 
@@ -160,6 +194,14 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 		logger.Error().Str("username", payload.Username).Err(err).Msg("Failed to generate JWT token")
 		return nil, NewInternalError("failed to generate JWT token")
 	}
+
+	_ = s.db.AuditLog().Record(ctx, security.AuditLogParams{
+		Username:   &payload.Username,
+		ResourceID: &user.ID,
+		Action:     security.ActionLogin,
+		IsSuccess:  true,
+		Summary:    fmt.Sprintf("User %s logged in", payload.Username),
+	})
 
 	logger.Debug().Str("username", payload.Username).Msg("Login successful")
 	return &LoginResponse{Jwt: *jwtToken}, nil
