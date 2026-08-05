@@ -1,13 +1,27 @@
+import { cn } from "@/lib/utils";
+
+const COLOR_MAP = {
+  success: "bg-green-500",
+  failure: "bg-red-700",
+  pending: "bg-yellow-500",
+} as const;
+
+const SIZE_MAP = {
+  sm: "size-2",
+  default: "size-3",
+  lg: "size-4",
+  xl: "size-6",
+} as const;
+
 export const StatusDot = ({
   status,
+  size = "default",
 }: {
   status: "success" | "failure" | "pending";
+  size?: "sm" | "default" | "lg" | "xl";
 }) => {
-  const color = {
-    success: "bg-green-500",
-    failure: "bg-red-700",
-    pending: "bg-yellow-500",
-  }[status];
+  const color = COLOR_MAP[status] ?? COLOR_MAP.pending;
+  const sizeClass = SIZE_MAP[size] ?? SIZE_MAP.default;
 
-  return <span className={`inline-block w-3 h-3 rounded-full ${color}`} />;
+  return <span className={cn("inline-block rounded-full", sizeClass, color)} />;
 };

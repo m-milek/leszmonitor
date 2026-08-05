@@ -7,10 +7,8 @@ export interface MainPanelContainerProps {
 
 export const MainPanelContainer = (props: MainPanelContainerProps) => {
   return (
-    <main
-      className={cn("flex flex-col gap-6 p-6 w-full h-full", props.className)}
-    >
+    <div className={cn("flex flex-col gap-4 w-full p-6", props.className)}>
       {props.children}
-    </main>
+    </div>
   );
 };

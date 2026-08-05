@@ -2,7 +2,7 @@ import type { Project } from "@/lib/types.ts";
 import { SidebarMenu } from "@/components/ui/sidebar.tsx";
 import {
   LayoutDashboardIcon,
-  LucideActivity,
+  LucideHeartPulse,
   LucideLogs,
   LucideNotebookText,
   LucideUsers,
@@ -81,7 +81,7 @@ export const ProjectMenu = ({ projects }: ProjectMenuProps) => {
             label="Dashboard"
           />
           <SidebarButton
-            icon={<LucideActivity />}
+            icon={<LucideHeartPulse />}
             href={`/projects/${project.slug}/monitors`}
             label="Monitors"
           />
