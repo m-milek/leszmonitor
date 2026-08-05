@@ -7,16 +7,14 @@ import {
 } from "@/components/leszmonitor/ui/Typography.tsx";
 import {
   addProject,
-  deleteProject,
   getProjects,
   type ProjectInput,
 } from "@/lib/data/projectData.ts";
+import { QUERY_KEYS } from "@/lib/consts.ts";
+import { ProjectListItem } from "@/components/leszmonitor/ProjectListItem.tsx";
+import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
-import { NewProjectForm } from "@/components/leszmonitor/forms/NewProjectForm.tsx";
-import { ProjectsTable } from "@/components/leszmonitor/tables/ProjectsTable.tsx";
-import { QUERY_KEYS } from "@/lib/consts.ts";
-import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
+import { NewProjectForm } from "@/components/leszmonitor/forms/NewProjectForm";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/projects/")({
   component: Projects,
@@ -45,12 +45,7 @@ function Projects() {
     },
   });
 
-  const deleteProjectMutation = useMutation({
-    mutationFn: (projectId: string) => deleteProject(projectId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PROJECTS] });
-    },
-  });
+  const [formOpen, setFormOpen] = useState(false);
 
   if (!data) {
     return null;
@@ -63,7 +58,7 @@ function Projects() {
         <CardHeader>
           <Flex direction="row" className="justify-between items-center">
             <TypographyH2>Your Projects</TypographyH2>
-            <Dialog>
+            <Dialog open={formOpen} onOpenChange={setFormOpen}>
               <DialogTrigger asChild>
                 <Button>Create Project</Button>
               </DialogTrigger>
@@ -75,6 +70,7 @@ function Projects() {
                   formId="project-form"
                   onSubmitProject={async (value) => {
                     await addProjectMutation.mutateAsync(value);
+                    setFormOpen(false);
                   }}
                 />
                 <DialogFooter>
@@ -93,12 +89,13 @@ function Projects() {
           </Flex>
         </CardHeader>
         <CardContent>
-          <ProjectsTable
-            projects={data}
-            onProjectDeleted={async (projectId) =>
-              deleteProjectMutation.mutateAsync(projectId)
-            }
-          />
+          <Flex direction="column" className="gap-4">
+            {data.map((project) => (
+              <div key={project.id}>
+                <ProjectListItem project={project} />
+              </div>
+            ))}
+          </Flex>
         </CardContent>
       </Card>
     </MainPanelContainer>
