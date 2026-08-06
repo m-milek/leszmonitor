@@ -54,6 +54,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            CI_BUILD_NUMBER=${{ github.run_number }}
+            GIT_COMMIT=${{ github.sha }}
+            IMAGE_TAG=${{ steps.vars.outputs.name }}:${{ steps.vars.outputs.version }}
+            VERSION=${{ steps.vars.outputs.version }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.version=${{ steps.vars.outputs.version }}

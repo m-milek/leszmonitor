@@ -132,6 +132,11 @@ jobs:
         uses: arduino/setup-task@v2
 
       - name: Build the app image
+        env:
+          CI_BUILD_NUMBER: ${{ github.run_number }}
+          GIT_COMMIT: ${{ github.sha }}
+          IMAGE_TAG: dev
+          VERSION: ${{ github.sha }}-SNAPSHOT
         run: task docker:build
 
       - name: Setup Node.js
