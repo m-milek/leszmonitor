@@ -11,8 +11,13 @@ includes:
 tasks:
   docker:build:
     desc: Build both frontend and backend Docker images
-    cmds:
-      - docker build -t leszmonitor .
+    cmd: |
+      docker build \
+      --build-arg CI_BUILD_NUMBER=$CI_BUILD_NUMBER \
+      --build-arg GIT_COMMIT=$GIT_COMMIT \
+      --build-arg IMAGE_TAG=$IMAGE_TAG \
+      --build-arg VERSION=$VERSION \
+      -t leszmonitor .
 
   docker:up:
     desc: Start all services using Docker Compose
