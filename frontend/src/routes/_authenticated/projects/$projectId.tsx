@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useAppStore } from "@/lib/store.ts";
 import { useEffect } from "react";
-import { getProject } from "@/lib/data/projectData.ts";
+import { getProjectBySlug } from "@/lib/data/projectData.ts";
 import { useQuery } from "@tanstack/react-query";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/projects/$projectId")({
     try {
       return await context.queryClient.ensureQueryData({
         queryKey: ["project", projectId],
-        queryFn: () => getProject(projectId),
+        queryFn: () => getProjectBySlug(projectId),
       });
     } catch {
       throw new Response("Project not found", { status: 404 });
@@ -32,7 +32,7 @@ function ProjectLayout() {
 
   const { data: project } = useQuery({
     queryKey: ["project", projectId],
-    queryFn: () => getProject(projectId),
+    queryFn: () => getProjectBySlug(projectId),
   });
 
   useEffect(() => {

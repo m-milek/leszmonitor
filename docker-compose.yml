@@ -12,13 +12,13 @@ services:
       LOG_LEVEL: TRACE
       LOG_FORMAT: json
       ENABLE_LOGDY: "true"
-      SQLITE_DB_PATH: /data/leszmonitor.db
+      SQLITE_DB_PATH: /app/leszmonitor.db
       JWT_SECRET: your_jwt_secret
       JWT_EXPIRY_HOURS: 24
       INSTANCE_ADMIN_USERNAME: admin
       INSTANCE_ADMIN_PASSWORD: 123123
-      LOGDY_CONFIG_FILE_PATH: /data/logdy.json
+      LOGDY_CONFIG_FILE_PATH: /app/logdy.json
     volumes:
-      - ./backend/src/leszmonitor.db:/data/leszmonitor.db
-      - ./logdy.json:/data/logdy.json
+      - ./backend/src/leszmonitor.db:/app/leszmonitor.db
+      - ./logdy.json:/app/logdy.json
     restart: unless-stopped

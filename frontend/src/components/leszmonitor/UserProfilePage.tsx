@@ -4,7 +4,7 @@ import {
   TypographyH2,
 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
-import { UserInitial } from "@/components/leszmonitor/UserInitial.tsx";
+import { Initial } from "@/components/leszmonitor/Initial.tsx";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { CopyToClipboardButton } from "@/components/leszmonitor/CopyToClipboardButton.tsx";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +30,7 @@ export const UserProfilePage = ({ user }: UserProfilePageProps) => {
     <section>
       <Flex direction="column" className="gap-4">
         <Flex className="gap-4">
-          <UserInitial username={user.username} size="xl" />
+          <Initial text={user.username} size="xl" />
           <div className="flex flex-col justify-center">
             <TypographyH1>{user.username}</TypographyH1>
             <span className="text-muted-foreground">{user.id}</span>

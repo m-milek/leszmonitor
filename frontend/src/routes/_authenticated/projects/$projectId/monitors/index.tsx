@@ -66,7 +66,7 @@ function MonitorsComponent() {
               <MonitorListItem
                 key={monitor.id}
                 monitor={monitor}
-                projectId={projectId}
+                projectSlug={projectId}
                 onDeleteMonitor={onDeleteMonitor}
                 navigateToEditMonitor={navigateToEditMonitor}
               />
