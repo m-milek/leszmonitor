@@ -1,6 +1,6 @@
 import type { Project } from "@/lib/types.ts";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
-import { hashedHue } from "@/lib/hashedHue.ts";
+import { colorFromString } from "@/lib/colorFromString.ts";
 import { Card } from "@/components/ui/card.tsx";
 import { LucideHeartPulse, LucideUser } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -14,8 +14,7 @@ export interface ProjectListItemProps {
 }
 
 export const ProjectListItem = ({ project }: ProjectListItemProps) => {
-  const bgColorHue = hashedHue(project.id);
-  const backgroundColor = `hsl(${bgColorHue}, 75%, 70%)`;
+  const backgroundColor = colorFromString(project.id);
 
   const { data: monitors } = useQuery({
     queryKey: ["monitors", project.slug],

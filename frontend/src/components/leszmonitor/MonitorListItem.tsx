@@ -20,14 +20,14 @@ const getDotStatus = (isSuccess: boolean | undefined) => {
 
 export interface MonitorListItemProps {
   monitor: Monitor;
-  projectId: string;
-  onDeleteMonitor: (monitorId: string) => Promise<void>;
-  navigateToEditMonitor: (monitorId: string) => void;
+  projectSlug: string;
+  onDeleteMonitor?: (monitorId: string) => Promise<void>;
+  navigateToEditMonitor?: (monitorId: string) => void;
 }
 
 export function MonitorListItem({
   monitor,
-  projectId,
+  projectSlug,
   onDeleteMonitor,
   navigateToEditMonitor,
 }: Readonly<MonitorListItemProps>) {
@@ -47,7 +47,7 @@ export function MonitorListItem({
             <TypographyH3>
               <StyledLink
                 to="/projects/$projectId/monitors/$monitorSlug"
-                params={{ projectId, monitorSlug: monitor.slug }}
+                params={{ projectId: projectSlug, monitorSlug: monitor.slug }}
               >
                 {monitor.name}
               </StyledLink>
@@ -55,20 +55,24 @@ export function MonitorListItem({
             <MonitorStatusPill monitor={monitor} />
           </Flex>
           <Flex direction="row">
-            <Button
-              variant="ghost"
-              size="icon-lg"
-              onClick={() => navigateToEditMonitor(monitor.slug)}
-            >
-              <LucideEdit className="size-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-lg"
-              onClick={() => onDeleteMonitor(monitor.id)}
-            >
-              <LucideTrash2 className="size-5 text-destructive" />
-            </Button>
+            {navigateToEditMonitor && onDeleteMonitor && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-lg"
+                  onClick={() => navigateToEditMonitor(monitor.slug)}
+                >
+                  <LucideEdit className="size-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-lg"
+                  onClick={() => onDeleteMonitor(monitor.id)}
+                >
+                  <LucideTrash2 className="size-5 text-destructive" />
+                </Button>
+              </>
+            )}
           </Flex>
         </Flex>
       </CardHeader>

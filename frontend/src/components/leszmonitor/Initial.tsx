@@ -1,7 +1,9 @@
 import { cn } from "@/lib/utils";
+import { colorFromString } from "@/lib/colorFromString.ts";
 
 export interface UserInitialProps {
-  username: string;
+  text: string;
+  textForColorCalculation?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
@@ -13,12 +15,15 @@ const sizeClasses = {
   xl: "size-24 text-[24px]",
 };
 
-export const UserInitial = ({
-  username,
+export const Initial = ({
+  text,
+  textForColorCalculation,
   size = "xl",
   className,
 }: UserInitialProps) => {
-  const value = username?.[0]?.toUpperCase() ?? "?";
+  const value = text?.[0]?.toUpperCase() ?? "?";
+
+  const backgroundColor = colorFromString(textForColorCalculation ?? text);
 
   return (
     <div
@@ -27,8 +32,9 @@ export const UserInitial = ({
         sizeClasses[size],
         className,
       )}
+      style={{ backgroundColor }}
     >
-      <span className="text-[2em] leading-none text-white">{value}</span>
+      <span className="text-[2em] leading-none text-slate-800">{value}</span>
     </div>
   );
 };
