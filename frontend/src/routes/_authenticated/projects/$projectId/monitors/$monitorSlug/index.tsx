@@ -9,9 +9,10 @@ import {
   TypographyH1,
   TypographyH2,
 } from "@/components/leszmonitor/ui/Typography.tsx";
-import type { Pagination } from "@/lib/types.ts";
+import type { Pagination, MonitorResult } from "@/lib/types.ts";
 import { MonitorResultsList } from "@/components/leszmonitor/MonitorResultsList.tsx";
-import { LatencyChart } from "@/components/leszmonitor/charts/LatencyChart.tsx";
+import { LineChart } from "@/components/leszmonitor/charts/LineChart.tsx";
+import { formatTime } from "@/components/leszmonitor/charts/utils.ts";
 import { getMonitorResultsByMonitorId } from "@/lib/data/monitorResultsData.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
@@ -20,6 +21,12 @@ import { ButtonGroup } from "@/components/ui/button-group.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { PauseIcon, PlayIcon, TrashIcon } from "lucide-react";
 import { MonitorStatusPill } from "@/components/leszmonitor/MonitorStatusPill.tsx";
+
+const latencyChartConfig = {
+  durationMs: {
+    label: "Latency (ms)",
+  },
+};
 
 export const Route = createFileRoute(
   "/_authenticated/projects/$projectId/monitors/$monitorSlug/",
@@ -104,7 +111,16 @@ function RouteComponent() {
             <TypographyH2>Latency (ms)</TypographyH2>
           </CardHeader>
           <CardContent className="flex-1 min-h-0">
-            <LatencyChart monitorResults={monitorResults ?? []} />
+            <LineChart<MonitorResult>
+              data={monitorResults ?? []}
+              config={latencyChartConfig}
+              timestampExtractor={(r) => new Date(r.createdAt).getTime()}
+              xAxisKey="createdAt"
+              yAxisKey="durationMs"
+              uniqueMatchKey="id"
+              xAxisTickFormatter={formatTime}
+              yAxisDomain={[0, "auto"]}
+            />
           </CardContent>
         </Card>
 
