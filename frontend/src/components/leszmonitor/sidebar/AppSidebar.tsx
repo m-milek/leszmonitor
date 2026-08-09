@@ -11,6 +11,7 @@ import {
 import {
   LucideBookText,
   LucideHome,
+  LucideLogs,
   LucideSearch,
   LucideSettings,
   LucideUsers,
@@ -67,10 +68,10 @@ export const AppSidebar = () => {
   }, [userData, setUser]);
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar className="p-0" variant="inset">
       <AppSidebarHeader />
 
-      <SidebarContent>
+      <SidebarContent className="p-2">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -118,12 +119,19 @@ export const AppSidebar = () => {
                 href="/docs"
                 label="Documentation"
               />
+              <SidebarButton
+                icon={<LucideLogs />}
+                href="/_logdy"
+                label="Logs"
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>{user && <AppSidebarFooter user={user} />}</SidebarFooter>
+      <SidebarFooter className="p-0">
+        {user && <AppSidebarFooter user={user} />}
+      </SidebarFooter>
     </Sidebar>
   );
 };

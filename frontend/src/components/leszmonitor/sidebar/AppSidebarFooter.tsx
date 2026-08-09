@@ -34,7 +34,7 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
 
   return (
     <Flex direction="column">
-      <div className="flex items-center m-2">
+      <div className="flex items-center p-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
           <span className="text-sm font-medium text-white">{firstLetter}</span>
         </div>
