@@ -251,18 +251,18 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		_ = project
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
-		originalState := monitor.State
+		originalState := monitor.RunState
 
 		// Try to illegally change project ID and state
 		monitor.ProjectID = uuid.New()
-		monitor.State = monitors.MonitorStateStopped
+		monitor.RunState = monitors.MonitorStateStopped
 
 		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.Nil(t, svcErr)
 
 		updatedMonitor, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		assert.Equal(t, project.ID, updatedMonitor.ProjectID, "Project ID should not have been updated")
-		assert.Equal(t, originalState, updatedMonitor.State, "State should not have been updated via UpdateMonitor")
+		assert.Equal(t, originalState, updatedMonitor.RunState, "State should not have been updated via UpdateMonitor")
 	})
 
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
@@ -342,7 +342,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
-		assert.Equal(t, monitors.MonitorStateStopped, retrieved.State)
+		assert.Equal(t, monitors.MonitorStateStopped, retrieved.RunState)
 	})
 
 	t.Run("Returns nil if state is already the desired state", func(t *testing.T) {
@@ -360,7 +360,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
-		assert.Equal(t, monitors.MonitorStateStopped, retrieved.State)
+		assert.Equal(t, monitors.MonitorStateStopped, retrieved.RunState)
 	})
 
 	t.Run("Fails with 400 for invalid monitor state", func(t *testing.T) {
@@ -371,7 +371,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(t, ctx, project.ID)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorState("invalid_state"))
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunState("invalid_state"))
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})

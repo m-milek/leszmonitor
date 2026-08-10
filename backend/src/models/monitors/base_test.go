@@ -18,7 +18,7 @@ func createTestBaseMonitor() Monitor {
 		Interval:               60,
 		Type:                   shared.HTTPConfigType,
 		ResultRetentionSeconds: 60,
-		State:                  MonitorStateActive,
+		RunState:               MonitorStateActive,
 	}
 }
 
@@ -78,7 +78,7 @@ func TestBaseMonitorValidateNegativeResultRetentionSeconds(t *testing.T) {
 
 func TestBaseMonitorValidateInvalidState(t *testing.T) {
 	monitor := createTestBaseMonitor()
-	monitor.State = "invalid_state"
+	monitor.RunState = "invalid_state"
 	err := monitor.Validate()
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "state must be either 'running' or 'stopped'")

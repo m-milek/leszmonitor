@@ -1,4 +1,4 @@
-import type { Monitor } from "@/lib/types.ts";
+import type { Monitor, MonitorStatus } from "@/lib/types.ts";
 import { TypographyH3 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { StyledLink } from "@/components/leszmonitor/StyledLink.tsx";
@@ -11,11 +11,15 @@ import { getLatestMonitorResultByMonitorId } from "@/lib/data/monitorResultsData
 import { useQuery } from "@tanstack/react-query";
 import { MonitorStatusPill } from "@/components/leszmonitor/MonitorStatusPill.tsx";
 
-const getDotStatus = (isSuccess: boolean | undefined) => {
-  if (isSuccess === undefined) {
-    return "pending";
+const monitorStatusToStatusDot = (status: MonitorStatus | undefined) => {
+  switch (status) {
+    case "up":
+      return "success";
+    case "down":
+      return "failure";
+    default:
+      return "pending";
   }
-  return isSuccess ? "success" : "failure";
 };
 
 export interface MonitorListItemProps {
@@ -36,7 +40,7 @@ export function MonitorListItem({
     queryFn: () => getLatestMonitorResultByMonitorId(monitor.id),
   });
 
-  const dotStatus = getDotStatus(lastResultData?.isSuccess);
+  const dotStatus = monitorStatusToStatusDot(lastResultData?.status);
 
   return (
     <Card>
@@ -81,14 +85,6 @@ export function MonitorListItem({
           <span>{monitor.id}</span>
           <span>{monitor.type}</span>
           <span>{monitor.description}</span>
-          {lastResultData ? (
-            <span>
-              Last result: {lastResultData.isSuccess ? "Success" : "Failure"} at{" "}
-              {new Date(lastResultData.createdAt).toLocaleString()}
-            </span>
-          ) : (
-            <span>No results yet</span>
-          )}
         </Flex>
       </CardContent>
     </Card>

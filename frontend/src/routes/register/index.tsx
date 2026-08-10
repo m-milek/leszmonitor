@@ -9,24 +9,22 @@ import {
 } from "@/components/ui/card.tsx";
 import { LeszmonitorLogo } from "@/components/leszmonitor/ui/LeszmonitorLogo.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { z } from "zod";
-import { useForm } from "@tanstack/react-form";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
-import { getUser, registerUser } from "@/lib/data/userData.ts";
+import {
+  getUser,
+  registerUser,
+  type RegisterUserPayload,
+} from "@/lib/data/userData.ts";
 import { isJwtClaims } from "@/lib/jwt.ts";
 import { setCookie } from "@/lib/cookies.ts";
 import { toast } from "sonner";
 import { RegisterUserForm } from "@/components/leszmonitor/forms/RegisterUserForm.tsx";
-import { type RegisterUserPayload } from "@/lib/data/userData.ts";
 
 export const Route = createFileRoute("/register/")({
   component: RegisterComponent,
 });
-
-
 
 function RegisterComponent() {
   const navigate = useNavigate();
@@ -80,11 +78,7 @@ function RegisterComponent() {
             <RegisterUserForm id="login-form" onSubmit={handleSubmit} />
           </CardContent>
           <CardFooter>
-            <Button
-              className="w-full"
-              type="submit"
-              form="login-form"
-            >
+            <Button className="w-full" type="submit" form="login-form">
               Register
             </Button>
           </CardFooter>

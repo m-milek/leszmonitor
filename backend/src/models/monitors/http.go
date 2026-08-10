@@ -15,6 +15,7 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
+	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/m-milek/leszmonitor/util"
 )
 
@@ -38,7 +39,7 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.
 	result := monitorresult.NewMonitorResult(
 		monitorID,
 		consts.HTTPConfigType,
-		true,
+		shared.MonitorStatusUp,
 		false,
 		0,
 		"",

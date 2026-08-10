@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	_const "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
+	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -129,7 +130,7 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.True(t, response.GetIsSuccess())
+	assert.Equal(t, shared.MonitorStatusUp, response.GetStatus())
 	assert.Empty(t, response.GetErrorDetails().Errors)
 
 	details, ok := response.GetDetails().(*monitorresult.HTTPResultDetails)
@@ -154,7 +155,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.False(t, response.GetIsSuccess())
+	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
 
 	assert.Contains(t, response.GetErrorDetails().Failures[0], "Unexpected status code")
 
@@ -171,7 +172,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.False(t, response.GetIsSuccess())
+	assert.Equal(t, shared.MonitorStatusError, response.GetStatus())
 	assert.NotEmpty(t, response.GetErrorDetails().Errors)
 	assert.Contains(t, response.GetErrorDetails().Errors[0], "connection refused")
 
@@ -194,7 +195,7 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.False(t, response.GetIsSuccess())
+	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
 
 	failures := response.GetErrorDetails().Failures
 	assert.Len(t, failures, 3)

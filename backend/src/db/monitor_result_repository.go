@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/util"
 )
@@ -42,7 +42,7 @@ func (r *monitorResultRepository) GetMonitorResultsByMonitorID(
 		var results []monitorresult.MonitorResult
 
 		err := sqlx.SelectContext(ctx, r.pool, &results, `
-			SELECT mr.id, mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
 			FROM monitor_results mr
 			JOIN monitors m ON m.id = mr.monitor_id
 			WHERE mr.monitor_id = $1
@@ -97,11 +97,11 @@ func (r *monitorResultRepository) InsertMonitorResult(
 
 		_, err = r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitor_results (id, monitor_id, is_success, is_manually_triggered, duration_ms, error_details, details, created_at) 
+			`INSERT INTO monitor_results (id, monitor_id, status, is_manually_triggered, duration_ms, error_details, details, created_at) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			result.GetID(),
 			result.GetMonitorID(),
-			result.GetIsSuccess(),
+			result.GetStatus(),
 			result.GetIsManuallyTriggered(),
 			result.GetDurationMs(),
 			errorDetailsJSON,
@@ -121,7 +121,7 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(
 		var result monitorresult.MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `
-            SELECT mr.id, mr.monitor_id, m.kind, mr.is_success, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+            SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
             FROM monitor_results mr
             JOIN monitors m ON m.id = mr.monitor_id
             WHERE mr.monitor_id = $1

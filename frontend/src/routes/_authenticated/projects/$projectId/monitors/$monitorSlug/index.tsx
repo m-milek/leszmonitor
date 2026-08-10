@@ -75,7 +75,7 @@ function RouteComponent() {
     return null;
   }
 
-  const isPaused = monitor.state === "paused";
+  const isPaused = monitor.runState === "paused";
 
   const handleToggleMonitorState = () => {
     mutation.mutate();

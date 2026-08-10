@@ -23,7 +23,7 @@ type Monitor struct {
 	Type                   shared.ProbeType `json:"type"                   db:"kind"`                     // Type of the monitor (http, tcp, etc.)
 	ProbeConfig            string           `json:"probeConfig"            db:"config"`                   // JSON string containing the specific configuration for the monitor type
 	ResultRetentionSeconds int              `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
-	State                  MonitorState     `json:"state"                  db:"state"`                    // State indicates whether the monitor is currently running or stopped
+	RunState               MonitorRunState  `json:"runState" db:"run_state"`                              // RunState indicates whether the monitor is currently running or stopped
 }
 
 type Probe interface {
@@ -31,11 +31,11 @@ type Probe interface {
 	Validate() error
 }
 
-type MonitorState string
+type MonitorRunState string
 
 const (
-	MonitorStateActive  MonitorState = "active"
-	MonitorStateStopped MonitorState = "paused"
+	MonitorStateActive  MonitorRunState = "active"
+	MonitorStateStopped MonitorRunState = "paused"
 )
 
 func IsValidMonitorState(state string) bool {
@@ -53,7 +53,7 @@ func InitializeFromPayload(payload Monitor, projectID uuid.UUID) *Monitor {
 		Type:                   payload.Type,
 		ProbeConfig:            payload.ProbeConfig,
 		ResultRetentionSeconds: int((12 * time.Hour).Seconds()), // TODO: Make this configurable later
-		State:                  MonitorStateActive,
+		RunState:               MonitorStateActive,
 	}
 }
 
@@ -76,7 +76,7 @@ func (m *Monitor) Validate() error {
 	if m.ResultRetentionSeconds <= 0 {
 		return fmt.Errorf("monitor result retention period must be greater than zero")
 	}
-	if !IsValidMonitorState(string(m.State)) {
+	if !IsValidMonitorState(string(m.RunState)) {
 		return fmt.Errorf("monitor state must be either 'running' or 'stopped'")
 	}
 

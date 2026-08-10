@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	monitors "github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/models/monitors"
 )
 
 type IMonitorRepository interface {
@@ -41,7 +41,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(
 			ctx,
 			r.pool,
 			&allMonitors,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at, m.project_id
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at, m.project_id
 			 FROM monitors m
 			 WHERE m.project_id = $1`,
 			projectID,
@@ -67,7 +67,7 @@ func (r *monitorRepository) GetMonitorBySlug(
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 
 			   AND m.project_id = $2`,
@@ -91,7 +91,7 @@ func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.id = $1`,
 			id,
@@ -113,7 +113,7 @@ func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Moni
 			ctx,
 			r.pool,
 			&allMonitors,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
 			 FROM monitors m`,
 		)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -152,7 +152,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, result_retention_seconds, state, config)
+			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, result_retention_seconds, run_state, config)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			id,
 			monitor.Slug,
@@ -162,7 +162,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 			monitor.Interval,
 			monitor.Type,
 			monitor.ResultRetentionSeconds,
-			monitor.State,
+			monitor.RunState,
 			monitor.ProbeConfig,
 		)
 		if err != nil {
@@ -180,7 +180,7 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 	return dbWrap(ctx, "UpdateMonitor", func() (any, error) {
 		res, err := r.pool.ExecContext(ctx,
 			`UPDATE monitors
-			SET slug=$1, project_id=$2, name=$3, description=$4, interval=$5, kind=$6, state=$7, config=$8
+			SET slug=$1, project_id=$2, name=$3, description=$4, interval=$5, kind=$6, run_state=$7, config=$8
 			WHERE id=$9`,
 			newMonitor.Slug,
 			newMonitor.ProjectID,
@@ -188,7 +188,7 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 			newMonitor.Description,
 			newMonitor.Interval,
 			newMonitor.Type,
-			newMonitor.State,
+			newMonitor.RunState,
 			newMonitor.ProbeConfig,
 			newMonitor.ID,
 		)
@@ -222,7 +222,7 @@ func (r *monitorRepository) GetMonitorBySlugByProject(
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1 
 			   AND m.project_id = $2`,

@@ -5,12 +5,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/shared"
 )
 
 type IMonitorResult interface {
 	GetID() uuid.UUID
 	GetMonitorID() uuid.UUID
-	GetIsSuccess() bool
+	GetStatus() shared.MonitorStatus
 	GetIsManuallyTriggered() bool
 	GetDurationMs() int64
 	GetDetails() IMonitorResultDetails
@@ -29,14 +30,14 @@ type ErrorDetails struct {
 }
 
 type baseMonitorResult struct {
-	ID                  uuid.UUID     `json:"id"                     db:"id"`
-	MonitorID           uuid.UUID     `json:"monitorId"              db:"monitor_id"`
-	IsSuccess           bool          `json:"isSuccess"              db:"is_success"`
-	IsManuallyTriggered bool          `json:"isManuallyTriggered"    db:"is_manually_triggered"`
-	DurationMs          int64         `json:"durationMs"             db:"duration_ms"`
-	ErrorDetailsJSON    []byte        `json:"-"                      db:"error_details"`
-	ErrorDetails        *ErrorDetails `json:"errorDetails,omitempty" db:"-"`
-	CreatedAt           string        `json:"createdAt"              db:"created_at"`
+	ID                  uuid.UUID            `json:"id"                     db:"id"`
+	MonitorID           uuid.UUID            `json:"monitorId"              db:"monitor_id"`
+	Status              shared.MonitorStatus `json:"status" db:"status"`
+	IsManuallyTriggered bool                 `json:"isManuallyTriggered"    db:"is_manually_triggered"`
+	DurationMs          int64                `json:"durationMs"             db:"duration_ms"`
+	ErrorDetailsJSON    []byte               `json:"-"                      db:"error_details"`
+	ErrorDetails        *ErrorDetails        `json:"errorDetails,omitempty" db:"-"`
+	CreatedAt           string               `json:"createdAt"              db:"created_at"`
 }
 
 type MonitorResult struct {
@@ -50,7 +51,7 @@ type MonitorResult struct {
 func NewMonitorResult(
 	monitorID uuid.UUID,
 	monitorType consts.ProbeType,
-	isSuccess bool,
+	status shared.MonitorStatus,
 	isManuallyTriggered bool,
 	durationMs int64,
 	errorMessage string,
@@ -60,7 +61,7 @@ func NewMonitorResult(
 		baseMonitorResult: baseMonitorResult{
 			ID:                  uuid.New(),
 			MonitorID:           monitorID,
-			IsSuccess:           isSuccess,
+			Status:              status,
 			IsManuallyTriggered: isManuallyTriggered,
 			DurationMs:          durationMs,
 			CreatedAt:           time.Now().Format(time.RFC3339),
@@ -82,8 +83,8 @@ func (m *MonitorResult) GetMonitorID() uuid.UUID {
 	return m.MonitorID
 }
 
-func (m *MonitorResult) GetIsSuccess() bool {
-	return m.IsSuccess
+func (m *MonitorResult) GetStatus() shared.MonitorStatus {
+	return m.Status
 }
 
 func (m *MonitorResult) GetIsManuallyTriggered() bool {
@@ -114,7 +115,7 @@ func (m *MonitorResult) AddError(err string) {
 		m.ErrorDetails = &ErrorDetails{}
 	}
 	m.ErrorDetails.Errors = append(m.ErrorDetails.Errors, err)
-	m.IsSuccess = false
+	m.Status = shared.MonitorStatusError
 }
 
 func (m *MonitorResult) AddFailure(fail string) {
@@ -122,7 +123,7 @@ func (m *MonitorResult) AddFailure(fail string) {
 		m.ErrorDetails = &ErrorDetails{}
 	}
 	m.ErrorDetails.Failures = append(m.ErrorDetails.Failures, fail)
-	m.IsSuccess = false
+	m.Status = shared.MonitorStatusDown
 }
 
 func (m *MonitorResult) SetDuration(duration int64) {

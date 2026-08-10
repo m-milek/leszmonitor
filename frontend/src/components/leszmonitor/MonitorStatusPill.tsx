@@ -1,10 +1,10 @@
-import type { Monitor, MonitorState } from "@/lib/types.ts";
+import type { Monitor, MonitorRunState } from "@/lib/types.ts";
 
 export interface MonitorStatusPillProps {
   monitor: Monitor;
 }
 
-const mapMonitorState = (state: MonitorState) => {
+const mapMonitorState = (state: MonitorRunState) => {
   switch (state) {
     case "active":
       return {
@@ -25,8 +25,8 @@ const mapMonitorState = (state: MonitorState) => {
 };
 
 export const MonitorStatusPill = ({ monitor }: MonitorStatusPillProps) => {
-  const text = mapMonitorState(monitor.state).text;
-  const color = mapMonitorState(monitor.state).color;
+  const text = mapMonitorState(monitor.runState).text;
+  const color = mapMonitorState(monitor.runState).color;
 
   return (
     <span

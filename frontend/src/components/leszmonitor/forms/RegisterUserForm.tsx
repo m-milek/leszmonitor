@@ -31,7 +31,7 @@ export function RegisterUserForm({
         .min(6, "Password has to be at least 6 characters long"),
       passwordConfirm: requirePasswordConfirm
         ? z.string().min(6, "Verify the password by entering it again")
-        : z.string().optional(),
+        : z.string(),
     })
     .refine(
       (data) => {

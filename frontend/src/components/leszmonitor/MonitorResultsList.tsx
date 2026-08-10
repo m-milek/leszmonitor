@@ -1,4 +1,9 @@
-import type { Monitor, Pagination } from "@/lib/types.ts";
+import type {
+  Monitor,
+  MonitorResult,
+  MonitorStatus,
+  Pagination,
+} from "@/lib/types.ts";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 import { getMonitorResultsByMonitorId } from "@/lib/data/monitorResultsData.ts";
@@ -20,17 +25,24 @@ export const MonitorResultsList = ({
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id, pagination],
     queryFn: () => getMonitorResultsByMonitorId(monitor.id, pagination),
   });
+
+  const getStatusDotStatus = (result: MonitorResult) => {
+    return monitorStatusToStatusDot(result.status);
+  };
+
+  const getStatusText = (result: MonitorResult) => {
+    return result.status.toUpperCase();
+  };
+
   return (
     <div className="h-full">
       <ScrollArea className="h-full">
         {results?.map((result) => (
           <div key={result.id}>
             <Flex direction="row" className="gap-4 items-center">
-              <StatusDot status={result.isSuccess ? "success" : "failure"} />
+              <StatusDot status={getStatusDotStatus(result)} />
               <span className="font-mono">{result.id.substring(0, 8)}</span>
-              <span className="font-mono">
-                {result.isSuccess ? "Success" : "Failure"}
-              </span>
+              <span className="font-mono">{getStatusText(result)}</span>
               <span>{result.createdAt.toLocaleString()}</span>
             </Flex>
           </div>
@@ -38,4 +50,15 @@ export const MonitorResultsList = ({
       </ScrollArea>
     </div>
   );
+};
+
+const monitorStatusToStatusDot = (status: MonitorStatus | undefined) => {
+  switch (status) {
+    case "up":
+      return "success";
+    case "down":
+      return "failure";
+    default:
+      return "pending";
+  }
 };

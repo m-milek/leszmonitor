@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     interval                 INT  NOT NULL CHECK (interval > 0),       -- in seconds
     kind                     TEXT NOT NULL,
     result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
-    state                    TEXT NOT NULL,
+    run_state                TEXT NOT NULL,
     config                   TEXT NOT NULL CHECK (JSON_VALID(config)), -- JSON string
 
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -85,7 +85,7 @@ CREATE INDEX IF NOT EXISTS idx_monitors_project_id ON monitors (project_id);
 CREATE TABLE IF NOT EXISTS monitor_results (
     id                    TEXT PRIMARY KEY,
     monitor_id            TEXT    NOT NULL,
-    is_success            BOOLEAN NOT NULL,
+    status                TEXT    NOT NULL,
     is_manually_triggered BOOLEAN NOT NULL,
     duration_ms           INT     NOT NULL CHECK (duration_ms >= 0),
 

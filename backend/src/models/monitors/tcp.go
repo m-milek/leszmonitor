@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
+	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/m-milek/leszmonitor/util"
 )
 
@@ -52,7 +53,7 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 	result := monitorresult.NewMonitorResult(
 		monitorID,
 		consts.TCPConfigType,
-		true,
+		shared.MonitorStatusUp,
 		false,
 		0,
 		"",

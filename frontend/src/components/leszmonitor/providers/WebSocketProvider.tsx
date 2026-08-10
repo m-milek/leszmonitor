@@ -32,10 +32,14 @@ export function WebSocketProvider({
       }
 
       if (isMonitorResultMessage(data)) {
-        if (data.response.isSuccess) {
+        if (data.response.status === "up") {
           toast.success(`Monitor ${data.monitorId} succeeded`);
-        } else {
+        } else if (data.response.status === "down") {
           toast.error(`Monitor ${data.monitorId} failed`);
+        } else {
+          toast.info(
+            `Monitor ${data.monitorId} status: ${data.response.status}`,
+          );
         }
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.MONITOR_RESULTS, data.monitorId],
