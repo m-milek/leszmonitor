@@ -8,6 +8,7 @@ import (
 	"github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/rs/zerolog"
 )
 
@@ -99,8 +100,8 @@ func (r *probeRunner) applyUpdate(update monitors.Monitor, ticker *time.Ticker) 
 
 // runCheck executes the monitor's check and handles the result.
 func (r *probeRunner) runCheck(ctx context.Context) {
-	if r.monitor.State != monitors.MonitorStateActive {
-		r.logger.Trace().Str("state", string(r.monitor.State)).Msg("Skipping run - not active")
+	if r.monitor.RunState != monitors.MonitorStateActive {
+		r.logger.Trace().Str("state", string(r.monitor.RunState)).Msg("Skipping run - not active")
 		return
 	}
 
@@ -123,7 +124,7 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 	result := probe.Run(ctx, r.monitor.ID)
 	r.logger.Info().Any("monitor_result", result).Msg("Monitor result")
 
-	if !result.GetIsSuccess() {
+	if result.GetStatus() != shared.MonitorStatusUp {
 		d := result.GetErrorDetails()
 		if d.ErrorMessage != "" || len(d.Errors) > 0 {
 			r.logger.Error().

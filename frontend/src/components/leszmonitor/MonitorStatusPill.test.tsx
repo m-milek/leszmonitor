@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MonitorStatusPill } from "./MonitorStatusPill";
 import type { Monitor } from "@/lib/types.ts";
 
 const createMonitor = (state: string): Monitor =>
   ({
-    state,
+    runState: state,
   }) as Monitor;
 
 describe("MonitorStatusPill", () => {

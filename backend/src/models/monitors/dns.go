@@ -11,6 +11,7 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
+	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/rs/zerolog"
 )
 
@@ -42,7 +43,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 	result := monitorresult.NewMonitorResult(
 		monitorID,
 		consts.DNSConfigType,
-		true,
+		shared.MonitorStatusUp,
 		false,
 		0,
 		"",

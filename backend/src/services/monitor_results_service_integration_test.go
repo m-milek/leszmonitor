@@ -35,7 +35,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		require.Nil(t, svcErr)
 		require.NotNil(t, latest)
 		assert.Equal(t, res2.ID, latest.GetID())
-		assert.False(t, latest.GetIsSuccess())
+		assert.False(t, latest.GetStatus())
 	})
 
 	t.Run("Fails with 404 when no results exist", func(t *testing.T) {

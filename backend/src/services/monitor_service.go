@@ -28,7 +28,7 @@ type IMonitorService interface {
 	UpdateMonitorStateByID(
 		ctx context.Context,
 		monitorID uuid.UUID,
-		state monitors.MonitorState,
+		state monitors.MonitorRunState,
 	) *ServiceError
 }
 
@@ -255,7 +255,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 			return nil, fmt.Errorf("failed to retrieve existing monitor for update: %w", err)
 		}
 
-		monitor.State = existingMonitor.State
+		monitor.RunState = existingMonitor.RunState
 		monitor.ProjectID = existingMonitor.ProjectID
 
 		if err := monitor.Validate(); err != nil {
@@ -343,7 +343,7 @@ func (s *MonitorService) GetMonitorBySlugByProject(
 func (s *MonitorService) UpdateMonitorStateByID(
 	ctx context.Context,
 	monitorID uuid.UUID,
-	state monitors.MonitorState,
+	state monitors.MonitorRunState,
 ) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "UpdateMonitorStateByID")
 	logger.Trace().Str("id", monitorID.String()).Str("newState", string(state)).Msg("Updating monitor state by ID")
@@ -370,7 +370,7 @@ func (s *MonitorService) UpdateMonitorStateByID(
 			return nil, NewInternalError("failed to retrieve monitor for state update: %w", err)
 		}
 
-		if monitor.State == state {
+		if monitor.RunState == state {
 			logger.Warn().
 				Str("id", monitorID.String()).
 				Str("state", string(state)).
@@ -379,7 +379,7 @@ func (s *MonitorService) UpdateMonitorStateByID(
 		}
 
 		oldMonitor := *monitor
-		monitor.State = state
+		monitor.RunState = state
 
 		_, updateErr := tx.Monitors().UpdateMonitor(ctx, *monitor)
 		if updateErr != nil {

@@ -49,7 +49,7 @@ func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 		Interval:    1,
 		Type:        consts.HTTPConfigType,
 		ProbeConfig: `{"method": "GET", "url": "http://localhost:8080", "expectedStatusCodes": [200]}`,
-		State:       monitors.MonitorStateActive,
+		RunState:    monitors.MonitorStateActive,
 	}
 	payload.GenerateSlug()
 	monitor := monitors.InitializeFromPayload(payload, project.ID)

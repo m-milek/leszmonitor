@@ -85,7 +85,7 @@ CREATE INDEX IF NOT EXISTS idx_monitors_project_id ON monitors (project_id);
 CREATE TABLE IF NOT EXISTS monitor_results (
     id                    TEXT PRIMARY KEY,
     monitor_id            TEXT    NOT NULL,
-    is_success            BOOLEAN NOT NULL,
+    status                TEXT    NOT NULL,
     is_manually_triggered BOOLEAN NOT NULL,
     duration_ms           INT     NOT NULL CHECK (duration_ms >= 0),
 

@@ -129,7 +129,7 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.True(t, response.GetIsSuccess())
+	assert.True(t, response.GetStatus())
 	assert.Empty(t, response.GetErrorDetails().Errors)
 
 	details, ok := response.GetDetails().(*monitorresult.HTTPResultDetails)
@@ -154,7 +154,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.False(t, response.GetIsSuccess())
+	assert.False(t, response.GetStatus())
 
 	assert.Contains(t, response.GetErrorDetails().Failures[0], "Unexpected status code")
 
@@ -171,7 +171,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.False(t, response.GetIsSuccess())
+	assert.False(t, response.GetStatus())
 	assert.NotEmpty(t, response.GetErrorDetails().Errors)
 	assert.Contains(t, response.GetErrorDetails().Errors[0], "connection refused")
 
@@ -194,7 +194,7 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 
 	response := probe.Run(context.Background(), uuid.Nil)
 
-	assert.False(t, response.GetIsSuccess())
+	assert.False(t, response.GetStatus())
 
 	failures := response.GetErrorDetails().Failures
 	assert.Len(t, failures, 3)

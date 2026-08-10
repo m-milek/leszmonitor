@@ -47,13 +47,16 @@ export interface Monitor extends Timestamps {
   projectSlug: string;
   interval: number;
   // Retention seconds not configurable yet
-  state: MonitorState;
+  runState: MonitorRunState;
   type: MonitorType;
   probeConfig?: HttpMonitorConfig | TcpMonitorConfig;
 }
 
-const monitorStates = ["active", "paused"] as const;
-export type MonitorState = (typeof monitorStates)[number];
+const monitorStatuses = ["up", "down", "paused", "maintenance"] as const;
+export type MonitorStatus = (typeof monitorStatuses)[number];
+
+const monitorRunStates = ["active", "paused"] as const;
+export type MonitorRunState = (typeof monitorRunStates)[number];
 
 const monitorTypes = ["http", "tcp", "dns"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
@@ -246,7 +249,7 @@ export interface JwtClaims {
 export interface MonitorResult {
   id: string;
   monitorId: string;
-  isSuccess: boolean;
+  status: MonitorStatus;
   isManuallyTriggered: boolean;
   durationMs: number;
   errorDetails: ErrorDetails;

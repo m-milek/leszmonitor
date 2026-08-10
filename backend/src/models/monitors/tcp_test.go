@@ -191,7 +191,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 		}
 
 		response := probe.Run(context.Background(), uuid.Nil)
-		assert.True(t, response.GetIsSuccess())
+		assert.True(t, response.GetStatus())
 		assert.Equal(t, int64(100), response.GetDurationMs())
 		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
 	})
@@ -208,7 +208,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 
 		response := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
-		assert.False(t, response.GetIsSuccess())
+		assert.False(t, response.GetStatus())
 	})
 
 	t.Run("Successful shared.TCPConfigType After Retry", func(t *testing.T) {
@@ -226,7 +226,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 
 		response := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
-		assert.True(t, response.GetIsSuccess())
+		assert.True(t, response.GetStatus())
 		assert.Equal(t, int64(150), response.GetDurationMs())
 	})
 }
