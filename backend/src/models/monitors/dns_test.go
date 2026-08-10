@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
+	"github.com/m-milek/leszmonitor/models/shared"
 )
 
 const testDNSServer = "8.8.8.8:53"
@@ -32,11 +33,14 @@ func assertDNSProbeRun(t *testing.T, probe DNSProbe, wantSuccess bool, timeout t
 
 	result := probe.Run(ctx, uuid.New())
 
-	if result.GetStatus() != wantSuccess {
-		if wantSuccess {
+	if wantSuccess {
+		if result.GetStatus() != shared.MonitorStatusUp {
 			t.Fatalf("Expected success, got errors: %+v", result.GetErrorDetails())
 		}
-		t.Fatalf("Expected failure, got success")
+	} else {
+		if result.GetStatus() == shared.MonitorStatusUp {
+			t.Fatalf("Expected failure, got success")
+		}
 	}
 
 	if !wantSuccess {

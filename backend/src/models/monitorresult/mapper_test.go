@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	consts "github.com/m-milek/leszmonitor/models/consts"
+	"github.com/m-milek/leszmonitor/models/shared"
 )
 
 func TestParseResultDetails(t *testing.T) {
@@ -50,7 +51,7 @@ func TestMonitorResultJSON(t *testing.T) {
 		original := NewMonitorResult(
 			uuid.New(),
 			consts.HTTPConfigType,
-			true,
+			shared.MonitorStatusUp,
 			false,
 			100,
 			"",
