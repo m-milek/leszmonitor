@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Card, CardContent, CardFooter } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -40,7 +40,7 @@ function MonitorEditRoute() {
   }
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>Edit Monitor</TypographyH1>
       <Card>
         <CardContent>
@@ -57,6 +57,6 @@ function MonitorEditRoute() {
           </Button>
         </CardFooter>
       </Card>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

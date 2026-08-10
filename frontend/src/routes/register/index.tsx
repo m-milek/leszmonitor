@@ -15,82 +15,54 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
-import { fetchUser, registerUser } from "@/lib/data/userData.ts";
+import { getUser, registerUser } from "@/lib/data/userData.ts";
 import { isJwtClaims } from "@/lib/jwt.ts";
 import { setCookie } from "@/lib/cookies.ts";
 import { toast } from "sonner";
-import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
-import {
-  getFirstError,
-  isFieldInvalid,
-} from "@/components/leszmonitor/forms/inputs/utils.ts";
+import { RegisterUserForm } from "@/components/leszmonitor/forms/RegisterUserForm.tsx";
+import { type RegisterUserPayload } from "@/lib/data/userData.ts";
 
 export const Route = createFileRoute("/register/")({
   component: RegisterComponent,
 });
 
-const registerFormSchema = z
-  .object({
-    username: z
-      .string()
-      .min(2, "Username has to be at least 2 characters long"),
-    password: z
-      .string()
-      .min(6, "Password has to be at least 6 characters long"),
-    passwordConfirm: z
-      .string()
-      .min(6, "Verify the password by entering it again"),
-  })
-  .refine((data) => data.password === data.passwordConfirm, {
-    message: "Passwords don't match",
-    path: ["passwordConfirm"],
-  });
+
 
 function RegisterComponent() {
   const navigate = useNavigate();
 
   const { setUsername, setUser } = useAppStore();
 
-  const form = useForm({
-    defaultValues: {
-      username: "",
-      password: "",
-      passwordConfirm: "",
-    },
-    validators: {
-      onSubmit: registerFormSchema,
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        console.log("Registering user with values:", value);
-        await registerUser(value);
+  const handleSubmit = async (value: RegisterUserPayload) => {
+    try {
+      console.log("Registering user with values:", value);
+      await registerUser(value);
 
-        const loginResponse = await fetchLoginToken(value);
+      const loginResponse = await fetchLoginToken(value);
 
-        setCookie("LOGIN_TOKEN", loginResponse.jwt, {
-          maxAge: 24 * 60 * 60,
-          path: "/",
-          sameSite: "Lax",
-        });
+      setCookie("LOGIN_TOKEN", loginResponse.jwt, {
+        maxAge: 24 * 60 * 60,
+        path: "/",
+        sameSite: "Lax",
+      });
 
-        const claims = jwtDecode(loginResponse.jwt);
-        if (!isJwtClaims(claims)) {
-          console.error("Invalid JWT claims");
-          return;
-        }
-
-        setUsername(claims.username);
-
-        const user = await fetchUser(claims.username);
-        setUser(user);
-
-        await navigate({ to: "/", replace: true });
-      } catch (error) {
-        console.error("Registration failed:", error);
-        toast.error("Registration failed. Please try again.");
+      const claims = jwtDecode(loginResponse.jwt);
+      if (!isJwtClaims(claims)) {
+        console.error("Invalid JWT claims");
+        return;
       }
-    },
-  });
+
+      setUsername(claims.username);
+
+      const user = await getUser(claims.username);
+      setUser(user);
+
+      await navigate({ to: "/", replace: true });
+    } catch (error) {
+      console.error("Registration failed:", error);
+      toast.error("Registration failed. Please try again.");
+    }
+  };
 
   return (
     <main className="h-screen w-screen bg-background">
@@ -105,73 +77,11 @@ function RegisterComponent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form
-              id="login-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-              }}
-            >
-              <FieldGroup className="gap-2">
-                <form.Field
-                  name="username"
-                  children={(field) => (
-                    <Field id={field.name}>
-                      <FieldLabel>Username</FieldLabel>
-                      <LMInputField
-                        name={field.name}
-                        type="text"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        isInvalid={isFieldInvalid(field)}
-                        errorMessage={getFirstError(field)}
-                      />
-                    </Field>
-                  )}
-                />
-                <form.Field
-                  name="password"
-                  children={(field) => (
-                    <Field id={field.name}>
-                      <FieldLabel>Password</FieldLabel>
-                      <LMInputField
-                        name={field.name}
-                        type="password"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        autoComplete="new-password"
-                        isInvalid={isFieldInvalid(field)}
-                        errorMessage={getFirstError(field)}
-                      />
-                    </Field>
-                  )}
-                />
-                <form.Field
-                  name="passwordConfirm"
-                  children={(field) => (
-                    <Field id={field.name}>
-                      <FieldLabel>
-                        Confirm your password
-                      </FieldLabel>
-                      <LMInputField
-                        name={field.name}
-                        type="password"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        autoComplete="new-password"
-                        isInvalid={isFieldInvalid(field)}
-                        errorMessage={getFirstError(field)}
-                      />
-                    </Field>
-                  )}
-                />
-              </FieldGroup>
-            </form>
+            <RegisterUserForm id="login-form" onSubmit={handleSubmit} />
           </CardContent>
           <CardFooter>
             <Button
               className="w-full"
-              onClick={() => form.handleSubmit()}
               type="submit"
               form="login-form"
             >

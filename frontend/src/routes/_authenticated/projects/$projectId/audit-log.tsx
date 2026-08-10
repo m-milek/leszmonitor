@@ -1,9 +1,9 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { getAuditLogByFilter } from "@/lib/data/auditLogData.ts";
 import type { AuditLogFilters } from "@/lib/types.ts";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { AuditLogTable } from "@/components/leszmonitor/tables/audit-log/AuditLogTable.tsx";
 
 export const Route = createFileRoute(
@@ -30,8 +30,8 @@ function RouteComponent() {
   });
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <AuditLogTable entries={logs ?? []} />
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

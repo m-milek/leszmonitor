@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Card, CardContent, CardFooter } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -15,7 +15,7 @@ function NewMonitorComponent() {
   const { projectId } = Route.useParams();
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>New Monitor Wizard</TypographyH1>
       <Card>
         <CardContent>
@@ -27,6 +27,6 @@ function NewMonitorComponent() {
           </Button>
         </CardFooter>
       </Card>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

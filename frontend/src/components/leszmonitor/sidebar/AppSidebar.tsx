@@ -13,7 +13,6 @@ import {
   LucideHome,
   LucideSearch,
   LucideSettings,
-  LucideUsers,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store.ts";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +20,7 @@ import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
-import { fetchUser } from "@/lib/data/userData.ts";
+import { getUser } from "@/lib/data/userData.ts";
 import { getProjects } from "@/lib/data/projectData.ts";
 import { AppSidebarHeader } from "@/components/leszmonitor/sidebar/AppSidebarHeader.tsx";
 import { ProjectMenu } from "@/components/leszmonitor/sidebar/ProjectMenu.tsx";
@@ -50,7 +49,7 @@ export const AppSidebar = () => {
 
   const { data: userData } = useQuery({
     queryKey: ["user", username],
-    queryFn: () => fetchUser(username!),
+    queryFn: () => getUser(username!),
     enabled: !!username,
     staleTime: 5 * 60 * 1000,
   });
@@ -92,9 +91,9 @@ export const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarButton
-                icon={<LucideUsers />}
-                href={`/users`}
-                label="Users"
+                icon={<LucideSettings />}
+                href={`/admin`}
+                label="Administration"
               />
               <SidebarButton
                 icon={<LucideSettings />}

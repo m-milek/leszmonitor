@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { useAppStore } from "@/lib/store.ts";
 import {
   TypographyH1,
@@ -21,7 +21,7 @@ import {
   type AddProjectMemberPayload,
   removeMemberFromProject,
 } from "@/lib/data/projectData.ts";
-import { fetchAllUsers } from "@/lib/data/userData.ts";
+import { getAllUsers } from "@/lib/data/userData.ts";
 import { AddMemberForm } from "@/components/leszmonitor/forms/AddMemberForm.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import {
@@ -45,7 +45,7 @@ function ProjectMembersRoute() {
 
   const { data: users } = useQuery({
     queryKey: ["users"],
-    queryFn: () => fetchAllUsers(),
+    queryFn: () => getAllUsers(),
   });
 
   const addMemberMutation = useMutation({
@@ -81,7 +81,7 @@ function ProjectMembersRoute() {
     });
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>Manage Members</TypographyH1>
       <Card>
         <CardHeader>
@@ -133,6 +133,6 @@ function ProjectMembersRoute() {
         </CardContent>
         <CardFooter></CardFooter>
       </Card>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

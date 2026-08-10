@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -49,7 +49,7 @@ function MonitorsComponent() {
   };
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>Monitors</TypographyH1>
       <Card>
         <CardHeader>
@@ -74,6 +74,6 @@ function MonitorsComponent() {
           </Flex>
         </CardContent>
       </Card>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }
