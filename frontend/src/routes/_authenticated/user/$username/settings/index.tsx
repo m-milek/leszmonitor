@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useTheme } from "@/components/ui/theme-provider.tsx";
@@ -18,9 +18,9 @@ function RouteComponent() {
   };
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>Settings</TypographyH1>
       <Button onClick={toggleTheme}>Switch Theme</Button>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

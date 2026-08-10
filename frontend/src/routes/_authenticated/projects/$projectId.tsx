@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { getProjectBySlug } from "@/lib/data/projectData.ts";
 import { useQuery } from "@tanstack/react-query";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 
 export const Route = createFileRoute("/_authenticated/projects/$projectId")({
   component: ProjectLayout,
@@ -46,8 +46,8 @@ function ProjectLayout() {
 
 function NotFound() {
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>Not Found</TypographyH1>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

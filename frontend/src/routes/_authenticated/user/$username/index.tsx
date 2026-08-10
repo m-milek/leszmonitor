@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUser } from "@/lib/data/userData.ts";
+import { getUser } from "@/lib/data/userData.ts";
 import { UserProfilePage } from "@/components/leszmonitor/UserProfilePage.tsx";
 
 export const Route = createFileRoute("/_authenticated/user/$username/")({
@@ -13,7 +13,7 @@ function UserProfileComponent() {
 
   const { data: user } = useQuery({
     queryKey: ["users", username],
-    queryFn: () => fetchUser(username),
+    queryFn: () => getUser(username),
   });
 
   if (!user) {
@@ -21,8 +21,8 @@ function UserProfileComponent() {
   }
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <UserProfilePage user={user} />
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

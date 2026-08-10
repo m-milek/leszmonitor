@@ -5,7 +5,7 @@ export interface MainPanelContainerProps {
   children: React.ReactNode;
 }
 
-export const MainPanelContainer = (props: MainPanelContainerProps) => {
+export const PageContainer = (props: MainPanelContainerProps) => {
   return (
     <div className={cn("flex flex-col gap-4 w-full p-6", props.className)}>
       {props.children}

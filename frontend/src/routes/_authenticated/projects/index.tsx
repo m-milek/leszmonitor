@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TypographyH1,
@@ -52,7 +52,7 @@ function Projects() {
   }
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>Projects</TypographyH1>
       <Card>
         <CardHeader>
@@ -98,6 +98,6 @@ function Projects() {
           </Flex>
         </CardContent>
       </Card>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

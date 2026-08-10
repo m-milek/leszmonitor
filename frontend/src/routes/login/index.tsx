@@ -16,7 +16,7 @@ import { fetchLoginToken } from "@/lib/fetchLoginToken.ts";
 import { useAppStore } from "@/lib/store.ts";
 import { jwtDecode } from "jwt-decode";
 import { isJwtClaims } from "@/lib/jwt.ts";
-import { fetchUser } from "@/lib/data/userData.ts";
+import { getUser } from "@/lib/data/userData.ts";
 import { setCookie } from "@/lib/cookies.ts";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
 import {
@@ -65,7 +65,7 @@ function RouteComponent() {
 
         setUsername(claims.username);
 
-        const user = await fetchUser(claims.username);
+        const user = await getUser(claims.username);
         setUser(user);
 
         await navigate({ to: "/", replace: true });

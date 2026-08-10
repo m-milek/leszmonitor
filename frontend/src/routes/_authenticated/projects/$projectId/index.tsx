@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import {
   TypographyH1,
   TypographyH2,
@@ -27,7 +27,7 @@ function ProjectDashboard() {
   });
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <Flex direction="column" className="gap-4">
         <Flex className="gap-4">
           <Initial
@@ -78,6 +78,6 @@ function ProjectDashboard() {
           </Card>
         </Flex>
       </Flex>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

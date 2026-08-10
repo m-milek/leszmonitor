@@ -4,12 +4,12 @@ import {
   getMonitorBySlug,
   updateMonitorState,
 } from "@/lib/data/monitorData.ts";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import {
   TypographyH1,
   TypographyH2,
 } from "@/components/leszmonitor/ui/Typography.tsx";
-import type { Pagination, MonitorResult } from "@/lib/types.ts";
+import type { MonitorResult, Pagination } from "@/lib/types.ts";
 import { MonitorResultsList } from "@/components/leszmonitor/MonitorResultsList.tsx";
 import { LineChart } from "@/components/leszmonitor/charts/LineChart.tsx";
 import { formatTime } from "@/components/leszmonitor/charts/utils.ts";
@@ -82,7 +82,7 @@ function RouteComponent() {
   };
 
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>{monitor.name}</TypographyH1>
       <Flex direction="row" className="gap-4">
         <ButtonGroup>
@@ -130,6 +130,6 @@ function RouteComponent() {
           </CardContent>
         </Card>
       </Flex>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }

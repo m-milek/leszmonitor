@@ -15,6 +15,7 @@ import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedProjectsProjectIdRouteImport } from './routes/_authenticated/projects/$projectId'
 import { Route as AuthenticatedUserUsernameIndexRouteImport } from './routes/_authenticated/user/$username/index'
 import { Route as AuthenticatedProjectsProjectIdIndexRouteImport } from './routes/_authenticated/projects/$projectId/index'
@@ -54,6 +55,11 @@ const AuthenticatedProjectsIndexRoute =
 const AuthenticatedDocsIndexRoute = AuthenticatedDocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProjectsProjectIdRoute =
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/docs/': typeof AuthenticatedDocsIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/projects/$projectId/audit-log': typeof AuthenticatedProjectsProjectIdAuditLogRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
   '/register': typeof RegisterIndexRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/projects/$projectId/audit-log': typeof AuthenticatedProjectsProjectIdAuditLogRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/_authenticated/projects/$projectId': typeof AuthenticatedProjectsProjectIdRouteWithChildren
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/projects/$projectId/audit-log': typeof AuthenticatedProjectsProjectIdAuditLogRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/login/'
     | '/register/'
     | '/projects/$projectId'
+    | '/admin/'
     | '/docs/'
     | '/projects/'
     | '/projects/$projectId/audit-log'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
+    | '/admin'
     | '/docs'
     | '/projects'
     | '/projects/$projectId/audit-log'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/login/'
     | '/register/'
     | '/_authenticated/projects/$projectId'
+    | '/_authenticated/admin/'
     | '/_authenticated/docs/'
     | '/_authenticated/projects/'
     | '/_authenticated/projects/$projectId/audit-log'
@@ -271,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs/'
       preLoaderRoute: typeof AuthenticatedDocsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/projects/$projectId': {
@@ -382,6 +401,7 @@ const AuthenticatedProjectsProjectIdRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedProjectsProjectIdRoute: typeof AuthenticatedProjectsProjectIdRouteWithChildren
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
   AuthenticatedUserUsernameIndexRoute: typeof AuthenticatedUserUsernameIndexRoute
@@ -392,6 +412,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedProjectsProjectIdRoute:
     AuthenticatedProjectsProjectIdRouteWithChildren,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
   AuthenticatedUserUsernameIndexRoute: AuthenticatedUserUsernameIndexRoute,

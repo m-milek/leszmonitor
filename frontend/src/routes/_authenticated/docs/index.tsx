@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MainPanelContainer } from "@/components/leszmonitor/MainPanelContainer.tsx";
+import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 
 export const Route = createFileRoute("/_authenticated/docs/")({
@@ -8,8 +8,8 @@ export const Route = createFileRoute("/_authenticated/docs/")({
 
 function DocsComponent() {
   return (
-    <MainPanelContainer>
+    <PageContainer>
       <TypographyH1>Documentation</TypographyH1>
-    </MainPanelContainer>
+    </PageContainer>
   );
 }
