@@ -27,7 +27,7 @@ type Monitor struct {
 }
 
 type Probe interface {
-	Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult
+	Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.IMonitorResult, error)
 	Validate() error
 }
 

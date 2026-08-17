@@ -49,7 +49,7 @@ func NewTCPProbe(host string, port int, protocol string, timeout, retryCount int
 	return probe, nil
 }
 
-func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
+func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.IMonitorResult, error) {
 	result := monitorresult.NewMonitorResult(
 		monitorID,
 		consts.TCPConfigType,
@@ -70,7 +70,7 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		if success {
 			result.SetDuration(duration.Milliseconds())
 			details.LatencyMs = duration.Milliseconds()
-			return &result
+			return &result, nil
 		}
 		if i < m.RetryCount-1 {
 			details.Tries++
@@ -80,7 +80,7 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 
 	result.AddFailure(fmt.Sprintf("Failed to connect to %s after %d tries", address, m.RetryCount))
 
-	return &result
+	return &result, nil
 }
 
 func (m *TCPProbe) Validate() error {

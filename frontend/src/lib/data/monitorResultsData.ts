@@ -13,7 +13,7 @@ export const getLatestMonitorResultByMonitorId = async (
   if (!res.ok)
     throw new Error(`Failed to fetch latest result for ${monitorId}`);
 
-  return res.json();
+  return mapMonitorResult(await res.json());
 };
 
 export const getMonitorResultsByMonitorId = async (
@@ -35,5 +35,12 @@ export const getMonitorResultsByMonitorId = async (
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed to fetch results for ${monitorId}`);
 
-  return res.json();
+  return (await res.json()).map(mapMonitorResult);
+};
+
+const mapMonitorResult = (result: MonitorResult): MonitorResult => {
+  return {
+    ...result,
+    createdAt: new Date(result.createdAt),
+  };
 };

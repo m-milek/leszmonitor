@@ -121,7 +121,10 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 	}
 
 	r.logger.Trace().Msg("Running monitor")
-	result := probe.Run(ctx, r.monitor.ID)
+	result, err := probe.Run(ctx, r.monitor.ID)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Probe execution failed due to an error")
+	}
 	r.logger.Info().Any("monitor_result", result).Msg("Monitor result")
 
 	if result.GetStatus() != shared.MonitorStatusUp {

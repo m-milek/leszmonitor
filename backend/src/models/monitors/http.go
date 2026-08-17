@@ -3,6 +3,7 @@ package monitors
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/meta"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/models/shared"
@@ -34,7 +36,7 @@ type HTTPProbe struct {
 
 const httpTimeout = 10 * time.Second
 
-func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
+func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.IMonitorResult, error) {
 	logger := log.FromContext(ctx)
 	result := monitorresult.NewMonitorResult(
 		monitorID,
@@ -48,8 +50,7 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.
 	details, castErr := result.GetDetails().(*monitorresult.HTTPResultDetails)
 	if !castErr {
 		logger.Error().Msg("Failed to cast monitor result details to HTTPResultDetails")
-		result.AddError("Internal error: failed to process monitor result details")
-		return &result
+		return nil, errors.New("failed to cast monitor result details to HTTPResultDetails")
 	}
 
 	httpResponse, elapsed, err := m.executeRequest(&httpClientOrMock)
@@ -59,9 +60,9 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.
 
 	result.SetDuration(elapsed.Milliseconds())
 	if err != nil {
-		result.AddError(fmt.Sprintf("HTTP request failed: %s", err.Error()))
+		result.AddFailure(fmt.Sprintf("HTTP request failed: %s", err.Error()))
 		logger.Trace().Err(err).Msg("HTTP request execution failed")
-		return &result
+		return &result, nil
 	}
 
 	details.StatusCode = httpResponse.StatusCode
@@ -85,9 +86,15 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.
 	m.checkStatusCode(httpResponse, &result)
 	m.checkResponseTime(elapsed, &result)
 	m.checkResponseHeaders(httpResponse, &result)
-	m.checkResponseBody(httpResponse, &result)
+	err = m.checkResponseBody(httpResponse, &result)
 
-	return &result
+	if err != nil {
+		result.AddFailure(fmt.Sprintf("Error checking response body: %s", err.Error()))
+		logger.Trace().Err(err).Msg("Response body check failed")
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Validate checks if the HTTP monitor configuration is valid
@@ -159,7 +166,7 @@ func (m *HTTPProbe) executeRequest(httpClient *httpRequestExecutor) (*http.Respo
 		return nil, 0, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	request.Header.Set("User-Agent", "LeszMonitor/DEV")
+	request.Header.Set("User-Agent", "Leszmonitor:"+meta.Version)
 
 	start := time.Now()
 	response, err := (*httpClient).Do(request)
@@ -227,31 +234,28 @@ func (m *HTTPProbe) checkResponseHeaders(
 func (m *HTTPProbe) checkResponseBody(
 	response *http.Response,
 	result monitorresult.IMonitorResult,
-) {
+) error {
 	if m.ExpectedBodyRegex == "" {
-		return
+		return nil
 	}
 
 	responseBody, err := readResponseBody(response)
 	if err != nil {
-		result.AddError("Error reading response body: " + err.Error())
-		return
+		return errors.New("Error reading response body: " + err.Error())
 	}
 
 	// Add (?s) flag to make dot match newlines
 	patternWithFlag := "(?s)" + m.ExpectedBodyRegex
 
-	regex, err := regexp.Compile(patternWithFlag)
-	if err != nil {
-		result.AddError(fmt.Sprintf("Invalid regex for expected body: %s", patternWithFlag))
-		return
-	}
+	regex := regexp.MustCompile(patternWithFlag) // Compilation was checked in Validate
 
 	matches := regex.MatchString(responseBody)
 	if !matches {
 		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
 		result.AddFailure(failureMsg)
 	}
+
+	return nil
 }
 
 // createRequest constructs an HTTP request based on the monitor's configuration.

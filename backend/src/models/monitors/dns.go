@@ -38,7 +38,7 @@ type DNSCNAMEExpectedValues struct {
 	CNAME string `json:"cname"`
 }
 
-func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.IMonitorResult {
+func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.IMonitorResult, error) {
 	logger := log.FromContext(ctx)
 	result := monitorresult.NewMonitorResult(
 		monitorID,
@@ -68,7 +68,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 				fmt.Sprintf("Failed to lookup AAAA records: %s", err.Error()),
 				err,
 				"AAAA record lookup failed",
-			)
+			), nil
 		}
 		expectedRecordType := "A"
 		if p.RecordType == DNSRecordTypeAAAA {
@@ -92,7 +92,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 				fmt.Sprintf("Failed to lookup CNAME record: %s", err.Error()),
 				err,
 				"CNAME record lookup failed",
-			)
+			), nil
 		}
 		checkExpected(&result, logger, details, p.ExpectedRecordValues, []string{cname},
 			func(cname string) any { return cname },
@@ -112,7 +112,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 				fmt.Sprintf("Failed to lookup MX records: %s", err.Error()),
 				err,
 				"MX record lookup failed",
-			)
+			), nil
 		}
 		checkExpected(&result, logger, details, p.ExpectedRecordValues, mxRecords,
 			func(mx *net.MX) any { return fmt.Sprintf("%s:%d", mx.Host, mx.Pref) },
@@ -132,7 +132,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 				fmt.Sprintf("Failed to lookup TXT records: %s", err.Error()),
 				err,
 				"TXT record lookup failed",
-			)
+			), nil
 		}
 		checkExpected(&result, logger, details, p.ExpectedRecordValues, txtRecords,
 			func(txt string) any { return txt },
@@ -152,7 +152,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 				fmt.Sprintf("Failed to lookup NS records: %s", err.Error()),
 				err,
 				"NS record lookup failed",
-			)
+			), nil
 		}
 		checkExpected(&result, logger, details, p.ExpectedRecordValues, nsRecords,
 			func(ns *net.NS) any { return ns.Host },
@@ -165,7 +165,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 	case DNSRecordTypeSRV:
 		service, proto, name, err := splitSRVHostname(p.Hostname)
 		if err != nil {
-			return earlyErrorWithErr(&result, logger, err.Error(), err, "SRV record name parsing failed")
+			return earlyErrorWithErr(&result, logger, err.Error(), err, "SRV record name parsing failed"), nil
 		}
 		_, srvRecords, err := resolver.LookupSRV(ctx, service, proto, name)
 		endTime = time.Now()
@@ -176,7 +176,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 				fmt.Sprintf("Failed to lookup SRV records: %s", err.Error()),
 				err,
 				"SRV record lookup failed",
-			)
+			), nil
 		}
 		checkExpected(&result, logger, details, p.ExpectedRecordValues, srvRecords,
 			func(srv *net.SRV) any { return fmt.Sprintf("%s:%d", srv.Target, srv.Port) },
@@ -189,15 +189,12 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) monitorresult.I
 		)
 
 	default:
-		result.AddError(fmt.Sprintf("Unsupported DNS record type: %s", rt))
-		logger.Error().Msgf("Unsupported DNS record type: %s", rt)
-		result.SetDuration(0)
-		return &result
+		logger.Fatal().Msgf("[Unreachable] Unsupported DNS record type: %s", rt)
 	}
 
 	result.SetDuration(endTime.Sub(startTime).Milliseconds())
 
-	return &result
+	return &result, nil
 }
 
 func (p *DNSProbe) Validate() error {
@@ -282,7 +279,7 @@ func earlyErrorWithErr(
 	err error,
 	logMsg string,
 ) monitorresult.IMonitorResult {
-	result.AddError(userMsg)
+	result.AddFailure(userMsg)
 	logger.Trace().Err(err).Msg(logMsg)
 	result.SetDuration(0)
 	return result
