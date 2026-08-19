@@ -12,6 +12,7 @@ import {
 import type { MonitorResult, Pagination } from "@/lib/types.ts";
 import { MonitorResultsList } from "@/components/leszmonitor/MonitorResultsList.tsx";
 import { LineChart } from "@/components/leszmonitor/charts/LineChart.tsx";
+import { BatteryChart } from "@/components/leszmonitor/charts/BatteryChart/BatteryChart.tsx";
 import { formatTime } from "@/components/leszmonitor/charts/utils.ts";
 import { getMonitorResultsByMonitorId } from "@/lib/data/monitorResultsData.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
@@ -100,13 +101,16 @@ function RouteComponent() {
         <MonitorStatusPill monitor={monitor} />
       </Flex>
 
-      <Card>
-        <CardContent>
-          <pre>{JSON.stringify(monitor, null, 2)}</pre>
+      <Card className="min-w-0">
+        <CardContent className="min-w-0">
+          <pre className="overflow-x-auto text-xs pb-4">
+            {JSON.stringify(monitor, null, 2)}
+          </pre>
+          <BatteryChart monitorResults={monitorResults ?? []} />
         </CardContent>
       </Card>
-      <Flex direction="row" className="gap-4 h-96 min-h-0">
-        <Card className="flex-1 flex flex-col min-h-0">
+      <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
+        <Card className="flex-1 flex flex-col min-h-0 min-w-0">
           <CardHeader>
             <TypographyH2>Latency (ms)</TypographyH2>
           </CardHeader>
@@ -124,7 +128,7 @@ function RouteComponent() {
           </CardContent>
         </Card>
 
-        <Card className="flex-1 flex flex-col min-h-0">
+        <Card className="flex-1 flex flex-col min-h-0 min-w-0">
           <CardContent className="flex-1 min-h-0">
             <MonitorResultsList monitor={monitor} pagination={pagination} />
           </CardContent>
