@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { MonitorResult } from "@/lib/types.ts";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { BatteryBar } from "@/components/leszmonitor/charts/BatteryChart/BatteryBar.tsx";
+import { prepareResults } from "@/components/leszmonitor/charts/BatteryChart/prepare-results.ts";
 
 export interface BatteryChartProps {
   length?: number;
@@ -35,12 +36,7 @@ export const BatteryChart = ({
   }, []);
 
   const displayResults = useMemo(() => {
-    const sorted = [...monitorResults].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
-    const recent = sorted.slice(0, length);
-
-    return Array.from({ length }, (_, i) => recent[length - 1 - i]);
+    return prepareResults(monitorResults, length);
   }, [monitorResults, length]);
 
   return (
