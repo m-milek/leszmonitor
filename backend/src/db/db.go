@@ -34,13 +34,13 @@ func isUniqueViolation(err error) bool {
 
 const timeoutDuration = 1000 * time.Second
 
-// DB defines the database access surface. It returns repository interfaces for easy mocking.
+// DB defines the database access surface. It returns DAO interfaces for easy mocking.
 type DB interface {
-	Users() IUserRepository
-	Monitors() IMonitorRepository
-	Projects() IProjectRepository
-	MonitorResults() IMonitorResultRepository
-	AuditLog() IAuditLogRepository
+	Users() IUserDAO
+	Monitors() IMonitorDAO
+	Projects() IProjectDAO
+	MonitorResults() IMonitorResultDAO
+	AuditLog() IAuditLogDAO
 	WithTx(ctx context.Context, fn func(tx DB) error) error
 	Close()
 }
@@ -49,12 +49,12 @@ type DB interface {
 type Client struct {
 	dbPool
 	sqlxDB *sqlx.DB
-	// cached repositories to avoid re-allocation on every getter call
-	users          IUserRepository
-	monitors       IMonitorRepository
-	projects       IProjectRepository
-	monitorResults IMonitorResultRepository
-	auditLog       IAuditLogRepository
+	// cached DAOs to avoid re-allocation on every getter call
+	users          IUserDAO
+	monitors       IMonitorDAO
+	projects       IProjectDAO
+	monitorResults IMonitorResultDAO
+	auditLog       IAuditLogDAO
 }
 
 type dbPool struct {
@@ -66,12 +66,12 @@ type dbResult[T any] struct {
 	Result   T
 }
 
-type baseRepository struct {
+type baseDAO struct {
 	dbPool
 }
 
-func newBaseRepository(pool sqlx.ExtContext) baseRepository {
-	return baseRepository{
+func newBaseDAO(pool sqlx.ExtContext) baseDAO {
+	return baseDAO{
 		dbPool: dbPool{pool: pool},
 	}
 }
@@ -79,14 +79,14 @@ func newBaseRepository(pool sqlx.ExtContext) baseRepository {
 // newClientFromPool creates a Client wired to the given sqlx.ExtContext handle.
 // Used by both New (with *sqlx.DB) and WithTx (with *sqlx.Tx).
 func newClientFromPool(pool sqlx.ExtContext) *Client {
-	base := newBaseRepository(pool)
+	base := newBaseDAO(pool)
 	return &Client{
 		dbPool:         dbPool{pool: pool},
-		users:          newUserRepository(base),
-		monitors:       newMonitorRepository(base),
-		projects:       newProjectRepository(base),
-		monitorResults: newMonitorResultRepository(base),
-		auditLog:       newAuditLogRepository(base),
+		users:          newUserDAO(base),
+		monitors:       newMonitorDAO(base),
+		projects:       newProjectDAO(base),
+		monitorResults: newMonitorResultDAO(base),
+		auditLog:       newAuditLogDAO(base),
 	}
 }
 
@@ -175,13 +175,13 @@ func dbWrap[T any](ctx context.Context, operationName string, operation func() (
 	return result.Result, err
 }
 
-// Repository getters (return interfaces for mocking)
+// DAO getters (return interfaces for mocking)
 
-func (c *Client) Users() IUserRepository                   { return c.users }
-func (c *Client) Monitors() IMonitorRepository             { return c.monitors }
-func (c *Client) Projects() IProjectRepository             { return c.projects }
-func (c *Client) MonitorResults() IMonitorResultRepository { return c.monitorResults }
-func (c *Client) AuditLog() IAuditLogRepository            { return c.auditLog }
+func (c *Client) Users() IUserDAO                   { return c.users }
+func (c *Client) Monitors() IMonitorDAO             { return c.monitors }
+func (c *Client) Projects() IProjectDAO             { return c.projects }
+func (c *Client) MonitorResults() IMonitorResultDAO { return c.monitorResults }
+func (c *Client) AuditLog() IAuditLogDAO            { return c.auditLog }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)

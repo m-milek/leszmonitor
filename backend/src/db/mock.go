@@ -11,50 +11,49 @@ import (
 )
 
 // MockDB is a simple implementation of DB for tests.
-// Provide your own fake repositories as needed.
 type MockDB struct {
-	UsersRepo          IUserRepository
-	MonitorsRepo       IMonitorRepository
-	ProjectsRepo       IProjectRepository
-	MonitorResultsRepo IMonitorResultRepository
-	AuditLogRepo       IAuditLogRepository
-	CloseFn            func()
+	UsersDAO          IUserDAO
+	MonitorsDAO       IMonitorDAO
+	ProjectsDAO       IProjectDAO
+	MonitorResultsDAO IMonitorResultDAO
+	AuditLogDAO       IAuditLogDAO
+	CloseFn           func()
 }
 
-type MockUserRepository struct {
+type MockUserDAO struct {
 	mock.Mock
 }
 
-func (r *MockUserRepository) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
+func (r *MockUserDAO) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
 	args := r.Called(ctx, user)
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (r *MockUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+func (r *MockUserDAO) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	args := r.Called(ctx, username)
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (r *MockUserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+func (r *MockUserDAO) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	args := r.Called(ctx, id)
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (r *MockUserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
+func (r *MockUserDAO) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	args := r.Called(ctx)
 	return args.Get(0).([]models.User), args.Error(1)
 }
 
-type MockProjectRepository struct {
+type MockProjectDAO struct {
 	mock.Mock
 }
 
-func (r *MockProjectRepository) InsertProject(ctx context.Context, project *models.Project) error {
+func (r *MockProjectDAO) InsertProject(ctx context.Context, project *models.Project) error {
 	args := r.Called(ctx, project)
 	return args.Error(0)
 }
 
-func (r *MockProjectRepository) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
+func (r *MockProjectDAO) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
 	args := r.Called(ctx, slug)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -62,7 +61,7 @@ func (r *MockProjectRepository) GetProjectBySlug(ctx context.Context, slug strin
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug uuid.UUID) (*models.Project, error) {
+func (r *MockProjectDAO) GetProjectByID(ctx context.Context, slug uuid.UUID) (*models.Project, error) {
 	args := r.Called(ctx, slug)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -70,7 +69,7 @@ func (r *MockProjectRepository) GetProjectByID(ctx context.Context, slug uuid.UU
 	return args.Get(0).(*models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) GetProjectsByQuery(
+func (r *MockProjectDAO) GetProjectsByQuery(
 	ctx context.Context,
 	query GetProjectsQuery,
 ) ([]models.Project, error) {
@@ -78,7 +77,7 @@ func (r *MockProjectRepository) GetProjectsByQuery(
 	return args.Get(0).([]models.Project), args.Error(1)
 }
 
-func (r *MockProjectRepository) UpdateProject(
+func (r *MockProjectDAO) UpdateProject(
 	ctx context.Context,
 	oldProject, newProject *models.Project,
 ) (bool, error) {
@@ -86,12 +85,12 @@ func (r *MockProjectRepository) UpdateProject(
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
+func (r *MockProjectDAO) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
 	args := r.Called(ctx, projectSlug)
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) AddMemberToProject(
+func (r *MockProjectDAO) AddMemberToProject(
 	ctx context.Context,
 	projectSlug string,
 	member *models.ProjectMember,
@@ -100,7 +99,7 @@ func (r *MockProjectRepository) AddMemberToProject(
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) RemoveMemberFromProject(
+func (r *MockProjectDAO) RemoveMemberFromProject(
 	ctx context.Context,
 	projectSlug string,
 	userID uuid.UUID,
@@ -109,7 +108,7 @@ func (r *MockProjectRepository) RemoveMemberFromProject(
 	return args.Bool(0), args.Error(1)
 }
 
-func (r *MockProjectRepository) ChangeMemberRole(
+func (r *MockProjectDAO) ChangeMemberRole(
 	ctx context.Context,
 	projectSlug string,
 	userID uuid.UUID,
@@ -119,16 +118,16 @@ func (r *MockProjectRepository) ChangeMemberRole(
 	return args.Bool(0), args.Error(1)
 }
 
-type MockAuditLogRepository struct {
+type MockAuditLogDAO struct {
 	mock.Mock
 }
 
-func (r *MockAuditLogRepository) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
+func (r *MockAuditLogDAO) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
 	args := r.Called(ctx, entry)
 	return args.Get(0), args.Error(1)
 }
 
-func (r *MockAuditLogRepository) GetAuditLogEntries(
+func (r *MockAuditLogDAO) GetAuditLogEntries(
 	ctx context.Context,
 	filter security.AuditLogFilter,
 	pagination util.Pagination,
@@ -137,16 +136,16 @@ func (r *MockAuditLogRepository) GetAuditLogEntries(
 	return args.Get(0).([]security.AuditLogEntry), args.Error(1)
 }
 
-func (r *MockAuditLogRepository) Record(ctx context.Context, params security.AuditLogParams) error {
+func (r *MockAuditLogDAO) Record(ctx context.Context, params security.AuditLogParams) error {
 	args := r.Called(ctx, params)
 	return args.Error(0)
 }
 
-func (m *MockDB) Users() IUserRepository                   { return m.UsersRepo }
-func (m *MockDB) Monitors() IMonitorRepository             { return m.MonitorsRepo }
-func (m *MockDB) Projects() IProjectRepository             { return m.ProjectsRepo }
-func (m *MockDB) MonitorResults() IMonitorResultRepository { return m.MonitorResultsRepo }
-func (m *MockDB) AuditLog() IAuditLogRepository            { return m.AuditLogRepo }
+func (m *MockDB) Users() IUserDAO                   { return m.UsersDAO }
+func (m *MockDB) Monitors() IMonitorDAO             { return m.MonitorsDAO }
+func (m *MockDB) Projects() IProjectDAO             { return m.ProjectsDAO }
+func (m *MockDB) MonitorResults() IMonitorResultDAO { return m.MonitorResultsDAO }
+func (m *MockDB) AuditLog() IAuditLogDAO            { return m.AuditLogDAO }
 func (m *MockDB) WithTx(_ context.Context, fn func(tx DB) error) error {
 	// In tests, execute the function directly without a real transaction.
 	return fn(m)

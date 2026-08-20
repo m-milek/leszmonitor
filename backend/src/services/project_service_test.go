@@ -15,9 +15,9 @@ import (
 
 func setupTestProjectService() (context.Context, *ProjectService, *db.MockDB) {
 	mockDB := &db.MockDB{
-		UsersRepo:    new(db.MockUserRepository),
-		ProjectsRepo: new(db.MockProjectRepository),
-		AuditLogRepo: new(db.MockAuditLogRepository),
+		UsersDAO:    new(db.MockUserDAO),
+		ProjectsDAO: new(db.MockProjectDAO),
+		AuditLogDAO: new(db.MockAuditLogDAO),
 	}
 	db.Set(mockDB)
 
@@ -44,7 +44,7 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 		expected := &models.Project{Description: "Test Description"}
 		expected.SlugFromName.Init("test-project")
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).On("GetProjectBySlug", ctx, "test-project").
 			Return(expected, nil)
 
 		project, err := internalGetProjectBySlug(ctx, mockDB, "test-project")
@@ -52,14 +52,14 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, project)
 		assert.Equal(t, "test-project", project.Slug)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).AssertExpectations(t)
 	})
 
 	t.Run("Fails with 404 when project not found", func(t *testing.T) {
 		ctx, _, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "nonexistent").
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).On("GetProjectBySlug", ctx, "nonexistent").
 			Return((*models.Project)(nil), db.ErrNotFound)
 
 		project, err := internalGetProjectBySlug(ctx, mockDB, "nonexistent")
@@ -67,14 +67,14 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 		assert.Nil(t, project)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).AssertExpectations(t)
 	})
 
 	t.Run("Fails with 500 when database returns error", func(t *testing.T) {
 		ctx, _, mockDB := setupTestProjectService()
 		defer db.Set(nil)
 
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, "test-project").
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).On("GetProjectBySlug", ctx, "test-project").
 			Return((*models.Project)(nil), errors.New("database error"))
 
 		project, err := internalGetProjectBySlug(ctx, mockDB, "test-project")
@@ -82,7 +82,7 @@ func TestProjectServiceT_InternalGetProjectBySlug(t *testing.T) {
 		assert.Nil(t, project)
 		assert.NotNil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, err.Code)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).AssertExpectations(t)
 	})
 }
 
@@ -105,12 +105,12 @@ func TestProjectService_CreateProject(t *testing.T) {
 		}
 		expectedProject.SlugFromName.Init(payload.Name)
 
-		mockDB.UsersRepo.(*db.MockUserRepository).On("GetUserByUsername", ctx, ownerUsername).Return(mockUser, nil)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("InsertProject", ctx, mock.AnythingOfType("*models.Project")).
+		mockDB.UsersDAO.(*db.MockUserDAO).On("GetUserByUsername", ctx, ownerUsername).Return(mockUser, nil)
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).On("InsertProject", ctx, mock.AnythingOfType("*models.Project")).
 			Return(nil)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).On("GetProjectBySlug", ctx, expectedProject.Slug).
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).On("GetProjectBySlug", ctx, expectedProject.Slug).
 			Return(expectedProject, nil)
-		mockDB.AuditLogRepo.(*db.MockAuditLogRepository).On("Record", ctx, mock.AnythingOfType("security.AuditLogParams")).
+		mockDB.AuditLogDAO.(*db.MockAuditLogDAO).On("Record", ctx, mock.AnythingOfType("security.AuditLogParams")).
 			Return(nil)
 
 		project, err := svc.CreateProject(ctx, ownerUsername, payload)
@@ -121,9 +121,9 @@ func TestProjectService_CreateProject(t *testing.T) {
 		assert.Equal(t, "Test Project", project.Name)
 		assert.Equal(t, "A test project", project.Description)
 
-		mockDB.UsersRepo.(*db.MockUserRepository).AssertExpectations(t)
-		mockDB.ProjectsRepo.(*db.MockProjectRepository).AssertExpectations(t)
-		mockDB.AuditLogRepo.(*db.MockAuditLogRepository).AssertExpectations(t)
+		mockDB.UsersDAO.(*db.MockUserDAO).AssertExpectations(t)
+		mockDB.ProjectsDAO.(*db.MockProjectDAO).AssertExpectations(t)
+		mockDB.AuditLogDAO.(*db.MockAuditLogDAO).AssertExpectations(t)
 	})
 }
 

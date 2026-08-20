@@ -10,7 +10,7 @@ import (
 	"github.com/m-milek/leszmonitor/models/monitors"
 )
 
-type IMonitorRepository interface {
+type IMonitorDAO interface {
 	GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.Monitor, error)
 	GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error)
 	GetMonitorBySlug(ctx context.Context, slug string, projectID uuid.UUID) (*monitors.Monitor, error)
@@ -21,17 +21,17 @@ type IMonitorRepository interface {
 	GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error)
 }
 
-type monitorRepository struct {
-	baseRepository
+type monitorDAO struct {
+	baseDAO
 }
 
-func newMonitorRepository(repository baseRepository) IMonitorRepository {
-	return &monitorRepository{
-		baseRepository: repository,
+func newMonitorDAO(dao baseDAO) IMonitorDAO {
+	return &monitorDAO{
+		baseDAO: dao,
 	}
 }
 
-func (r *monitorRepository) GetMonitorsByProjectID(
+func (r *monitorDAO) GetMonitorsByProjectID(
 	ctx context.Context,
 	projectID uuid.UUID,
 ) ([]monitors.Monitor, error) {
@@ -56,7 +56,7 @@ func (r *monitorRepository) GetMonitorsByProjectID(
 	})
 }
 
-func (r *monitorRepository) GetMonitorBySlug(
+func (r *monitorDAO) GetMonitorBySlug(
 	ctx context.Context,
 	slug string,
 	projectID uuid.UUID,
@@ -84,7 +84,7 @@ func (r *monitorRepository) GetMonitorBySlug(
 	})
 }
 
-func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error) {
+func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorByID", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
 		err := sqlx.GetContext(
@@ -106,7 +106,7 @@ func (r *monitorRepository) GetMonitorByID(ctx context.Context, id uuid.UUID) (*
 	})
 }
 
-func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error) {
+func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error) {
 	return dbWrap(ctx, "GetAllMonitors", func() ([]monitors.Monitor, error) {
 		var allMonitors []monitors.Monitor
 		err := sqlx.SelectContext(
@@ -126,7 +126,7 @@ func (r *monitorRepository) GetAllMonitors(ctx context.Context) ([]monitors.Moni
 	})
 }
 
-func (r *monitorRepository) DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error) {
+func (r *monitorDAO) DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error) {
 	return dbWrap(ctx, "DeleteMonitor", func() (*uuid.UUID, error) {
 		var id uuid.UUID
 		err := r.pool.QueryRowxContext(ctx, `DELETE FROM monitors WHERE id = $1 RETURNING id`, monitorID.String()).
@@ -143,7 +143,7 @@ func (r *monitorRepository) DeleteMonitorByID(ctx context.Context, monitorID uui
 }
 
 // InsertMonitor adds a new monitor to the database and returns the created monitor.
-func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error) {
+func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "InsertMonitor", func() (*monitors.Monitor, error) {
 		id := monitor.ID
 		if id == uuid.Nil {
@@ -176,7 +176,7 @@ func (r *monitorRepository) InsertMonitor(ctx context.Context, monitor monitors.
 	})
 }
 
-func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (any, error) {
+func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (any, error) {
 	return dbWrap(ctx, "UpdateMonitor", func() (any, error) {
 		res, err := r.pool.ExecContext(ctx,
 			`UPDATE monitors
@@ -211,7 +211,7 @@ func (r *monitorRepository) UpdateMonitor(ctx context.Context, newMonitor monito
 	})
 }
 
-func (r *monitorRepository) GetMonitorBySlugByProject(
+func (r *monitorDAO) GetMonitorBySlugByProject(
 	ctx context.Context,
 	slug string,
 	id uuid.UUID,

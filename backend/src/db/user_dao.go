@@ -10,24 +10,24 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 )
 
-type IUserRepository interface {
+type IUserDAO interface {
 	InsertUser(ctx context.Context, user *models.User) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetAllUsers(ctx context.Context) ([]models.User, error)
 }
 
-type UserRepository struct {
-	baseRepository
+type UserDAO struct {
+	baseDAO
 }
 
-func newUserRepository(repository baseRepository) IUserRepository {
-	return &UserRepository{
-		baseRepository: repository,
+func newUserDAO(dao baseDAO) IUserDAO {
+	return &UserDAO{
+		baseDAO: dao,
 	}
 }
 
-func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
+func (r *UserDAO) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
 	return dbWrap(ctx, "CreateUser", func() (*models.User, error) {
 		if user.ID == uuid.Nil {
 			user.ID = uuid.New()
@@ -53,7 +53,7 @@ func (r *UserRepository) InsertUser(ctx context.Context, user *models.User) (*mo
 	})
 }
 
-func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+func (r *UserDAO) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		var user models.User
 		err := sqlx.GetContext(ctx, r.pool, &user,
@@ -69,7 +69,7 @@ func (r *UserRepository) GetUserByUsername(ctx context.Context, username string)
 	})
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+func (r *UserDAO) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	return dbWrap(ctx, "GetUserByID", func() (*models.User, error) {
 		var user models.User
 		err := sqlx.GetContext(ctx, r.pool, &user,
@@ -85,7 +85,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*models
 	})
 }
 
-func (r *UserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
+func (r *UserDAO) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
 		var users []models.User
 		err := sqlx.SelectContext(ctx, r.pool, &users,
