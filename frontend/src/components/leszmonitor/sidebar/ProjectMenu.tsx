@@ -77,7 +77,7 @@ export const ProjectMenu = ({ projects }: ProjectMenuProps) => {
         <SidebarMenu>
           <SidebarButton
             icon={<LayoutDashboardIcon />}
-            href={`/projects/${project.slug}/dashboard`}
+            href={`/projects/${project.slug}`}
             label="Dashboard"
           />
           <SidebarButton
