@@ -10,7 +10,7 @@ import (
 	"github.com/m-milek/leszmonitor/models"
 )
 
-type IProjectRepository interface {
+type IProjectDAO interface {
 	InsertProject(ctx context.Context, project *models.Project) error
 	GetProjectByID(ctx context.Context, id uuid.UUID) (*models.Project, error)
 	GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error)
@@ -22,18 +22,18 @@ type IProjectRepository interface {
 	ChangeMemberRole(ctx context.Context, projectSlug string, userID uuid.UUID, newRole models.Role) (bool, error)
 }
 
-type projectRepository struct {
-	baseRepository
+type projectDAO struct {
+	baseDAO
 }
 
-func newProjectRepository(repository baseRepository) IProjectRepository {
-	return &projectRepository{
-		baseRepository: repository,
+func newProjectDAO(dao baseDAO) IProjectDAO {
+	return &projectDAO{
+		baseDAO: dao,
 	}
 }
 
 // loadMembers fetches members for a single project and attaches them.
-func (r *projectRepository) loadMembers(ctx context.Context, project *models.Project) error {
+func (r *projectDAO) loadMembers(ctx context.Context, project *models.Project) error {
 	var members []models.ProjectMember
 	err := sqlx.SelectContext(ctx, r.pool, &members,
 		`SELECT up.user_id AS id, u.username AS username, up.role AS role, up.created_at, up.updated_at
@@ -47,7 +47,7 @@ func (r *projectRepository) loadMembers(ctx context.Context, project *models.Pro
 	return nil
 }
 
-func (r *projectRepository) InsertProject(ctx context.Context, project *models.Project) error {
+func (r *projectDAO) InsertProject(ctx context.Context, project *models.Project) error {
 	_, err := dbWrap(ctx, "InsertProject", func() (struct{}, error) {
 		if project.ID == uuid.Nil {
 			project.ID = uuid.New()
@@ -81,7 +81,7 @@ func (r *projectRepository) InsertProject(ctx context.Context, project *models.P
 	return err
 }
 
-func (r *projectRepository) GetProjectByID(ctx context.Context, id uuid.UUID) (*models.Project, error) {
+func (r *projectDAO) GetProjectByID(ctx context.Context, id uuid.UUID) (*models.Project, error) {
 	return dbWrap(ctx, "GetProjectByID", func() (*models.Project, error) {
 		var project models.Project
 		err := sqlx.GetContext(ctx, r.pool, &project,
@@ -102,7 +102,7 @@ func (r *projectRepository) GetProjectByID(ctx context.Context, id uuid.UUID) (*
 	})
 }
 
-func (r *projectRepository) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
+func (r *projectDAO) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
 	return dbWrap(ctx, "GetProjectBySlug", func() (*models.Project, error) {
 		var project models.Project
 		err := sqlx.GetContext(ctx, r.pool, &project,
@@ -128,7 +128,7 @@ type GetProjectsQuery struct {
 	MemberUsername   string
 }
 
-func (r *projectRepository) GetProjectsByQuery(ctx context.Context, query GetProjectsQuery) ([]models.Project, error) {
+func (r *projectDAO) GetProjectsByQuery(ctx context.Context, query GetProjectsQuery) ([]models.Project, error) {
 	return dbWrap(ctx, "GetProjectsByQuery", func() ([]models.Project, error) {
 		var projects []models.Project
 
@@ -173,7 +173,7 @@ func (r *projectRepository) GetProjectsByQuery(ctx context.Context, query GetPro
 	})
 }
 
-func (r *projectRepository) UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error) {
+func (r *projectDAO) UpdateProject(ctx context.Context, oldProject, newProject *models.Project) (bool, error) {
 	return dbWrap(ctx, "UpdateProject", func() (bool, error) {
 		result, err := r.pool.ExecContext(ctx,
 			`UPDATE projects SET slug = $1, name = $2, description = $3 WHERE id = $4`,
@@ -192,7 +192,7 @@ func (r *projectRepository) UpdateProject(ctx context.Context, oldProject, newPr
 	})
 }
 
-func (r *projectRepository) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
+func (r *projectDAO) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
 	return dbWrap(ctx, "DeleteProject", func() (bool, error) {
 		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM projects WHERE slug = $1`,
@@ -208,7 +208,7 @@ func (r *projectRepository) DeleteProject(ctx context.Context, projectSlug strin
 	})
 }
 
-func (r *projectRepository) AddMemberToProject(
+func (r *projectDAO) AddMemberToProject(
 	ctx context.Context,
 	projectSlug string,
 	member *models.ProjectMember,
@@ -241,7 +241,7 @@ func (r *projectRepository) AddMemberToProject(
 	})
 }
 
-func (r *projectRepository) RemoveMemberFromProject(
+func (r *projectDAO) RemoveMemberFromProject(
 	ctx context.Context,
 	projectSlug string,
 	userID uuid.UUID,
@@ -274,7 +274,7 @@ func (r *projectRepository) RemoveMemberFromProject(
 	})
 }
 
-func (r *projectRepository) ChangeMemberRole(
+func (r *projectDAO) ChangeMemberRole(
 	ctx context.Context,
 	projectSlug string,
 	userID uuid.UUID,

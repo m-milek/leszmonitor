@@ -11,7 +11,7 @@ import (
 	"github.com/m-milek/leszmonitor/util"
 )
 
-type IAuditLogRepository interface {
+type IAuditLogDAO interface {
 	InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error)
 	GetAuditLogEntries(
 		ctx context.Context,
@@ -21,17 +21,17 @@ type IAuditLogRepository interface {
 	Record(ctx context.Context, params security.AuditLogParams) error
 }
 
-type auditLogRepository struct {
-	baseRepository
+type auditLogDAO struct {
+	baseDAO
 }
 
-func newAuditLogRepository(base baseRepository) IAuditLogRepository {
-	return &auditLogRepository{
-		baseRepository: base,
+func newAuditLogDAO(base baseDAO) IAuditLogDAO {
+	return &auditLogDAO{
+		baseDAO: base,
 	}
 }
 
-func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
+func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
 	return dbWrap(ctx, "InsertAuditLogEntry", func() (any, error) {
 		_, err := a.pool.ExecContext(
 			ctx,
@@ -56,7 +56,7 @@ func (a auditLogRepository) InsertAuditLogEntry(ctx context.Context, entry secur
 	})
 }
 
-func (a auditLogRepository) Record(ctx context.Context, params security.AuditLogParams) error {
+func (a auditLogDAO) Record(ctx context.Context, params security.AuditLogParams) error {
 	entry, err := security.NewAuditLogEntry(ctx, params)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (a auditLogRepository) Record(ctx context.Context, params security.AuditLog
 	return err
 }
 
-func (a auditLogRepository) GetAuditLogEntries(
+func (a auditLogDAO) GetAuditLogEntries(
 	ctx context.Context,
 	filter security.AuditLogFilter,
 	pagination util.Pagination,

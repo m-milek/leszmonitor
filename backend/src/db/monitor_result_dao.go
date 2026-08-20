@@ -14,7 +14,7 @@ import (
 	"github.com/m-milek/leszmonitor/util"
 )
 
-type IMonitorResultRepository interface {
+type IMonitorResultDAO interface {
 	InsertMonitorResult(ctx context.Context, result monitorresult.IMonitorResult) (any, error)
 	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, error)
 	GetMonitorResultsByMonitorID(
@@ -29,11 +29,11 @@ type IMonitorResultRepository interface {
 	) (int64, error)
 }
 
-type monitorResultRepository struct {
-	baseRepository
+type monitorResultDAO struct {
+	baseDAO
 }
 
-func (r *monitorResultRepository) GetMonitorResultsByMonitorID(
+func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 	ctx context.Context,
 	id string,
 	pagination *util.Pagination,
@@ -70,13 +70,13 @@ func (r *monitorResultRepository) GetMonitorResultsByMonitorID(
 	})
 }
 
-func newMonitorResultRepository(repository baseRepository) IMonitorResultRepository {
-	return &monitorResultRepository{
-		baseRepository: repository,
+func newMonitorResultDAO(dao baseDAO) IMonitorResultDAO {
+	return &monitorResultDAO{
+		baseDAO: dao,
 	}
 }
 
-func (r *monitorResultRepository) InsertMonitorResult(
+func (r *monitorResultDAO) InsertMonitorResult(
 	ctx context.Context,
 	result monitorresult.IMonitorResult,
 ) (any, error) {
@@ -113,7 +113,7 @@ func (r *monitorResultRepository) InsertMonitorResult(
 	})
 }
 
-func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(
+func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
 	ctx context.Context,
 	monitorID string,
 ) (monitorresult.IMonitorResult, error) {
@@ -143,7 +143,7 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(
 	})
 }
 
-func (r *monitorResultRepository) DeleteMonitorResultsOlderThanDuration(
+func (r *monitorResultDAO) DeleteMonitorResultsOlderThanDuration(
 	ctx context.Context,
 	monitorID uuid.UUID,
 	duration time.Duration,
