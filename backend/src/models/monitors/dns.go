@@ -189,7 +189,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.
 		)
 
 	default:
-		logger.Fatal().Msgf("[Unreachable] Unsupported DNS record type: %s", rt)
+		err := fmt.Errorf("unsupported DNS record type: %s", rt)
+		return nil, err
 	}
 
 	result.SetDuration(endTime.Sub(startTime).Milliseconds())
