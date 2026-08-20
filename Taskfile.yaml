@@ -41,7 +41,9 @@ tasks:
 
   build:
     desc: Build both frontend and backend
-    deps: [ backend:build, frontend:build ]
+    cmds:
+      - task: frontend:build
+      - task: backend:build
 
   test:
     desc: Run tests for both frontend and backend
