@@ -8,7 +8,7 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 )
 
-const durationBetweenCleanups = time.Duration(60) * time.Second
+const durationBetweenCleanups = time.Duration(600) * time.Second
 
 func StartDataCleanupWorker(ctx context.Context) {
 	logger := log.FromContext(ctx).With().Str("component", "data_cleanup_worker").Logger()

@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -19,6 +21,7 @@ const (
 )
 
 func Validate() error {
+	log.Info().Msg("Validating environment variables...")
 	var missingVars []string
 
 	if os.Getenv(APIPort) == "" {

@@ -191,7 +191,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return true, 100 * time.Millisecond
 		}
 
-		response := probe.Run(context.Background(), uuid.Nil)
+		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, shared.MonitorStatusUp, response.GetStatus())
 		assert.Equal(t, int64(100), response.GetDurationMs())
 		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
@@ -207,7 +207,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response := probe.Run(context.Background(), uuid.Nil)
+		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
 		assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
 	})
@@ -225,7 +225,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 			return false, 0
 		}
 
-		response := probe.Run(context.Background(), uuid.Nil)
+		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
 		assert.Equal(t, shared.MonitorStatusUp, response.GetStatus())
 		assert.Equal(t, int64(150), response.GetDurationMs())

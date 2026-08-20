@@ -31,13 +31,19 @@ func assertDNSProbeRun(t *testing.T, probe DNSProbe, wantSuccess bool, timeout t
 		defer cancel()
 	}
 
-	result := probe.Run(ctx, uuid.New())
+	result, err := probe.Run(ctx, uuid.New())
 
 	if wantSuccess {
+		if err != nil {
+			t.Fatalf("Expected success, got error: %v", err)
+		}
 		if result.GetStatus() != shared.MonitorStatusUp {
 			t.Fatalf("Expected success, got errors: %+v", result.GetErrorDetails())
 		}
 	} else {
+		if err != nil {
+			return
+		}
 		if result.GetStatus() == shared.MonitorStatusUp {
 			t.Fatalf("Expected failure, got success")
 		}

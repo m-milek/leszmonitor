@@ -58,7 +58,7 @@ func (r *monitorResultRepository) GetMonitorResultsByMonitorID(
 
 		var monitorResults []monitorresult.IMonitorResult
 		for _, r := range results {
-			err = processResultDetails(r)
+			err = processResultDetails(&r)
 			if err != nil {
 				return nil, err
 			}
@@ -134,7 +134,7 @@ func (r *monitorResultRepository) GetLatestMonitorResultByMonitorID(
 			return nil, err
 		}
 
-		err = processResultDetails(result)
+		err = processResultDetails(&result)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (r *monitorResultRepository) DeleteMonitorResultsOlderThanDuration(
 	})
 }
 
-func processResultDetails(result monitorresult.MonitorResult) error {
+func processResultDetails(result *monitorresult.MonitorResult) error {
 	details, err := monitorresult.ParseResultDetails(consts.ProbeType(result.MonitorType), result.DetailsJSON)
 	if err != nil && !errors.Is(err, monitorresult.ErrEmptyDetails) {
 		return err

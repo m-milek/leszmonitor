@@ -128,7 +128,7 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 	mockHTTPClient.On("Do", mock.Anything).Return(successResponse, nil).Once()
 	httpClientOrMock = mockHTTPClient
 
-	response := probe.Run(context.Background(), uuid.Nil)
+	response, _ := probe.Run(context.Background(), uuid.Nil)
 
 	assert.Equal(t, shared.MonitorStatusUp, response.GetStatus())
 	assert.Empty(t, response.GetErrorDetails().Errors)
@@ -153,7 +153,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
 	httpClientOrMock = mockClient
 
-	response := probe.Run(context.Background(), uuid.Nil)
+	response, _ := probe.Run(context.Background(), uuid.Nil)
 
 	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
 
@@ -170,11 +170,11 @@ func TestHttpMonitorRunError(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(nil, errors.New("connection refused")).Once()
 	httpClientOrMock = mockClient
 
-	response := probe.Run(context.Background(), uuid.Nil)
+	response, _ := probe.Run(context.Background(), uuid.Nil)
 
-	assert.Equal(t, shared.MonitorStatusError, response.GetStatus())
-	assert.NotEmpty(t, response.GetErrorDetails().Errors)
-	assert.Contains(t, response.GetErrorDetails().Errors[0], "connection refused")
+	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
+	assert.NotEmpty(t, response.GetErrorDetails().Failures)
+	assert.Contains(t, response.GetErrorDetails().Failures[0], "connection refused")
 
 	mockClient.AssertExpectations(t)
 }
@@ -193,7 +193,7 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 	mockClient.On("Do", mock.Anything).Return(failedResponse, nil).Once()
 	httpClientOrMock = mockClient
 
-	response := probe.Run(context.Background(), uuid.Nil)
+	response, _ := probe.Run(context.Background(), uuid.Nil)
 
 	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
 

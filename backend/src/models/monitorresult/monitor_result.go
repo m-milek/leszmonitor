@@ -16,7 +16,6 @@ type IMonitorResult interface {
 	GetDurationMs() int64
 	GetDetails() IMonitorResultDetails
 	GetCreatedAt() string
-	AddError(err string)
 	AddFailure(fail string)
 	SetDuration(duration int64)
 	SetDetails(details IMonitorResultDetails)
@@ -108,14 +107,6 @@ func (m *MonitorResult) GetDetails() IMonitorResultDetails {
 
 func (m *MonitorResult) GetCreatedAt() string {
 	return m.CreatedAt
-}
-
-func (m *MonitorResult) AddError(err string) {
-	if m.ErrorDetails == nil {
-		m.ErrorDetails = &ErrorDetails{}
-	}
-	m.ErrorDetails.Errors = append(m.ErrorDetails.Errors, err)
-	m.Status = shared.MonitorStatusError
 }
 
 func (m *MonitorResult) AddFailure(fail string) {
