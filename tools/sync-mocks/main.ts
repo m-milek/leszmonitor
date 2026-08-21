@@ -5,7 +5,7 @@ const AUTH_USERNAME = process.env.AUTH_USERNAME || "";
 const AUTH_PASSWORD = process.env.AUTH_PASSWORD || "";
 
 const BASE_URL = "http://localhost:7001";
-const MOCKS_BASE_PATH = "../../frontend/e2e/mocks"
+const MOCKS_BASE_PATH = "../../leszmonitor-ui/e2e/mocks"
 
 interface MockMapping {
   url: string;

@@ -5,7 +5,7 @@ import { getLoginToken } from "@/lib/utils.ts";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { isMonitorResultMessage } from "@/lib/types.ts";
-import { BACKEND_WS_URL, QUERY_KEYS } from "@/lib/consts.ts";
+import { QUERY_KEYS, SERVER_WS_URL } from "@/lib/consts.ts";
 
 type WebSocketProviderProps = {
   children: ReactNode;
@@ -51,7 +51,7 @@ export function WebSocketProvider({
   }, []);
 
   const { readyState, sendMessage, getWebSocket } = useWebSocket(
-    BACKEND_WS_URL,
+    SERVER_WS_URL,
     {
       share: true,
       onMessage,

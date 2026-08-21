@@ -1,12 +1,12 @@
 import { authFetch } from "@/lib/data/utils.ts";
-import { BACKEND_API_URL } from "@/lib/consts.ts";
+import { SERVER_API_URL } from "@/lib/consts.ts";
 import type { MonitorResult, Pagination } from "@/lib/types.ts";
 
 export const getLatestMonitorResultByMonitorId = async (
   monitorId: string,
 ): Promise<MonitorResult | null> => {
   const res = await authFetch(
-    `${BACKEND_API_URL}/monitors/${monitorId}/results/latest`,
+    `${SERVER_API_URL}/monitors/${monitorId}/results/latest`,
   );
 
   if (res.status === 404) return null;
@@ -29,7 +29,7 @@ export const getMonitorResultsByMonitorId = async (
     per_page: pagination.perPage.toString(),
   });
   const res = await authFetch(
-    `${BACKEND_API_URL}/monitors/${monitorId}/results?${queryParams.toString()}`,
+    `${SERVER_API_URL}/monitors/${monitorId}/results?${queryParams.toString()}`,
   );
 
   if (res.status === 404) return null;

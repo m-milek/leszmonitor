@@ -10,25 +10,35 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as RegisterIndexRouteImport } from './routes/register/index'
-import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
-import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
+import { Route as LoginIndexRouteImport } from './routes/login/index'
+import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
+import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects/index'
 import { Route as AuthenticatedProjectsProjectIdRouteImport } from './routes/_authenticated/projects/$projectId'
-import { Route as AuthenticatedUserUsernameIndexRouteImport } from './routes/_authenticated/user/$username/index'
 import { Route as AuthenticatedProjectsProjectIdIndexRouteImport } from './routes/_authenticated/projects/$projectId/index'
 import { Route as AuthenticatedProjectsProjectIdAuditLogRouteImport } from './routes/_authenticated/projects/$projectId/audit-log'
-import { Route as AuthenticatedUserUsernameSettingsIndexRouteImport } from './routes/_authenticated/user/$username/settings/index'
-import { Route as AuthenticatedProjectsProjectIdMonitorsIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/index'
+import { Route as AuthenticatedUserUsernameIndexRouteImport } from './routes/_authenticated/user/$username/index'
 import { Route as AuthenticatedProjectsProjectIdMembersIndexRouteImport } from './routes/_authenticated/projects/$projectId/members/index'
-import { Route as AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/new/index'
+import { Route as AuthenticatedProjectsProjectIdMonitorsIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/index'
+import { Route as AuthenticatedUserUsernameSettingsIndexRouteImport } from './routes/_authenticated/user/$username/settings/index'
 import { Route as AuthenticatedProjectsProjectIdMonitorsMonitorSlugIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/$monitorSlug/index'
 import { Route as AuthenticatedProjectsProjectIdMonitorsMonitorSlugEditRouteImport } from './routes/_authenticated/projects/$projectId/monitors/$monitorSlug/edit'
+import { Route as AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport } from './routes/_authenticated/projects/$projectId/monitors/new/index'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const LoginIndexRoute = LoginIndexRouteImport.update({
+  id: '/login/',
+  path: '/login/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterIndexRoute = RegisterIndexRouteImport.update({
@@ -36,14 +46,14 @@ const RegisterIndexRoute = RegisterIndexRouteImport.update({
   path: '/register/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginIndexRoute = LoginIndexRouteImport.update({
-  id: '/login/',
-  path: '/login/',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedDocsIndexRoute = AuthenticatedDocsIndexRouteImport.update({
+  id: '/docs/',
+  path: '/docs/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProjectsIndexRoute =
@@ -52,26 +62,10 @@ const AuthenticatedProjectsIndexRoute =
     path: '/projects/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDocsIndexRoute = AuthenticatedDocsIndexRouteImport.update({
-  id: '/docs/',
-  path: '/docs/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedProjectsProjectIdRoute =
   AuthenticatedProjectsProjectIdRouteImport.update({
     id: '/projects/$projectId',
     path: '/projects/$projectId',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedUserUsernameIndexRoute =
-  AuthenticatedUserUsernameIndexRouteImport.update({
-    id: '/user/$username/',
-    path: '/user/$username/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedProjectsProjectIdIndexRoute =
@@ -86,17 +80,11 @@ const AuthenticatedProjectsProjectIdAuditLogRoute =
     path: '/audit-log',
     getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
-const AuthenticatedUserUsernameSettingsIndexRoute =
-  AuthenticatedUserUsernameSettingsIndexRouteImport.update({
-    id: '/user/$username/settings/',
-    path: '/user/$username/settings/',
+const AuthenticatedUserUsernameIndexRoute =
+  AuthenticatedUserUsernameIndexRouteImport.update({
+    id: '/user/$username/',
+    path: '/user/$username/',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedProjectsProjectIdMonitorsIndexRoute =
-  AuthenticatedProjectsProjectIdMonitorsIndexRouteImport.update({
-    id: '/monitors/',
-    path: '/monitors/',
-    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
 const AuthenticatedProjectsProjectIdMembersIndexRoute =
   AuthenticatedProjectsProjectIdMembersIndexRouteImport.update({
@@ -104,11 +92,17 @@ const AuthenticatedProjectsProjectIdMembersIndexRoute =
     path: '/members/',
     getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
-const AuthenticatedProjectsProjectIdMonitorsNewIndexRoute =
-  AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport.update({
-    id: '/monitors/new/',
-    path: '/monitors/new/',
+const AuthenticatedProjectsProjectIdMonitorsIndexRoute =
+  AuthenticatedProjectsProjectIdMonitorsIndexRouteImport.update({
+    id: '/monitors/',
+    path: '/monitors/',
     getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
+  } as any)
+const AuthenticatedUserUsernameSettingsIndexRoute =
+  AuthenticatedUserUsernameSettingsIndexRouteImport.update({
+    id: '/user/$username/settings/',
+    path: '/user/$username/settings/',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedProjectsProjectIdMonitorsMonitorSlugIndexRoute =
   AuthenticatedProjectsProjectIdMonitorsMonitorSlugIndexRouteImport.update({
@@ -120,6 +114,12 @@ const AuthenticatedProjectsProjectIdMonitorsMonitorSlugEditRoute =
   AuthenticatedProjectsProjectIdMonitorsMonitorSlugEditRouteImport.update({
     id: '/monitors/$monitorSlug/edit',
     path: '/monitors/$monitorSlug/edit',
+    getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
+  } as any)
+const AuthenticatedProjectsProjectIdMonitorsNewIndexRoute =
+  AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport.update({
+    id: '/monitors/new/',
+    path: '/monitors/new/',
     getParentRoute: () => AuthenticatedProjectsProjectIdRoute,
   } as any)
 
@@ -250,12 +250,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/register/': {
-      id: '/register/'
-      path: '/register'
-      fullPath: '/register/'
-      preLoaderRoute: typeof RegisterIndexRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/login/': {
       id: '/login/'
@@ -264,18 +264,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/register/': {
+      id: '/register/'
+      path: '/register'
+      fullPath: '/register/'
+      preLoaderRoute: typeof RegisterIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/projects/': {
-      id: '/_authenticated/projects/'
-      path: '/projects'
-      fullPath: '/projects/'
-      preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/docs/': {
@@ -285,11 +285,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin/': {
-      id: '/_authenticated/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+    '/_authenticated/projects/': {
+      id: '/_authenticated/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/projects/$projectId': {
@@ -297,13 +297,6 @@ declare module '@tanstack/react-router' {
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId'
       preLoaderRoute: typeof AuthenticatedProjectsProjectIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/user/$username/': {
-      id: '/_authenticated/user/$username/'
-      path: '/user/$username'
-      fullPath: '/user/$username/'
-      preLoaderRoute: typeof AuthenticatedUserUsernameIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/projects/$projectId/': {
@@ -320,19 +313,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsProjectIdAuditLogRouteImport
       parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/_authenticated/user/$username/settings/': {
-      id: '/_authenticated/user/$username/settings/'
-      path: '/user/$username/settings'
-      fullPath: '/user/$username/settings/'
-      preLoaderRoute: typeof AuthenticatedUserUsernameSettingsIndexRouteImport
+    '/_authenticated/user/$username/': {
+      id: '/_authenticated/user/$username/'
+      path: '/user/$username'
+      fullPath: '/user/$username/'
+      preLoaderRoute: typeof AuthenticatedUserUsernameIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/projects/$projectId/monitors/': {
-      id: '/_authenticated/projects/$projectId/monitors/'
-      path: '/monitors'
-      fullPath: '/projects/$projectId/monitors/'
-      preLoaderRoute: typeof AuthenticatedProjectsProjectIdMonitorsIndexRouteImport
-      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
     '/_authenticated/projects/$projectId/members/': {
       id: '/_authenticated/projects/$projectId/members/'
@@ -341,12 +327,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsProjectIdMembersIndexRouteImport
       parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
-    '/_authenticated/projects/$projectId/monitors/new/': {
-      id: '/_authenticated/projects/$projectId/monitors/new/'
-      path: '/monitors/new'
-      fullPath: '/projects/$projectId/monitors/new/'
-      preLoaderRoute: typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport
+    '/_authenticated/projects/$projectId/monitors/': {
+      id: '/_authenticated/projects/$projectId/monitors/'
+      path: '/monitors'
+      fullPath: '/projects/$projectId/monitors/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdMonitorsIndexRouteImport
       parentRoute: typeof AuthenticatedProjectsProjectIdRoute
+    }
+    '/_authenticated/user/$username/settings/': {
+      id: '/_authenticated/user/$username/settings/'
+      path: '/user/$username/settings'
+      fullPath: '/user/$username/settings/'
+      preLoaderRoute: typeof AuthenticatedUserUsernameSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/projects/$projectId/monitors/$monitorSlug/': {
       id: '/_authenticated/projects/$projectId/monitors/$monitorSlug/'
@@ -360,6 +353,13 @@ declare module '@tanstack/react-router' {
       path: '/monitors/$monitorSlug/edit'
       fullPath: '/projects/$projectId/monitors/$monitorSlug/edit'
       preLoaderRoute: typeof AuthenticatedProjectsProjectIdMonitorsMonitorSlugEditRouteImport
+      parentRoute: typeof AuthenticatedProjectsProjectIdRoute
+    }
+    '/_authenticated/projects/$projectId/monitors/new/': {
+      id: '/_authenticated/projects/$projectId/monitors/new/'
+      path: '/monitors/new'
+      fullPath: '/projects/$projectId/monitors/new/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdMonitorsNewIndexRouteImport
       parentRoute: typeof AuthenticatedProjectsProjectIdRoute
     }
   }

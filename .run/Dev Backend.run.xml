@@ -1,11 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Dev Backend" type="TaskRunConfiguration" factoryName="TaskRunConfiguration">
-    <taskfile taskPath="" filename="$PROJECT_DIR$/Taskfile.yaml" task="backend:dev" workingDirectory="$PROJECT_DIR$/backend/src" arguments="" pty="false">
-      <envs>
-        <env name="GOPATH" value="$USER_HOME$/Software/go" />
-      </envs>
-      <vars />
-    </taskfile>
-    <method v="2" />
-  </configuration>
+    <configuration default="false" name="Dev Server" type="TaskRunConfiguration" factoryName="TaskRunConfiguration">
+        <taskfile taskPath="" filename="$PROJECT_DIR$/Taskfile.yaml" task="server:dev"
+                  workingDirectory="$PROJECT_DIR$/leszmonitor-server/src" arguments="" pty="false">
+            <envs>
+                <env name="GOPATH" value="$USER_HOME$/Software/go"/>
+            </envs>
+            <vars/>
+        </taskfile>
+        <method v="2"/>
+    </configuration>
 </component>

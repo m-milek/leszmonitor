@@ -138,7 +138,6 @@ function RouteComponent() {
           <CardFooter className="flex-col items-center gap-4">
             <Button
               className="w-full"
-              onClick={() => form.handleSubmit()}
               type="submit"
               form="login-form"
             >

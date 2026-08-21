@@ -8,19 +8,19 @@ import { fileURLToPath, URL } from "node:url";
 import { resolve } from "node:path";
 import { cp, mkdir, rm } from "node:fs/promises";
 
-const frontendDistDir = "dist";
-const backendStaticDir = fileURLToPath(
-  new URL("../backend/src/static", import.meta.url),
+const uiDistDir = "dist";
+const serverStaticDir = fileURLToPath(
+  new URL("../leszmonitor-server/src/static", import.meta.url),
 );
 
-const copyBackendStatic = () => ({
-  name: "copy-backend-static",
+const copyServerStatic = () => ({
+  name: "copy-server-static",
   async closeBundle() {
-    const sourceDir = resolve(process.cwd(), frontendDistDir);
+    const sourceDir = resolve(process.cwd(), uiDistDir);
 
-    await rm(backendStaticDir, { recursive: true, force: true });
-    await mkdir(backendStaticDir, { recursive: true });
-    await cp(sourceDir, backendStaticDir, { recursive: true });
+    await rm(serverStaticDir, { recursive: true, force: true });
+    await mkdir(serverStaticDir, { recursive: true });
+    await cp(sourceDir, serverStaticDir, { recursive: true });
   },
 });
 
@@ -34,10 +34,10 @@ export default defineConfig({
     }),
     viteReact(),
     tailwindcss(),
-    copyBackendStatic(),
+    copyServerStatic(),
   ],
   build: {
-    outDir: frontendDistDir,
+    outDir: uiDistDir,
   },
   resolve: {
     alias: {

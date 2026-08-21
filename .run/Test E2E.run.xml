@@ -1,12 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Test E2E" type="JavaScriptTestRunnerPlaywright">
-    <node-interpreter value="project" />
-    <playwright-package value="$PROJECT_DIR$/frontend/node_modules/@playwright/test" />
-    <working-dir value="$PROJECT_DIR$/frontend/e2e" />
-    <cli-options value="--headed" />
-    <envs />
-    <scope-kind value="DIRECTORY" />
-    <test-directory value="$PROJECT_DIR$/frontend/e2e" />
-    <method v="2" />
-  </configuration>
+    <configuration default="false" name="Test E2E" type="JavaScriptTestRunnerPlaywright">
+        <node-interpreter value="project"/>
+        <playwright-package value="$PROJECT_DIR$/leszmonitor-ui/node_modules/@playwright/test"/>
+        <working-dir value="$PROJECT_DIR$/leszmonitor-ui/e2e"/>
+        <cli-options value="--headed"/>
+        <envs/>
+        <scope-kind value="DIRECTORY"/>
+        <test-directory value="$PROJECT_DIR$/leszmonitor-ui/e2e"/>
+        <method v="2"/>
+    </configuration>
 </component>

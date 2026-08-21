@@ -1,4 +1,4 @@
-import { BACKEND_API_URL } from "@/lib/consts.ts";
+import { SERVER_API_URL } from "@/lib/consts.ts";
 import { authFetch } from "@/lib/data/utils.ts";
 import type {
   Monitor,
@@ -27,7 +27,7 @@ export const getMonitorsByProjectSlug = async (
   const query = new URLSearchParams({
     projectSlug,
   }).toString();
-  const res = await authFetch(`${BACKEND_API_URL}/monitors?${query}`, {
+  const res = await authFetch(`${SERVER_API_URL}/monitors?${query}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export const getMonitorBySlug = async (
   monitorSlug: string,
 ): Promise<Monitor> => {
   const res = await authFetch(
-    `${BACKEND_API_URL}/projects/${projectSlug}/monitors/${monitorSlug}`,
+    `${SERVER_API_URL}/projects/${projectSlug}/monitors/${monitorSlug}`,
     {
       method: "GET",
       headers: {
@@ -60,7 +60,7 @@ export const createMonitor = async (monitorData: MonitorCreatePayload) => {
   const query = new URLSearchParams({
     projectSlug: monitorData.projectSlug,
   }).toString();
-  const res = await authFetch(`${BACKEND_API_URL}/monitors?${query}`, {
+  const res = await authFetch(`${SERVER_API_URL}/monitors?${query}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -75,7 +75,7 @@ export const updateMonitor = async (
   monitorId: string,
   monitorData: MonitorUpdatePayload,
 ) => {
-  const res = await authFetch(`${BACKEND_API_URL}/monitors/${monitorId}`, {
+  const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -90,22 +90,19 @@ export const updateMonitorState = async (
   monitorId: string,
   newState: string,
 ) => {
-  const res = await authFetch(
-    `${BACKEND_API_URL}/monitors/${monitorId}/state`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ newState }),
+  const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}/state`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({ newState }),
+  });
 
   return res.json();
 };
 
 export const deleteMonitor = async (monitorId: string) => {
-  await authFetch(`${BACKEND_API_URL}/monitors/${monitorId}`, {
+  await authFetch(`${SERVER_API_URL}/monitors/${monitorId}`, {
     method: "DELETE",
   });
 };

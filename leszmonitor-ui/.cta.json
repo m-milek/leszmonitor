@@ -1,5 +1,5 @@
 {
-  "projectName": "frontend",
+  "projectName": "leszmonitor-ui",
   "mode": "file-router",
   "typescript": true,
   "tailwind": true,
@@ -8,7 +8,5 @@
   "addOnOptions": {},
   "version": 1,
   "framework": "react-cra",
-  "chosenAddOns": [
-    "shadcn"
-  ]
+  "chosenAddOns": ["shadcn"]
 }

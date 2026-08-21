@@ -1,16 +1,16 @@
 version: '3'
 
 includes:
-  backend:
-    taskfile: ./backend
-    dir: ./backend
-  frontend:
-    taskfile: ./frontend
-    dir: ./frontend
+  server:
+    taskfile: ./leszmonitor-server
+    dir: ./leszmonitor-server
+  ui:
+    taskfile: ./leszmonitor-ui
+    dir: ./leszmonitor-ui
 
 tasks:
   docker:build:
-    desc: Build both frontend and backend Docker images
+    desc: Build both ui and server Docker images
     cmd: |
       docker build \
       --build-arg CI_BUILD_NUMBER=$CI_BUILD_NUMBER \
@@ -34,27 +34,20 @@ tasks:
     cmds:
       - docker compose down
 
-  # Combined tasks
   dev:
-    desc: Run both frontend and backend in development mode
-    deps: [ backend:dev, frontend:dev ]
+    desc: Run both ui and server in development mode
+    deps: [ server:dev, ui:dev ]
 
   build:
-    desc: Build both frontend and backend
-    deps: [ backend:build, frontend:build ]
+    desc: Build both ui and server
+    cmds:
+      - task: ui:build
+      - task: server:build
 
   test:
-    desc: Run tests for both frontend and backend
-    deps: [ backend:test, frontend:test ]
+    desc: Run tests for both ui and server
+    deps: [ server:test, ui:test ]
 
   clean:
     desc: Clean all build artifacts
-    deps: [ frontend:clean, backend:clean, logs:clean ]
-
-  logs:clean:
-    desc: Remove logs
-    cmds:
-      - rm -rf ./.dev-logs/* || true
-      - rm -rf ./backend/.dev-logs/* || true
-      - rm -rf ./.logs/* || true
-      - rm -rf ./backend/logs/* || true
+    deps: [ ui:clean, server:clean ]
