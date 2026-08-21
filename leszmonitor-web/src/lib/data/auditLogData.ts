@@ -1,6 +1,6 @@
 import type { AuditLogEntry, AuditLogFilters } from "@/lib/types.ts";
 import { authFetch } from "@/lib/data/utils.ts";
-import { BACKEND_API_URL } from "@/lib/consts.ts";
+import { SERVER_API_URL } from "@/lib/consts.ts";
 
 const filterIntoParams = (filter: AuditLogFilters): URLSearchParams => {
   const params = new URLSearchParams();
@@ -22,7 +22,7 @@ export const getAuditLogByFilter = async (
   const queryParams = filterIntoParams(filter);
 
   const response = await authFetch(
-    `${BACKEND_API_URL}/audit-log?${queryParams.toString()}`,
+    `${SERVER_API_URL}/audit-log?${queryParams.toString()}`,
     {
       method: "GET",
       headers: {

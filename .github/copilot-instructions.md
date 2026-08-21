@@ -3,7 +3,7 @@
 ## Project summary
 
 - Leszmonitor: lightweight homelab monitoring.
-- Backend: Go service in `backend/src`.
+- Server: Go service in `server/src`.
 - Frontend: web app in `frontend`.
 
 ## Workflow (Taskfile)
@@ -21,7 +21,7 @@ task --list
 
 ## Coding guidelines
 
-- Keep changes scoped and consistent with existing patterns in each area (Go backend, frontend).
+- Keep changes scoped and consistent with existing patterns in each area (Go server, frontend).
 - Avoid introducing new dependencies unless necessary; if you add one, update the relevant manifest.
 - Add tests only when the feature is trivial to test; if not, ask before proceeding.
 - Pay attention to backend security practices, especially around authentication and data handling.

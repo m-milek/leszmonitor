@@ -1,4 +1,4 @@
-import { BACKEND_API_URL } from "@/lib/consts.ts";
+import { SERVER_API_URL } from "@/lib/consts.ts";
 import type { Project, ProjectRole, Timestamps } from "@/lib/types.ts";
 import { authFetch } from "@/lib/data/utils.ts";
 
@@ -23,7 +23,7 @@ export const getProjects = async (userQuery?: string): Promise<Project[]> => {
     queryParams.append("user", userQuery);
   }
   const res = await authFetch(
-    `${BACKEND_API_URL}/projects?${queryParams.toString()}`,
+    `${SERVER_API_URL}/projects?${queryParams.toString()}`,
   );
 
   const projects = (await res.json()) as Project[];
@@ -33,13 +33,13 @@ export const getProjects = async (userQuery?: string): Promise<Project[]> => {
 export const getProjectBySlug = async (
   projectSlug: string,
 ): Promise<Project> => {
-  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectSlug}`);
+  const res = await authFetch(`${SERVER_API_URL}/projects/${projectSlug}`);
 
   return parseProject((await res.json()) as Project);
 };
 
 export const addProject = async (project: ProjectInput): Promise<Project> => {
-  const res = await authFetch(`${BACKEND_API_URL}/projects`, {
+  const res = await authFetch(`${SERVER_API_URL}/projects`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(project),
@@ -49,7 +49,7 @@ export const addProject = async (project: ProjectInput): Promise<Project> => {
 };
 
 export const deleteProject = async (projectId: string): Promise<void> => {
-  const res = await authFetch(`${BACKEND_API_URL}/projects/${projectId}`, {
+  const res = await authFetch(`${SERVER_API_URL}/projects/${projectId}`, {
     method: "DELETE",
   });
 
@@ -68,7 +68,7 @@ export const addMemberToProject = async (
   payload: AddProjectMemberPayload,
 ): Promise<void> => {
   const res = await authFetch(
-    `${BACKEND_API_URL}/projects/${projectId}/members`,
+    `${SERVER_API_URL}/projects/${projectId}/members`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -90,7 +90,7 @@ export const removeMemberFromProject = async (
   payload: RemoveProjectMemberPayload,
 ): Promise<void> => {
   const res = await authFetch(
-    `${BACKEND_API_URL}/projects/${projectId}/members`,
+    `${SERVER_API_URL}/projects/${projectId}/members`,
     {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },

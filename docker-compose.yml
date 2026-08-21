@@ -19,6 +19,6 @@ services:
       INSTANCE_ADMIN_PASSWORD: 123123
       LOGDY_CONFIG_FILE_PATH: /app/logdy.json
     volumes:
-      - ./backend/src/leszmonitor.db:/app/leszmonitor.db
+      - ./leszmonitor-server/src/leszmonitor.db:/app/leszmonitor.db
       - ./logdy.json:/app/logdy.json
     restart: unless-stopped
