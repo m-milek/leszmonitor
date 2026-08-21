@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	util "github.com/m-milek/leszmonitor/api/api_util"
-	websocket2 "github.com/m-milek/leszmonitor/workers/websocket"
+	websocketworker "github.com/m-milek/leszmonitor/workers/websocket"
 )
 
 var upgrader = websocket.Upgrader{
@@ -24,5 +24,5 @@ func WebSocketConnectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	websocket2.RunWebSocketWorker(ctx, conn)
+	websocketworker.RunWebSocketWorker(ctx, conn)
 }

@@ -4,7 +4,7 @@
 
 - Leszmonitor: lightweight homelab monitoring.
 - Server: Go service in `leszmonitor-server/src`.
-- UI: web app in `leszmonitor-web`.
+- UI: web app in `leszmonitor-ui`.
 
 ## Workflow (Taskfile)
 

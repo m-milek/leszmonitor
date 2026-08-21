@@ -1,5 +1,5 @@
 <div align="center">
-<img src="leszmonitor-web/public/logo-512x512.png" alt="Leszmonitor Logo" height="150" />
+<img src="leszmonitor-ui/public/logo-512x512.png" alt="Leszmonitor Logo" height="150" />
 <h1 style="margin: 0;">Leszmonitor</h1>
 </div>
 <div align="center">

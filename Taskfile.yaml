@@ -4,13 +4,13 @@ includes:
   server:
     taskfile: ./leszmonitor-server
     dir: ./leszmonitor-server
-  web:
-    taskfile: ./leszmonitor-web
-    dir: ./leszmonitor-web
+  ui:
+    taskfile: ./leszmonitor-ui
+    dir: ./leszmonitor-ui
 
 tasks:
   docker:build:
-    desc: Build both web and server Docker images
+    desc: Build both ui and server Docker images
     cmd: |
       docker build \
       --build-arg CI_BUILD_NUMBER=$CI_BUILD_NUMBER \
@@ -35,19 +35,19 @@ tasks:
       - docker compose down
 
   dev:
-    desc: Run both web and server in development mode
-    deps: [ server:dev, web:dev ]
+    desc: Run both ui and server in development mode
+    deps: [ server:dev, ui:dev ]
 
   build:
-    desc: Build both web and server
+    desc: Build both ui and server
     cmds:
-      - task: web:build
+      - task: ui:build
       - task: server:build
 
   test:
-    desc: Run tests for both web and server
-    deps: [ server:test, web:test ]
+    desc: Run tests for both ui and server
+    deps: [ server:test, ui:test ]
 
   clean:
     desc: Clean all build artifacts
-    deps: [ web:clean, server:clean ]
+    deps: [ ui:clean, server:clean ]

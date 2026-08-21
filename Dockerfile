@@ -1,11 +1,11 @@
-FROM node:24-alpine AS web-builder
+FROM node:24-alpine AS ui-builder
 
 WORKDIR /app
 
-COPY leszmonitor-web/package*.json ./
+COPY leszmonitor-ui/package*.json ./
 RUN npm ci
 
-COPY leszmonitor-web/ .
+COPY leszmonitor-ui/ .
 
 RUN npm run build
 
@@ -26,7 +26,7 @@ RUN go mod download
 
 COPY leszmonitor-server/src/ ./src
 
-COPY --from=web-builder /app/dist ./src/static
+COPY --from=ui-builder /app/dist ./src/static
 
 WORKDIR /app/src
 
