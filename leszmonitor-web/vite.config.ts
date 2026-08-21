@@ -8,7 +8,7 @@ import { fileURLToPath, URL } from "node:url";
 import { resolve } from "node:path";
 import { cp, mkdir, rm } from "node:fs/promises";
 
-const frontendDistDir = "dist";
+const uiDistDir = "dist";
 const serverStaticDir = fileURLToPath(
   new URL("../leszmonitor-server/src/static", import.meta.url),
 );
@@ -16,7 +16,7 @@ const serverStaticDir = fileURLToPath(
 const copyServerStatic = () => ({
   name: "copy-server-static",
   async closeBundle() {
-    const sourceDir = resolve(process.cwd(), frontendDistDir);
+    const sourceDir = resolve(process.cwd(), uiDistDir);
 
     await rm(serverStaticDir, { recursive: true, force: true });
     await mkdir(serverStaticDir, { recursive: true });
@@ -37,7 +37,7 @@ export default defineConfig({
     copyServerStatic(),
   ],
   build: {
-    outDir: frontendDistDir,
+    outDir: uiDistDir,
   },
   resolve: {
     alias: {

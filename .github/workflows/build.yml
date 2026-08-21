@@ -28,7 +28,7 @@ jobs:
         with:
           version: 3.x
 
-      - name: Mock frontend assets
+      - name: Mock web assets
         run: |
           mkdir -p leszmonitor-server/src/static &&
           touch leszmonitor-server/src/static/index.html
@@ -46,13 +46,13 @@ jobs:
           path: leszmonitor-server/src/coverage.out
           retention-days: 1
 
-  frontend:
-    name: Front-end
+  leszmonitor-web:
+    name: Web
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: ./leszmonitor-web
 
     steps:
       - name: Checkout code
@@ -63,19 +63,19 @@ jobs:
         with:
           node-version: '24.x'
           cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
+          cache-dependency-path: './leszmonitor-web/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run frontend tests
+      - name: Run web tests
         run: npm run test:coverage
 
       - name: Upload TS Coverage Report
         uses: actions/upload-artifact@v6
         with:
           name: ts-coverage-report
-          path: frontend/coverage
+          path: leszmonitor-web/coverage
           retention-days: 1
 
       - name: Build application
@@ -84,7 +84,7 @@ jobs:
   sonar:
     name: SonarQube
     runs-on: ubuntu-latest
-    needs: [ leszmonitor-server, frontend ]
+    needs: [ leszmonitor-server, leszmonitor-web ]
     continue-on-error: true
 
     steps:
@@ -102,7 +102,7 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: ts-coverage-report
-          path: frontend/coverage
+          path: leszmonitor-web/coverage
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -118,7 +118,7 @@ jobs:
   e2e:
     name: Docker Build & E2E Tests
     runs-on: ubuntu-latest
-    needs: [ leszmonitor-server, frontend ]
+    needs: [ leszmonitor-server, leszmonitor-web ]
     timeout-minutes: 20
 
     steps:
@@ -144,7 +144,7 @@ jobs:
         with:
           node-version: '24.x'
           cache: 'npm'
-          cache-dependency-path: './frontend/package-lock.json'
+          cache-dependency-path: './leszmonitor-web/package-lock.json'
 
       - name: Initialize DB
         run: touch server/src/leszmonitor.db
@@ -153,4 +153,4 @@ jobs:
         run: task server:db:restore
 
       - name: Run end-to-end tests
-        run: task frontend:test:e2e
+        run: task web:test:e2e

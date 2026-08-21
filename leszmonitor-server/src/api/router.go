@@ -194,6 +194,6 @@ func SetupRouters(
 	// Health
 	protectedRouter.HandleFunc("GET /api/v1/health", controllers.GetHealthCheckHandler)
 
-	// SPA Handler for frontend
+	// SPA Handler for UI
 	publicRouter.Handle("/", newSPAHandler(staticFiles))
 }

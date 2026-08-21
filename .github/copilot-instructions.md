@@ -3,8 +3,8 @@
 ## Project summary
 
 - Leszmonitor: lightweight homelab monitoring.
-- Server: Go service in `server/src`.
-- Frontend: web app in `frontend`.
+- Server: Go service in `leszmonitor-server/src`.
+- UI: web app in `leszmonitor-web`.
 
 ## Workflow (Taskfile)
 
@@ -21,7 +21,7 @@ task --list
 
 ## Coding guidelines
 
-- Keep changes scoped and consistent with existing patterns in each area (Go server, frontend).
+- Keep changes scoped and consistent with existing patterns in each area (Go server, UI).
 - Avoid introducing new dependencies unless necessary; if you add one, update the relevant manifest.
 - Add tests only when the feature is trivial to test; if not, ask before proceeding.
 - Pay attention to backend security practices, especially around authentication and data handling.
@@ -31,7 +31,7 @@ task --list
 - SQLite database
 - JWT auth, user data in context.Context
 
-## Frontend guidelines
+## UI guidelines
 
 - Prefer named exports over default exports
 - All components use props interface named `{ComponentName}Props`
