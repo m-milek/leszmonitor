@@ -188,6 +188,11 @@ func SetupRouters(
 		),
 	)
 
+	protectedRouter.HandleFunc(
+		"GET /api/v1/instance-metadata",
+		h.InstanceMetadata.GetInstanceMetadataHandler,
+	)
+
 	// WebSocket
 	publicRouter.HandleFunc("GET /api/ws", controllers.WebSocketConnectionHandler)
 

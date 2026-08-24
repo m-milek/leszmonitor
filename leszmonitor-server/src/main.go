@@ -52,34 +52,36 @@ func main() {
 		logger.Fatal().Err(err).Msg("Failed to initialize SQLite connection")
 	}
 
-	db := db.Get()
+	database := db.Get()
 
 	projectService := services.NewProjectService(services.ProjectServiceDeps{
-		DB:          db,
+		DB:          database,
 		UserService: nil,
 	})
 	userService := services.NewUserService(services.UserServiceDeps{
-		DB:             db,
+		DB:             database,
 		ProjectService: projectService,
 	})
 	projectService.UserService = userService
 	monitorService := services.NewMonitorService(services.MonitorServiceDeps{
-		DB: db,
+		DB: database,
 	})
 	monitorResultService := services.NewMonitorResultsService(services.MonitorResultsServiceDeps{
-		DB: db,
+		DB: database,
 	})
 	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
-		DB: db,
+		DB: database,
 	})
+	instanceMetadataService := services.NewInstanceMetadataService(services.InstanceMetadataServiceDeps{})
 
 	projectAPIController := controllers.NewProjectAPIController(projectService)
 	userAPIController := controllers.NewUserAPIController(userService)
 	monitorAPIController := controllers.NewMonitorAPIController(monitorService)
 	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
 	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
+	instanceMetadataAPIController := controllers.NewInstanceMetadataAPIController(instanceMetadataService)
 
-	authzMiddlewareService := services.NewAuthzMiddlewareService(db)
+	authzMiddlewareService := services.NewAuthzMiddlewareService(database)
 
 	handlers := api.Handlers{
 		Project:                projectAPIController,
@@ -87,6 +89,7 @@ func main() {
 		Monitor:                monitorAPIController,
 		MonitorResults:         monitorResultsAPIController,
 		AuditLog:               auditLogAPIController,
+		InstanceMetadata:       instanceMetadataAPIController,
 		AuthzMiddlewareService: authzMiddlewareService,
 	}
 
@@ -122,6 +125,6 @@ func main() {
 	wg.Wait()
 	logger.Info().Msg("All processes terminated successfully")
 
-	db.Close()
+	database.Close()
 	logger.Info().Msg("Database connection closed")
 }
