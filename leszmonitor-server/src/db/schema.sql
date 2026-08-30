@@ -115,3 +115,16 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_project_id_created ON audit_logs (project_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS monitor_status_changes (
+    id              TEXT PRIMARY KEY,
+    monitor_id      TEXT NOT NULL,
+    caused_by_id    TEXT NOT NULL, -- UUID of the monitor result that caused the status change
+    previous_status TEXT NOT NULL,
+    next_status     TEXT NOT NULL,
+
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE,
+    FOREIGN KEY (caused_by_id) REFERENCES monitor_results (id) ON DELETE SET NULL
+)

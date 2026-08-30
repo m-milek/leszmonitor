@@ -9,11 +9,6 @@ var (
 	notificationTypeMonitorRun = "monitor_run"
 )
 
-type iNotification interface {
-	GetType() string
-	GetPayload() any
-}
-
 type baseNotification struct {
 	Type string `json:"type"`
 }
@@ -33,12 +28,4 @@ func newMonitorRunNotification(result monitorresult.IMonitorResult, monitor moni
 		Response:  result,
 		MonitorID: monitor.ID.String(),
 	}
-}
-
-func (n *monitorRunNotification) GetType() string {
-	return n.Type
-}
-
-func (n *monitorRunNotification) GetPayload() any {
-	return n.Response
 }

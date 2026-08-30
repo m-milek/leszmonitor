@@ -21,7 +21,7 @@ import (
 //go:embed schema.sql
 var dbSchema embed.FS
 
-var ErrNotFound = errors.New("document not found")
+var ErrNotFound = errors.New("resource not found")
 var ErrAlreadyExists = errors.New("resource already exists")
 
 func isUniqueViolation(err error) bool {
@@ -40,6 +40,7 @@ type DB interface {
 	Monitors() IMonitorDAO
 	Projects() IProjectDAO
 	MonitorResults() IMonitorResultDAO
+	MonitorStatusChanges() IMonitorStatusChangeDAO
 	AuditLog() IAuditLogDAO
 	WithTx(ctx context.Context, fn func(tx DB) error) error
 	Close()
@@ -50,11 +51,12 @@ type Client struct {
 	dbPool
 	sqlxDB *sqlx.DB
 	// cached DAOs to avoid re-allocation on every getter call
-	users          IUserDAO
-	monitors       IMonitorDAO
-	projects       IProjectDAO
-	monitorResults IMonitorResultDAO
-	auditLog       IAuditLogDAO
+	users                IUserDAO
+	monitors             IMonitorDAO
+	projects             IProjectDAO
+	monitorResults       IMonitorResultDAO
+	monitorStatusChanges IMonitorStatusChangeDAO
+	auditLog             IAuditLogDAO
 }
 
 type dbPool struct {
@@ -81,12 +83,13 @@ func newBaseDAO(pool sqlx.ExtContext) baseDAO {
 func newClientFromPool(pool sqlx.ExtContext) *Client {
 	base := newBaseDAO(pool)
 	return &Client{
-		dbPool:         dbPool{pool: pool},
-		users:          newUserDAO(base),
-		monitors:       newMonitorDAO(base),
-		projects:       newProjectDAO(base),
-		monitorResults: newMonitorResultDAO(base),
-		auditLog:       newAuditLogDAO(base),
+		dbPool:               dbPool{pool: pool},
+		users:                newUserDAO(base),
+		monitors:             newMonitorDAO(base),
+		projects:             newProjectDAO(base),
+		monitorResults:       newMonitorResultDAO(base),
+		monitorStatusChanges: newMonitorStatusChangeDAO(base),
+		auditLog:             newAuditLogDAO(base),
 	}
 }
 
@@ -177,11 +180,12 @@ func dbWrap[T any](ctx context.Context, operationName string, operation func() (
 
 // DAO getters (return interfaces for mocking)
 
-func (c *Client) Users() IUserDAO                   { return c.users }
-func (c *Client) Monitors() IMonitorDAO             { return c.monitors }
-func (c *Client) Projects() IProjectDAO             { return c.projects }
-func (c *Client) MonitorResults() IMonitorResultDAO { return c.monitorResults }
-func (c *Client) AuditLog() IAuditLogDAO            { return c.auditLog }
+func (c *Client) Users() IUserDAO                               { return c.users }
+func (c *Client) Monitors() IMonitorDAO                         { return c.monitors }
+func (c *Client) Projects() IProjectDAO                         { return c.projects }
+func (c *Client) MonitorResults() IMonitorResultDAO             { return c.monitorResults }
+func (c *Client) MonitorStatusChanges() IMonitorStatusChangeDAO { return c.monitorStatusChanges }
+func (c *Client) AuditLog() IAuditLogDAO                        { return c.auditLog }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)

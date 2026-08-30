@@ -16,7 +16,8 @@ import (
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/services"
 	"github.com/m-milek/leszmonitor/workers"
-	"github.com/m-milek/leszmonitor/workers/probes"
+	"github.com/m-milek/leszmonitor/workers/probesrunner"
+	"github.com/m-milek/leszmonitor/workers/resultsprocessor"
 )
 
 //go:embed all:static
@@ -29,6 +30,10 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	})
 	wg.Go(func() {
 		workers.StartDataCleanupWorker(ctx)
+	})
+	wg.Go(func() {
+		resultsProcessor := resultsprocessor.NewResultsProcessor(db.Get())
+		resultsProcessor.Run(ctx)
 	})
 }
 

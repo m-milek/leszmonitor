@@ -8,9 +8,7 @@ import (
 	"github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
-	"github.com/m-milek/leszmonitor/util"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
@@ -41,12 +39,6 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 	case <-time.After(3 * time.Second):
 		t.Fatal("Timeout waiting for monitor run result")
 	}
-
-	// Verify that the result was inserted in the DB
-	results, err := realDB.MonitorResults().
-		GetMonitorResultsByMonitorID(ctx, monitor.ID.String(), &util.Pagination{Page: 1, PerPage: 10})
-	require.NoError(t, err)
-	assert.GreaterOrEqual(t, len(results), 1)
 }
 
 func TestIntegration_ProbeRunner_SelfTermination(t *testing.T) {
