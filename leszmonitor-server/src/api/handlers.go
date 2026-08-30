@@ -9,6 +9,7 @@ type Handlers struct {
 	Project                controllers.ProjectAPIController
 	Monitor                controllers.MonitorAPIController
 	MonitorResults         controllers.MonitorResultsAPIController
+	MonitorStats           controllers.MonitorStatsAPIController
 	AuditLog               controllers.AuditLogAPIController
 	User                   controllers.UserAPIController
 	InstanceMetadata       controllers.InstanceMetadataAPIController

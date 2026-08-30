@@ -74,6 +74,9 @@ func main() {
 	monitorResultService := services.NewMonitorResultsService(services.MonitorResultsServiceDeps{
 		DB: database,
 	})
+	monitorStatsService := services.NewMonitorStatsService(services.MonitorStatsServiceDeps{
+		DB: database,
+	})
 	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
 		DB: database,
 	})
@@ -83,6 +86,7 @@ func main() {
 	userAPIController := controllers.NewUserAPIController(userService)
 	monitorAPIController := controllers.NewMonitorAPIController(monitorService)
 	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
+	monitorStatsAPIController := controllers.NewMonitorStatsAPIController(monitorStatsService)
 	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
 	instanceMetadataAPIController := controllers.NewInstanceMetadataAPIController(instanceMetadataService)
 
@@ -93,6 +97,7 @@ func main() {
 		User:                   userAPIController,
 		Monitor:                monitorAPIController,
 		MonitorResults:         monitorResultsAPIController,
+		MonitorStats:           monitorStatsAPIController,
 		AuditLog:               auditLogAPIController,
 		InstanceMetadata:       instanceMetadataAPIController,
 		AuthzMiddlewareService: authzMiddlewareService,

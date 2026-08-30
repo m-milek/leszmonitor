@@ -193,6 +193,16 @@ func SetupRouters(
 		h.InstanceMetadata.GetInstanceMetadataHandler,
 	)
 
+	protectedRouter.HandleFunc(
+		"GET /api/v1/monitors/{monitorId}/stats/average-latency",
+		middleware.RequireMonitorPermission(
+			h.AuthzMiddlewareService,
+			models.PermissionMonitorReader,
+		)(
+			h.MonitorStats.GetAverageLatencyByMonitorIDHandler,
+		),
+	)
+
 	// WebSocket
 	publicRouter.HandleFunc("GET /api/ws", controllers.WebSocketConnectionHandler)
 

@@ -22,6 +22,7 @@ import { ButtonGroup } from "@/components/ui/button-group.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { PauseIcon, PlayIcon, TrashIcon } from "lucide-react";
 import { MonitorStatusPill } from "@/components/leszmonitor/MonitorStatusPill.tsx";
+import { getAverageLatencyByMonitorId } from "@/lib/data/monitorStats.ts";
 
 const latencyChartConfig = {
   durationMs: {
@@ -38,11 +39,6 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const pagination: Pagination = {
     page: 1,
-    perPage: 20,
-  };
-
-  const largePagination: Pagination = {
-    page: 1,
     perPage: 100,
   };
 
@@ -57,8 +53,17 @@ function RouteComponent() {
 
   const { data: monitorResults } = useQuery({
     enabled: !!monitor,
-    queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", largePagination],
-    queryFn: () => getMonitorResultsByMonitorId(monitor!.id, largePagination),
+    queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", pagination],
+    queryFn: () => getMonitorResultsByMonitorId(monitor!.id, pagination),
+  });
+
+  const { data: averageLatency } = useQuery({
+    enabled: !!monitor,
+    queryKey: [QUERY_KEYS.MONITOR_AVERAGE_LATENCY, monitor?.id ?? ""],
+    queryFn: () =>
+      getAverageLatencyByMonitorId(monitor!.id, {
+        from: new Date(Date.now() - 24 * 60 * 60 * 1000), // last 24 hours
+      }),
   });
 
   const mutation = useMutation({
@@ -107,6 +112,14 @@ function RouteComponent() {
             {JSON.stringify(monitor, null, 2)}
           </pre>
           <BatteryChart monitorResults={monitorResults ?? []} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="min-w-0">
+          <TypographyH2>Average Latency (last 24h)</TypographyH2>
+          {averageLatency && (
+            <p>{averageLatency.averageLatency.toFixed(2)} ms</p>
+          )}
         </CardContent>
       </Card>
       <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
