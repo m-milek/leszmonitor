@@ -12,12 +12,13 @@ import (
 
 // MockDB is a simple implementation of DB for tests.
 type MockDB struct {
-	UsersDAO          IUserDAO
-	MonitorsDAO       IMonitorDAO
-	ProjectsDAO       IProjectDAO
-	MonitorResultsDAO IMonitorResultDAO
-	AuditLogDAO       IAuditLogDAO
-	CloseFn           func()
+	UsersDAO                IUserDAO
+	MonitorsDAO             IMonitorDAO
+	ProjectsDAO             IProjectDAO
+	MonitorResultsDAO       IMonitorResultDAO
+	MonitorStatusChangesDAO IMonitorStatusChangeDAO
+	AuditLogDAO             IAuditLogDAO
+	CloseFn                 func()
 }
 
 type MockUserDAO struct {
@@ -141,11 +142,12 @@ func (r *MockAuditLogDAO) Record(ctx context.Context, params security.AuditLogPa
 	return args.Error(0)
 }
 
-func (m *MockDB) Users() IUserDAO                   { return m.UsersDAO }
-func (m *MockDB) Monitors() IMonitorDAO             { return m.MonitorsDAO }
-func (m *MockDB) Projects() IProjectDAO             { return m.ProjectsDAO }
-func (m *MockDB) MonitorResults() IMonitorResultDAO { return m.MonitorResultsDAO }
-func (m *MockDB) AuditLog() IAuditLogDAO            { return m.AuditLogDAO }
+func (m *MockDB) Users() IUserDAO                               { return m.UsersDAO }
+func (m *MockDB) Monitors() IMonitorDAO                         { return m.MonitorsDAO }
+func (m *MockDB) Projects() IProjectDAO                         { return m.ProjectsDAO }
+func (m *MockDB) MonitorResults() IMonitorResultDAO             { return m.MonitorResultsDAO }
+func (m *MockDB) MonitorStatusChanges() IMonitorStatusChangeDAO { return m.MonitorStatusChangesDAO }
+func (m *MockDB) AuditLog() IAuditLogDAO                        { return m.AuditLogDAO }
 func (m *MockDB) WithTx(_ context.Context, fn func(tx DB) error) error {
 	// In tests, execute the function directly without a real transaction.
 	return fn(m)

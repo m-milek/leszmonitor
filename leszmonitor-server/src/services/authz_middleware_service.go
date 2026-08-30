@@ -177,7 +177,7 @@ func (s *AuthzMiddlewareService) CheckMonitorPermissionByID(
 	}
 
 	hasPermission := project.GetMember(user.ID).Role.HasPermissions(permission)
-	logger.Debug().
+	logger.Trace().
 		Str("username", username).
 		Str("monitorID", monitorID).
 		Interface("permission", permission).
