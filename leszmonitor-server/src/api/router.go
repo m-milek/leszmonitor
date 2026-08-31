@@ -194,12 +194,12 @@ func SetupRouters(
 	)
 
 	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}/stats/average-latency",
+		"GET /api/v1/monitors/{monitorId}/stats/latency",
 		middleware.RequireMonitorPermission(
 			h.AuthzMiddlewareService,
 			models.PermissionMonitorReader,
 		)(
-			h.MonitorStats.GetAverageLatencyByMonitorIDHandler,
+			h.MonitorStats.GetLatencyStatsByMonitorIDHandler,
 		),
 	)
 

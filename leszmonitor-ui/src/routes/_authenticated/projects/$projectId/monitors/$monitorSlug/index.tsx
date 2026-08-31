@@ -22,7 +22,7 @@ import { ButtonGroup } from "@/components/ui/button-group.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { PauseIcon, PlayIcon, TrashIcon } from "lucide-react";
 import { MonitorStatusPill } from "@/components/leszmonitor/MonitorStatusPill.tsx";
-import { getAverageLatencyByMonitorId } from "@/lib/data/monitorStats.ts";
+import { getLatencyStatsByMonitorId } from "@/lib/data/monitorStats.ts";
 
 const latencyChartConfig = {
   durationMs: {
@@ -57,11 +57,11 @@ function RouteComponent() {
     queryFn: () => getMonitorResultsByMonitorId(monitor!.id, pagination),
   });
 
-  const { data: averageLatency } = useQuery({
+  const { data: latencyStats } = useQuery({
     enabled: !!monitor,
-    queryKey: [QUERY_KEYS.MONITOR_AVERAGE_LATENCY, monitor?.id ?? ""],
+    queryKey: [QUERY_KEYS.MONITOR_LATENCY_STATS, monitor?.id ?? ""],
     queryFn: () =>
-      getAverageLatencyByMonitorId(monitor!.id, {
+      getLatencyStatsByMonitorId(monitor!.id, {
         from: new Date(Date.now() - 24 * 60 * 60 * 1000), // last 24 hours
       }),
   });
@@ -116,9 +116,13 @@ function RouteComponent() {
       </Card>
       <Card>
         <CardContent className="min-w-0">
-          <TypographyH2>Average Latency (last 24h)</TypographyH2>
-          {averageLatency && (
-            <p>{averageLatency.averageLatency.toFixed(2)} ms</p>
+          <TypographyH2>Latency (last 24h)</TypographyH2>
+          {latencyStats && (
+            <>
+              <p>Avg: {latencyStats.averageLatency.toFixed(2)} ms</p>
+              <p>Min: {latencyStats.minLatency.toFixed(2)} ms</p>
+              <p>Max: {latencyStats.maxLatency.toFixed(2)} ms</p>
+            </>
           )}
         </CardContent>
       </Card>
