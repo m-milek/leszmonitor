@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/m-milek/leszmonitor/constants"
@@ -37,11 +38,20 @@ func (s *MonitorStatsService) GetAverageLatencyByMonitorID(ctx context.Context, 
 
 	avgLatency, err := s.db.MonitorStats().GetAverageLatencyByMonitorID(ctx, monitorID, from, to)
 	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			logger.Warn().Str("monitorID", monitorID).Msg("No latency data found for the given monitor ID and time range")
+			return 0, &ServiceError{
+				Code: http.StatusNotFound,
+				Err:  errors.New("no latency data found for the given monitor ID and time range"),
+			}
+		}
+		logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get average latency")
 		return 0, &ServiceError{
-			Code: 500,
+			Code: http.StatusInternalServerError,
 			Err:  errors.New("failed to get average latency: " + err.Error()),
 		}
 	}
+	logger.Info().Float64("avgLatency", avgLatency).Msg("Average latency calculated successfully")
 
 	return avgLatency, nil
 }

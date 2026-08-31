@@ -108,6 +108,18 @@ func setupMonitorIntegrationTest(
 	return ctx, monitorService, projectService, userService, user
 }
 
+func setupMonitorStatsIntegrationTest(
+	t *testing.T,
+) (context.Context, *MonitorStatsService, *ProjectService, *UserService, *models.User) {
+	ctx, projectService, userService, user := setupIntegrationTest(t)
+
+	monitorStatsService := NewMonitorStatsService(MonitorStatsServiceDeps{
+		DB: db.Get(),
+	})
+
+	return ctx, &monitorStatsService, projectService, userService, user
+}
+
 // insertTestMonitor is a helper to directly insert a monitor and return it.
 func insertTestMonitor(t *testing.T, ctx context.Context, projectID uuid.UUID) *monitors.Monitor {
 	payload := monitors.Monitor{

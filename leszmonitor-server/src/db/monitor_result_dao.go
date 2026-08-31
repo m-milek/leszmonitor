@@ -149,7 +149,7 @@ func (r *monitorResultDAO) DeleteMonitorResultsOlderThanDuration(
 	duration time.Duration,
 ) (int64, error) {
 	return dbWrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
-		cutoffTime := time.Now().Add(-duration).Format(time.RFC3339)
+		cutoffTime := time.Now().UTC().Add(-duration).Format(time.RFC3339)
 		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM monitor_results WHERE monitor_id = $1 AND created_at < $2`,
 			monitorID,

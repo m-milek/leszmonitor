@@ -63,7 +63,7 @@ func NewMonitorResult(
 			Status:              status,
 			IsManuallyTriggered: isManuallyTriggered,
 			DurationMs:          durationMs,
-			CreatedAt:           time.Now().Format(time.RFC3339),
+			CreatedAt:           time.Now().UTC().Format(time.RFC3339),
 		},
 		MonitorType: string(monitorType),
 		Details:     details,
