@@ -20,11 +20,13 @@ func NewMonitorStatsAPIController(service services.MonitorStatsService) MonitorS
 	}
 }
 
-type AverageLatencyResponse struct {
+type LatencyStatsResponse struct {
 	AverageLatency float64 `json:"averageLatency"`
+	MinLatency     float64 `json:"minLatency"`
+	MaxLatency     float64 `json:"maxLatency"`
 }
 
-func (c *MonitorStatsAPIController) GetAverageLatencyByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorStatsAPIController) GetLatencyStatsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	monitorID := r.PathValue("monitorId")
@@ -53,14 +55,16 @@ func (c *MonitorStatsAPIController) GetAverageLatencyByMonitorIDHandler(w http.R
 		return
 	}
 
-	avgLatency, svcErr := c.service.GetAverageLatencyByMonitorID(ctx, monitorID, from, to)
+	stats, svcErr := c.service.GetLatencyStatsByMonitorID(ctx, monitorID, from, to)
 	if svcErr != nil {
 		util.RespondError(ctx, w, svcErr.Code, svcErr.Err)
 		return
 	}
 
-	response := AverageLatencyResponse{
-		AverageLatency: avgLatency,
+	response := LatencyStatsResponse{
+		AverageLatency: stats.Avg,
+		MinLatency:     stats.Min,
+		MaxLatency:     stats.Max,
 	}
 
 	util.RespondJSON(ctx, w, http.StatusOK, response)

@@ -1,25 +1,27 @@
 import { authFetch } from "@/lib/data/utils.ts";
 import { SERVER_API_URL } from "@/lib/consts.ts";
 
-export interface AverageLatencyParams {
+export interface LatencyStatsParams {
   from: Date;
   to?: Date;
 }
 
-export interface AverageLatencyResponse {
+export interface LatencyStatsResponse {
   averageLatency: number;
+  minLatency: number;
+  maxLatency: number;
 }
 
-export const getAverageLatencyByMonitorId = async (
+export const getLatencyStatsByMonitorId = async (
   monitorId: string,
-  { from, to = new Date(Date.now()) }: AverageLatencyParams,
-): Promise<AverageLatencyResponse> => {
+  { from, to = new Date(Date.now()) }: LatencyStatsParams,
+): Promise<LatencyStatsResponse> => {
   const queryParams = new URLSearchParams({
     from: from.toISOString(),
     to: to.toISOString(),
   });
   const res = await authFetch(
-    `${SERVER_API_URL}/monitors/${monitorId}/stats/average-latency?${queryParams.toString()}`,
+    `${SERVER_API_URL}/monitors/${monitorId}/stats/latency?${queryParams.toString()}`,
     {
       method: "GET",
       headers: {
@@ -29,7 +31,7 @@ export const getAverageLatencyByMonitorId = async (
   );
 
   if (!res.ok)
-    throw new Error(`Failed to fetch average latency for ${monitorId}`);
+    throw new Error(`Failed to fetch latency stats for ${monitorId}`);
 
   return res.json();
 };

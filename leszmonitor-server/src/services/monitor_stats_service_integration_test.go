@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestIntegration_MonitorStatsService_GetAverageLatencyByMonitorID(t *testing.T) {
-	t.Run("Returns correct average latency for results in range", func(t *testing.T) {
+func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T) {
+	t.Run("Returns correct avg/min/max latency for results in range", func(t *testing.T) {
 		ctx, service, projectService, _, owner := setupMonitorStatsIntegrationTest(t)
 
 		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
@@ -22,7 +22,7 @@ func TestIntegration_MonitorStatsService_GetAverageLatencyByMonitorID(t *testing
 
 		now := time.Now().UTC()
 
-		// Insert 3 results with known latencies: 100, 200, 300 → avg = 200
+		// Insert 3 results with known latencies: 100, 200, 300 → avg=200, min=100, max=300
 		for _, latency := range []int64{100, 200, 300} {
 			res := monitorresult.NewMonitorResult(monitor.ID, consts.HTTPConfigType, shared.MonitorStatusUp, false, latency, "", nil)
 			// Store created_at in UTC RFC3339 so SQLite string comparisons work correctly with the DAO's UTC-formatted query bounds
@@ -34,9 +34,11 @@ func TestIntegration_MonitorStatsService_GetAverageLatencyByMonitorID(t *testing
 		from := now.Add(-1 * time.Hour)
 		to := now.Add(1 * time.Hour)
 
-		avg, svcErr := service.GetAverageLatencyByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetLatencyStatsByMonitorID(ctx, monitor.ID.String(), from, to)
 		require.Nil(t, svcErr)
-		assert.InDelta(t, 200.0, avg, 0.001)
+		assert.InDelta(t, 200.0, stats.Avg, 0.001)
+		assert.InDelta(t, 100.0, stats.Min, 0.001)
+		assert.InDelta(t, 300.0, stats.Max, 0.001)
 	})
 
 	t.Run("Returns 404 when no results exist for monitor", func(t *testing.T) {
@@ -48,10 +50,12 @@ func TestIntegration_MonitorStatsService_GetAverageLatencyByMonitorID(t *testing
 		from := time.Now().UTC().Add(-1 * time.Hour)
 		to := time.Now().UTC().Add(1 * time.Hour)
 
-		avg, svcErr := service.GetAverageLatencyByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetLatencyStatsByMonitorID(ctx, monitor.ID.String(), from, to)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
-		assert.Equal(t, 0.0, avg)
+		assert.Equal(t, 0.0, stats.Avg)
+		assert.Equal(t, 0.0, stats.Min)
+		assert.Equal(t, 0.0, stats.Max)
 	})
 
 	t.Run("Only includes results within the specified time range", func(t *testing.T) {
@@ -77,8 +81,10 @@ func TestIntegration_MonitorStatsService_GetAverageLatencyByMonitorID(t *testing
 		from := now.Add(-1 * time.Hour)
 		to := now.Add(1 * time.Hour)
 
-		avg, svcErr := service.GetAverageLatencyByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetLatencyStatsByMonitorID(ctx, monitor.ID.String(), from, to)
 		require.Nil(t, svcErr)
-		assert.InDelta(t, 500.0, avg, 0.001)
+		assert.InDelta(t, 500.0, stats.Avg, 0.001)
+		assert.InDelta(t, 500.0, stats.Min, 0.001)
+		assert.InDelta(t, 500.0, stats.Max, 0.001)
 	})
 }
