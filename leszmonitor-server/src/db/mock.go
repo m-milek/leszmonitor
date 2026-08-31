@@ -17,6 +17,7 @@ type MockDB struct {
 	ProjectsDAO             IProjectDAO
 	MonitorResultsDAO       IMonitorResultDAO
 	MonitorStatusChangesDAO IMonitorStatusChangeDAO
+	MonitorStatsDao         IMonitorStatsDAO
 	AuditLogDAO             IAuditLogDAO
 	CloseFn                 func()
 }
@@ -147,6 +148,7 @@ func (m *MockDB) Monitors() IMonitorDAO                         { return m.Monit
 func (m *MockDB) Projects() IProjectDAO                         { return m.ProjectsDAO }
 func (m *MockDB) MonitorResults() IMonitorResultDAO             { return m.MonitorResultsDAO }
 func (m *MockDB) MonitorStatusChanges() IMonitorStatusChangeDAO { return m.MonitorStatusChangesDAO }
+func (m *MockDB) MonitorStats() IMonitorStatsDAO                { return m.MonitorStatsDao }
 func (m *MockDB) AuditLog() IAuditLogDAO                        { return m.AuditLogDAO }
 func (m *MockDB) WithTx(_ context.Context, fn func(tx DB) error) error {
 	// In tests, execute the function directly without a real transaction.

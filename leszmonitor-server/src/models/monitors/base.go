@@ -52,7 +52,7 @@ func InitializeFromPayload(payload Monitor, projectID uuid.UUID) *Monitor {
 		Interval:               payload.Interval,
 		Type:                   payload.Type,
 		ProbeConfig:            payload.ProbeConfig,
-		ResultRetentionSeconds: int((12 * time.Hour).Seconds()), // TODO: Make this configurable later
+		ResultRetentionSeconds: int((48 * time.Hour).Seconds()), // TODO: Make this configurable later
 		RunState:               MonitorStateActive,
 	}
 }

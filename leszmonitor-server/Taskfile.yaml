@@ -60,21 +60,21 @@ tasks:
 
   test:
     desc: Run the back-end tests
-    dir: '{{.SERVER_SRC_DIR}}'
+    dir: src
     cmds:
-      - cd {{.SERVER_SRC_DIR}} && go run gotest.tools/gotestsum@latest --format testdox ./...
+      - go run gotest.tools/gotestsum@latest --format testdox ./...
 
   coverage:
     desc: Run the back-end tests with coverage
-    dir: '{{.SERVER_SRC_DIR}}'
+    dir: src
     cmds:
-      - cd {{.SERVER_SRC_DIR}} && go test -coverpkg=./... -coverprofile=coverage.out -v ./...
+      - go test -coverpkg=./... -coverprofile=coverage.out -v ./...
     generates:
       - 'coverage.out'
 
   db:dump:
     desc: Dump the SQLite database to a file
-    dir: '{{.SERVER_SRC_DIR}}'
+    dir: src
     cmds:
       - sqlite3 {{.SQLITE_DB_PATH}} .dump > {{.DUMP_FILE_PATH}}
     generates:
@@ -82,6 +82,6 @@ tasks:
 
   db:restore:
     desc: Restore the SQLite database from a dump file
-    dir: '{{.SERVER_SRC_DIR}}'
+    dir: src
     cmds:
       - sqlite3 {{.SQLITE_DB_PATH}} < {{.DUMP_FILE_PATH}}

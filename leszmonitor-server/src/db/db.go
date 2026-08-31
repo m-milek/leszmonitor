@@ -41,6 +41,7 @@ type DB interface {
 	Projects() IProjectDAO
 	MonitorResults() IMonitorResultDAO
 	MonitorStatusChanges() IMonitorStatusChangeDAO
+	MonitorStats() IMonitorStatsDAO
 	AuditLog() IAuditLogDAO
 	WithTx(ctx context.Context, fn func(tx DB) error) error
 	Close()
@@ -56,6 +57,7 @@ type Client struct {
 	projects             IProjectDAO
 	monitorResults       IMonitorResultDAO
 	monitorStatusChanges IMonitorStatusChangeDAO
+	monitorStats         IMonitorStatsDAO
 	auditLog             IAuditLogDAO
 }
 
@@ -89,6 +91,7 @@ func newClientFromPool(pool sqlx.ExtContext) *Client {
 		projects:             newProjectDAO(base),
 		monitorResults:       newMonitorResultDAO(base),
 		monitorStatusChanges: newMonitorStatusChangeDAO(base),
+		monitorStats:         newMonitorStatsDAO(base),
 		auditLog:             newAuditLogDAO(base),
 	}
 }
@@ -185,6 +188,7 @@ func (c *Client) Monitors() IMonitorDAO                         { return c.monit
 func (c *Client) Projects() IProjectDAO                         { return c.projects }
 func (c *Client) MonitorResults() IMonitorResultDAO             { return c.monitorResults }
 func (c *Client) MonitorStatusChanges() IMonitorStatusChangeDAO { return c.monitorStatusChanges }
+func (c *Client) MonitorStats() IMonitorStatsDAO                { return c.monitorStats }
 func (c *Client) AuditLog() IAuditLogDAO                        { return c.auditLog }
 
 // --------------------------
