@@ -421,7 +421,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 
 		payload := ChangeProjectMemberRolePayload{
 			Username: "newbie",
-			Role:     models.RoleMember,
+			Role:     models.RoleWriter,
 		}
 
 		svcErr := projectService.ChangeProjectMemberRole(ctx, project.Slug, payload)
@@ -429,7 +429,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 
 		dbProject, _ := db.Get().Projects().GetProjectBySlug(ctx, project.Slug)
 		member := dbProject.GetMember(newbie.ID)
-		assert.Equal(t, models.RoleMember, member.Role)
+		assert.Equal(t, models.RoleWriter, member.Role)
 	})
 
 	t.Run("Fails when trying to change role of a user that is not a member", func(t *testing.T) {
@@ -447,7 +447,7 @@ func TestIntegration_ProjectService_ChangeProjectMemberRole(t *testing.T) {
 
 		payload := ChangeProjectMemberRolePayload{
 			Username: "random",
-			Role:     models.RoleMember,
+			Role:     models.RoleWriter,
 		}
 
 		svcErr := projectService.ChangeProjectMemberRole(ctx, project.Slug, payload)

@@ -14,28 +14,21 @@ import (
 type AuditLogAction string
 
 const (
-	ActionCreateProject       AuditLogAction = "project.create"
-	ActionUpdateProject       AuditLogAction = "project.update"
-	ActionDeleteProject       AuditLogAction = "project.delete"
-	ActionAddProjectMember    AuditLogAction = "project.member.add"
-	ActionRemoveProjectMember AuditLogAction = "project.member.remove"
-	ActionUpdateProjectMember AuditLogAction = "project.member.update"
-	ActionCreateMonitor       AuditLogAction = "monitor.create"
-	ActionUpdateMonitor       AuditLogAction = "monitor.update"
-	ActionDeleteMonitor       AuditLogAction = "monitor.delete"
-	ActionCreateUser          AuditLogAction = "user.create"
-	ActionUpdateUser          AuditLogAction = "user.update"
-	ActionDeleteUser          AuditLogAction = "user.delete"
-	ActionLogin               AuditLogAction = "auth.login"
-	ActionFailedLogin         AuditLogAction = "auth.failed_login"
-	ActionPasswordChange      AuditLogAction = "auth.password_change"
+	ActionCreateMonitor  AuditLogAction = "monitor.create"
+	ActionUpdateMonitor  AuditLogAction = "monitor.update"
+	ActionDeleteMonitor  AuditLogAction = "monitor.delete"
+	ActionCreateUser     AuditLogAction = "user.create"
+	ActionUpdateUser     AuditLogAction = "user.update"
+	ActionDeleteUser     AuditLogAction = "user.delete"
+	ActionLogin          AuditLogAction = "auth.login"
+	ActionFailedLogin    AuditLogAction = "auth.failed_login"
+	ActionPasswordChange AuditLogAction = "auth.password_change"
 )
 
 type AuditLogEntry struct {
 	ID         uuid.UUID      `json:"id"                   db:"id"`
-	Username   *string        `json:"username,omitempty"   db:"username"` /// "system" if the action was performed by the system (e.g. scheduled task)
-	ProjectID  *uuid.UUID     `json:"projectId,omitempty"  db:"project_id"`
-	ResourceID *uuid.UUID     `json:"resourceId,omitempty" db:"resource_id"` // ID of the resource that was acted upon, e.g. monitor ID, project ID, etc. Can be empty if not applicable.
+	Username   *string        `json:"username,omitempty"   db:"username"`    /// "system" if the action was performed by the system (e.g. scheduled task)
+	ResourceID *uuid.UUID     `json:"resourceId,omitempty" db:"resource_id"` // ID of the resource that was acted upon, e.g. monitor ID etc. Can be empty if not applicable.
 	Action     AuditLogAction `json:"action"               db:"action"`
 	IsSuccess  bool           `json:"isSuccess"            db:"is_success"`
 	Summary    string         `json:"summary,omitempty"    db:"summary"`
@@ -48,7 +41,6 @@ type AuditLogEntry struct {
 // AuditLogParams encapsulates the parameters needed to create a new audit log entry.
 type AuditLogParams struct {
 	Username   *string
-	ProjectID  *uuid.UUID
 	ResourceID *uuid.UUID
 	Action     AuditLogAction
 	IsSuccess  bool
@@ -87,7 +79,6 @@ func NewAuditLogEntry(
 
 	entry := AuditLogEntry{
 		Username:   params.Username,
-		ProjectID:  params.ProjectID,
 		ResourceID: params.ResourceID,
 		Action:     params.Action,
 		IsSuccess:  params.IsSuccess,
@@ -108,7 +99,6 @@ func (a *AuditLogEntry) BeforeCreate() {
 
 type AuditLogFilter struct {
 	UserID     *string
-	ProjectID  *uuid.UUID
 	ResourceID *uuid.UUID
 	Action     *AuditLogAction
 	IsSuccess  *bool
@@ -117,28 +107,12 @@ type AuditLogFilter struct {
 	EndDate    *time.Time
 }
 
-func (f *AuditLogFilter) ValidateForNonInstanceAdmin() error {
-	// Allow filtering without project ID only for instance admins
-	if f.ProjectID == nil {
-		return errors.New("filtering without project ID is allowed only for instance admins")
-	}
-	return nil
-}
-
 func AuditLogFilterFromRequest(r *http.Request) (*AuditLogFilter, error) {
 	f := &AuditLogFilter{}
 	query := r.URL.Query()
 
 	if userID := query.Get("userId"); userID != "" {
 		f.UserID = &userID
-	}
-
-	if projectIDStr := query.Get("projectId"); projectIDStr != "" {
-		projectID, err := uuid.Parse(projectIDStr)
-		if err != nil {
-			return nil, errors.New("invalid projectId format")
-		}
-		f.ProjectID = &projectID
 	}
 
 	if resourceIDStr := query.Get("resourceId"); resourceIDStr != "" {

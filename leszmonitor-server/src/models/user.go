@@ -16,6 +16,7 @@ type User struct {
 	ID              uuid.UUID `json:"id"              db:"id"`
 	Username        string    `json:"username"        db:"username"`
 	PasswordHash    string    `json:"-"               db:"password_hash"`
+	Role            Role      `json:"role"            db:"role"`
 	IsInstanceAdmin bool      `json:"isInstanceAdmin" db:"is_instance_admin"`
 }
 

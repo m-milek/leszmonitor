@@ -14,7 +14,6 @@ import (
 type MockDB struct {
 	UsersDAO                IUserDAO
 	MonitorsDAO             IMonitorDAO
-	ProjectsDAO             IProjectDAO
 	MonitorResultsDAO       IMonitorResultDAO
 	MonitorStatusChangesDAO IMonitorStatusChangeDAO
 	MonitorStatsDao         IMonitorStatsDAO
@@ -46,80 +45,6 @@ func (r *MockUserDAO) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return args.Get(0).([]models.User), args.Error(1)
 }
 
-type MockProjectDAO struct {
-	mock.Mock
-}
-
-func (r *MockProjectDAO) InsertProject(ctx context.Context, project *models.Project) error {
-	args := r.Called(ctx, project)
-	return args.Error(0)
-}
-
-func (r *MockProjectDAO) GetProjectBySlug(ctx context.Context, slug string) (*models.Project, error) {
-	args := r.Called(ctx, slug)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.Project), args.Error(1)
-}
-
-func (r *MockProjectDAO) GetProjectByID(ctx context.Context, slug uuid.UUID) (*models.Project, error) {
-	args := r.Called(ctx, slug)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.Project), args.Error(1)
-}
-
-func (r *MockProjectDAO) GetProjectsByQuery(
-	ctx context.Context,
-	query GetProjectsQuery,
-) ([]models.Project, error) {
-	args := r.Called(ctx, query)
-	return args.Get(0).([]models.Project), args.Error(1)
-}
-
-func (r *MockProjectDAO) UpdateProject(
-	ctx context.Context,
-	oldProject, newProject *models.Project,
-) (bool, error) {
-	args := r.Called(ctx, oldProject, newProject)
-	return args.Bool(0), args.Error(1)
-}
-
-func (r *MockProjectDAO) DeleteProject(ctx context.Context, projectSlug string) (bool, error) {
-	args := r.Called(ctx, projectSlug)
-	return args.Bool(0), args.Error(1)
-}
-
-func (r *MockProjectDAO) AddMemberToProject(
-	ctx context.Context,
-	projectSlug string,
-	member *models.ProjectMember,
-) (bool, error) {
-	args := r.Called(ctx, projectSlug, member)
-	return args.Bool(0), args.Error(1)
-}
-
-func (r *MockProjectDAO) RemoveMemberFromProject(
-	ctx context.Context,
-	projectSlug string,
-	userID uuid.UUID,
-) (bool, error) {
-	args := r.Called(ctx, projectSlug, userID)
-	return args.Bool(0), args.Error(1)
-}
-
-func (r *MockProjectDAO) ChangeMemberRole(
-	ctx context.Context,
-	projectSlug string,
-	userID uuid.UUID,
-	newRole models.Role,
-) (bool, error) {
-	args := r.Called(ctx, projectSlug, userID, newRole)
-	return args.Bool(0), args.Error(1)
-}
-
 type MockAuditLogDAO struct {
 	mock.Mock
 }
@@ -145,7 +70,6 @@ func (r *MockAuditLogDAO) Record(ctx context.Context, params security.AuditLogPa
 
 func (m *MockDB) Users() IUserDAO                               { return m.UsersDAO }
 func (m *MockDB) Monitors() IMonitorDAO                         { return m.MonitorsDAO }
-func (m *MockDB) Projects() IProjectDAO                         { return m.ProjectsDAO }
 func (m *MockDB) MonitorResults() IMonitorResultDAO             { return m.MonitorResultsDAO }
 func (m *MockDB) MonitorStatusChanges() IMonitorStatusChangeDAO { return m.MonitorStatusChangesDAO }
 func (m *MockDB) MonitorStats() IMonitorStatsDAO                { return m.MonitorStatsDao }

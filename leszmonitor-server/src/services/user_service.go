@@ -22,20 +22,17 @@ type IUserService interface {
 }
 
 type UserServiceDeps struct {
-	DB             db.DB
-	ProjectService IProjectService
+	DB db.DB
 }
 
 // UserService handles user-related operations such as registration, login, and retrieval.
 type UserService struct {
-	db             db.DB
-	projectService IProjectService
+	db db.DB
 }
 
 func NewUserService(deps UserServiceDeps) *UserService {
 	return &UserService{
-		db:             deps.DB,
-		projectService: deps.ProjectService,
+		db: deps.DB,
 	}
 }
 
@@ -139,16 +136,6 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 
 	logger.Trace().Str("username", payload.Username).Msg("User registered successfully")
 
-	_, projectErr := s.projectService.CreateProject(ctx, payload.Username, CreateProjectPayload{
-		Name:        fmt.Sprintf("%s's Sandbox", payload.Username),
-		Description: "Your default sandbox project",
-	})
-	if projectErr != nil {
-		logger.Error().Err(projectErr.Err).Msg("Failed to auto-create sandbox project for new user")
-		return NewInternalError("failed to create sandbox project for user %s: %w", payload.Username, projectErr.Err)
-	}
-
-	logger.Debug().Str("username", payload.Username).Msg("User registration fully completed")
 	return nil
 }
 

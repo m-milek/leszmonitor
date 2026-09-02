@@ -35,11 +35,10 @@ func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry security.Aud
 	return dbWrap(ctx, "InsertAuditLogEntry", func() (any, error) {
 		_, err := a.pool.ExecContext(
 			ctx,
-			`INSERT INTO audit_logs (id, username, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+			`INSERT INTO audit_logs (id, username, resource_id, action, is_success, summary, before, after, trace_id, created_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			entry.ID,
 			entry.Username,
-			entry.ProjectID,
 			entry.ResourceID,
 			entry.Action,
 			entry.IsSuccess,
@@ -80,10 +79,6 @@ func (a auditLogDAO) GetAuditLogEntries(
 			conditions = append(conditions, "user_id = ?")
 			args = append(args, *filter.UserID)
 		}
-		if filter.ProjectID != nil {
-			conditions = append(conditions, "project_id = ?")
-			args = append(args, *filter.ProjectID)
-		}
 		if filter.ResourceID != nil {
 			conditions = append(conditions, "resource_id = ?")
 			args = append(args, *filter.ResourceID)
@@ -109,7 +104,7 @@ func (a auditLogDAO) GetAuditLogEntries(
 			args = append(args, *filter.EndDate)
 		}
 
-		query := `SELECT id, username, project_id, resource_id, action, is_success, summary, before, after, trace_id, created_at
+		query := `SELECT id, username, resource_id, action, is_success, summary, before, after, trace_id, created_at
 	          FROM audit_logs`
 		if len(conditions) > 0 {
 			query += " WHERE " + strings.Join(conditions, " AND ")

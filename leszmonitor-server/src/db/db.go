@@ -38,7 +38,6 @@ const timeoutDuration = 1000 * time.Second
 type DB interface {
 	Users() IUserDAO
 	Monitors() IMonitorDAO
-	Projects() IProjectDAO
 	MonitorResults() IMonitorResultDAO
 	MonitorStatusChanges() IMonitorStatusChangeDAO
 	MonitorStats() IMonitorStatsDAO
@@ -54,7 +53,6 @@ type Client struct {
 	// cached DAOs to avoid re-allocation on every getter call
 	users                IUserDAO
 	monitors             IMonitorDAO
-	projects             IProjectDAO
 	monitorResults       IMonitorResultDAO
 	monitorStatusChanges IMonitorStatusChangeDAO
 	monitorStats         IMonitorStatsDAO
@@ -88,7 +86,6 @@ func newClientFromPool(pool sqlx.ExtContext) *Client {
 		dbPool:               dbPool{pool: pool},
 		users:                newUserDAO(base),
 		monitors:             newMonitorDAO(base),
-		projects:             newProjectDAO(base),
 		monitorResults:       newMonitorResultDAO(base),
 		monitorStatusChanges: newMonitorStatusChangeDAO(base),
 		monitorStats:         newMonitorStatsDAO(base),
@@ -185,7 +182,6 @@ func dbWrap[T any](ctx context.Context, operationName string, operation func() (
 
 func (c *Client) Users() IUserDAO                               { return c.users }
 func (c *Client) Monitors() IMonitorDAO                         { return c.monitors }
-func (c *Client) Projects() IProjectDAO                         { return c.projects }
 func (c *Client) MonitorResults() IMonitorResultDAO             { return c.monitorResults }
 func (c *Client) MonitorStatusChanges() IMonitorStatusChangeDAO { return c.monitorStatusChanges }
 func (c *Client) MonitorStats() IMonitorStatsDAO                { return c.monitorStats }

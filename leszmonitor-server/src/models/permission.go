@@ -17,38 +17,22 @@ func newPermission(id, name, description string) Permission {
 	}
 }
 
-var PermissionMonitorAdmin = newPermission("admin:monitor", "Delete Monitors", "Allows deleting monitors.")
-var PermissionMonitorEditor = newPermission("edit:monitor", "Manage Monitors", "Allows editing and creating monitors.")
-
-var PermissionMonitorReader = newPermission(
+var PermissionInstanceAdmin = newPermission("admin:instance", "Instance Admin", "Full access to all resources and settings in the instance.")
+var PermissionAdmin = newPermission("admin:monitor", "Delete Monitors", "Allows deleting monitors.")
+var PermissionWriter = newPermission("edit:monitor", "Manage Monitors", "Allows editing and creating monitors.")
+var PermissionReader = newPermission(
 	"read:monitor",
 	"Read Monitors",
 	"Allows reading monitor details and statuses.",
 )
 
-var PermissionProjectAdmin = newPermission("admin:project", "Administrate Project", "Allows deleting projects.")
-
-var PermissionProjectEditor = newPermission(
-	"edit:project",
-	"Manage Project",
-	"Allows adding and removing members from the project.",
-)
-
-var PermissionProjectReader = newPermission(
-	"read:project",
-	"Read Projects",
-	"Allows reading project details and members.",
-)
-
 // permissionImplications defines which permissions imply other permissions.
 // For example, having ProjectAdmin permission implies having lower ProjectEditor and ProjectReader permissions.
 var permissionImplications = map[Permission][]Permission{
-	PermissionProjectAdmin:  {PermissionProjectEditor},
-	PermissionProjectEditor: {PermissionProjectReader},
-	PermissionProjectReader: {}, // No implications
-	PermissionMonitorAdmin:  {PermissionMonitorEditor},
-	PermissionMonitorEditor: {PermissionMonitorReader},
-	PermissionMonitorReader: {}, // No implications
+	PermissionInstanceAdmin: {PermissionAdmin, PermissionWriter, PermissionReader},
+	PermissionAdmin:         {PermissionWriter},
+	PermissionWriter:        {PermissionReader},
+	PermissionReader:        {}, // No implications
 }
 
 // getEffectivePermissions expands a single permission to include all implied permissions.

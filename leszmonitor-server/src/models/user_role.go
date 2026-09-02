@@ -10,36 +10,32 @@ type Role string
 const (
 	RoleOwner  Role = "owner"  // RoleOwner has full permissions to manage the project
 	RoleAdmin  Role = "admin"  // RoleAdmin has full permissions to manage monitors and the project
-	RoleMember Role = "member" // RoleMember can manage monitors and view project details
+	RoleWriter Role = "member" // RoleWriter can manage monitors and view project details
 	RoleViewer Role = "viewer" // RoleViewer can only view monitor statuses and project details
 )
 
 var rolePermissions = map[Role][]Permission{
 	RoleOwner: {
-		PermissionProjectAdmin,
-		PermissionMonitorAdmin,
+		PermissionInstanceAdmin,
 	},
 	RoleAdmin: {
-		PermissionProjectEditor,
-		PermissionMonitorAdmin,
+		PermissionAdmin,
 	},
-	RoleMember: {
-		PermissionProjectReader,
-		PermissionMonitorEditor,
+	RoleWriter: {
+		PermissionWriter,
 	},
 	RoleViewer: {
-		PermissionProjectReader,
-		PermissionMonitorReader,
+		PermissionReader,
 	},
 }
 
 // Validate checks if the Role is one of the defined roles.
 func (r *Role) Validate() error {
 	switch *r {
-	case RoleOwner, RoleAdmin, RoleMember, RoleViewer:
+	case RoleOwner, RoleAdmin, RoleWriter, RoleViewer:
 		return nil
 	default:
-		return fmt.Errorf("invalid project role: %s", *r)
+		return fmt.Errorf("invalid user role: %s", *r)
 	}
 }
 

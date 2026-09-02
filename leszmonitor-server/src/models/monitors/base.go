@@ -15,8 +15,7 @@ import (
 type Monitor struct {
 	util2.Timestamps
 	ID                     uuid.UUID        `json:"id"                     db:"id"`                       // ID is the unique identifier for the monitor, generated as a UUID
-	Slug                   string           `json:"slug"                   db:"slug"`                     // Slug is unique in the project
-	ProjectID              uuid.UUID        `json:"projectId"              db:"project_id"`               // ProjectID is used to associate the monitor with a project
+	Slug                   string           `json:"slug"                   db:"slug"`                     // Slug is unique
 	Name                   string           `json:"name"                   db:"name"`                     // Name of the monitor
 	Description            string           `json:"description"            db:"description"`              // Description of the monitor
 	Interval               int              `json:"interval"               db:"interval"`                 // Interval determines how often to run the monitor in seconds
@@ -42,11 +41,10 @@ func IsValidMonitorState(state string) bool {
 	return state == string(MonitorStateActive) || state == string(MonitorStateStopped)
 }
 
-func InitializeFromPayload(payload Monitor, projectID uuid.UUID) *Monitor {
+func InitializeFromPayload(payload Monitor) *Monitor {
 	return &Monitor{
 		ID:                     uuid.New(),
 		Slug:                   payload.Slug,
-		ProjectID:              projectID,
 		Name:                   payload.Name,
 		Description:            payload.Description,
 		Interval:               payload.Interval,

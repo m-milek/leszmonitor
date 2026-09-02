@@ -6,7 +6,6 @@ import (
 )
 
 type Handlers struct {
-	Project                controllers.ProjectAPIController
 	Monitor                controllers.MonitorAPIController
 	MonitorResults         controllers.MonitorResultsAPIController
 	MonitorStats           controllers.MonitorStatsAPIController
