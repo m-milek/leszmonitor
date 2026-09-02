@@ -11,7 +11,7 @@ import {
 } from "@/components/leszmonitor/ui/Typography.tsx";
 import type { MonitorResult, Pagination } from "@/lib/types.ts";
 import { MonitorResultsList } from "@/components/leszmonitor/MonitorResultsList.tsx";
-import { LineChart } from "@/components/leszmonitor/charts/LineChart.tsx";
+import { LineChart } from "@/components/leszmonitor/charts/LineChartLazy.tsx";
 import { BatteryChart } from "@/components/leszmonitor/charts/BatteryChart/BatteryChart.tsx";
 import { formatTime } from "@/components/leszmonitor/charts/utils.ts";
 import { getMonitorResultsByMonitorId } from "@/lib/data/monitorResultsData.ts";

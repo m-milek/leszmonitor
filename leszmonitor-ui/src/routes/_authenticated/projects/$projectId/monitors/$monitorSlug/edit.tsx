@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button.tsx";
 import { getMonitorBySlug, updateMonitor } from "@/lib/data/monitorData.ts";
 import { MonitorForm } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-import { mapMonitorToFormValues, type MonitorFormValues } from "@/lib/types.ts";
+import {
+  mapMonitorToFormValues,
+  type MonitorFormValues,
+} from "@/lib/monitorSchema.ts";
 
 export const Route = createFileRoute(
   "/_authenticated/projects/$projectId/monitors/$monitorSlug/edit",

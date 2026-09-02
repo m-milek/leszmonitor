@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { slugFromString } from "@/lib/slugFromString.ts";
+import { isValidMonitorType, type MonitorType } from "@/lib/types.ts";
 import {
   type MonitorFormValues,
   defaultConfigs,
-  isValidMonitorType,
-  type MonitorType,
   newMonitorSchemaDefaultValues,
-} from "@/lib/types.ts";
+} from "@/lib/monitorSchema.ts";
 import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { LMInputField } from "@/components/leszmonitor/forms/inputs/LMInputField.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
