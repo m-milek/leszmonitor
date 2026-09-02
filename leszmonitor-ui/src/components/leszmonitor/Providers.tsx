@@ -1,7 +1,18 @@
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { lazy, Suspense } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { ThemeProvider } from "@/components/ui/theme-provider.tsx";
 import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+
+// Keep the router devtools out of production bundles. `import.meta.env.PROD` is
+// statically inlined by Vite, so the dynamic import below is dropped entirely
+// from prod builds.
+const TanStackRouterDevtools = import.meta.env.PROD
+  ? () => null
+  : lazy(() =>
+      import("@tanstack/react-router-devtools").then((m) => ({
+        default: m.TanStackRouterDevtools,
+      })),
+    );
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -9,7 +20,9 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
       <TooltipProvider>
         <SidebarProvider>
           {children}
-          <TanStackRouterDevtools position="bottom-right" />
+          <Suspense fallback={null}>
+            <TanStackRouterDevtools position="bottom-right" />
+          </Suspense>
         </SidebarProvider>
       </TooltipProvider>
     </ThemeProvider>
