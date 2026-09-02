@@ -36,9 +36,10 @@ func (r *UserDAO) InsertUser(ctx context.Context, user *models.User) (*models.Us
 		var createdUser models.User
 		err := r.pool.QueryRowxContext(
 			ctx,
-			`INSERT INTO users (id, username, password_hash) VALUES ($1, $2, $3) RETURNING id, username, password_hash, created_at, updated_at`,
+			`INSERT INTO users (id, username, role, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, username, role, password_hash, created_at, updated_at`,
 			user.ID,
 			user.Username,
+			user.Role,
 			user.PasswordHash,
 		).StructScan(&createdUser)
 
@@ -57,7 +58,7 @@ func (r *UserDAO) GetUserByUsername(ctx context.Context, username string) (*mode
 	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		var user models.User
 		err := sqlx.GetContext(ctx, r.pool, &user,
-			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE username=$1`,
+			`SELECT id, username, role, password_hash, created_at, updated_at FROM users WHERE username=$1`,
 			username)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -73,7 +74,7 @@ func (r *UserDAO) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, 
 	return dbWrap(ctx, "GetUserByID", func() (*models.User, error) {
 		var user models.User
 		err := sqlx.GetContext(ctx, r.pool, &user,
-			`SELECT id, username, password_hash, created_at, updated_at FROM users WHERE id=$1`,
+			`SELECT id, username, role, password_hash, created_at, updated_at FROM users WHERE id=$1`,
 			id)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -89,7 +90,7 @@ func (r *UserDAO) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
 		var users []models.User
 		err := sqlx.SelectContext(ctx, r.pool, &users,
-			`SELECT id, username, password_hash, created_at, updated_at FROM users`)
+			`SELECT id, username, role, password_hash, created_at, updated_at FROM users`)
 		if err != nil {
 			return nil, err
 		}

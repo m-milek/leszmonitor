@@ -38,11 +38,6 @@ func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 	insertedUser, err := realDB.Users().InsertUser(ctx, user)
 	require.NoError(t, err)
 
-	project, err := models.NewProject("Test Project", "Desc", insertedUser.ID)
-	require.NoError(t, err)
-	err = realDB.Projects().InsertProject(ctx, project)
-	require.NoError(t, err)
-
 	payload := monitors.Monitor{
 		Name:        "Test Monitor " + uuid.New().String(),
 		Description: "Testing monitor results",
@@ -52,7 +47,7 @@ func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 		RunState:    monitors.MonitorStateActive,
 	}
 	payload.GenerateSlug()
-	monitor := monitors.InitializeFromPayload(payload, project.ID)
+	monitor := monitors.InitializeFromPayload(payload, insertedUser.ID)
 
 	insertedMonitor, err := realDB.Monitors().InsertMonitor(ctx, *monitor)
 	require.NoError(t, err)

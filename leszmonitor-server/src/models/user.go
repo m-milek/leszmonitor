@@ -25,6 +25,7 @@ func NewUser(username, hashedPassword string) (*User, error) {
 	user := &User{
 		Username:     username,
 		PasswordHash: hashedPassword,
+		Role:         RoleViewer,
 	}
 	err := user.Validate()
 
@@ -41,6 +42,9 @@ func (u *User) Validate() error {
 	}
 	if u.PasswordHash == "" {
 		return fmt.Errorf("password hash cannot be empty")
+	}
+	if err := u.Role.Validate(); err != nil {
+		return err
 	}
 	return nil
 }

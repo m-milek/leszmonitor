@@ -16,10 +16,7 @@ import (
 
 func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 	t.Run("Successfully creates a monitor", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		require.Nil(t, err)
+		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
 		payload := monitors.Monitor{
 			Name:        "Ping API",
@@ -30,7 +27,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		}
 		payload.GenerateSlug()
 
-		resp, svcErr := monitorService.CreateMonitor(ctx, project.Slug, payload)
+		resp, svcErr := monitorService.CreateMonitor(ctx, payload)
 		require.Nil(t, svcErr)
 		require.NotNil(t, resp)
 		assert.NotEmpty(t, resp.MonitorID)
@@ -39,12 +36,11 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		monitorFromDB, svcErr := monitorService.GetMonitorByID(ctx, resp.MonitorID)
 		require.Nil(t, svcErr)
 		assert.Equal(t, "Ping API", monitorFromDB.Name)
-		assert.Equal(t, project.ID, monitorFromDB.ProjectID)
 		assert.Equal(t, consts.HTTPConfigType, monitorFromDB.Type)
 		assert.Equal(t, "ping-api", monitorFromDB.Slug)
 
 		// Verify audit log was created
-		filter := security.AuditLogFilter{ProjectID: &project.ID}
+		filter := security.AuditLogFilter{ResourceID: &monitorFromDB.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
@@ -61,9 +57,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 	})
 
 	t.Run("Fails with 400 Bad Request for invalid monitor payload", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		payload := monitors.Monitor{
 			Name:     "",  // Empty name makes it invalid
@@ -71,7 +65,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 			Type:     consts.HTTPConfigType,
 		}
 
-		resp, svcErr := monitorService.CreateMonitor(ctx, project.Slug, payload)
+		resp, svcErr := monitorService.CreateMonitor(ctx, payload)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 		assert.Nil(t, resp)
@@ -80,13 +74,10 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 
 func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 	t.Run("Successfully deletes a monitor and records audit log", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		require.Nil(t, err)
+		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
 		// Insert a monitor to delete
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		// Delete it
 		svcErr := monitorService.DeleteMonitor(ctx, monitor.ID.String())
@@ -98,7 +89,7 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, getErr.Code)
 
 		// Verify audit log was created
-		filter := security.AuditLogFilter{ProjectID: &project.ID}
+		filter := security.AuditLogFilter{ResourceID: &monitor.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
@@ -115,10 +106,7 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 	})
 
 	t.Run("Fails with 404 when deleting nonexistent monitor", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		// Use a random UUID
 		svcErr := monitorService.DeleteMonitor(ctx, uuid.New().String())
@@ -127,54 +115,11 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 	})
 }
 
-func TestIntegration_MonitorService_GetMonitorsByProjectID(t *testing.T) {
-	t.Run("Successfully retrieves monitors for a project", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		require.Nil(t, err)
-
-		// Insert 2 monitors
-		m1 := insertTestMonitor(t, ctx, project.ID)
-		m2 := insertTestMonitor(t, ctx, project.ID)
-
-		monitorsList, svcErr := monitorService.GetMonitorsByProjectSlug(ctx, project.Slug)
-		require.Nil(t, svcErr)
-		require.Len(t, monitorsList, 2)
-
-		foundM1, foundM2 := false, false
-		for _, m := range monitorsList {
-			if m.ID == m1.ID {
-				foundM1 = true
-			}
-			if m.ID == m2.ID {
-				foundM2 = true
-			}
-		}
-		assert.True(t, foundM1)
-		assert.True(t, foundM2)
-	})
-
-	t.Run("Returns empty list if project has no monitors", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Empty Project"})
-		require.Nil(t, err)
-
-		monitorsList, svcErr := monitorService.GetMonitorsByProjectSlug(ctx, project.Slug)
-		require.Nil(t, svcErr)
-		assert.Empty(t, monitorsList)
-	})
-}
-
 func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 	t.Run("Successfully retrieves a monitor by ID", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		retrieved, svcErr := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		require.Nil(t, svcErr)
@@ -184,9 +129,7 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 	})
 
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		_, _ = projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		retrieved, svcErr := monitorService.GetMonitorByID(ctx, uuid.New().String())
 		require.NotNil(t, svcErr)
@@ -195,9 +138,7 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 	})
 
 	t.Run("Fails with 400 for invalid UUID format", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		_, _ = projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		retrieved, svcErr := monitorService.GetMonitorByID(ctx, "not-a-uuid")
 		require.NotNil(t, svcErr)
@@ -208,12 +149,9 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 
 func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	t.Run("Successfully updates a monitor and records audit log", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
+		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		// Modify it
 		monitor.Name = "Updated Name"
@@ -228,7 +166,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		assert.Equal(t, 120, updatedMonitor.Interval)
 
 		// Verify audit log
-		filter := security.AuditLogFilter{ProjectID: &project.ID}
+		filter := security.AuditLogFilter{ResourceID: &monitor.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
@@ -244,35 +182,27 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		assert.True(t, found, "Audit log for monitor update not found")
 	})
 
-	t.Run("Preserves project ID and state even if explicitly changed in payload", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
+	t.Run("Preserves state even if explicitly changed in payload", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 		originalState := monitor.RunState
 
-		// Try to illegally change project ID and state
-		monitor.ProjectID = uuid.New()
+		// Try to illegally change state
 		monitor.RunState = monitors.MonitorStateStopped
 
 		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.Nil(t, svcErr)
 
 		updatedMonitor, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
-		assert.Equal(t, project.ID, updatedMonitor.ProjectID, "Project ID should not have been updated")
 		assert.Equal(t, originalState, updatedMonitor.RunState, "State should not have been updated via UpdateMonitor")
 	})
 
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		fakeMonitor := monitors.Monitor{
 			ID:          uuid.New(),
-			ProjectID:   project.ID,
 			Name:        "Fake",
 			Description: "Fake",
 			Interval:    60,
@@ -286,12 +216,9 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	})
 
 	t.Run("Fails with 400 for invalid configuration", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 		monitor.Name = "" // Invalid
 
 		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
@@ -300,43 +227,11 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	})
 }
 
-func TestIntegration_MonitorService_GetMonitorBySlugByProject(t *testing.T) {
-	t.Run("Successfully retrieves a monitor by slug", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
-
-		retrieved, svcErr := monitorService.GetMonitorBySlugByProject(ctx, project.Slug, monitor.Slug)
-		require.Nil(t, svcErr)
-		require.NotNil(t, retrieved)
-		assert.Equal(t, monitor.ID, retrieved.ID)
-		assert.Equal(t, monitor.Slug, retrieved.Slug)
-	})
-
-	t.Run("Fails with 404 for nonexistent slug", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		retrieved, svcErr := monitorService.GetMonitorBySlugByProject(ctx, project.Slug, "does-not-exist")
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusNotFound, svcErr.Code)
-		assert.Nil(t, retrieved)
-	})
-}
-
 func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	t.Run("Successfully updates a monitor state", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
@@ -346,12 +241,9 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	})
 
 	t.Run("Returns nil if state is already the desired state", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
@@ -364,12 +256,9 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	})
 
 	t.Run("Fails with 400 for invalid monitor state", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
-
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunState("invalid_state"))
 		require.NotNil(t, svcErr)
@@ -377,10 +266,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	})
 
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
-		ctx, monitorService, projectService, _, owner := setupMonitorIntegrationTest(t)
-
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "My Real Project"})
-		_ = project
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), monitors.MonitorStateStopped)
 		require.NotNil(t, svcErr)

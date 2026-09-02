@@ -16,7 +16,7 @@ import (
 )
 
 // setupIntegrationTest initializes a temporary SQLite DB, sets up services, and registers a test user.
-func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *UserService, *models.User) {
+func setupIntegrationTest(t *testing.T) (context.Context, *UserService, *models.User) {
 	ctx := context.Background()
 
 	t.Setenv("JWT_SECRET", "test_secret_key_1234567890123456")
@@ -44,14 +44,6 @@ func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *User
 		DB: realDB,
 	})
 
-	projectService := NewProjectService(ProjectServiceDeps{
-		DB: realDB,
-
-		UserService: userService,
-	})
-
-	userService.projectService = projectService
-
 	// Setup Phase: Create a real user in the DB
 	registerPayload := &UserRegisterPayload{
 		Username:        "integration_user",
@@ -69,59 +61,59 @@ func setupIntegrationTest(t *testing.T) (context.Context, *ProjectService, *User
 		Username: user.Username,
 	})
 
-	return ctx, projectService, userService, user
+	return ctx, userService, user
 }
 
 func setupAuditLogIntegrationTest(
 	t *testing.T,
-) (context.Context, AuditLogService, *ProjectService, *UserService, *models.User) {
-	ctx, projectService, userService, user := setupIntegrationTest(t)
+) (context.Context, AuditLogService, *UserService, *models.User) {
+	ctx, userService, user := setupIntegrationTest(t)
 
 	auditLogService := NewAuditLogService(AuditLogServiceDeps{
 		DB: db.Get(),
 	})
 
-	return ctx, auditLogService, projectService, userService, user
+	return ctx, auditLogService, userService, user
 }
 
 func setupMonitorResultsIntegrationTest(
 	t *testing.T,
-) (context.Context, *MonitorResultsService, *ProjectService, *UserService, *models.User) {
-	ctx, projectService, userService, user := setupIntegrationTest(t)
+) (context.Context, *MonitorResultsService, *UserService, *models.User) {
+	ctx, userService, user := setupIntegrationTest(t)
 
 	service := NewMonitorResultsService(MonitorResultsServiceDeps{
 		DB: db.Get(),
 	})
 
-	return ctx, service, projectService, userService, user
+	return ctx, service, userService, user
 }
 
 func setupMonitorIntegrationTest(
 	t *testing.T,
-) (context.Context, *MonitorService, *ProjectService, *UserService, *models.User) {
-	ctx, projectService, userService, user := setupIntegrationTest(t)
+) (context.Context, *MonitorService, *UserService, *models.User) {
+	ctx, userService, user := setupIntegrationTest(t)
 
 	monitorService := NewMonitorService(MonitorServiceDeps{
 		DB: db.Get(),
 	})
 
-	return ctx, monitorService, projectService, userService, user
+	return ctx, monitorService, userService, user
 }
 
 func setupMonitorStatsIntegrationTest(
 	t *testing.T,
-) (context.Context, *MonitorStatsService, *ProjectService, *UserService, *models.User) {
-	ctx, projectService, userService, user := setupIntegrationTest(t)
+) (context.Context, *MonitorStatsService, *UserService, *models.User) {
+	ctx, userService, user := setupIntegrationTest(t)
 
 	monitorStatsService := NewMonitorStatsService(MonitorStatsServiceDeps{
 		DB: db.Get(),
 	})
 
-	return ctx, &monitorStatsService, projectService, userService, user
+	return ctx, &monitorStatsService, userService, user
 }
 
 // insertTestMonitor is a helper to directly insert a monitor and return it.
-func insertTestMonitor(t *testing.T, ctx context.Context, projectID uuid.UUID) *monitors.Monitor {
+func insertTestMonitor(t *testing.T, ctx context.Context) *monitors.Monitor {
 	payload := monitors.Monitor{
 		Name:        "Test Monitor " + uuid.New().String(),
 		Description: "Testing monitor results",
@@ -130,7 +122,10 @@ func insertTestMonitor(t *testing.T, ctx context.Context, projectID uuid.UUID) *
 		ProbeConfig: "{}",
 	}
 	payload.GenerateSlug()
-	monitor := monitors.InitializeFromPayload(payload, projectID)
+
+	owner, err := db.Get().Users().GetUserByUsername(ctx, "integration_user")
+	require.NoError(t, err)
+	monitor := monitors.InitializeFromPayload(payload, owner.ID)
 
 	inserted, dbErr := db.Get().Monitors().InsertMonitor(ctx, *monitor)
 	require.NoError(t, dbErr)

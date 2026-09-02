@@ -4,14 +4,13 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestIntegration_UserService_RegisterUser(t *testing.T) {
-	t.Run("Successfully registers a new user and creates sandbox project", func(t *testing.T) {
-		ctx, _, userService, _ := setupIntegrationTest(t)
+	t.Run("Successfully registers a new user", func(t *testing.T) {
+		ctx, userService, _ := setupIntegrationTest(t)
 
 		payload := &UserRegisterPayload{
 			Username:        "new_user",
@@ -27,15 +26,10 @@ func TestIntegration_UserService_RegisterUser(t *testing.T) {
 		require.Nil(t, getErr)
 		assert.Equal(t, "new_user", user.Username)
 
-		// Verify sandbox project was auto-created
-		projects, projErr := db.Get().Projects().GetProjectsByQuery(ctx, db.GetProjectsQuery{RequestingUserID: user.ID})
-		require.NoError(t, projErr)
-		require.Len(t, projects, 1)
-		assert.Equal(t, "new_user's Sandbox", projects[0].Name)
 	})
 
 	t.Run("Fails to register a duplicate user", func(t *testing.T) {
-		ctx, _, userService, owner := setupIntegrationTest(t)
+		ctx, userService, owner := setupIntegrationTest(t)
 
 		payload := &UserRegisterPayload{
 			Username:        owner.Username, // Already registered by setupIntegrationTest
@@ -51,7 +45,7 @@ func TestIntegration_UserService_RegisterUser(t *testing.T) {
 
 func TestIntegration_UserService_Login(t *testing.T) {
 	t.Run("Successfully logs in with valid credentials", func(t *testing.T) {
-		ctx, _, userService, _ := setupIntegrationTest(t)
+		ctx, userService, _ := setupIntegrationTest(t)
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{
 			Username:        "login_user",
@@ -71,7 +65,7 @@ func TestIntegration_UserService_Login(t *testing.T) {
 	})
 
 	t.Run("Fails to log in with invalid password", func(t *testing.T) {
-		ctx, _, userService, _ := setupIntegrationTest(t)
+		ctx, userService, _ := setupIntegrationTest(t)
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{
 			Username:        "login_user2",
@@ -91,7 +85,7 @@ func TestIntegration_UserService_Login(t *testing.T) {
 	})
 
 	t.Run("Fails to log in with nonexistent user", func(t *testing.T) {
-		ctx, _, userService, _ := setupIntegrationTest(t)
+		ctx, userService, _ := setupIntegrationTest(t)
 
 		payload := LoginPayload{
 			Username: "nonexistent",
@@ -107,7 +101,7 @@ func TestIntegration_UserService_Login(t *testing.T) {
 
 func TestIntegration_UserService_GetUserByUsername(t *testing.T) {
 	t.Run("Successfully retrieves an existing user", func(t *testing.T) {
-		ctx, _, userService, owner := setupIntegrationTest(t)
+		ctx, userService, owner := setupIntegrationTest(t)
 
 		user, err := userService.GetUserByUsername(ctx, owner.Username)
 		require.Nil(t, err)
@@ -116,7 +110,7 @@ func TestIntegration_UserService_GetUserByUsername(t *testing.T) {
 	})
 
 	t.Run("Fails to retrieve a nonexistent user", func(t *testing.T) {
-		ctx, _, userService, _ := setupIntegrationTest(t)
+		ctx, userService, _ := setupIntegrationTest(t)
 
 		user, err := userService.GetUserByUsername(ctx, "nobody")
 		require.NotNil(t, err)
@@ -127,7 +121,7 @@ func TestIntegration_UserService_GetUserByUsername(t *testing.T) {
 
 func TestIntegration_UserService_GetAllUsers(t *testing.T) {
 	t.Run("Successfully retrieves all users", func(t *testing.T) {
-		ctx, _, userService, owner := setupIntegrationTest(t)
+		ctx, userService, owner := setupIntegrationTest(t)
 
 		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{
 			Username:        "user1",

@@ -64,7 +64,13 @@ func (s *MonitorService) CreateMonitor(
 		return nil, NewUnauthorizedError("user claims not found in context")
 	}
 
-	initializedMonitor := monitors.InitializeFromPayload(monitor)
+	owner, err := s.db.Users().GetUserByUsername(ctx, userClaims.Username)
+	if err != nil {
+		logger.Error().Err(err).Str("username", userClaims.Username).Msg("Failed to find creating user")
+		return nil, NewInternalError("failed to find creating user: %w", err)
+	}
+
+	initializedMonitor := monitors.InitializeFromPayload(monitor, owner.ID)
 
 	if err := initializedMonitor.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Invalid monitor configuration")
@@ -216,6 +222,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 		}
 
 		monitor.RunState = existingMonitor.RunState
+		monitor.OwnerID = existingMonitor.OwnerID
 
 		if err := monitor.Validate(); err != nil {
 			logger.Error().

@@ -23,6 +23,7 @@ type Monitor struct {
 	ProbeConfig            string           `json:"probeConfig"            db:"config"`                   // JSON string containing the specific configuration for the monitor type
 	ResultRetentionSeconds int              `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
 	RunState               MonitorRunState  `json:"runState" db:"run_state"`                              // RunState indicates whether the monitor is currently running or stopped
+	OwnerID                uuid.UUID        `json:"ownerId"                db:"owner_id"`                 // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
 }
 
 type Probe interface {
@@ -41,9 +42,10 @@ func IsValidMonitorState(state string) bool {
 	return state == string(MonitorStateActive) || state == string(MonitorStateStopped)
 }
 
-func InitializeFromPayload(payload Monitor) *Monitor {
+func InitializeFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
 	return &Monitor{
 		ID:                     uuid.New(),
+		OwnerID:                ownerID,
 		Slug:                   payload.Slug,
 		Name:                   payload.Name,
 		Description:            payload.Description,

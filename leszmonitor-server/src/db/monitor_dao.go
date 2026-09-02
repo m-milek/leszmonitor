@@ -39,7 +39,7 @@ func (r *monitorDAO) GetMonitorBySlug(
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1`,
 			slug,
@@ -61,7 +61,7 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitor
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.id = $1`,
 			id,
@@ -83,7 +83,7 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, er
 			ctx,
 			r.pool,
 			&allMonitors,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
 			 FROM monitors m`,
 		)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -122,8 +122,8 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config, owner_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			id,
 			monitor.Slug,
 			monitor.Name,
@@ -133,6 +133,7 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor
 			monitor.ResultRetentionSeconds,
 			monitor.RunState,
 			monitor.ProbeConfig,
+			monitor.OwnerID,
 		)
 		if err != nil {
 			if isUniqueViolation(err) {
