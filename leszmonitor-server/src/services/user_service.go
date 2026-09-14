@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
 	"github.com/m-milek/leszmonitor/api/authorization"
+	config "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
@@ -257,6 +259,69 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 
 	logger.Debug().Str("username", payload.Username).Msg("Login successful")
 	return &LoginResponse{Jwt: *jwtToken}, nil
+}
+
+func (s *UserService) EnsureAdminUserExists(ctx context.Context) *ServiceError {
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "EnsureAdminUserExists")
+	logger.Info().Msg("Ensuring admin user exists")
+
+	adminUser, err := s.db.Users().GetUserByUsername(ctx, os.Getenv(config.InstanceAdminUsername))
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			logger.Info().Msg("Admin user not found, creating...")
+			return s.createAdminUser(ctx)
+		}
+		return NewInternalError("error occurred while checking for admin user: %w", err)
+	}
+
+	logger.Info().Str("username", adminUser.Username).Msg("Admin user already exists")
+
+	return nil
+}
+
+func (s *UserService) createAdminUser(ctx context.Context) *ServiceError {
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "CreateAdminUser")
+
+	hashedPassword, err := hashPassword(os.Getenv(config.InstanceAdminPassword))
+	if err != nil {
+		return NewInternalError("failed to hash admin password: %w", err)
+	}
+
+	adminUserModel, err := models.NewUser(os.Getenv(config.InstanceAdminUsername), hashedPassword)
+	if err != nil {
+		return NewBadRequestError("invalid admin user data: %w", err)
+	}
+	adminUserModel.IsInstanceAdmin = true
+	adminUserModel.Role = models.RoleOwner
+
+	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *security.AuditLogParams, error) {
+		u, err := tx.Users().InsertUser(ctx, adminUserModel)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		params := &security.AuditLogParams{
+			Username:   &u.Username,
+			ResourceID: &u.ID,
+			Action:     security.ActionCreateUser,
+			IsSuccess:  true,
+			Summary:    fmt.Sprintf("Admin user %s created", u.Username),
+			After:      u,
+		}
+
+		return u, params, nil
+	})
+	if txErr != nil {
+		if errors.Is(txErr, db.ErrAlreadyExists) {
+			logger.Info().Msg("Admin user already exists")
+			return nil
+		}
+		return NewInternalError("failed to create admin user: %w", txErr)
+	}
+
+	logger.Info().Msg("Admin user created successfully")
+
+	return nil
 }
 
 func hashPassword(password string) (string, error) {
