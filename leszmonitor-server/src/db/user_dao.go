@@ -12,6 +12,7 @@ import (
 
 type IUserDAO interface {
 	InsertUser(ctx context.Context, user *models.User) (*models.User, error)
+	UpdateUserRole(ctx context.Context, userID uuid.UUID, role models.Role) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetAllUsers(ctx context.Context) ([]models.User, error)
@@ -51,6 +52,29 @@ func (r *UserDAO) InsertUser(ctx context.Context, user *models.User) (*models.Us
 		}
 
 		return &createdUser, nil
+	})
+}
+
+func (r *UserDAO) UpdateUserRole(
+	ctx context.Context,
+	userID uuid.UUID,
+	role models.Role,
+) (*models.User, error) {
+	return dbWrap(ctx, "UpdateUserRole", func() (*models.User, error) {
+		var updatedUser models.User
+		err := r.pool.QueryRowxContext(
+			ctx,
+			`UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role, password_hash, created_at, updated_at`,
+			role,
+			userID,
+		).StructScan(&updatedUser)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+		return &updatedUser, nil
 	})
 }
 

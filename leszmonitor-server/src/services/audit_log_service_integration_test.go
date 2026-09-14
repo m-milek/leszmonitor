@@ -69,4 +69,34 @@ func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
 		require.Nil(t, svcErr)
 		require.Len(t, entries, 2)
 	})
+
+	t.Run("Successfully retrieves entries filtered by username", func(t *testing.T) {
+		ctx, auditLogService, _, _ := setupAuditLogIntegrationTest(t)
+
+		alice := "alice"
+		bob := "bob"
+		resource := uuid.New()
+
+		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+			Username:   &alice,
+			ResourceID: &resource,
+			Action:     security.ActionCreateMonitor,
+			IsSuccess:  true,
+		}))
+		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+			Username:   &bob,
+			ResourceID: &resource,
+			Action:     security.ActionCreateMonitor,
+			IsSuccess:  true,
+		}))
+
+		entries, svcErr := auditLogService.GetEntries(
+			ctx,
+			security.AuditLogFilter{Username: &alice},
+			util.Pagination{Page: 1, PerPage: 10},
+		)
+		require.Nil(t, svcErr)
+		require.Len(t, entries, 1)
+		assert.Equal(t, "alice", *entries[0].Username)
+	})
 }

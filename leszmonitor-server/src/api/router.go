@@ -21,6 +21,10 @@ func SetupRouters(
 		"GET /api/v1/users/{username}",
 		middleware.RequireSelf("username")(h.User.GetUserHandler),
 	)
+	protectedRouter.HandleFunc(
+		"PATCH /api/v1/users/{username}/role",
+		middleware.RequireInstanceAdmin()(h.User.SetUserRoleHandler),
+	)
 	publicRouter.HandleFunc("POST /api/v1/auth/register", h.User.UserRegisterHandler)
 	publicRouter.HandleFunc("POST /api/v1/auth/login", h.User.UserLoginHandler)
 

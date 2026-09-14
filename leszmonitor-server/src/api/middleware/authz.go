@@ -99,13 +99,7 @@ func RequirePermission(
 				return
 			}
 
-			monitorID := r.PathValue("monitorId")
-			if monitorID == "" {
-				util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("monitor ID not found in URL"))
-				return
-			}
-
-			hasPerm, err := authzService.CheckPermissionByID(ctx, userClaims.Username, perm)
+			hasPerm, err := authzService.CheckUserPermission(ctx, userClaims.Username, perm)
 			if err != nil {
 				util.RespondError(ctx, w, http.StatusInternalServerError, err)
 				return
@@ -115,7 +109,7 @@ func RequirePermission(
 					ctx,
 					w,
 					http.StatusForbidden,
-					fmt.Errorf("user does not have required monitor permission: %s", perm.Name),
+					fmt.Errorf("user does not have required permission: %s", perm.Name),
 				)
 				return
 			}

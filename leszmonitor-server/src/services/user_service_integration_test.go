@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/m-milek/leszmonitor/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -116,6 +117,44 @@ func TestIntegration_UserService_GetUserByUsername(t *testing.T) {
 		require.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
 		assert.Nil(t, user)
+	})
+}
+
+func TestIntegration_UserService_SetUserRole(t *testing.T) {
+	t.Run("New users default to viewer", func(t *testing.T) {
+		ctx, userService, owner := setupIntegrationTest(t)
+
+		user, err := userService.GetUserByUsername(ctx, owner.Username)
+		require.Nil(t, err)
+		assert.Equal(t, models.RoleViewer, user.Role)
+	})
+
+	t.Run("Successfully promotes a user", func(t *testing.T) {
+		ctx, userService, owner := setupIntegrationTest(t)
+
+		updated, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: models.RoleAdmin})
+		require.Nil(t, err)
+		assert.Equal(t, models.RoleAdmin, updated.Role)
+
+		refetched, err := userService.GetUserByUsername(ctx, owner.Username)
+		require.Nil(t, err)
+		assert.Equal(t, models.RoleAdmin, refetched.Role)
+	})
+
+	t.Run("Fails with 400 for an invalid role", func(t *testing.T) {
+		ctx, userService, owner := setupIntegrationTest(t)
+
+		_, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: models.Role("superuser")})
+		require.NotNil(t, err)
+		assert.Equal(t, http.StatusBadRequest, err.Code)
+	})
+
+	t.Run("Fails with 404 for a nonexistent user", func(t *testing.T) {
+		ctx, userService, _ := setupIntegrationTest(t)
+
+		_, err := userService.SetUserRole(ctx, "ghost", SetUserRolePayload{Role: models.RoleAdmin})
+		require.NotNil(t, err)
+		assert.Equal(t, http.StatusNotFound, err.Code)
 	})
 }
 

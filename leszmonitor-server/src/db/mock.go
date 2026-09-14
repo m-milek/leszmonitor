@@ -30,6 +30,18 @@ func (r *MockUserDAO) InsertUser(ctx context.Context, user *models.User) (*model
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
+func (r *MockUserDAO) UpdateUserRole(
+	ctx context.Context,
+	userID uuid.UUID,
+	role models.Role,
+) (*models.User, error) {
+	args := r.Called(ctx, userID, role)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
 func (r *MockUserDAO) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	args := r.Called(ctx, username)
 	return args.Get(0).(*models.User), args.Error(1)

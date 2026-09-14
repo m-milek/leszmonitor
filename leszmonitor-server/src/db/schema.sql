@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     name                     TEXT NOT NULL CHECK (LENGTH(name) >= 2) CHECK (LENGTH(name) <= 100),
     description              TEXT NOT NULL CHECK (LENGTH(description) <= 1000),
     interval                 INT  NOT NULL CHECK (interval > 0),       -- in seconds
-    owner_id                 TEXT NOT NULL,
+    owner_id                 TEXT NOT NULL,                            -- user who created the monitor
     kind                     TEXT NOT NULL,
     result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
     run_state                TEXT NOT NULL,
@@ -30,8 +30,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE (slug),
-    FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE SET NULL
+    UNIQUE (slug)
 );
 CREATE TRIGGER IF NOT EXISTS update_monitors_updated_at
     AFTER UPDATE

@@ -1,7 +1,7 @@
 package models
 
 // Permission represents a specific action that can be performed within the system.
-// Examples include "read:monitor", "edit:project", etc.
+// Examples include "read:monitor", "edit:monitor", etc.
 type Permission struct {
 	ID          string `json:"id"`          // ID of the permission - a unique identifier, e.g., "read:monitor"
 	Name        string `json:"name"`        // Name of the permission. Used for display purposes.
@@ -27,7 +27,7 @@ var PermissionReader = newPermission(
 )
 
 // permissionImplications defines which permissions imply other permissions.
-// For example, having ProjectAdmin permission implies having lower ProjectEditor and ProjectReader permissions.
+// For example, having PermissionAdmin implies having the lower PermissionWriter and PermissionReader permissions.
 var permissionImplications = map[Permission][]Permission{
 	PermissionInstanceAdmin: {PermissionAdmin, PermissionWriter, PermissionReader},
 	PermissionAdmin:         {PermissionWriter},
@@ -36,7 +36,7 @@ var permissionImplications = map[Permission][]Permission{
 }
 
 // getEffectivePermissions expands a single permission to include all implied permissions.
-// For example, if a user has ProjectAdmin permission, this function will return ProjectAdmin, ProjectEditor, and ProjectReader permissions.
+// For example, if a user has PermissionAdmin, this function returns PermissionAdmin, PermissionWriter, and PermissionReader.
 func getEffectivePermissions(perm Permission) []Permission {
 	result := []Permission{perm}
 

@@ -98,7 +98,7 @@ func (a *AuditLogEntry) BeforeCreate() {
 }
 
 type AuditLogFilter struct {
-	UserID     *string
+	Username   *string
 	ResourceID *uuid.UUID
 	Action     *AuditLogAction
 	IsSuccess  *bool
@@ -111,8 +111,8 @@ func AuditLogFilterFromRequest(r *http.Request) (*AuditLogFilter, error) {
 	f := &AuditLogFilter{}
 	query := r.URL.Query()
 
-	if userID := query.Get("userId"); userID != "" {
-		f.UserID = &userID
+	if username := query.Get("username"); username != "" {
+		f.Username = &username
 	}
 
 	if resourceIDStr := query.Get("resourceId"); resourceIDStr != "" {

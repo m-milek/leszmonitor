@@ -4,14 +4,14 @@ import (
 	"fmt"
 )
 
-// Role represents the role of a project member within a project.
+// Role represents a user's role within the instance.
 type Role string
 
 const (
-	RoleOwner  Role = "owner"  // RoleOwner has full permissions to manage the project
-	RoleAdmin  Role = "admin"  // RoleAdmin has full permissions to manage monitors and the project
-	RoleWriter Role = "member" // RoleWriter can manage monitors and view project details
-	RoleViewer Role = "viewer" // RoleViewer can only view monitor statuses and project details
+	RoleOwner  Role = "owner"  // RoleOwner has full (instance admin) permissions
+	RoleAdmin  Role = "admin"  // RoleAdmin can create, edit, and delete monitors
+	RoleWriter Role = "member" // RoleWriter can create and edit monitors
+	RoleViewer Role = "viewer" // RoleViewer can only view monitors and their statuses
 )
 
 var rolePermissions = map[Role][]Permission{

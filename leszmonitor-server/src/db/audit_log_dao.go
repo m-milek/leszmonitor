@@ -75,9 +75,9 @@ func (a auditLogDAO) GetAuditLogEntries(
 			conditions []string
 			args       []any
 		)
-		if filter.UserID != nil {
-			conditions = append(conditions, "user_id = ?")
-			args = append(args, *filter.UserID)
+		if filter.Username != nil {
+			conditions = append(conditions, "username = ?")
+			args = append(args, *filter.Username)
 		}
 		if filter.ResourceID != nil {
 			conditions = append(conditions, "resource_id = ?")

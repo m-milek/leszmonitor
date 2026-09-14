@@ -10,7 +10,8 @@ import (
 )
 
 type IAuthzMiddlewareService interface {
-	CheckPermissionByID(
+	// CheckUserPermission reports whether the user's role grants the given permission.
+	CheckUserPermission(
 		ctx context.Context,
 		username string,
 		permission models.Permission,
@@ -25,12 +26,12 @@ func NewAuthzMiddlewareService(db db.DB) IAuthzMiddlewareService {
 	return &AuthzMiddlewareService{db: db}
 }
 
-func (s *AuthzMiddlewareService) CheckPermissionByID(
+func (s *AuthzMiddlewareService) CheckUserPermission(
 	ctx context.Context,
 	username string,
 	permission models.Permission,
 ) (bool, error) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckPermissionByID")
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckUserPermission")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, username)
 	if err != nil {
@@ -47,6 +48,6 @@ func (s *AuthzMiddlewareService) CheckPermissionByID(
 		Str("username", username).
 		Interface("permission", permission).
 		Bool("hasPermission", hasPermission).
-		Msg("Checked monitor permission successfully")
+		Msg("Checked user permission successfully")
 	return hasPermission, nil
 }
