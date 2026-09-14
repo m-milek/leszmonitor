@@ -95,6 +95,11 @@ func main() {
 		AuthzMiddlewareService: authzMiddlewareService,
 	}
 
+	svcErr := userService.EnsureAdminUserExists(appCtx)
+	if svcErr != nil {
+		logger.Fatal().Err(svcErr).Msg("Failed to ensure admin user exists")
+	}
+
 	// Start the server
 	serverConfig := api.DefaultServerConfig()
 	logger.Info().Msg("Starting API server...")

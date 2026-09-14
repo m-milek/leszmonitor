@@ -25,19 +25,19 @@ func Validate() error {
 	var missingVars []string
 
 	if os.Getenv(APIPort) == "" {
-		missingVars = append(missingVars, APIPort)
+		os.Setenv(APIPort, "7001")
 	}
 
 	if os.Getenv(SqliteDBPath) == "" {
-		missingVars = append(missingVars, SqliteDBPath)
+		os.Setenv(SqliteDBPath, "./leszmonitor.db")
+	}
+
+	if os.Getenv(JwtExpiryHours) == "" {
+		os.Setenv(JwtExpiryHours, "24")
 	}
 
 	if os.Getenv(JwtSecret) == "" {
 		missingVars = append(missingVars, JwtSecret)
-	}
-
-	if os.Getenv(JwtExpiryHours) == "" {
-		missingVars = append(missingVars, JwtExpiryHours)
 	}
 
 	if os.Getenv(InstanceAdminUsername) == "" {

@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Dev UI" type="TaskRunConfiguration" factoryName="TaskRunConfiguration">
+    <taskfile taskPath="" filename="$PROJECT_DIR$/leszmonitor-ui/Taskfile.yaml" task="dev" workingDirectory="" arguments="" pty="false">
+      <envs />
+      <vars />
+    </taskfile>
+    <method v="2" />
+  </configuration>
+</component>

@@ -44,6 +44,15 @@ tasks:
     cmds:
       - cd {{.SERVER_SRC_DIR}} && $(go env GOPATH)/bin/air -build.stop_on_error true
 
+  dev:debug:
+    desc: Run the back-end dev server with air (live reload) + headless delve on :2345
+    env:
+      API_PORT: '7001'
+      JWT_SECRET: 'your_jwt_secret'
+      JWT_EXPIRY_HOURS: '24'
+    cmds:
+      - cd {{.SERVER_SRC_DIR}} && $(go env GOPATH)/bin/air -c .air.toml
+
   docker:run:
     desc: Run the Docker image
     env:
