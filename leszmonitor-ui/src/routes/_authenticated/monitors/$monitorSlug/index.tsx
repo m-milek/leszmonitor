@@ -30,9 +30,7 @@ const latencyChartConfig = {
   },
 };
 
-export const Route = createFileRoute(
-  "/_authenticated/projects/$projectId/monitors/$monitorSlug/",
-)({
+export const Route = createFileRoute("/_authenticated/monitors/$monitorSlug/")({
   component: RouteComponent,
 });
 
@@ -42,13 +40,13 @@ function RouteComponent() {
     perPage: 100,
   };
 
-  const { projectId, monitorSlug } = Route.useParams();
+  const { monitorSlug } = Route.useParams();
 
   const queryClient = useQueryClient();
 
   const { data: monitor } = useQuery({
-    queryKey: [QUERY_KEYS.MONITORS, monitorSlug, projectId],
-    queryFn: () => getMonitorBySlug(projectId, monitorSlug),
+    queryKey: [QUERY_KEYS.MONITORS, monitorSlug],
+    queryFn: () => getMonitorBySlug(monitorSlug),
   });
 
   const { data: monitorResults } = useQuery({
@@ -67,12 +65,12 @@ function RouteComponent() {
   });
 
   const mutation = useMutation({
-    mutationKey: [QUERY_KEYS.MONITORS, monitorSlug, projectId],
+    mutationKey: [QUERY_KEYS.MONITORS, monitorSlug],
     mutationFn: async () =>
       updateMonitorState(monitor!.id, isPaused ? "active" : "paused"),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.MONITORS, monitorSlug, projectId],
+        queryKey: [QUERY_KEYS.MONITORS, monitorSlug],
       });
     },
   });

@@ -24,14 +24,12 @@ const monitorStatusToStatusDot = (status: MonitorStatus | undefined) => {
 
 export interface MonitorListItemProps {
   monitor: Monitor;
-  projectSlug: string;
   onDeleteMonitor?: (monitorId: string) => Promise<void>;
   navigateToEditMonitor?: (monitorId: string) => void;
 }
 
 export function MonitorListItem({
   monitor,
-  projectSlug,
   onDeleteMonitor,
   navigateToEditMonitor,
 }: Readonly<MonitorListItemProps>) {
@@ -50,8 +48,8 @@ export function MonitorListItem({
             <StatusDot status={dotStatus} />
             <TypographyH3>
               <StyledLink
-                to="/projects/$projectId/monitors/$monitorSlug"
-                params={{ projectId: projectSlug, monitorSlug: monitor.slug }}
+                to="/monitors/$monitorSlug"
+                params={{ monitorSlug: monitor.slug }}
               >
                 {monitor.name}
               </StyledLink>

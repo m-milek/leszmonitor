@@ -1,6 +1,6 @@
 import { SERVER_API_URL } from "@/lib/consts.ts";
 import { authFetch } from "@/lib/data/utils.ts";
-import type { ApiError, User } from "@/lib/types.ts";
+import type { ApiError, User, UserRole } from "@/lib/types.ts";
 
 export const getUser = async (username: string): Promise<User> => {
   const res = await authFetch(`${SERVER_API_URL}/users/${username}`);
@@ -35,6 +35,20 @@ export const registerUser = async (
     console.error(errorData);
     throw new Error("Failed to register user: " + errorData.error.message);
   }
+};
+
+export const updateUserRole = async (
+  username: string,
+  role: UserRole,
+): Promise<User> => {
+  const res = await authFetch(`${SERVER_API_URL}/users/${username}/role`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
+
+  const user = (await res.json()) as User;
+  return mapUser(user);
 };
 
 const mapUser = (user: User): User => {

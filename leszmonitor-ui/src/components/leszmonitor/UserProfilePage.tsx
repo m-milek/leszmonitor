@@ -7,25 +7,12 @@ import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { Initial } from "@/components/leszmonitor/Initial.tsx";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { CopyToClipboardButton } from "@/components/leszmonitor/CopyToClipboardButton.tsx";
-import { useQuery } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/lib/consts.ts";
-import { getProjects } from "@/lib/data/projectData.ts";
-import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { ProjectsTable } from "@/components/leszmonitor/tables/ProjectsTable.tsx";
 
 export interface UserProfilePageProps {
   user: User;
 }
 
 export const UserProfilePage = ({ user }: UserProfilePageProps) => {
-  console.log("user", user);
-  const { data: userProjects, isLoading } = useQuery({
-    queryKey: [QUERY_KEYS.PROJECTS, user.username],
-    enabled: !!user,
-    queryFn: () => getProjects(user.username),
-  });
-
   return (
     <section>
       <Flex direction="column" className="gap-4">
@@ -36,17 +23,6 @@ export const UserProfilePage = ({ user }: UserProfilePageProps) => {
             <span className="text-muted-foreground">{user.id}</span>
           </div>
         </Flex>
-        <Card>
-          <CardHeader>
-            <TypographyH2>Projects</TypographyH2>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<Skeleton className="h-24" />}>
-              {userProjects && <ProjectsTable projects={userProjects} />}
-              {isLoading && <Skeleton className="h-24" />}
-            </Suspense>
-          </CardContent>
-        </Card>
         <Card>
           <CardHeader>
             <TypographyH2>Details</TypographyH2>

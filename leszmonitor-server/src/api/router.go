@@ -39,6 +39,15 @@ func SetupRouters(
 		),
 	)
 	protectedRouter.HandleFunc(
+		"GET /api/v1/monitors",
+		middleware.RequirePermission(
+			h.AuthzMiddlewareService,
+			models.PermissionReader,
+		)(
+			h.Monitor.GetAllMonitorsHandler,
+		),
+	)
+	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,

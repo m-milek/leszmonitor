@@ -14,6 +14,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestIntegration_MonitorService_GetAllMonitors(t *testing.T) {
+	t.Run("Returns every monitor in the instance", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+
+		m1 := insertTestMonitor(t, ctx)
+		m2 := insertTestMonitor(t, ctx)
+
+		all, svcErr := monitorService.GetAllMonitors(ctx)
+		require.Nil(t, svcErr)
+
+		ids := make(map[string]bool)
+		for _, m := range all {
+			ids[m.ID.String()] = true
+		}
+		assert.True(t, ids[m1.ID.String()])
+		assert.True(t, ids[m2.ID.String()])
+	})
+
+	t.Run("Returns an empty list when there are no monitors", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+
+		all, svcErr := monitorService.GetAllMonitors(ctx)
+		require.Nil(t, svcErr)
+		assert.Empty(t, all)
+	})
+}
+
 func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 	t.Run("Successfully creates a monitor", func(t *testing.T) {
 		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
@@ -137,12 +164,24 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 		assert.Nil(t, retrieved)
 	})
 
-	t.Run("Fails with 400 for invalid UUID format", func(t *testing.T) {
+	t.Run("Successfully retrieves a monitor by slug when the id does not parse as a UUID", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+
+		monitor := insertTestMonitor(t, ctx)
+
+		retrieved, svcErr := monitorService.GetMonitorByID(ctx, monitor.Slug)
+		require.Nil(t, svcErr)
+		require.NotNil(t, retrieved)
+		assert.Equal(t, monitor.ID, retrieved.ID)
+		assert.Equal(t, monitor.Slug, retrieved.Slug)
+	})
+
+	t.Run("Fails with 404 for a non-UUID id that doesn't match any slug", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		retrieved, svcErr := monitorService.GetMonitorByID(ctx, "not-a-uuid")
 		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
+		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 		assert.Nil(t, retrieved)
 	})
 }

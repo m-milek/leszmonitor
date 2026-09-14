@@ -21,13 +21,8 @@ const normalizeMonitor = (monitor: Monitor): Monitor => {
   return monitor;
 };
 
-export const getMonitorsByProjectSlug = async (
-  projectSlug: string,
-): Promise<Monitor[]> => {
-  const query = new URLSearchParams({
-    projectSlug,
-  }).toString();
-  const res = await authFetch(`${SERVER_API_URL}/monitors?${query}`, {
+export const getAllMonitors = async (): Promise<Monitor[]> => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -38,29 +33,20 @@ export const getMonitorsByProjectSlug = async (
   return monitors.map(normalizeMonitor);
 };
 
-export const getMonitorBySlug = async (
-  projectSlug: string,
-  monitorSlug: string,
-): Promise<Monitor> => {
-  const res = await authFetch(
-    `${SERVER_API_URL}/projects/${projectSlug}/monitors/${monitorSlug}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+export const getMonitorBySlug = async (monitorSlug: string): Promise<Monitor> => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorSlug}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+  });
 
   const monitor = (await res.json()) as Monitor;
   return normalizeMonitor(monitor);
 };
 
 export const createMonitor = async (monitorData: MonitorCreatePayload) => {
-  const query = new URLSearchParams({
-    projectSlug: monitorData.projectSlug,
-  }).toString();
-  const res = await authFetch(`${SERVER_API_URL}/monitors?${query}`, {
+  const res = await authFetch(`${SERVER_API_URL}/monitors`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

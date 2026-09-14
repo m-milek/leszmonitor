@@ -20,6 +20,7 @@ type IMonitorService interface {
 		monitor monitors.Monitor,
 	) (*MonitorCreateResponse, *ServiceError)
 	DeleteMonitor(ctx context.Context, id string) *ServiceError
+	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *ServiceError)
 	GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError)
 	UpdateMonitor(ctx context.Context, monitor monitors.Monitor) *ServiceError
 	UpdateMonitorStateByID(
@@ -174,18 +175,38 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *ServiceE
 	return nil
 }
 
-// GetMonitorByID retrieves a specific monitor by its ID.
-func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorByID")
-	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
+// GetAllMonitors retrieves every monitor in the instance.
+func (s *MonitorService) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetAllMonitors")
+	logger.Trace().Msg("Retrieving all monitors")
 
-	monitorUUID, err := uuid.Parse(id)
+	allMonitors, err := s.db.Monitors().GetAllMonitors(ctx)
 	if err != nil {
-		logger.Error().Str("id", id).Msg("Invalid monitor ID format (should be uuid)")
-		return nil, NewBadRequestError("invalid monitor ID format: %w", err)
+		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
+		return nil, NewInternalError("failed to retrieve monitors: %w", err)
 	}
 
-	monitor, err := s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
+	logger.Debug().Int("count", len(allMonitors)).Msg("Monitors retrieved successfully")
+	return allMonitors, nil
+}
+
+// GetMonitorByID retrieves a specific monitor either by its UUID or, if id does not parse as a
+// UUID, by its slug.
+func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorByID")
+	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID or slug")
+
+	var (
+		monitor *monitors.Monitor
+		err     error
+	)
+
+	if monitorUUID, parseErr := uuid.Parse(id); parseErr == nil {
+		monitor, err = s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
+	} else {
+		monitor, err = s.db.Monitors().GetMonitorBySlug(ctx, id)
+	}
+
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Monitor not found in database")

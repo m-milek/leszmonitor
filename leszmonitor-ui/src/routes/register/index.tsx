@@ -55,7 +55,7 @@ function RegisterComponent() {
       const user = await getUser(claims.username);
       setUser(user);
 
-      await navigate({ to: "/", replace: true });
+      await navigate({ to: "/monitors", replace: true });
     } catch (error) {
       console.error("Registration failed:", error);
       toast.error("Registration failed. Please try again.");

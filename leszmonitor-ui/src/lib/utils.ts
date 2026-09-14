@@ -1,6 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ProjectRole } from "@/lib/types.ts";
 
 export const cn = (...inputs: ClassValue[]): string => {
   return twMerge(clsx(inputs));
@@ -19,19 +18,4 @@ export const formatDate = (date: Date): string => {
     hour: "2-digit",
     minute: "2-digit",
   });
-};
-
-export const formatRole = (role: ProjectRole): string => {
-  switch (role) {
-    case ProjectRole.Viewer:
-      return "Viewer";
-    case ProjectRole.Member:
-      return "Member";
-    case ProjectRole.Admin:
-      return "Admin";
-    case ProjectRole.Owner:
-      return "Owner";
-    default:
-      return role;
-  }
 };

@@ -4,37 +4,24 @@ export interface Timestamps {
   updatedAt: Date;
 }
 
-export interface User extends Timestamps {
-  id: string;
-  username: string;
-}
-
-export enum ProjectRole {
+export enum UserRole {
   Owner = "owner",
   Admin = "admin",
   Member = "member",
   Viewer = "viewer",
 }
 
-export const mapProjectRoleToDisplayName: Record<ProjectRole, string> = {
-  [ProjectRole.Owner]: "Owner",
-  [ProjectRole.Admin]: "Admin",
-  [ProjectRole.Member]: "Member",
-  [ProjectRole.Viewer]: "Viewer",
+export const mapUserRoleToDisplayName: Record<UserRole, string> = {
+  [UserRole.Owner]: "Owner",
+  [UserRole.Admin]: "Admin",
+  [UserRole.Member]: "Member",
+  [UserRole.Viewer]: "Viewer",
 };
 
-export interface ProjectMember extends Timestamps {
+export interface User extends Timestamps {
   id: string;
   username: string;
-  role: ProjectRole;
-}
-
-export interface Project extends Timestamps {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  members: ProjectMember[];
+  role: UserRole;
 }
 
 export interface Monitor extends Timestamps {
@@ -42,7 +29,7 @@ export interface Monitor extends Timestamps {
   name: string;
   slug: string;
   description?: string;
-  projectSlug: string;
+  ownerId: string;
   interval: number;
   // Retention seconds not configurable yet
   runState: MonitorRunState;
@@ -192,7 +179,6 @@ export interface ApiError {
 export interface AuditLogEntry {
   id: string;
   username?: string;
-  projectId?: string;
   resourceId?: string;
   action: string;
   isSuccess: boolean;
@@ -205,7 +191,6 @@ export interface AuditLogEntry {
 
 export interface AuditLogFilters {
   username?: string;
-  projectId?: string;
   resourceId?: string;
   action?: string;
   isSuccess?: boolean;

@@ -9,7 +9,7 @@ export function AppSidebarHeader() {
     <SidebarHeader className="p-2">
       <Flex direction="row" className="justify-between items-center">
         <div className="p-2">
-          <Link to={"/projects"}>
+          <Link to={"/monitors"}>
             <LeszmonitorLogo />
           </Link>
         </div>

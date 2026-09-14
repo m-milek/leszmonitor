@@ -79,6 +79,18 @@ func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *ht
 	util.RespondMessage(ctx, w, http.StatusOK, "Monitor deleted successfully")
 }
 
+func (c *MonitorAPIController) GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	allMonitors, err := c.service.GetAllMonitors(ctx)
+	if err != nil {
+		util.RespondError(ctx, w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondJSON(ctx, w, http.StatusOK, allMonitors)
+}
+
 func (c *MonitorAPIController) GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
