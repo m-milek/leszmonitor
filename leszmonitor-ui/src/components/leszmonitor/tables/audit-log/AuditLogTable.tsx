@@ -60,11 +60,6 @@ const columns: ColumnDef<AuditLogEntry>[] = [
     cell: ({ row }) => <Badge variant="secondary">{row.original.action}</Badge>,
   },
   {
-    accessorKey: "projectId",
-    header: "Project ID",
-    cell: ({ row }) => <ShortId value={row.original.projectId} />,
-  },
-  {
     accessorKey: "resourceId",
     header: "Resource ID",
     cell: ({ row }) => <ShortId value={row.original.resourceId} />,

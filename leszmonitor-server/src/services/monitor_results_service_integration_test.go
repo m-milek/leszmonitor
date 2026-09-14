@@ -16,10 +16,9 @@ import (
 
 func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 	t.Run("Successfully gets latest monitor result", func(t *testing.T) {
-		ctx, service, projectService, _, owner := setupMonitorResultsIntegrationTest(t)
+		ctx, service, _, _ := setupMonitorResultsIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		// Insert 2 results
 		res1 := monitorresult.NewMonitorResult(monitor.ID, consts.HTTPConfigType, shared.MonitorStatusUp, false, 100, "", nil)
@@ -40,10 +39,9 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 	})
 
 	t.Run("Fails with 404 when no results exist", func(t *testing.T) {
-		ctx, service, projectService, _, owner := setupMonitorResultsIntegrationTest(t)
+		ctx, service, _, _ := setupMonitorResultsIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
 		require.NotNil(t, svcErr)
@@ -54,10 +52,9 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 
 func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 	t.Run("Successfully gets paginated monitor results", func(t *testing.T) {
-		ctx, service, projectService, _, owner := setupMonitorResultsIntegrationTest(t)
+		ctx, service, _, _ := setupMonitorResultsIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		// Insert 3 results
 		for i := range 3 {

@@ -17,14 +17,12 @@ import (
 type IMonitorService interface {
 	CreateMonitor(
 		ctx context.Context,
-		projectSlug string,
 		monitor monitors.Monitor,
 	) (*MonitorCreateResponse, *ServiceError)
 	DeleteMonitor(ctx context.Context, id string) *ServiceError
-	GetMonitorsByProjectSlug(ctx context.Context, projectSlug string) ([]monitors.Monitor, *ServiceError)
+	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *ServiceError)
 	GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError)
 	UpdateMonitor(ctx context.Context, monitor monitors.Monitor) *ServiceError
-	GetMonitorBySlugByProject(ctx context.Context, projectSlug string, slug string) (*monitors.Monitor, *ServiceError)
 	UpdateMonitorStateByID(
 		ctx context.Context,
 		monitorID uuid.UUID,
@@ -51,15 +49,13 @@ type MonitorCreateResponse struct {
 	MonitorID string `json:"monitorId"`
 }
 
-// CreateMonitor creates a new monitor in the specified project.
+// CreateMonitor creates a new monitor.
 func (s *MonitorService) CreateMonitor(
 	ctx context.Context,
-	projectSlug string,
 	monitor monitors.Monitor,
 ) (*MonitorCreateResponse, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "CreateMonitor")
 	logger.Trace().
-		Str("projectSlug", projectSlug).
 		Interface("monitor", monitor).
 		Msg("Creating monitor")
 
@@ -69,13 +65,13 @@ func (s *MonitorService) CreateMonitor(
 		return nil, NewUnauthorizedError("user claims not found in context")
 	}
 
-	project, err := s.db.Projects().GetProjectBySlug(ctx, projectSlug)
+	owner, err := s.db.Users().GetUserByUsername(ctx, userClaims.Username)
 	if err != nil {
-		logger.Error().Err(err).Str("projectSlug", projectSlug).Msg("Failed to find project by slug")
-		return nil, NewNotFoundError("failed to find project: %w", err)
+		logger.Error().Err(err).Str("username", userClaims.Username).Msg("Failed to find creating user")
+		return nil, NewInternalError("failed to find creating user: %w", err)
 	}
 
-	initializedMonitor := monitors.InitializeFromPayload(monitor, project.ID)
+	initializedMonitor := monitors.InitializeFromPayload(monitor, owner.ID)
 
 	if err := initializedMonitor.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Invalid monitor configuration")
@@ -90,7 +86,6 @@ func (s *MonitorService) CreateMonitor(
 
 		params := &security.AuditLogParams{
 			Username:   &userClaims.Username,
-			ProjectID:  &project.ID,
 			ResourceID: &m.ID,
 			Action:     security.ActionCreateMonitor,
 			IsSuccess:  true,
@@ -152,7 +147,6 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *ServiceE
 
 		params := &security.AuditLogParams{
 			Username:   &userClaims.Username,
-			ProjectID:  &monitorBeforeDelete.ProjectID,
 			ResourceID: &monitorUUID,
 			Action:     security.ActionDeleteMonitor,
 			IsSuccess:  true,
@@ -181,45 +175,38 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *ServiceE
 	return nil
 }
 
-// GetMonitorsByProjectSlug retrieves all monitors for the project.
-func (s *MonitorService) GetMonitorsByProjectSlug(
-	ctx context.Context,
-	projectSlug string,
-) ([]monitors.Monitor, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorsByProjectSlug")
-	logger.Trace().Str("projectSlug", projectSlug).Msg("Retrieving monitors by project slug")
+// GetAllMonitors retrieves every monitor in the instance.
+func (s *MonitorService) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetAllMonitors")
+	logger.Trace().Msg("Retrieving all monitors")
 
-	project, err := s.db.Projects().GetProjectBySlug(ctx, projectSlug)
-	if err != nil {
-		logger.Error().Err(err).Str("projectSlug", projectSlug).Msg("Failed to find project by slug")
-		return nil, NewInternalError("failed to find project: %w", err)
-	}
-
-	monitorsList, err := s.db.Monitors().GetMonitorsByProjectID(ctx, project.ID)
+	allMonitors, err := s.db.Monitors().GetAllMonitors(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
 		return nil, NewInternalError("failed to retrieve monitors: %w", err)
 	}
 
-	logger.Debug().
-		Str("projectSlug", projectSlug).
-		Int("monitorCount", len(monitorsList)).
-		Msg("Monitors retrieved successfully")
-	return monitorsList, nil
+	logger.Debug().Int("count", len(allMonitors)).Msg("Monitors retrieved successfully")
+	return allMonitors, nil
 }
 
-// GetMonitorByID retrieves a specific monitor by its ID.
+// GetMonitorByID retrieves a specific monitor either by its UUID or, if id does not parse as a
+// UUID, by its slug.
 func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError) {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorByID")
-	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID")
+	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID or slug")
 
-	monitorUUID, err := uuid.Parse(id)
-	if err != nil {
-		logger.Error().Str("id", id).Msg("Invalid monitor ID format (should be uuid)")
-		return nil, NewBadRequestError("invalid monitor ID format: %w", err)
+	var (
+		monitor *monitors.Monitor
+		err     error
+	)
+
+	if monitorUUID, parseErr := uuid.Parse(id); parseErr == nil {
+		monitor, err = s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
+	} else {
+		monitor, err = s.db.Monitors().GetMonitorBySlug(ctx, id)
 	}
 
-	monitor, err := s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Monitor not found in database")
@@ -256,7 +243,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 		}
 
 		monitor.RunState = existingMonitor.RunState
-		monitor.ProjectID = existingMonitor.ProjectID
+		monitor.OwnerID = existingMonitor.OwnerID
 
 		if err := monitor.Validate(); err != nil {
 			logger.Error().
@@ -275,7 +262,6 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 
 		params := &security.AuditLogParams{
 			Username:   &userClaims.Username,
-			ProjectID:  &existingMonitor.ProjectID,
 			ResourceID: &monitor.ID,
 			Action:     security.ActionUpdateMonitor,
 			IsSuccess:  true,
@@ -302,42 +288,6 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 
 	logger.Debug().Str("id", monitor.ID.String()).Msg("Monitor updated")
 	return nil
-}
-
-func (s *MonitorService) GetMonitorBySlugByProject(
-	ctx context.Context,
-	projectSlug string,
-	slug string,
-) (*monitors.Monitor, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorBySlugByProject")
-	logger.Trace().Str("slug", slug).Msg("Retrieving monitor by slug and project")
-
-	project, getErr := internalGetProjectBySlug(ctx, s.db, projectSlug)
-	if getErr != nil {
-		logger.Error().
-			Err(getErr).
-			Str("slug", slug).
-			Str("projectSlug", projectSlug).
-			Msg("Failed to retrieve project by slug")
-		return nil, getErr
-	}
-
-	monitor, err := s.db.Monitors().GetMonitorBySlugByProject(ctx, slug, project.ID)
-	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Error().Str("slug", slug).Str("projectSlug", projectSlug).Msg("Monitor not found in project")
-			return nil, NewNotFoundError("monitor with slug %s not found in project", slug)
-		}
-		logger.Error().
-			Err(err).
-			Str("slug", slug).
-			Str("projectSlug", projectSlug).
-			Msg("Failed to retrieve monitor by slug and project")
-		return nil, NewInternalError("failed to retrieve monitor by slug and project: %w", err)
-	}
-
-	logger.Debug().Str("slug", slug).Msg("Monitor retrieved by slug and project")
-	return monitor, nil
 }
 
 func (s *MonitorService) UpdateMonitorStateByID(
@@ -393,7 +343,6 @@ func (s *MonitorService) UpdateMonitorStateByID(
 
 		params := &security.AuditLogParams{
 			Username:   &userClaims.Username,
-			ProjectID:  &monitor.ProjectID,
 			ResourceID: &monitor.ID,
 			Action:     security.ActionUpdateMonitor,
 			IsSuccess:  true,

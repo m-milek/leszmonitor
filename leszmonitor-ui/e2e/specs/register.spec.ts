@@ -13,7 +13,7 @@ test.describe("Register", () => {
     await page.locator("#passwordConfirm").fill(password);
     await page.getByRole("button", { name: "Register" }).click();
 
-    await expect(page).toHaveURL("/projects");
+    await expect(page).toHaveURL("/monitors");
   });
 
   test("Fails to register with a short password", async ({ page }) => {

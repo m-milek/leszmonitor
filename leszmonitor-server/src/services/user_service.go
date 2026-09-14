@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
+	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
@@ -19,23 +20,25 @@ type IUserService interface {
 	GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError)
 	RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError
 	Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError)
+	SetUserRole(ctx context.Context, username string, payload SetUserRolePayload) (*models.User, *ServiceError)
+}
+
+type SetUserRolePayload struct {
+	Role models.Role `json:"role"`
 }
 
 type UserServiceDeps struct {
-	DB             db.DB
-	ProjectService IProjectService
+	DB db.DB
 }
 
 // UserService handles user-related operations such as registration, login, and retrieval.
 type UserService struct {
-	db             db.DB
-	projectService IProjectService
+	db db.DB
 }
 
 func NewUserService(deps UserServiceDeps) *UserService {
 	return &UserService{
-		db:             deps.DB,
-		projectService: deps.ProjectService,
+		db: deps.DB,
 	}
 }
 
@@ -95,6 +98,65 @@ func (s *UserService) internalGetUserByUsername(ctx context.Context, username st
 	return user, nil
 }
 
+// SetUserRole updates the role of the user identified by username.
+func (s *UserService) SetUserRole(
+	ctx context.Context,
+	username string,
+	payload SetUserRolePayload,
+) (*models.User, *ServiceError) {
+	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "SetUserRole")
+	logger.Trace().Str("username", username).Str("role", string(payload.Role)).Msg("Setting user role")
+
+	if err := payload.Role.Validate(); err != nil {
+		logger.Error().Err(err).Msg("Invalid role")
+		return nil, NewBadRequestError("invalid role: %w", err)
+	}
+
+	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	if !ok {
+		logger.Error().Msg("User claims not found in context")
+		return nil, NewUnauthorizedError("user claims not found in context")
+	}
+
+	existingUser, getErr := s.internalGetUserByUsername(ctx, username)
+	if getErr != nil {
+		return nil, getErr
+	}
+
+	if existingUser.Role == payload.Role {
+		logger.Debug().Str("username", username).Msg("User already has the requested role")
+		return existingUser, nil
+	}
+
+	updatedUser, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *security.AuditLogParams, error) {
+		u, err := tx.Users().UpdateUserRole(ctx, existingUser.ID, payload.Role)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		params := &security.AuditLogParams{
+			Username:   &userClaims.Username,
+			ResourceID: &u.ID,
+			Action:     security.ActionUpdateUser,
+			IsSuccess:  true,
+			Summary:    fmt.Sprintf("User %s role changed from %s to %s", username, existingUser.Role, payload.Role),
+			Before:     existingUser,
+			After:      u,
+		}
+		return u, params, nil
+	})
+	if txErr != nil {
+		if errors.Is(txErr, db.ErrNotFound) {
+			return nil, NewNotFoundError("user %s not found", username)
+		}
+		logger.Error().Err(txErr).Str("username", username).Msg("Failed to update user role")
+		return nil, NewInternalError("failed to update user role: %w", txErr)
+	}
+
+	logger.Debug().Str("username", username).Str("role", string(payload.Role)).Msg("User role updated successfully")
+	return updatedUser, nil
+}
+
 // RegisterUser registers a new user with the provided payload.
 func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
 	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "RegisterUser")
@@ -139,16 +201,6 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 
 	logger.Trace().Str("username", payload.Username).Msg("User registered successfully")
 
-	_, projectErr := s.projectService.CreateProject(ctx, payload.Username, CreateProjectPayload{
-		Name:        fmt.Sprintf("%s's Sandbox", payload.Username),
-		Description: "Your default sandbox project",
-	})
-	if projectErr != nil {
-		logger.Error().Err(projectErr.Err).Msg("Failed to auto-create sandbox project for new user")
-		return NewInternalError("failed to create sandbox project for user %s: %w", payload.Username, projectErr.Err)
-	}
-
-	logger.Debug().Str("username", payload.Username).Msg("User registration fully completed")
 	return nil
 }
 

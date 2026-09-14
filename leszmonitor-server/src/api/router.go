@@ -21,158 +21,84 @@ func SetupRouters(
 		"GET /api/v1/users/{username}",
 		middleware.RequireSelf("username")(h.User.GetUserHandler),
 	)
+	protectedRouter.HandleFunc(
+		"PATCH /api/v1/users/{username}/role",
+		middleware.RequireInstanceAdmin()(h.User.SetUserRoleHandler),
+	)
 	publicRouter.HandleFunc("POST /api/v1/auth/register", h.User.UserRegisterHandler)
 	publicRouter.HandleFunc("POST /api/v1/auth/login", h.User.UserLoginHandler)
 
-	// Projects
-	protectedRouter.HandleFunc("GET /api/v1/projects", h.Project.GetProjectsHandler)
-	protectedRouter.HandleFunc("POST /api/v1/projects", h.Project.CreateProjectHandler)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/projects/{projectSlug}",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectReader,
-			middleware.SlugSourcePath,
-		)(
-			h.Project.GetProjectByIDHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"PATCH /api/v1/projects/{projectSlug}",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectEditor,
-			middleware.SlugSourcePath,
-		)(
-			h.Project.UpdateProjectHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"DELETE /api/v1/projects/{projectSlug}",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectAdmin,
-			middleware.SlugSourcePath,
-		)(
-			h.Project.DeleteProjectHandler,
-		),
-	)
-
-	// Project Members
-	protectedRouter.HandleFunc(
-		"POST /api/v1/projects/{projectSlug}/members",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectEditor,
-			middleware.SlugSourcePath,
-		)(
-			h.Project.AddProjectMemberHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"DELETE /api/v1/projects/{projectSlug}/members",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectEditor,
-			middleware.SlugSourcePath,
-		)(
-			h.Project.RemoveProjectMemberHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"PATCH /api/v1/projects/{projectSlug}/members/{userId}",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectAdmin,
-			middleware.SlugSourcePath,
-		)(
-			h.Project.ChangeProjectMemberRoleHandler,
-		),
-	)
-
 	// Monitors
 	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectReader,
-			middleware.SlugSourceQuery,
-		)(
-			h.Monitor.GetMonitorByProjectSlugHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
 		"POST /api/v1/monitors",
-		middleware.RequireProjectPermission(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectEditor,
-			middleware.SlugSourceQuery,
+			models.PermissionWriter,
 		)(
 			h.Monitor.CreateMonitorHandler,
 		),
 	)
 	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}",
-		middleware.RequireMonitorPermission(
+		"GET /api/v1/monitors",
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectReader,
+			models.PermissionReader,
+		)(
+			h.Monitor.GetAllMonitorsHandler,
+		),
+	)
+	protectedRouter.HandleFunc(
+		"GET /api/v1/monitors/{monitorId}",
+		middleware.RequirePermission(
+			h.AuthzMiddlewareService,
+			models.PermissionReader,
 		)(
 			h.Monitor.GetMonitorByIDHandler,
 		),
 	)
 	protectedRouter.HandleFunc(
 		"DELETE /api/v1/monitors/{monitorId}",
-		middleware.RequireMonitorPermission(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectEditor,
+			models.PermissionWriter,
 		)(
 			h.Monitor.DeleteMonitorHandler,
 		),
 	)
 	protectedRouter.HandleFunc(
 		"PATCH /api/v1/monitors/{monitorId}",
-		middleware.RequireMonitorPermission(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectEditor,
+			models.PermissionWriter,
 		)(
 			h.Monitor.UpdateMonitorHandler,
 		),
 	)
 	protectedRouter.HandleFunc(
 		"PATCH /api/v1/monitors/{monitorId}/state",
-		middleware.RequireMonitorPermission(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectEditor,
+			models.PermissionWriter,
 		)(
 			h.Monitor.UpdateMonitorStateByIDHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/projects/{projectSlug}/monitors/{monitorSlug}",
-		middleware.RequireProjectPermission(
-			h.AuthzMiddlewareService,
-			models.PermissionProjectReader,
-			middleware.SlugSourcePath,
-		)(
-			h.Monitor.GetMonitorBySlugByProject,
 		),
 	)
 
 	// MonitorResults
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results/latest",
-		middleware.RequireMonitorPermission(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectReader,
+			models.PermissionReader,
 		)(
 			h.MonitorResults.GetLatestMonitorResultByMonitorIDHandler,
 		),
 	)
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results",
-		middleware.RequireMonitorPermission(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectReader,
+			models.PermissionReader,
 		)(
 			h.MonitorResults.GetMonitorResultsByMonitorIDHandler,
 		),
@@ -180,9 +106,9 @@ func SetupRouters(
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/audit-log",
-		middleware.RequireProjectPermissionByIDQuery(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionProjectAdmin,
+			models.PermissionInstanceAdmin,
 		)(
 			h.AuditLog.GetAuditLogByQueryHandler,
 		),
@@ -195,9 +121,9 @@ func SetupRouters(
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/stats/latency",
-		middleware.RequireMonitorPermission(
+		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionMonitorReader,
+			models.PermissionReader,
 		)(
 			h.MonitorStats.GetLatencyStatsByMonitorIDHandler,
 		),

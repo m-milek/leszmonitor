@@ -16,6 +16,7 @@ type User struct {
 	ID              uuid.UUID `json:"id"              db:"id"`
 	Username        string    `json:"username"        db:"username"`
 	PasswordHash    string    `json:"-"               db:"password_hash"`
+	Role            Role      `json:"role"            db:"role"`
 	IsInstanceAdmin bool      `json:"isInstanceAdmin" db:"is_instance_admin"`
 }
 
@@ -24,6 +25,7 @@ func NewUser(username, hashedPassword string) (*User, error) {
 	user := &User{
 		Username:     username,
 		PasswordHash: hashedPassword,
+		Role:         RoleViewer,
 	}
 	err := user.Validate()
 
@@ -40,6 +42,9 @@ func (u *User) Validate() error {
 	}
 	if u.PasswordHash == "" {
 		return fmt.Errorf("password hash cannot be empty")
+	}
+	if err := u.Role.Validate(); err != nil {
+		return err
 	}
 	return nil
 }

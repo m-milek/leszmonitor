@@ -10,7 +10,6 @@ const (
 	ServiceNameMonitorResults  = "MonitorResultsService"
 	ServiceNameMonitorStats    = "MonitorStatsService"
 	ServiceNameAuditLog        = "AuditLogService"
-	ServiceNameProject         = "ProjectService"
 	ServiceNameUser            = "UserService"
 	ServiceNameAuthzMiddleware = "AuthzMiddlewareService"
 )

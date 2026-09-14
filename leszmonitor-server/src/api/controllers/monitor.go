@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -49,13 +48,8 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 	if !ok {
 		return
 	}
-	projectSlug := r.URL.Query().Get("projectSlug")
-	if projectSlug == "" {
-		util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("project slug is required"))
-		return
-	}
 
-	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, projectSlug, monitor)
+	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, monitor)
 	if serviceErr != nil {
 		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
@@ -83,6 +77,18 @@ func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *ht
 	}
 
 	util.RespondMessage(ctx, w, http.StatusOK, "Monitor deleted successfully")
+}
+
+func (c *MonitorAPIController) GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	allMonitors, err := c.service.GetAllMonitors(ctx)
+	if err != nil {
+		util.RespondError(ctx, w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondJSON(ctx, w, http.StatusOK, allMonitors)
 }
 
 func (c *MonitorAPIController) GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -171,44 +177,6 @@ func decodeMonitorPayload(r *http.Request) (monitors.Monitor, error) {
 
 	monitor.ProbeConfig = string(probeConfigRaw)
 	return monitor, nil
-}
-
-func (c *MonitorAPIController) GetMonitorByProjectSlugHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	projectSlug := r.URL.Query().Get("projectSlug")
-	if projectSlug == "" {
-		util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("project slug is required"))
-		return
-	}
-
-	monitor, err := c.service.GetMonitorsByProjectSlug(ctx, projectSlug)
-	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
-		return
-	}
-
-	util.RespondJSON(ctx, w, http.StatusOK, monitor)
-}
-
-func (c *MonitorAPIController) GetMonitorBySlugByProject(w http.ResponseWriter, request *http.Request) {
-	ctx := request.Context()
-
-	monitorSlug := request.PathValue("monitorSlug")
-	if monitorSlug == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Monitor slug is required")
-		return
-	}
-
-	projectSlug := request.PathValue("projectSlug")
-
-	monitor, err := c.service.GetMonitorBySlugByProject(ctx, projectSlug, monitorSlug)
-	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
-		return
-	}
-
-	util.RespondJSON(ctx, w, http.StatusOK, monitor)
 }
 
 type UpdateMonitorStatePayload struct {

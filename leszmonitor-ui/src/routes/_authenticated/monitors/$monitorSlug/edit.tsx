@@ -13,18 +13,18 @@ import {
 } from "@/lib/monitorSchema.ts";
 
 export const Route = createFileRoute(
-  "/_authenticated/projects/$projectId/monitors/$monitorSlug/edit",
+  "/_authenticated/monitors/$monitorSlug/edit",
 )({
   component: MonitorEditRoute,
 });
 
 function MonitorEditRoute() {
-  const { projectId, monitorSlug } = Route.useParams();
+  const { monitorSlug } = Route.useParams();
   const queryClient = useQueryClient();
 
   const { data: monitor } = useQuery({
-    queryKey: [QUERY_KEYS.MONITORS, monitorSlug, projectId],
-    queryFn: () => getMonitorBySlug(projectId, monitorSlug),
+    queryKey: [QUERY_KEYS.MONITORS, monitorSlug],
+    queryFn: () => getMonitorBySlug(monitorSlug),
   });
 
   const updateMonitorMutation = useMutation({
@@ -49,7 +49,6 @@ function MonitorEditRoute() {
         <CardContent>
           <MonitorForm
             formId="edit-monitor-form"
-            projectSlug={projectId}
             defaultValues={mapMonitorToFormValues(monitor)}
             onSubmit={(value) => updateMonitorMutation.mutateAsync(value)}
           />

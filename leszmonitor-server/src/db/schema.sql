@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id            TEXT PRIMARY KEY,
     username      TEXT UNIQUE NOT NULL CHECK (LENGTH(username) >= 2) CHECK (LENGTH(username) <= 50),
+    role          TEXT        NOT NULL CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
     password_hash TEXT        NOT NULL,
 
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -14,53 +15,13 @@ BEGIN
     UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
 END;
 
-CREATE TABLE IF NOT EXISTS projects (
-    id          TEXT PRIMARY KEY,
-    slug        TEXT UNIQUE NOT NULL CHECK (LENGTH(slug) >= 2) CHECK (LENGTH(slug) <= 50),
-    name        TEXT        NOT NULL CHECK (LENGTH(name) >= 2) CHECK (LENGTH(name) <= 100),
-    description TEXT        NOT NULL CHECK (LENGTH(description) <= 1000),
-
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TRIGGER IF NOT EXISTS update_projects_updated_at
-    AFTER UPDATE
-    ON projects
-    FOR EACH ROW
-BEGIN
-    UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
-END;
-
-CREATE TABLE IF NOT EXISTS user_projects (
-    user_id    TEXT NOT NULL,
-    project_id TEXT NOT NULL,
-    role       TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
-
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (user_id, project_id),
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
-);
-CREATE TRIGGER IF NOT EXISTS update_user_projects_updated_at
-    AFTER UPDATE
-    ON user_projects
-    FOR EACH ROW
-BEGIN
-    UPDATE user_projects SET updated_at = CURRENT_TIMESTAMP WHERE user_id = new.user_id AND project_id = new.project_id;
-END;
-
-CREATE INDEX IF NOT EXISTS idx_user_projects_project_id
-    ON user_projects (project_id);
-
 CREATE TABLE IF NOT EXISTS monitors (
     id                       TEXT PRIMARY KEY,
     slug                     TEXT NOT NULL CHECK (LENGTH(slug) >= 2) CHECK (LENGTH(slug) <= 50),
-    project_id               TEXT NOT NULL,                            -- UUID
     name                     TEXT NOT NULL CHECK (LENGTH(name) >= 2) CHECK (LENGTH(name) <= 100),
     description              TEXT NOT NULL CHECK (LENGTH(description) <= 1000),
     interval                 INT  NOT NULL CHECK (interval > 0),       -- in seconds
+    owner_id                 TEXT NOT NULL,                            -- user who created the monitor
     kind                     TEXT NOT NULL,
     result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
     run_state                TEXT NOT NULL,
@@ -69,8 +30,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    UNIQUE (project_id, slug),
-    FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+    UNIQUE (slug)
 );
 CREATE TRIGGER IF NOT EXISTS update_monitors_updated_at
     AFTER UPDATE
@@ -79,8 +39,6 @@ CREATE TRIGGER IF NOT EXISTS update_monitors_updated_at
 BEGIN
     UPDATE monitors SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
 END;
-
-CREATE INDEX IF NOT EXISTS idx_monitors_project_id ON monitors (project_id);
 
 CREATE TABLE IF NOT EXISTS monitor_results (
     id                    TEXT PRIMARY KEY,
@@ -102,7 +60,6 @@ CREATE INDEX IF NOT EXISTS idx_monitor_results_monitor_id_created ON monitor_res
 CREATE TABLE IF NOT EXISTS audit_logs (
     id          TEXT PRIMARY KEY,
     username    TEXT,
-    project_id  TEXT,
     resource_id TEXT,
     action      TEXT    NOT NULL,
     is_success  BOOLEAN NOT NULL,
@@ -113,8 +70,6 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX IF NOT EXISTS idx_audit_logs_project_id_created ON audit_logs (project_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS monitor_status_changes (
     id              TEXT PRIMARY KEY,

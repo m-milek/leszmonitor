@@ -58,4 +58,3 @@ func (e ServiceError) Error() string {
 }
 
 const FormatFailedToCreateAuditLog = "failed to create audit log: %s"
-const FormatUserIsNotAMemberOfProject = "user %s is not a member of project %s"

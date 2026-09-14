@@ -1,17 +1,43 @@
-import type { User } from "@/lib/types.ts";
+import { UserRole, mapUserRoleToDisplayName, type User } from "@/lib/types.ts";
 import { formatDate } from "@/lib/utils.ts";
 import { StyledLink } from "../StyledLink";
 import { type ColumnDef } from "@tanstack/table-core";
 import { GenericTable } from "@/components/leszmonitor/tables/GenericTable.tsx";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { removeUser } from "@/lib/data/userData.ts";
+import { removeUser, updateUserRole } from "@/lib/data/userData.ts";
+import { LMSelect } from "@/components/leszmonitor/forms/inputs/LMSelect.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItemIcon,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const roleSelectItems = Object.values(UserRole).map((role) => ({
+  value: role,
+  label: mapUserRoleToDisplayName[role],
+}));
+
+const RoleCell = ({ user }: { user: User }) => {
+  const queryClient = useQueryClient();
+  const roleMutation = useMutation({
+    mutationFn: (role: UserRole) => updateUserRole(user.username, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+
+  return (
+    <LMSelect
+      id={`role-${user.username}`}
+      name={`role-${user.username}`}
+      value={user.role}
+      onValueChange={(value) => roleMutation.mutate(value as UserRole)}
+      items={roleSelectItems}
+    />
+  );
+};
 
 const ActionsCell = ({ user }: { user: User }) => {
   const queryClient = useQueryClient();
@@ -30,12 +56,6 @@ const ActionsCell = ({ user }: { user: User }) => {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItemIcon
-          icon={Pencil}
-          onClick={() => console.log("Edit user", user.username)}
-        >
-          Edit
-        </DropdownMenuItemIcon>
         <DropdownMenuItemIcon
           icon={Trash2}
           className="text-destructive focus:text-destructive"
@@ -71,6 +91,11 @@ export const UsersTable = ({ users }: UsersTableProps) => {
     {
       accessorKey: "id",
       header: "ID",
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      cell: ({ row }) => <RoleCell user={row.original} />,
     },
     {
       accessorKey: "createdAt",

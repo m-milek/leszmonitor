@@ -3,29 +3,23 @@ import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
 import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
 import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  deleteMonitor,
-  getMonitorsByProjectSlug,
-} from "@/lib/data/monitorData.ts";
+import { deleteMonitor, getAllMonitors } from "@/lib/data/monitorData.ts";
 import { MonitorListItem } from "@/components/leszmonitor/MonitorListItem.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { LucidePlusCircle } from "lucide-react";
 
-export const Route = createFileRoute(
-  "/_authenticated/projects/$projectId/monitors/",
-)({
+export const Route = createFileRoute("/_authenticated/monitors/")({
   component: MonitorsComponent,
 });
 
 function MonitorsComponent() {
-  const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
 
   const { data: monitors = [] } = useQuery({
-    queryKey: [QUERY_KEYS.MONITORS, projectId],
-    queryFn: () => getMonitorsByProjectSlug(projectId),
+    queryKey: [QUERY_KEYS.MONITORS],
+    queryFn: () => getAllMonitors(),
   });
 
   const { mutateAsync: deleteMutation } = useMutation({
@@ -37,14 +31,14 @@ function MonitorsComponent() {
   const onDeleteMonitor = async (monitorId: string) => {
     await deleteMutation(monitorId);
     queryClient.invalidateQueries({
-      queryKey: [QUERY_KEYS.MONITORS, projectId],
+      queryKey: [QUERY_KEYS.MONITORS],
     });
   };
 
   const navigateToEditMonitor = (monitorSlug: string) => {
     navigate({
-      to: "/projects/$projectId/monitors/$monitorSlug/edit",
-      params: { projectId, monitorSlug },
+      to: "/monitors/$monitorSlug/edit",
+      params: { monitorSlug },
     });
   };
 
@@ -53,7 +47,7 @@ function MonitorsComponent() {
       <TypographyH1>Monitors</TypographyH1>
       <Card>
         <CardHeader>
-          <Link to={"/projects/$projectId/monitors/new"} params={{ projectId }}>
+          <Link to={"/monitors/new"}>
             <Button>
               <LucidePlusCircle />
               <span>New Monitor</span>
@@ -66,7 +60,6 @@ function MonitorsComponent() {
               <MonitorListItem
                 key={monitor.id}
                 monitor={monitor}
-                projectSlug={projectId}
                 onDeleteMonitor={onDeleteMonitor}
                 navigateToEditMonitor={navigateToEditMonitor}
               />

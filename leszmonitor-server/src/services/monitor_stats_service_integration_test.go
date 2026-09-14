@@ -15,10 +15,9 @@ import (
 
 func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T) {
 	t.Run("Returns correct avg/min/max latency for results in range", func(t *testing.T) {
-		ctx, service, projectService, _, owner := setupMonitorStatsIntegrationTest(t)
+		ctx, service, _, _ := setupMonitorStatsIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		now := time.Now().UTC()
 
@@ -42,10 +41,9 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 	})
 
 	t.Run("Returns 404 when no results exist for monitor", func(t *testing.T) {
-		ctx, service, projectService, _, owner := setupMonitorStatsIntegrationTest(t)
+		ctx, service, _, _ := setupMonitorStatsIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		from := time.Now().UTC().Add(-1 * time.Hour)
 		to := time.Now().UTC().Add(1 * time.Hour)
@@ -59,10 +57,9 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 	})
 
 	t.Run("Only includes results within the specified time range", func(t *testing.T) {
-		ctx, service, projectService, _, owner := setupMonitorStatsIntegrationTest(t)
+		ctx, service, _, _ := setupMonitorStatsIntegrationTest(t)
 
-		project, _ := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		monitor := insertTestMonitor(t, ctx, project.ID)
+		monitor := insertTestMonitor(t, ctx)
 
 		now := time.Now().UTC()
 

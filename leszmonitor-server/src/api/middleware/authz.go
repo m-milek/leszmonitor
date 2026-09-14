@@ -17,59 +17,6 @@ const (
 	SlugSourceQuery SlugSource = "query"
 )
 
-// RequireProjectPermission checks if the user has the required permission for the project.
-// The slugSource determines whether the project slug is extracted from the URL path or query parameters.
-func RequireProjectPermission(
-	authzService services.IAuthzMiddlewareService,
-	perm models.Permission,
-	slugSource SlugSource,
-) func(http.HandlerFunc) http.HandlerFunc {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
-			if !ok {
-				return
-			}
-
-			if userClaims.IsInstanceAdmin {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			var projectSlug string
-			switch slugSource {
-			case SlugSourcePath:
-				projectSlug = r.PathValue("projectSlug")
-			case SlugSourceQuery:
-				projectSlug = r.URL.Query().Get("projectSlug")
-			}
-
-			if projectSlug == "" {
-				util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("project slug not found in %s", slugSource))
-				return
-			}
-
-			hasPerm, err := authzService.CheckProjectPermissionBySlug(ctx, userClaims.Username, projectSlug, perm)
-			if err != nil {
-				util.RespondError(ctx, w, http.StatusInternalServerError, err)
-				return
-			}
-			if !hasPerm {
-				util.RespondError(
-					ctx,
-					w,
-					http.StatusForbidden,
-					fmt.Errorf("user does not have required project permission: %s", perm.Name),
-				)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		}
-	}
-}
-
 // RequireInstanceAdmin checks if the user is an instance admin.
 func RequireInstanceAdmin() func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
@@ -134,8 +81,8 @@ func RequireSelf(usernameParam string) func(http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// RequireMonitorPermission checks if the user has the required permission for the monitor.
-func RequireMonitorPermission(
+// RequirePermission checks if the user has the required permission.
+func RequirePermission(
 	authzService services.IAuthzMiddlewareService,
 	perm models.Permission,
 ) func(http.HandlerFunc) http.HandlerFunc {
@@ -152,13 +99,7 @@ func RequireMonitorPermission(
 				return
 			}
 
-			monitorID := r.PathValue("monitorId")
-			if monitorID == "" {
-				util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("monitor ID not found in URL"))
-				return
-			}
-
-			hasPerm, err := authzService.CheckMonitorPermissionByID(ctx, userClaims.Username, monitorID, perm)
+			hasPerm, err := authzService.CheckUserPermission(ctx, userClaims.Username, perm)
 			if err != nil {
 				util.RespondError(ctx, w, http.StatusInternalServerError, err)
 				return
@@ -168,60 +109,7 @@ func RequireMonitorPermission(
 					ctx,
 					w,
 					http.StatusForbidden,
-					fmt.Errorf("user does not have required monitor permission: %s", perm.Name),
-				)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		}
-	}
-}
-
-// RequireProjectPermissionByIDQuery checks if the user has the required permission for the project.
-// The project ID is expected to be a query parameter named "projectId".
-// If "projectId" is missing, it will pass through (for instance admins to query globally), but if present, it validates permission.
-func RequireProjectPermissionByIDQuery(
-	authzService services.IAuthzMiddlewareService,
-	perm models.Permission,
-) func(http.HandlerFunc) http.HandlerFunc {
-	return func(next http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
-			if !ok {
-				return
-			}
-
-			if userClaims.IsInstanceAdmin {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			projectID := r.URL.Query().Get("projectId")
-			if projectID == "" {
-				// Non-admins must provide projectId (validated by filter logic later),
-				// but here we can just reject if missing since they aren't admins.
-				util.RespondError(
-					ctx,
-					w,
-					http.StatusBadRequest,
-					fmt.Errorf("projectId query parameter is required for non-admins"),
-				)
-				return
-			}
-
-			hasPermission, err := authzService.CheckProjectPermissionByID(ctx, userClaims.Username, projectID, perm)
-			if err != nil {
-				util.RespondError(ctx, w, http.StatusInternalServerError, err)
-				return
-			}
-			if !hasPermission {
-				util.RespondError(
-					ctx,
-					w,
-					http.StatusForbidden,
-					fmt.Errorf("user does not have required project permission: %s", perm.Name),
+					fmt.Errorf("user does not have required permission: %s", perm.Name),
 				)
 				return
 			}

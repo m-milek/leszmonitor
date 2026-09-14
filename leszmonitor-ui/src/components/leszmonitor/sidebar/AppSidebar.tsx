@@ -22,9 +22,7 @@ import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/types.ts";
 import { AppSidebarFooter } from "@/components/leszmonitor/sidebar/AppSidebarFooter.tsx";
 import { getUser } from "@/lib/data/userData.ts";
-import { getProjects } from "@/lib/data/projectData.ts";
 import { AppSidebarHeader } from "@/components/leszmonitor/sidebar/AppSidebarHeader.tsx";
-import { ProjectMenu } from "@/components/leszmonitor/sidebar/ProjectMenu.tsx";
 import { SidebarButton } from "@/components/leszmonitor/sidebar/SidebarButton.tsx";
 
 export const AppSidebar = () => {
@@ -55,11 +53,6 @@ export const AppSidebar = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: projectsData } = useQuery({
-    queryKey: ["projects"],
-    queryFn: () => getProjects(),
-  });
-
   useEffect(() => {
     if (userData) {
       setUser(userData);
@@ -76,15 +69,17 @@ export const AppSidebar = () => {
             <SidebarMenu>
               <SidebarButton
                 icon={<LucideHome />}
-                href="/projects"
+                href="/monitors"
                 label="Home"
               />
+              {(user?.role === "owner" || user?.role === "admin") && (
+                <SidebarButton
+                  icon={<LucideLogs />}
+                  href="/audit-log"
+                  label="Audit Log"
+                />
+              )}
             </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <ProjectMenu projects={projectsData ?? []} />
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>

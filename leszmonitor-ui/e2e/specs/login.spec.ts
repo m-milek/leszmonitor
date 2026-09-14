@@ -16,8 +16,8 @@ test.describe("Login", () => {
     await page.getByLabel("Password").fill(auth.password);
     await page.getByRole("button", { name: "Log in" }).click();
 
-    // Redirects to projects right away
-    await expect(page).toHaveURL("/projects");
+    // Redirects to monitors right away
+    await expect(page).toHaveURL("/monitors");
   });
 
   test("Bad credentials don't log in", async ({ page }) => {

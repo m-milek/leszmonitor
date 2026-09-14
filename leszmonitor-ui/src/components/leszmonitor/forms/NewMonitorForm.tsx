@@ -25,12 +25,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMonitorForm } from "@/hooks/useMonitorForm";
 
 export interface NewMonitorFormProps {
-  projectSlug: string;
   formId?: string;
 }
 
 export interface MonitorFormProps {
-  projectSlug: string;
   formId?: string;
   defaultValues?: Partial<MonitorFormValues>;
   onSubmit: (value: MonitorFormValues) => Promise<void>;
@@ -38,12 +36,10 @@ export interface MonitorFormProps {
 }
 
 const buildMonitorDefaults = (
-  projectSlug: string,
   defaultValues?: Partial<MonitorFormValues>,
 ): MonitorFormValues => {
   const baseValues = {
     ...newMonitorSchemaDefaultValues,
-    projectSlug: projectSlug,
   };
   const type = defaultValues?.type;
 
@@ -58,7 +54,6 @@ const buildMonitorDefaults = (
     ...baseValues,
     ...defaultValues,
     type,
-    projectSlug: projectSlug,
     probeConfig: {
       ...defaultConfigs[type],
       ...(defaultValues?.probeConfig ?? {}),
@@ -67,13 +62,12 @@ const buildMonitorDefaults = (
 };
 
 export function MonitorForm({
-  projectSlug,
   formId = "monitor-form",
   defaultValues,
   onSubmit,
   resetOnSuccess = false,
 }: Readonly<MonitorFormProps>) {
-  const mergedDefaults = buildMonitorDefaults(projectSlug, defaultValues);
+  const mergedDefaults = buildMonitorDefaults(defaultValues);
 
   const form = useMonitorForm({
     defaultValues: mergedDefaults,
@@ -236,16 +230,12 @@ export function MonitorForm({
 }
 
 export function NewMonitorForm({
-  projectSlug,
   formId = "new-monitor-form",
 }: Readonly<NewMonitorFormProps>) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const createMonitorMutation = useMutation({
-    mutationFn: (monitor: MonitorFormValues) => {
-      console.log("Creating monitor with values:", monitor);
-      return createMonitor(monitor);
-    },
+    mutationFn: (monitor: MonitorFormValues) => createMonitor(monitor),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
     },
@@ -254,17 +244,12 @@ export function NewMonitorForm({
   const onSubmit = async (value: MonitorFormValues) => {
     await createMonitorMutation.mutateAsync(value);
     await navigate({
-      to: "/projects/$projectId/monitors/$monitorSlug",
-      params: { projectId: projectSlug, monitorSlug: value.slug },
+      to: "/monitors/$monitorSlug",
+      params: { monitorSlug: value.slug },
     });
   };
 
   return (
-    <MonitorForm
-      projectSlug={projectSlug}
-      formId={formId}
-      onSubmit={onSubmit}
-      resetOnSuccess
-    />
+    <MonitorForm formId={formId} onSubmit={onSubmit} resetOnSuccess />
   );
 }

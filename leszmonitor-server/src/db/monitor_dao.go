@@ -11,14 +11,12 @@ import (
 )
 
 type IMonitorDAO interface {
-	GetMonitorsByProjectID(ctx context.Context, projectID uuid.UUID) ([]monitors.Monitor, error)
 	GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error)
-	GetMonitorBySlug(ctx context.Context, slug string, projectID uuid.UUID) (*monitors.Monitor, error)
+	GetMonitorBySlug(ctx context.Context, slug string) (*monitors.Monitor, error)
 	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error)
 	DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error)
 	InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error)
 	UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (any, error)
-	GetMonitorBySlugByProject(ctx context.Context, slug string, id uuid.UUID) (*monitors.Monitor, error)
 }
 
 type monitorDAO struct {
@@ -31,35 +29,9 @@ func newMonitorDAO(dao baseDAO) IMonitorDAO {
 	}
 }
 
-func (r *monitorDAO) GetMonitorsByProjectID(
-	ctx context.Context,
-	projectID uuid.UUID,
-) ([]monitors.Monitor, error) {
-	return dbWrap(ctx, "GetMonitorsByProjectID", func() ([]monitors.Monitor, error) {
-		var allMonitors []monitors.Monitor
-		err := sqlx.SelectContext(
-			ctx,
-			r.pool,
-			&allMonitors,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at, m.project_id
-			 FROM monitors m
-			 WHERE m.project_id = $1`,
-			projectID,
-		)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return nil, err
-		}
-		if allMonitors == nil {
-			allMonitors = []monitors.Monitor{}
-		}
-		return allMonitors, nil
-	})
-}
-
 func (r *monitorDAO) GetMonitorBySlug(
 	ctx context.Context,
 	slug string,
-	projectID uuid.UUID,
 ) (*monitors.Monitor, error) {
 	return dbWrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
 		var monitor monitors.Monitor
@@ -67,12 +39,10 @@ func (r *monitorDAO) GetMonitorBySlug(
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
 			 FROM monitors m
-			 WHERE m.slug = $1 
-			   AND m.project_id = $2`,
+			 WHERE m.slug = $1`,
 			slug,
-			projectID,
 		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -91,7 +61,7 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitor
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.id = $1`,
 			id,
@@ -113,7 +83,7 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, er
 			ctx,
 			r.pool,
 			&allMonitors,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
 			 FROM monitors m`,
 		)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -152,11 +122,10 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitors (id, slug, project_id, name, description, interval, kind, result_retention_seconds, run_state, config)
+			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config, owner_id)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			id,
 			monitor.Slug,
-			monitor.ProjectID,
 			monitor.Name,
 			monitor.Description,
 			monitor.Interval,
@@ -164,6 +133,7 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor
 			monitor.ResultRetentionSeconds,
 			monitor.RunState,
 			monitor.ProbeConfig,
+			monitor.OwnerID,
 		)
 		if err != nil {
 			if isUniqueViolation(err) {
@@ -180,10 +150,9 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor monitors.Moni
 	return dbWrap(ctx, "UpdateMonitor", func() (any, error) {
 		res, err := r.pool.ExecContext(ctx,
 			`UPDATE monitors
-			SET slug=$1, project_id=$2, name=$3, description=$4, interval=$5, kind=$6, run_state=$7, config=$8
-			WHERE id=$9`,
+			SET slug=$1, name=$2, description=$3, interval=$4, kind=$5, run_state=$6, config=$7
+			WHERE id=$8`,
 			newMonitor.Slug,
-			newMonitor.ProjectID,
 			newMonitor.Name,
 			newMonitor.Description,
 			newMonitor.Interval,
@@ -208,33 +177,5 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor monitors.Moni
 		}
 
 		return nil, nil
-	})
-}
-
-func (r *monitorDAO) GetMonitorBySlugByProject(
-	ctx context.Context,
-	slug string,
-	id uuid.UUID,
-) (*monitors.Monitor, error) {
-	return dbWrap(ctx, "GetMonitorBySlugByProject", func() (*monitors.Monitor, error) {
-		var monitor monitors.Monitor
-		err := sqlx.GetContext(
-			ctx,
-			r.pool,
-			&monitor,
-			`SELECT m.id, m.slug, m.project_id, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.created_at, m.updated_at
-			 FROM monitors m
-			 WHERE m.slug = $1 
-			   AND m.project_id = $2`,
-			slug,
-			id,
-		)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
-			}
-			return nil, err
-		}
-		return &monitor, nil
 	})
 }

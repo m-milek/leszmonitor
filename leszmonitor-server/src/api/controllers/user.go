@@ -77,3 +77,25 @@ func (c *UserAPIController) GetUserHandler(w http.ResponseWriter, r *http.Reques
 
 	util.RespondJSON(ctx, w, http.StatusOK, user)
 }
+
+func (c *UserAPIController) SetUserRoleHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	username := r.PathValue("username")
+	if username == "" {
+		util.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("username is required"))
+		return
+	}
+
+	var payload services.SetUserRolePayload
+	if !util.DecodeJSONOrRespond(ctx, w, r, &payload) {
+		return
+	}
+
+	user, err := c.service.SetUserRole(ctx, username, payload)
+	if err != nil {
+		util.RespondError(ctx, w, err.Code, err.Err)
+		return
+	}
+
+	util.RespondJSON(ctx, w, http.StatusOK, user)
+}

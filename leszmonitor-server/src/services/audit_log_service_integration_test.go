@@ -13,15 +13,13 @@ import (
 
 func TestIntegration_AuditLogService_Record(t *testing.T) {
 	t.Run("Successfully records an audit log entry", func(t *testing.T) {
-		ctx, auditLogService, _, _, _ := setupAuditLogIntegrationTest(t)
+		ctx, auditLogService, _, _ := setupAuditLogIntegrationTest(t)
 
 		user := "testuser"
-		projectID := uuid.New()
 		resourceID := uuid.New()
 
 		entry := security.AuditLogParams{
 			Username:   &user,
-			ProjectID:  &projectID,
 			ResourceID: &resourceID,
 			Action:     security.ActionCreateMonitor,
 			IsSuccess:  true,
@@ -31,7 +29,7 @@ func TestIntegration_AuditLogService_Record(t *testing.T) {
 		err := auditLogService.Record(ctx, entry)
 		require.NoError(t, err)
 
-		filter := security.AuditLogFilter{ProjectID: &projectID}
+		filter := security.AuditLogFilter{ResourceID: &resourceID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 		require.Len(t, entries, 1)
@@ -43,36 +41,62 @@ func TestIntegration_AuditLogService_Record(t *testing.T) {
 }
 
 func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
-	t.Run("Successfully retrieves entries for a project admin", func(t *testing.T) {
-		ctx, auditLogService, projectService, _, owner := setupAuditLogIntegrationTest(t)
-
-		project, err := projectService.CreateProject(ctx, owner.Username, CreateProjectPayload{Name: "Project 1"})
-		require.Nil(t, err)
+	t.Run("Successfully retrieves entries filtered by resource", func(t *testing.T) {
+		ctx, auditLogService, _, owner := setupAuditLogIntegrationTest(t)
 
 		user1 := "user1"
 		resource1 := uuid.New()
 
-		auditLogService.Record(ctx, security.AuditLogParams{
+		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
 			Username:   &user1,
-			ProjectID:  &project.ID,
 			ResourceID: &resource1,
 			Action:     security.ActionCreateMonitor,
 			IsSuccess:  true,
 			Summary:    "Entry 1",
-		})
-		auditLogService.Record(ctx, security.AuditLogParams{
-			Username:  &owner.Username,
-			ProjectID: &project.ID,
-			Action:    security.ActionUpdateProject,
-			IsSuccess: false,
-		})
+		}))
+		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+			Username:   &owner.Username,
+			ResourceID: &resource1,
+			Action:     security.ActionUpdateMonitor,
+			IsSuccess:  false,
+		}))
 
 		filter := security.AuditLogFilter{
-			ProjectID: &project.ID,
+			ResourceID: &resource1,
 		}
 
 		entries, svcErr := auditLogService.GetEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.Nil(t, svcErr)
-		require.Len(t, entries, 3)
+		require.Len(t, entries, 2)
+	})
+
+	t.Run("Successfully retrieves entries filtered by username", func(t *testing.T) {
+		ctx, auditLogService, _, _ := setupAuditLogIntegrationTest(t)
+
+		alice := "alice"
+		bob := "bob"
+		resource := uuid.New()
+
+		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+			Username:   &alice,
+			ResourceID: &resource,
+			Action:     security.ActionCreateMonitor,
+			IsSuccess:  true,
+		}))
+		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+			Username:   &bob,
+			ResourceID: &resource,
+			Action:     security.ActionCreateMonitor,
+			IsSuccess:  true,
+		}))
+
+		entries, svcErr := auditLogService.GetEntries(
+			ctx,
+			security.AuditLogFilter{Username: &alice},
+			util.Pagination{Page: 1, PerPage: 10},
+		)
+		require.Nil(t, svcErr)
+		require.Len(t, entries, 1)
+		assert.Equal(t, "alice", *entries[0].Username)
 	})
 }

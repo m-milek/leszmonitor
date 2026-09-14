@@ -59,15 +59,9 @@ func main() {
 
 	database := db.Get()
 
-	projectService := services.NewProjectService(services.ProjectServiceDeps{
-		DB:          database,
-		UserService: nil,
-	})
 	userService := services.NewUserService(services.UserServiceDeps{
-		DB:             database,
-		ProjectService: projectService,
+		DB: database,
 	})
-	projectService.UserService = userService
 	monitorService := services.NewMonitorService(services.MonitorServiceDeps{
 		DB: database,
 	})
@@ -82,7 +76,6 @@ func main() {
 	})
 	instanceMetadataService := services.NewInstanceMetadataService(services.InstanceMetadataServiceDeps{})
 
-	projectAPIController := controllers.NewProjectAPIController(projectService)
 	userAPIController := controllers.NewUserAPIController(userService)
 	monitorAPIController := controllers.NewMonitorAPIController(monitorService)
 	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
@@ -93,7 +86,6 @@ func main() {
 	authzMiddlewareService := services.NewAuthzMiddlewareService(database)
 
 	handlers := api.Handlers{
-		Project:                projectAPIController,
 		User:                   userAPIController,
 		Monitor:                monitorAPIController,
 		MonitorResults:         monitorResultsAPIController,
