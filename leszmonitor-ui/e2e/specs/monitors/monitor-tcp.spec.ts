@@ -3,7 +3,7 @@ import test from "../../fixtures/leszmonitorFixture.ts";
 
 test.describe("TCP Monitor", () => {
   test("Creates a valid TCP monitor", async ({ page }) => {
-    await page.goto("/projects/leszmaks-sandbox/monitors/new");
+    await page.goto("/monitors/new");
 
     const randomMonitorNumber = Math.floor(Math.random() * 10000);
 
@@ -20,8 +20,6 @@ test.describe("TCP Monitor", () => {
 
     await page.getByText("Create Monitor").click();
 
-    await expect(page).toHaveURL(
-      /\/projects\/leszmaks-sandbox\/monitors\/test-tcp-monitor-\d+$/,
-    );
+    await expect(page).toHaveURL(/\/monitors\/test-tcp-monitor-\d+$/);
   });
 });

@@ -2,21 +2,12 @@ import { expect } from "@playwright/test";
 import test from "../fixtures/leszmonitorFixture";
 
 test.describe("Sidebar", () => {
-  test("Project selector selects a project", async ({ page }) => {
-    await page.goto("/projects");
-
-    await page.getByRole("combobox").click();
-    await page.getByRole("option", { name: "leszmak's Sandbox" }).click();
-    await expect(page.locator("#project-selector")).toBeVisible();
-    expect(page.url()).toMatch(/\/projects\/leszmaks-sandbox$/);
-  });
-
-  test("Home icon navigates to project list", async ({ page }) => {
-    await page.goto("/projects/leszmaks-sandbox");
+  test("Home icon navigates to the monitors list", async ({ page }) => {
+    await page.goto("/monitors/new");
 
     await page.getByRole("link", { name: "Home" }).click();
 
-    await expect(page.getByText("Your Projects")).toBeVisible();
-    expect(page.url()).toMatch(/\/projects$/);
+    await expect(page.getByText("Monitors")).toBeVisible();
+    expect(page.url()).toMatch(/\/monitors$/);
   });
 });
