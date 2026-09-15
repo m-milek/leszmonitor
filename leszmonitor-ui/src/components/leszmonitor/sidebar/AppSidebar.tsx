@@ -14,6 +14,7 @@ import {
   LucideLogs,
   LucideSearch,
   LucideSettings,
+  LucideTag,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store.ts";
 import { useQuery } from "@tanstack/react-query";
@@ -72,6 +73,7 @@ export const AppSidebar = () => {
                 href="/monitors"
                 label="Home"
               />
+              <SidebarButton icon={<LucideTag />} href="/tags" label="Tags" />
               {(user?.role === "owner" || user?.role === "admin") && (
                 <SidebarButton
                   icon={<LucideLogs />}
