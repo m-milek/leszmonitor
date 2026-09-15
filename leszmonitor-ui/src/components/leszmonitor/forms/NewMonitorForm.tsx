@@ -18,11 +18,13 @@ import { LMTextareaField } from "@/components/leszmonitor/forms/inputs/LMTextare
 import { Divider } from "@/components/leszmonitor/ui/Divider.tsx";
 import { MonitorConfigFields } from "@/components/leszmonitor/forms/monitors/MonitorConfigFields.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createMonitor } from "@/lib/data/monitorData.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { useMonitorForm } from "@/hooks/useMonitorForm";
+import { LMTagSelect } from "@/components/leszmonitor/forms/inputs/LMTagSelect.tsx";
+import { getAllTags } from "@/lib/data/tags-api.ts";
 
 export interface NewMonitorFormProps {
   formId?: string;
@@ -68,6 +70,11 @@ export function MonitorForm({
   resetOnSuccess = false,
 }: Readonly<MonitorFormProps>) {
   const mergedDefaults = buildMonitorDefaults(defaultValues);
+
+  const { data: tags = [] } = useQuery({
+    queryKey: [QUERY_KEYS.TAGS],
+    queryFn: () => getAllTags(),
+  });
 
   const form = useMonitorForm({
     defaultValues: mergedDefaults,
@@ -192,6 +199,25 @@ export function MonitorForm({
                   name={field.name}
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
+          />
+          <form.Field
+            name="tagIds"
+            children={(field) => (
+              <Field id={field.name}>
+                <FieldLabel>Tags</FieldLabel>
+                <LMTagSelect
+                  id={field.name}
+                  name={field.name}
+                  tags={tags}
+                  value={field.state.value}
+                  onChange={(tagIds) => field.handleChange(tagIds)}
+                  placeholder="Add tag"
+                  emptyMessage="No tags found."
                   isInvalid={isFieldInvalid(field)}
                   errorMessage={getFirstError(field)}
                 />

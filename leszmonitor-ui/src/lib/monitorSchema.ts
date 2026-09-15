@@ -52,6 +52,7 @@ const baseMonitorFields = {
       "Invalid slug format. Must be lowercase, alphanumeric, and can include hyphens.",
     ),
   description: z.string().optional(),
+  tagIds: z.array(z.string()).default([]),
   interval: z
     .number({ message: "Interval must be a number" })
     .min(1, "Interval must be at least 1 second"),
@@ -91,6 +92,7 @@ export const newMonitorSchemaDefaultValues = {
   name: "",
   slug: "",
   description: "",
+  tagIds: [],
   interval: 60,
   resultRetentionSeconds: 43200,
 } satisfies Partial<MonitorFormValues>;
@@ -135,6 +137,7 @@ export const mapMonitorToFormValues = (monitor: Monitor): MonitorFormValues => {
     name: monitor.name,
     slug: monitor.slug,
     description: monitor.description ?? "",
+    tagIds: monitor.tagIds ?? [],
     interval: monitor.interval,
     type: monitor.type,
     probeConfig: {

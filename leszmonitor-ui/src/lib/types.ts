@@ -28,6 +28,7 @@ export interface Monitor extends Timestamps {
   name: string;
   slug: string;
   description?: string;
+  tagIds?: string[];
   ownerId: string;
   interval: number;
   // Retention seconds not configurable yet
