@@ -42,6 +42,7 @@ type DB interface {
 	MonitorStatusChanges() IMonitorStatusChangeDAO
 	MonitorStats() IMonitorStatsDAO
 	AuditLog() IAuditLogDAO
+	Tags() ITagDAO
 	WithTx(ctx context.Context, fn func(tx DB) error) error
 	Close()
 }
@@ -57,6 +58,7 @@ type Client struct {
 	monitorStatusChanges IMonitorStatusChangeDAO
 	monitorStats         IMonitorStatsDAO
 	auditLog             IAuditLogDAO
+	tags                 ITagDAO
 }
 
 type dbPool struct {
@@ -90,6 +92,7 @@ func newClientFromPool(pool sqlx.ExtContext) *Client {
 		monitorStatusChanges: newMonitorStatusChangeDAO(base),
 		monitorStats:         newMonitorStatsDAO(base),
 		auditLog:             newAuditLogDAO(base),
+		tags:                 newTagDAO(base),
 	}
 }
 
@@ -186,6 +189,7 @@ func (c *Client) MonitorResults() IMonitorResultDAO             { return c.monit
 func (c *Client) MonitorStatusChanges() IMonitorStatusChangeDAO { return c.monitorStatusChanges }
 func (c *Client) MonitorStats() IMonitorStatsDAO                { return c.monitorStats }
 func (c *Client) AuditLog() IAuditLogDAO                        { return c.auditLog }
+func (c *Client) Tags() ITagDAO                                 { return c.tags }
 
 // --------------------------
 // Singleton management (unexported global within the db package for convenience)

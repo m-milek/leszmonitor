@@ -18,6 +18,7 @@ type MockDB struct {
 	MonitorStatusChangesDAO IMonitorStatusChangeDAO
 	MonitorStatsDao         IMonitorStatsDAO
 	AuditLogDAO             IAuditLogDAO
+	TagsDAO                 ITagDAO
 	CloseFn                 func()
 }
 
@@ -80,12 +81,54 @@ func (r *MockAuditLogDAO) Record(ctx context.Context, params security.AuditLogPa
 	return args.Error(0)
 }
 
+type MockTagDAO struct {
+	mock.Mock
+}
+
+func (r *MockTagDAO) InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, error) {
+	args := r.Called(ctx, tag)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Tag), args.Error(1)
+}
+
+func (r *MockTagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*models.Tag, error) {
+	args := r.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Tag), args.Error(1)
+}
+
+func (r *MockTagDAO) GetAllTags(ctx context.Context) ([]models.Tag, error) {
+	args := r.Called(ctx)
+	return args.Get(0).([]models.Tag), args.Error(1)
+}
+
+func (r *MockTagDAO) UpdateTag(ctx context.Context, newTag models.Tag) (*models.Tag, error) {
+	args := r.Called(ctx, newTag)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Tag), args.Error(1)
+}
+
+func (r *MockTagDAO) DeleteTagByID(ctx context.Context, tagID uuid.UUID) (*uuid.UUID, error) {
+	args := r.Called(ctx, tagID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*uuid.UUID), args.Error(1)
+}
+
 func (m *MockDB) Users() IUserDAO                               { return m.UsersDAO }
 func (m *MockDB) Monitors() IMonitorDAO                         { return m.MonitorsDAO }
 func (m *MockDB) MonitorResults() IMonitorResultDAO             { return m.MonitorResultsDAO }
 func (m *MockDB) MonitorStatusChanges() IMonitorStatusChangeDAO { return m.MonitorStatusChangesDAO }
 func (m *MockDB) MonitorStats() IMonitorStatsDAO                { return m.MonitorStatsDao }
 func (m *MockDB) AuditLog() IAuditLogDAO                        { return m.AuditLogDAO }
+func (m *MockDB) Tags() ITagDAO                                 { return m.TagsDAO }
 func (m *MockDB) WithTx(_ context.Context, fn func(tx DB) error) error {
 	// In tests, execute the function directly without a real transaction.
 	return fn(m)

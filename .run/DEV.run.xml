@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="DEV" type="CompoundRunConfigurationType">
+    <toRun name="Dev Server" type="TaskRunConfiguration" />
+    <toRun name="Dev UI" type="TaskRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

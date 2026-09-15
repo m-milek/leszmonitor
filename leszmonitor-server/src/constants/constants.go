@@ -11,5 +11,6 @@ const (
 	ServiceNameMonitorStats    = "MonitorStatsService"
 	ServiceNameAuditLog        = "AuditLogService"
 	ServiceNameUser            = "UserService"
+	ServiceNameTag             = "TagService"
 	ServiceNameAuthzMiddleware = "AuthzMiddlewareService"
 )
