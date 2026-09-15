@@ -82,4 +82,22 @@ CREATE TABLE IF NOT EXISTS monitor_status_changes (
 
     FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE,
     FOREIGN KEY (caused_by_id) REFERENCES monitor_results (id) ON DELETE SET NULL
-)
+);
+
+CREATE TABLE IF NOT EXISTS tags (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT,
+    color_hex   TEXT NOT NULL,
+
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER IF NOT EXISTS update_tags_updated_at
+    AFTER UPDATE
+    ON tags
+    FOR EACH ROW
+BEGIN
+    UPDATE tags SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
+END;

@@ -112,6 +112,18 @@ func setupMonitorStatsIntegrationTest(
 	return ctx, &monitorStatsService, userService, user
 }
 
+func setupTagIntegrationTest(
+	t *testing.T,
+) (context.Context, *TagService, *UserService, *models.User) {
+	ctx, userService, user := setupIntegrationTest(t)
+
+	tagService := NewTagService(TagServiceDeps{
+		DB: db.Get(),
+	})
+
+	return ctx, tagService, userService, user
+}
+
 // insertTestMonitor is a helper to directly insert a monitor and return it.
 func insertTestMonitor(t *testing.T, ctx context.Context) *monitors.Monitor {
 	payload := monitors.Monitor{

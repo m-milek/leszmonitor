@@ -11,6 +11,7 @@ type Handlers struct {
 	MonitorStats           controllers.MonitorStatsAPIController
 	AuditLog               controllers.AuditLogAPIController
 	User                   controllers.UserAPIController
+	Tag                    controllers.TagAPIController
 	InstanceMetadata       controllers.InstanceMetadataAPIController
 	AuthzMiddlewareService services.IAuthzMiddlewareService
 }

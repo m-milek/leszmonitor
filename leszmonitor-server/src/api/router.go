@@ -84,6 +84,53 @@ func SetupRouters(
 		),
 	)
 
+	// Tags
+	protectedRouter.HandleFunc(
+		"POST /api/v1/tags",
+		middleware.RequirePermission(
+			h.AuthzMiddlewareService,
+			models.PermissionWriter,
+		)(
+			h.Tag.CreateTagHandler,
+		),
+	)
+	protectedRouter.HandleFunc(
+		"GET /api/v1/tags",
+		middleware.RequirePermission(
+			h.AuthzMiddlewareService,
+			models.PermissionReader,
+		)(
+			h.Tag.GetAllTagsHandler,
+		),
+	)
+	protectedRouter.HandleFunc(
+		"GET /api/v1/tags/{tagId}",
+		middleware.RequirePermission(
+			h.AuthzMiddlewareService,
+			models.PermissionReader,
+		)(
+			h.Tag.GetTagByIDHandler,
+		),
+	)
+	protectedRouter.HandleFunc(
+		"PATCH /api/v1/tags/{tagId}",
+		middleware.RequirePermission(
+			h.AuthzMiddlewareService,
+			models.PermissionWriter,
+		)(
+			h.Tag.UpdateTagHandler,
+		),
+	)
+	protectedRouter.HandleFunc(
+		"DELETE /api/v1/tags/{tagId}",
+		middleware.RequirePermission(
+			h.AuthzMiddlewareService,
+			models.PermissionWriter,
+		)(
+			h.Tag.DeleteTagHandler,
+		),
+	)
+
 	// MonitorResults
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results/latest",
