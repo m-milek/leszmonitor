@@ -1,4 +1,3 @@
-
 export interface Timestamps {
   createdAt: Date;
   updatedAt: Date;
@@ -196,4 +195,11 @@ export interface AuditLogFilters {
   isSuccess?: boolean;
   startDate?: Date;
   endDate?: Date;
+}
+
+export interface Tag extends Timestamps {
+  id: string;
+  name: string;
+  description: string;
+  colorHex: string;
 }
