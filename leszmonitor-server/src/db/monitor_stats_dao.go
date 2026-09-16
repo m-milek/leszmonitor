@@ -11,7 +11,7 @@ import (
 
 type IMonitorStatsDAO interface {
 	GetLatencyStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.LatencyStats, error)
-	GetStatusChangesByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.StatusChangeStats, error)
+	GetStatusChangeStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.StatusChangeStats, error)
 }
 
 type monitorStatsDAO struct {
@@ -47,7 +47,7 @@ func (m *monitorStatsDAO) GetLatencyStatsByMonitorID(ctx context.Context, monito
 	}, nil
 }
 
-func (m *monitorStatsDAO) GetStatusChangesByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.StatusChangeStats, error) {
+func (m *monitorStatsDAO) GetStatusChangeStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.StatusChangeStats, error) {
 	var lastCreatedAt string
 	query := `
 		SELECT created_at

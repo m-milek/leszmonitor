@@ -53,16 +53,49 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 		}
 	}
 
-	statusChangeStats, err := s.db.MonitorStats().GetStatusChangesByMonitorID(ctx, monitorID, from, to)
+	hasNoStatusChanges := false
+	var statusChangeStats models.StatusChangeStats
+	statusChangeStats, err = s.db.MonitorStats().GetStatusChangeStatsByMonitorID(ctx, monitorID, from, to)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Warn().Str("monitorID", monitorID).Msg("No status change data found for the given monitor ID and time range")
-			return models.MonitorStats{}, nil
+			hasNoStatusChanges = true
+		} else {
+			return models.MonitorStats{}, &ServiceError{
+				Code: http.StatusInternalServerError,
+				Err:  errors.New("failed to get status change stats: " + err.Error()),
+			}
 		}
-		logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get status change stats")
-		return models.MonitorStats{}, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  errors.New("failed to get status change stats: " + err.Error()),
+	}
+
+	if hasNoStatusChanges {
+		oldestResult, err := s.db.MonitorResults().GetOldestMonitorResultByMonitorID(ctx, monitorID)
+		if err != nil {
+			if errors.Is(err, db.ErrNotFound) {
+				logger.Warn().Str("monitorID", monitorID).Msg("No monitor results found for the given monitor ID")
+				return models.MonitorStats{
+					Latency:      latencyStats,
+					StatusChange: models.StatusChangeStats{},
+					Uptime:       models.UptimeStats{},
+				}, nil
+			}
+			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get oldest monitor result")
+			return models.MonitorStats{}, &ServiceError{
+				Code: http.StatusInternalServerError,
+				Err:  errors.New("failed to get oldest monitor result: " + err.Error()),
+			}
+		}
+		createdAt, err := time.Parse(time.RFC3339, oldestResult.GetCreatedAt())
+		if err != nil {
+			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to parse created_at of oldest monitor result")
+			return models.MonitorStats{}, &ServiceError{
+				Code: http.StatusInternalServerError,
+				Err:  errors.New("failed to parse created_at of oldest monitor result: " + err.Error()),
+			}
+		}
+		secondsInCurrentStatus := time.Since(createdAt).Seconds()
+		statusChangeStats = models.StatusChangeStats{
+			SecondsInCurrentStatus: int64(secondsInCurrentStatus),
 		}
 	}
 

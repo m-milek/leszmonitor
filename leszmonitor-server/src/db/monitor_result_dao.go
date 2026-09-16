@@ -17,6 +17,7 @@ import (
 type IMonitorResultDAO interface {
 	InsertMonitorResult(ctx context.Context, result monitorresult.IMonitorResult) (any, error)
 	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, error)
+	GetOldestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitorresult.IMonitorResult, error)
 	GetMonitorResultsByMonitorID(
 		ctx context.Context,
 		id string,
@@ -126,6 +127,36 @@ func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
             JOIN monitors m ON m.id = mr.monitor_id
             WHERE mr.monitor_id = $1
             ORDER BY mr.created_at DESC LIMIT 1`, monitorID)
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, ErrNotFound
+			}
+			return nil, err
+		}
+
+		err = processResultDetails(&result)
+		if err != nil {
+			return nil, err
+		}
+
+		return &result, nil
+	})
+}
+
+func (r *monitorResultDAO) GetOldestMonitorResultByMonitorID(
+	ctx context.Context,
+	monitorID string,
+) (monitorresult.IMonitorResult, error) {
+	return dbWrap(ctx, "GetOldestMonitorResultByMonitorID", func() (monitorresult.IMonitorResult, error) {
+		var result monitorresult.MonitorResult
+
+		err := sqlx.GetContext(ctx, r.pool, &result, `
+			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+			FROM monitor_results mr
+			JOIN monitors m ON m.id = mr.monitor_id
+			WHERE mr.monitor_id = $1
+			ORDER BY mr.created_at ASC LIMIT 1`, monitorID)
 
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {

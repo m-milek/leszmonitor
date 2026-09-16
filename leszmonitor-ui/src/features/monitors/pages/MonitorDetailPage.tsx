@@ -76,6 +76,8 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
   const isPaused = monitor.runState === "paused";
 
+  const monitorStatus = monitorResults?.[0]?.status ?? "unknown";
+
   const handleToggleMonitorState = () => {
     mutation.mutate();
   };
@@ -131,7 +133,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
               <p>Min: {stats.latency.avg.toFixed(2)} ms</p>
               <p>Max: {stats.latency.max.toFixed(2)} ms</p>
               <p>
-                In Current state:{" "}
+                {monitorStatus.toUpperCase()} for{"  "}
                 {formatDuration(stats.statusChange.secondsInCurrentStatus)}
               </p>
             </>
