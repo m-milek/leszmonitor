@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/combobox";
 import { Tag } from "@/features/tags/components/Tag.tsx";
 import { tagChipStyle } from "@/features/tags/lib/colors.ts";
-import type { Tag as TagModel } from "@/features/tags/model/types.ts";
+import type { Tag as TagModel } from "@/features/tags/types.ts";
 
 interface TagOption {
   value: string;

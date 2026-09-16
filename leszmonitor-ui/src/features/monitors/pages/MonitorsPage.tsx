@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   deleteMonitor,
   getAllMonitors,
-} from "@/features/monitors/api/monitors.ts";
+} from "@/features/monitors/monitors-api.ts";
 import { MonitorListItem } from "@/features/monitors/components/MonitorListItem.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 

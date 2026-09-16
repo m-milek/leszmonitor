@@ -4,7 +4,7 @@ import type {
   Monitor,
   MonitorCreatePayload,
   MonitorUpdatePayload,
-} from "@/features/monitors/model/types.ts";
+} from "@/features/monitors/types.ts";
 
 const normalizeMonitor = (monitor: Monitor): Monitor => {
   if (typeof monitor.probeConfig === "string") {

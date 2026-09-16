@@ -1,5 +1,5 @@
-import { monitorStatusToStatusDot } from "@/features/monitors/model/status.ts";
-import type { Monitor } from "@/features/monitors/model/types.ts";
+import { monitorStatusToStatusDot } from "@/features/monitors/status.ts";
+import type { Monitor } from "@/features/monitors/types.ts";
 import { TypographyH3 } from "@/components/common/Typography.tsx";
 import { Flex } from "@/components/common/Flex.tsx";
 import { StyledLink } from "@/components/common/StyledLink.tsx";
@@ -8,7 +8,7 @@ import { LucideEdit, LucideTrash2 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { StatusDot } from "@/components/common/StatusDot.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-import { getLatestMonitorResultByMonitorId } from "@/features/monitors/api/results.ts";
+import { getLatestMonitorResultByMonitorId } from "@/features/monitors/results-api.ts";
 import { useQuery } from "@tanstack/react-query";
 import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill.tsx";
 

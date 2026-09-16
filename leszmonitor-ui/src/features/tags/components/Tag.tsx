@@ -1,4 +1,4 @@
-import type { Tag as TagModel } from "@/features/tags/model/types.ts";
+import type { Tag as TagModel } from "@/features/tags/types.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { cn } from "@/lib/utils.ts";
 import { tagChipStyle } from "@/features/tags/lib/colors.ts";

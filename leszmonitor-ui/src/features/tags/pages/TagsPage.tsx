@@ -5,7 +5,7 @@ import { Flex } from "@/components/common/Flex.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { TagsTable } from "@/features/tags/components/TagsTable.tsx";
 import { NewTagDialog } from "@/features/tags/components/NewTagDialog.tsx";
-import { getAllTags } from "@/features/tags/api/tags.ts";
+import { getAllTags } from "@/features/tags/tags-api.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 
 export function TagsPage() {

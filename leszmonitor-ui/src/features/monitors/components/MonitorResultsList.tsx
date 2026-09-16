@@ -1,12 +1,12 @@
-import { monitorStatusToStatusDot } from "@/features/monitors/model/status.ts";
+import { monitorStatusToStatusDot } from "@/features/monitors/status.ts";
 import type {
   Monitor,
   MonitorResult,
-} from "@/features/monitors/model/types.ts";
+} from "@/features/monitors/types.ts";
 import type { Pagination } from "@/lib/types.ts";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-import { getMonitorResultsByMonitorId } from "@/features/monitors/api/results.ts";
+import { getMonitorResultsByMonitorId } from "@/features/monitors/results-api.ts";
 import { Flex } from "@/components/common/Flex.tsx";
 import { StatusDot } from "@/components/common/StatusDot.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";

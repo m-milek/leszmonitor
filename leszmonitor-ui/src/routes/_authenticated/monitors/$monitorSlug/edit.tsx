@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getMonitorBySlug } from "@/features/monitors/api/monitors.ts";
+import { getMonitorBySlug } from "@/features/monitors/monitors-api.ts";
 import { MonitorEditPage } from "@/features/monitors/pages/MonitorEditPage.tsx";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 

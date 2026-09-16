@@ -1,5 +1,5 @@
 import { Center } from "@/components/common/Center.tsx";
-import type { MetadataResponse } from "@/features/instance/api/metadata.ts";
+import type { MetadataResponse } from "@/features/instance/metadata-api.ts";
 import { LucideInfo } from "lucide-react";
 import { Flex } from "@/components/common/Flex.tsx";
 import {

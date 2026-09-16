@@ -6,7 +6,7 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/form/field-state.ts";
-import type { DnsRecordType } from "@/features/monitors/model/types.ts";
+import type { DnsRecordType } from "@/features/monitors/types.ts";
 import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
 import { LMListInput } from "@/components/form/LMListInput.tsx";
 

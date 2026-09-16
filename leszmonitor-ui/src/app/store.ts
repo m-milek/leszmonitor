@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { User } from "@/features/users/model/types.ts";
+import type { User } from "@/features/users/types.ts";
 import { ReadyState } from "react-use-websocket";
 import type { WebSocketStatus } from "@/app/providers/websocket-status.ts";
 

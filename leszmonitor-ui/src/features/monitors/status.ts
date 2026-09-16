@@ -1,4 +1,4 @@
-import type { MonitorStatus } from "@/features/monitors/model/types.ts";
+import type { MonitorStatus } from "@/features/monitors/types.ts";
 import type { StatusDotProps } from "@/components/common/StatusDot.tsx";
 
 export const monitorStatusToStatusDot = (

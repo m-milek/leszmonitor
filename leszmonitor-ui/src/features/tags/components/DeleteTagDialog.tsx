@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Tag } from "@/features/tags/components/Tag.tsx";
-import { deleteTag } from "@/features/tags/api/tags.ts";
+import { deleteTag } from "@/features/tags/tags-api.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-import type { Tag as TagModel } from "@/features/tags/model/types.ts";
+import type { Tag as TagModel } from "@/features/tags/types.ts";
 
 export interface DeleteTagDialogProps {
   tag: TagModel;

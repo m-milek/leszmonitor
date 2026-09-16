@@ -1,7 +1,7 @@
 import type {
   Monitor,
   MonitorRunState,
-} from "@/features/monitors/model/types.ts";
+} from "@/features/monitors/types.ts";
 
 export interface MonitorStatusPillProps {
   monitor: Monitor;

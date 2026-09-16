@@ -10,7 +10,7 @@ import {
 import { LMSwitch } from "@/components/form/LMSwitch.tsx";
 import { LMKeyValueInput } from "@/components/form/LMKeyValue.tsx";
 import { LMMultiSelect } from "@/components/form/LMMultiSelect.tsx";
-import type { HttpMethod } from "@/features/monitors/model/types.ts";
+import type { HttpMethod } from "@/features/monitors/types.ts";
 import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
 
 const httpMethodItems = [

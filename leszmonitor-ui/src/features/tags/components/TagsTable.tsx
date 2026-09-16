@@ -1,6 +1,6 @@
 import { type ColumnDef } from "@tanstack/table-core";
 import { Minus } from "lucide-react";
-import type { Tag as TagModel } from "@/features/tags/model/types.ts";
+import type { Tag as TagModel } from "@/features/tags/types.ts";
 import { DataTable } from "@/components/common/DataTable.tsx";
 import { Tag } from "@/features/tags/components/Tag.tsx";
 import { ShortId } from "@/components/common/ShortId.tsx";

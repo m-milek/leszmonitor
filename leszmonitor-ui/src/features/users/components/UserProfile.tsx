@@ -1,4 +1,4 @@
-import type { User } from "@/features/users/model/types.ts";
+import type { User } from "@/features/users/types.ts";
 import { TypographyH1, TypographyH2 } from "@/components/common/Typography.tsx";
 import { Flex } from "@/components/common/Flex.tsx";
 import { Initial } from "@/features/users/components/Initial.tsx";

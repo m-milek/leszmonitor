@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MonitorStatusPill } from "./MonitorStatusPill";
-import type { Monitor } from "@/features/monitors/model/types.ts";
+import type { Monitor } from "@/features/monitors/types.ts";
 
 const createMonitor = (state: string): Monitor =>
   ({

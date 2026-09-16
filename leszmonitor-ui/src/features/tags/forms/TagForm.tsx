@@ -14,7 +14,7 @@ import {
   normalizeHexColor,
   randomTagColor,
 } from "@/features/tags/lib/colors.ts";
-import type { TagPayload } from "@/features/tags/api/tags.ts";
+import type { TagPayload } from "@/features/tags/tags-api.ts";
 
 export interface TagFormProps {
   id?: string;

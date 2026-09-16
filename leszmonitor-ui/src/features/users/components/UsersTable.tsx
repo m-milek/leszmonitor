@@ -2,14 +2,14 @@ import {
   UserRole,
   mapUserRoleToDisplayName,
   type User,
-} from "@/features/users/model/types.ts";
+} from "@/features/users/types.ts";
 import { formatDate } from "@/lib/utils.ts";
 import { StyledLink } from "@/components/common/StyledLink.tsx";
 import { type ColumnDef } from "@tanstack/table-core";
 import { DataTable } from "@/components/common/DataTable.tsx";
 import { MoreVertical, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { removeUser, updateUserRole } from "@/features/users/api/users.ts";
+import { removeUser, updateUserRole } from "@/features/users/users-api.ts";
 import { LMSelect } from "@/components/form/LMSelect.tsx";
 import {
   DropdownMenu,

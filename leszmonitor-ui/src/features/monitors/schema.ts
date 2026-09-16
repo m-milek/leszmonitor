@@ -6,7 +6,7 @@ import {
   recordTypes,
   type Monitor,
   type MonitorType,
-} from "@/features/monitors/model/types.ts";
+} from "@/features/monitors/types.ts";
 
 export const httpMonitorConfigSchema = z.object({
   method: z.enum(httpMethods),

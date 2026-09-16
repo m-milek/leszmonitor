@@ -66,14 +66,14 @@ export interface Monitor extends Timestamps {
 }
 
 // Runtime zod schemas and form-value helpers live in
-// "@/features/monitors/model/schema.ts" so that zod is only pulled into the
+// "@/features/monitors/schema.ts" so that zod is only pulled into the
 // route chunks that actually validate monitor forms, keeping it out of the
 // initial bundle.
 export type {
   MonitorFormValues,
   MonitorCreatePayload,
   MonitorUpdatePayload,
-} from "@/features/monitors/model/schema.ts";
+} from "@/features/monitors/schema.ts";
 
 export interface MonitorErrorDetails {
   errorMessage: string;

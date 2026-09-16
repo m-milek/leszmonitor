@@ -1,7 +1,7 @@
 import { SERVER_API_URL } from "@/lib/consts.ts";
 import { authFetch } from "@/lib/api-client.ts";
 import type { ApiError } from "@/lib/types.ts";
-import type { User, UserRole } from "@/features/users/model/types.ts";
+import type { User, UserRole } from "@/features/users/types.ts";
 
 export const getUser = async (username: string): Promise<User> => {
   const res = await authFetch(`${SERVER_API_URL}/users/${username}`);

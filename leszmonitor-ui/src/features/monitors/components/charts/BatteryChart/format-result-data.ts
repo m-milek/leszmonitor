@@ -1,4 +1,4 @@
-import type { MonitorResult } from "@/features/monitors/model/types.ts";
+import type { MonitorResult } from "@/features/monitors/types.ts";
 
 export const formatResultData = (
   result: MonitorResult,

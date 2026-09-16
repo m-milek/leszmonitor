@@ -14,7 +14,7 @@ import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm.tsx";
 import {
   registerUser,
   type RegisterUserPayload,
-} from "@/features/users/api/users.ts";
+} from "@/features/users/users-api.ts";
 import { establishSession } from "@/features/auth/lib/session.ts";
 import { useAppStore } from "@/app/store.ts";
 

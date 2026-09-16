@@ -22,7 +22,7 @@ import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/jwt.ts";
 import { AppSidebarFooter } from "@/components/layout/AppSidebarFooter.tsx";
-import { getUser } from "@/features/users/api/users.ts";
+import { getUser } from "@/features/users/users-api.ts";
 import { readToken } from "@/features/auth/lib/token.ts";
 import { AppSidebarHeader } from "@/components/layout/AppSidebarHeader.tsx";
 import { SidebarButton } from "@/components/layout/SidebarButton.tsx";

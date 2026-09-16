@@ -4,11 +4,11 @@ import { slugFromString } from "@/lib/slugFromString.ts";
 import {
   isValidMonitorType,
   type MonitorType,
-} from "@/features/monitors/model/types.ts";
+} from "@/features/monitors/types.ts";
 import {
   type MonitorFormValues,
   defaultConfigs,
-} from "@/features/monitors/model/schema.ts";
+} from "@/features/monitors/schema.ts";
 import { buildMonitorDefaults } from "@/features/monitors/forms/monitor-form-defaults.ts";
 import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
 import { LMInputField } from "@/components/form/LMInputField.tsx";
@@ -24,7 +24,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { MonitorConfigFields } from "@/features/monitors/forms/fields/MonitorConfigFields.tsx";
 import { useMonitorForm } from "@/features/monitors/hooks/useMonitorForm.ts";
 import { LMTagSelect } from "@/features/tags/components/LMTagSelect.tsx";
-import { getAllTags } from "@/features/tags/api/tags.ts";
+import { getAllTags } from "@/features/tags/tags-api.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 
 export interface MonitorFormProps {

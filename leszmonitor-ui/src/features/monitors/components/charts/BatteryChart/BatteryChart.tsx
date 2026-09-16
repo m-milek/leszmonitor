@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { MonitorResult } from "@/features/monitors/model/types.ts";
+import type { MonitorResult } from "@/features/monitors/types.ts";
 import { Flex } from "@/components/common/Flex.tsx";
 import { BatteryBar } from "@/features/monitors/components/charts/BatteryChart/BatteryBar.tsx";
 import { prepareResults } from "@/features/monitors/components/charts/BatteryChart/prepare-results.ts";

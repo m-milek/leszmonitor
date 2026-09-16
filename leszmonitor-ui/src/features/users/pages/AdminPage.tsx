@@ -21,7 +21,7 @@ import {
   getAllUsers,
   registerUser,
   type RegisterUserPayload,
-} from "@/features/users/api/users.ts";
+} from "@/features/users/users-api.ts";
 
 export function AdminPage() {
   const queryClient = useQueryClient();

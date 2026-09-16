@@ -6,7 +6,7 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/form/field-state.ts";
-import type { TcpProtocol } from "@/features/monitors/model/types.ts";
+import type { TcpProtocol } from "@/features/monitors/types.ts";
 import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm.ts";
 
 const protocolItems: { value: TcpProtocol; label: string }[] = [

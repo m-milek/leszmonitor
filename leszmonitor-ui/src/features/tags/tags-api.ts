@@ -1,6 +1,6 @@
 import { SERVER_API_URL } from "@/lib/consts.ts";
 import { authFetch } from "@/lib/api-client.ts";
-import type { Tag } from "@/features/tags/model/types.ts";
+import type { Tag } from "@/features/tags/types.ts";
 
 export interface TagPayload {
   name: string;

@@ -6,7 +6,7 @@ import {
   getFirstError,
   isFieldInvalid,
 } from "@/components/form/field-state.ts";
-import { type RegisterUserPayload } from "@/features/users/api/users.ts";
+import { type RegisterUserPayload } from "@/features/users/users-api.ts";
 
 export interface RegisterUserFormProps {
   id?: string;

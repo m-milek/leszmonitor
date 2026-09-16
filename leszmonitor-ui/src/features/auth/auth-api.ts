@@ -1,7 +1,7 @@
 import type {
   LoginPayload,
   LoginResponse,
-} from "@/features/auth/model/types.ts";
+} from "@/features/auth/types.ts";
 import { SERVER_API_URL } from "@/lib/consts.ts";
 
 export const fetchLoginToken = async ({

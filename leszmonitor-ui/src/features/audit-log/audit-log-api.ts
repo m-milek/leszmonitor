@@ -1,7 +1,7 @@
 import type {
   AuditLogEntry,
   AuditLogFilters,
-} from "@/features/audit-log/model/types.ts";
+} from "@/features/audit-log/types.ts";
 import { authFetch } from "@/lib/api-client.ts";
 import { SERVER_API_URL } from "@/lib/consts.ts";
 

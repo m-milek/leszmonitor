@@ -4,7 +4,7 @@ import { useAppStore } from "@/app/store.ts";
 import { readToken } from "@/features/auth/lib/token.ts";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { isMonitorResultMessage } from "@/features/monitors/model/types.ts";
+import { isMonitorResultMessage } from "@/features/monitors/types.ts";
 import { QUERY_KEYS, SERVER_WS_URL } from "@/lib/consts.ts";
 
 type WebSocketProviderProps = {

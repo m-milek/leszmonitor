@@ -1,4 +1,4 @@
-import type { User } from "@/features/users/model/types.ts";
+import type { User } from "@/features/users/types.ts";
 import { LucideEllipsisVertical, LucideLogOut } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useRouter } from "@tanstack/react-router";
@@ -11,7 +11,7 @@ import {
 import { Flex } from "@/components/common/Flex.tsx";
 import { Metadata } from "@/components/layout/Metadata.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { getMetadata } from "@/features/instance/api/metadata.ts";
+import { getMetadata } from "@/features/instance/metadata-api.ts";
 import { clearToken } from "@/features/auth/lib/token.ts";
 
 export interface AppSidebarFooterProps {

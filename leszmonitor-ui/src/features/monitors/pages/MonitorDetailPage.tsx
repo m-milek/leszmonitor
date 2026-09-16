@@ -10,16 +10,16 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   getMonitorBySlug,
   updateMonitorState,
-} from "@/features/monitors/api/monitors.ts";
-import { getMonitorResultsByMonitorId } from "@/features/monitors/api/results.ts";
-import { getLatencyStatsByMonitorId } from "@/features/monitors/api/stats.ts";
+} from "@/features/monitors/monitors-api.ts";
+import { getMonitorResultsByMonitorId } from "@/features/monitors/results-api.ts";
+import { getLatencyStatsByMonitorId } from "@/features/monitors/stats-api.ts";
 import { MonitorResultsList } from "@/features/monitors/components/MonitorResultsList.tsx";
 import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill.tsx";
 import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog.tsx";
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy.tsx";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart.tsx";
 import { formatTime } from "@/features/monitors/components/charts/utils.ts";
-import type { MonitorResult } from "@/features/monitors/model/types.ts";
+import type { MonitorResult } from "@/features/monitors/types.ts";
 import type { Pagination } from "@/lib/types.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 

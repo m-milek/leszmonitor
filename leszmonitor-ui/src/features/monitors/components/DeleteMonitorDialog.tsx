@@ -12,9 +12,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { deleteMonitor } from "@/features/monitors/api/monitors.ts";
+import { deleteMonitor } from "@/features/monitors/monitors-api.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
-import type { Monitor } from "@/features/monitors/model/types.ts";
+import type { Monitor } from "@/features/monitors/types.ts";
 
 export interface DeleteMonitorDialogProps {
   monitor: Monitor;

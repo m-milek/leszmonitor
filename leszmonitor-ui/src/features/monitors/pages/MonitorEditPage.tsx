@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button.tsx";
 import {
   getMonitorBySlug,
   updateMonitor,
-} from "@/features/monitors/api/monitors.ts";
+} from "@/features/monitors/monitors-api.ts";
 import { MonitorForm } from "@/features/monitors/forms/MonitorForm.tsx";
 import {
   mapMonitorToFormValues,
   type MonitorFormValues,
-} from "@/features/monitors/model/schema.ts";
+} from "@/features/monitors/schema.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 
 export interface MonitorEditPageProps {

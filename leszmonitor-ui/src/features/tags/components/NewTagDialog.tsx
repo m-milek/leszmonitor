@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { TagForm } from "@/features/tags/forms/TagForm.tsx";
-import { createTag, type TagPayload } from "@/features/tags/api/tags.ts";
+import { createTag, type TagPayload } from "@/features/tags/tags-api.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 
 const FORM_ID = "new-tag-form";

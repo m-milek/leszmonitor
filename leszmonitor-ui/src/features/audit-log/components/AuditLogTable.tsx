@@ -1,5 +1,5 @@
 import { type ColumnDef } from "@tanstack/table-core";
-import type { AuditLogEntry } from "@/features/audit-log/model/types.ts";
+import type { AuditLogEntry } from "@/features/audit-log/types.ts";
 import { DataTable } from "@/components/common/DataTable.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { formatDate } from "@/lib/utils.ts";

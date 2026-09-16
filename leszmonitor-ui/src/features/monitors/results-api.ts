@@ -1,6 +1,6 @@
 import { authFetch } from "@/lib/api-client.ts";
 import { SERVER_API_URL } from "@/lib/consts.ts";
-import type { MonitorResult } from "@/features/monitors/model/types.ts";
+import type { MonitorResult } from "@/features/monitors/types.ts";
 import type { Pagination } from "@/lib/types.ts";
 
 export const getLatestMonitorResultByMonitorId = async (
