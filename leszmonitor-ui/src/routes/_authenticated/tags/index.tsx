@@ -10,6 +10,9 @@ import { getAllTags } from "@/lib/data/tags-api.ts";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 
 export const Route = createFileRoute("/_authenticated/tags/")({
+  head: () => ({
+    meta: [{ title: "Tags | Leszmonitor" }],
+  }),
   component: RouteComponent,
 });
 

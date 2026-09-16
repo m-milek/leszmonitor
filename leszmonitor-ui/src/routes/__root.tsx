@@ -1,4 +1,5 @@
 import {
+  HeadContent,
   Outlet,
   createRootRouteWithContext,
   redirect,
@@ -14,8 +15,12 @@ export interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  head: () => ({
+    meta: [{ title: "Leszmonitor" }],
+  }),
   component: () => (
     <Providers>
+      <HeadContent />
       <Outlet />
     </Providers>
   ),

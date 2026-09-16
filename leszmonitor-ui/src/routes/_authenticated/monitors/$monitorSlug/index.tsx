@@ -32,6 +32,14 @@ const latencyChartConfig = {
 };
 
 export const Route = createFileRoute("/_authenticated/monitors/$monitorSlug/")({
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: [QUERY_KEYS.MONITORS, params.monitorSlug],
+      queryFn: () => getMonitorBySlug(params.monitorSlug),
+    }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: `${loaderData?.name ?? "Monitor"} | Leszmonitor` }],
+  }),
   component: RouteComponent,
 });
 

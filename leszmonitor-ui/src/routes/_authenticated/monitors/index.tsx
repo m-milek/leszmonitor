@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { LucidePlusCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/monitors/")({
+  head: () => ({
+    meta: [{ title: "Monitors | Leszmonitor" }],
+  }),
   component: MonitorsComponent,
 });
 
