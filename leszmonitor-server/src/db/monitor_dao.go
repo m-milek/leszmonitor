@@ -50,6 +50,11 @@ func (r *monitorDAO) GetMonitorBySlug(
 			}
 			return nil, err
 		}
+
+		if err = r.attachTags(ctx, &monitor); err != nil {
+			return nil, err
+		}
+
 		return &monitor, nil
 	})
 }
@@ -72,6 +77,11 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitor
 			}
 			return nil, err
 		}
+
+		if err = r.attachTags(ctx, &monitor); err != nil {
+			return nil, err
+		}
+
 		return &monitor, nil
 	})
 }
@@ -92,6 +102,11 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, er
 		if allMonitors == nil {
 			allMonitors = []monitors.Monitor{}
 		}
+
+		if err = r.attachTagsToAll(ctx, allMonitors); err != nil {
+			return nil, err
+		}
+
 		return allMonitors, nil
 	})
 }
@@ -110,6 +125,79 @@ func (r *monitorDAO) DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID)
 
 		return &id, nil
 	})
+}
+
+func (r *monitorDAO) attachTags(ctx context.Context, monitor *monitors.Monitor) error {
+	tagIDs := []uuid.UUID{}
+	err := sqlx.SelectContext(
+		ctx,
+		r.pool,
+		&tagIDs,
+		`SELECT tag_id FROM monitor_tags WHERE monitor_id = $1 ORDER BY tag_id`,
+		monitor.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	monitor.TagIDs = tagIDs
+	return nil
+}
+
+func (r *monitorDAO) attachTagsToAll(ctx context.Context, allMonitors []monitors.Monitor) error {
+	var rows []struct {
+		MonitorID uuid.UUID `db:"monitor_id"`
+		TagID     uuid.UUID `db:"tag_id"`
+	}
+	err := sqlx.SelectContext(
+		ctx,
+		r.pool,
+		&rows,
+		`SELECT monitor_id, tag_id FROM monitor_tags ORDER BY tag_id`,
+	)
+	if err != nil {
+		return err
+	}
+
+	byMonitorID := make(map[uuid.UUID][]uuid.UUID, len(allMonitors))
+	for _, row := range rows {
+		byMonitorID[row.MonitorID] = append(byMonitorID[row.MonitorID], row.TagID)
+	}
+
+	for i := range allMonitors {
+		tagIDs := byMonitorID[allMonitors[i].ID]
+		if tagIDs == nil {
+			tagIDs = []uuid.UUID{}
+		}
+		allMonitors[i].TagIDs = tagIDs
+	}
+
+	return nil
+}
+
+func (r *monitorDAO) replaceMonitorTags(
+	ctx context.Context,
+	monitorID uuid.UUID,
+	tagIDs []uuid.UUID,
+) error {
+	_, err := r.pool.ExecContext(ctx, `DELETE FROM monitor_tags WHERE monitor_id = $1`, monitorID)
+	if err != nil {
+		return err
+	}
+
+	for _, tagID := range tagIDs {
+		_, err = r.pool.ExecContext(
+			ctx,
+			`INSERT OR IGNORE INTO monitor_tags (monitor_id, tag_id) VALUES ($1, $2)`,
+			monitorID,
+			tagID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // InsertMonitor adds a new monitor to the database and returns the created monitor.
@@ -139,6 +227,10 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor
 			if isUniqueViolation(err) {
 				return nil, ErrAlreadyExists
 			}
+			return nil, err
+		}
+
+		if err = r.replaceMonitorTags(ctx, id, monitor.TagIDs); err != nil {
 			return nil, err
 		}
 
@@ -174,6 +266,10 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor monitors.Moni
 		}
 		if rowsAffected == 0 {
 			return nil, ErrNotFound
+		}
+
+		if err = r.replaceMonitorTags(ctx, newMonitor.ID, newMonitor.TagIDs); err != nil {
+			return nil, err
 		}
 
 		return nil, nil
