@@ -31,5 +31,6 @@ const DURATION_UNITS = [
 export const formatDuration = (seconds: number): string => {
   const duration = intervalToDuration({ start: 0, end: seconds * 1000 });
   const format = DURATION_UNITS.filter((unit) => duration[unit]).slice(0, 2);
+  if (format.length === 0) return "0 seconds";
   return dateFnsFormatDuration(duration, { format });
 };

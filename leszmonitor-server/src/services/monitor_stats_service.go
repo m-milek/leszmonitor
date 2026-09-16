@@ -39,18 +39,14 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 
 	latencyStats, err := s.db.MonitorStats().GetLatencyStatsByMonitorID(ctx, monitorID, from, to)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("monitorID", monitorID).Msg("No data found for the given monitor ID and time range")
+		if !errors.Is(err, db.ErrNotFound) {
+			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get stats")
 			return models.MonitorStats{}, &ServiceError{
-				Code: http.StatusNotFound,
-				Err:  errors.New("no data found for the given monitor ID and time range"),
+				Code: http.StatusInternalServerError,
+				Err:  errors.New("failed to get stats: " + err.Error()),
 			}
 		}
-		logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get stats")
-		return models.MonitorStats{}, &ServiceError{
-			Code: http.StatusInternalServerError,
-			Err:  errors.New("failed to get stats: " + err.Error()),
-		}
+		logger.Warn().Str("monitorID", monitorID).Msg("No latency data found for the given monitor ID and time range")
 	}
 
 	hasNoStatusChanges := false

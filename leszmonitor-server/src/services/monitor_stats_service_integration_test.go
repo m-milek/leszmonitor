@@ -1,7 +1,6 @@
 package services
 
 import (
-	"net/http"
 	"testing"
 	"time"
 
@@ -35,12 +34,12 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 
 		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
 		require.Nil(t, svcErr)
-		assert.InDelta(t, 200.0, stats.Avg, 0.001)
-		assert.InDelta(t, 100.0, stats.Min, 0.001)
-		assert.InDelta(t, 300.0, stats.Max, 0.001)
+		assert.InDelta(t, 200.0, stats.Latency.Avg, 0.001)
+		assert.InDelta(t, 100.0, stats.Latency.Min, 0.001)
+		assert.InDelta(t, 300.0, stats.Latency.Max, 0.001)
 	})
 
-	t.Run("Returns 404 when no results exist for monitor", func(t *testing.T) {
+	t.Run("Returns empty stats when no results exist for monitor", func(t *testing.T) {
 		ctx, service, _, _ := setupMonitorStatsIntegrationTest(t)
 
 		monitor := insertTestMonitor(t, ctx)
@@ -49,11 +48,10 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		to := time.Now().UTC().Add(1 * time.Hour)
 
 		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusNotFound, svcErr.Code)
-		assert.Equal(t, 0.0, stats.Avg)
-		assert.Equal(t, 0.0, stats.Min)
-		assert.Equal(t, 0.0, stats.Max)
+		require.Nil(t, svcErr)
+		assert.Equal(t, 0.0, stats.Latency.Avg)
+		assert.Equal(t, 0.0, stats.Latency.Min)
+		assert.Equal(t, 0.0, stats.Latency.Max)
 	})
 
 	t.Run("Only includes results within the specified time range", func(t *testing.T) {
@@ -80,8 +78,8 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 
 		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
 		require.Nil(t, svcErr)
-		assert.InDelta(t, 500.0, stats.Avg, 0.001)
-		assert.InDelta(t, 500.0, stats.Min, 0.001)
-		assert.InDelta(t, 500.0, stats.Max, 0.001)
+		assert.InDelta(t, 500.0, stats.Latency.Avg, 0.001)
+		assert.InDelta(t, 500.0, stats.Latency.Min, 0.001)
+		assert.InDelta(t, 500.0, stats.Latency.Max, 0.001)
 	})
 }

@@ -129,8 +129,8 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
           <TypographyH2>Latency (last 24h)</TypographyH2>
           {stats && (
             <>
-              <p>Avg: {stats.latency.min.toFixed(2)} ms</p>
-              <p>Min: {stats.latency.avg.toFixed(2)} ms</p>
+              <p>Avg: {stats.latency.avg.toFixed(2)} ms</p>
+              <p>Min: {stats.latency.min.toFixed(2)} ms</p>
               <p>Max: {stats.latency.max.toFixed(2)} ms</p>
               <p>
                 {monitorStatus.toUpperCase()} for{"  "}
