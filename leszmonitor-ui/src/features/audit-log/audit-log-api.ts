@@ -1,0 +1,50 @@
+import type {
+  AuditLogEntry,
+  AuditLogFilters,
+} from "@/features/audit-log/types";
+import { authFetch } from "@/lib/api-client";
+import { SERVER_API_URL } from "@/lib/consts";
+
+const filterIntoParams = (filter: AuditLogFilters): URLSearchParams => {
+  const params = new URLSearchParams();
+  Object.entries(filter).forEach(([key, value]) => {
+    if (value) {
+      if (value instanceof Date) {
+        params.append(key, value.toISOString());
+      } else {
+        params.append(key, value);
+      }
+    }
+  });
+  return params;
+};
+
+const getByFilter = async (
+  filter: AuditLogFilters,
+): Promise<AuditLogEntry[]> => {
+  const queryParams = filterIntoParams(filter);
+
+  const response = await authFetch(
+    `${SERVER_API_URL}/audit-log?${queryParams.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch audit logs");
+  }
+
+  const data: AuditLogEntry[] = await response.json();
+
+  return data.map((entry) => ({
+    ...entry,
+    createdAt: new Date(entry.createdAt),
+  }));
+};
+
+export const AuditLogApi = {
+  getByFilter,
+};

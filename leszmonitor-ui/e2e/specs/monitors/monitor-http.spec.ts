@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import test from "../../fixtures/leszmonitorFixture.ts";
+import test from "../../fixtures/leszmonitorFixture";
 
 test.describe("HTTP Monitor", () => {
   test("Creates a valid HTTP monitor", async ({ page }) => {

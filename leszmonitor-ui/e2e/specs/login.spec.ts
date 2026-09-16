@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import test from "../fixtures/leszmonitorFixture.ts";
+import test from "../fixtures/leszmonitorFixture";
 
 test.describe("Login", () => {
   test("Displays app title", async ({ page }) => {

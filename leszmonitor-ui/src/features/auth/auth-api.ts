@@ -1,0 +1,30 @@
+import type { LoginPayload, LoginResponse } from "@/features/auth/types";
+import { SERVER_API_URL } from "@/lib/consts";
+
+const login = async ({
+  username,
+  password,
+}: LoginPayload): Promise<LoginResponse> => {
+  const res = await fetch(`${SERVER_API_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Login failed");
+  }
+
+  const data = (await res.json()) as LoginResponse;
+  if (!data.jwt) {
+    throw new Error("Invalid response from server");
+  }
+
+  return data;
+};
+
+export const AuthApi = {
+  login,
+};

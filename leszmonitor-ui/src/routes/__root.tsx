@@ -5,10 +5,10 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { Providers } from "@/components/leszmonitor/Providers.tsx";
-import { GlobalNotFound } from "@/components/leszmonitor/GlobalNotFound.tsx";
-import { isJwtValid } from "@/lib/jwt.ts";
-import { getCookie } from "@/lib/cookies.ts";
+import { Providers } from "@/app/providers/AppProviders";
+import { GlobalNotFound } from "@/components/common/GlobalNotFound";
+import { isJwtValid } from "@/lib/jwt";
+import { readTokenSync } from "@/features/auth/lib/token";
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -34,8 +34,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       return;
     }
 
-    // Get token from cookie
-    const token = getCookie("LOGIN_TOKEN");
+    const token = readTokenSync();
 
     // Redirect to login if token is missing or invalid
     if (!token || !isJwtValid(token)) {

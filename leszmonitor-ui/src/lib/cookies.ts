@@ -1,4 +1,13 @@
-export const setCookie = (name: string, value: string, options?: { maxAge?: number; path?: string; secure?: boolean; sameSite?: string }): void => {
+export const setCookie = (
+  name: string,
+  value: string,
+  options?: {
+    maxAge?: number;
+    path?: string;
+    secure?: boolean;
+    sameSite?: string;
+  },
+): void => {
   let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
 
   if (options?.maxAge) {
@@ -34,4 +43,3 @@ export const getCookie = (name: string): string | null => {
 export const deleteCookie = (name: string): void => {
   setCookie(name, "", { maxAge: -1, path: "/" });
 };
-

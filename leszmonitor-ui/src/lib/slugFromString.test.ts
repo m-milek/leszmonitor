@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { slugFromString } from "@/lib/slugFromString.ts";
+import { slugFromString } from "@/lib/slugFromString";
 
 describe("slugFromString", () => {
   const tests: [string, string][] = [

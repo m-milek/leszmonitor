@@ -14,7 +14,7 @@ export const isJwtClaims = (data: unknown): data is JwtClaims => {
     typeof obj.exp === "number" &&
     typeof obj.iat === "number"
   );
-}
+};
 
 export const isJwtValid = (token: string): JwtClaims | null => {
   try {
@@ -34,4 +34,4 @@ export const isJwtValid = (token: string): JwtClaims | null => {
     console.error("Invalid JWT:", error);
     return null;
   }
-}
+};
