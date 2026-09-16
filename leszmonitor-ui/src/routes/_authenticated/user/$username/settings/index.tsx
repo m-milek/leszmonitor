@@ -1,8 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
-import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { useTheme } from "@/components/ui/theme-provider.tsx";
+import { UserSettingsPage } from "@/features/users/pages/UserSettingsPage.tsx";
 
 export const Route = createFileRoute(
   "/_authenticated/user/$username/settings/",
@@ -10,20 +7,5 @@ export const Route = createFileRoute(
   head: () => ({
     meta: [{ title: "Settings | Leszmonitor" }],
   }),
-  component: RouteComponent,
+  component: UserSettingsPage,
 });
-
-function RouteComponent() {
-  const { theme, setTheme } = useTheme();
-
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
-
-  return (
-    <PageContainer>
-      <TypographyH1>Settings</TypographyH1>
-      <Button onClick={toggleTheme}>Switch Theme</Button>
-    </PageContainer>
-  );
-}

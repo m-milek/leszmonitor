@@ -1,0 +1,96 @@
+import { SERVER_API_URL } from "@/lib/consts.ts";
+import { authFetch } from "@/lib/api-client.ts";
+import type {
+  Monitor,
+  MonitorCreatePayload,
+  MonitorUpdatePayload,
+} from "@/features/monitors/model/types.ts";
+
+const normalizeMonitor = (monitor: Monitor): Monitor => {
+  if (typeof monitor.probeConfig === "string") {
+    try {
+      return {
+        ...monitor,
+        probeConfig: JSON.parse(monitor.probeConfig),
+      } as Monitor;
+    } catch {
+      return monitor;
+    }
+  }
+
+  return monitor;
+};
+
+export const getAllMonitors = async (): Promise<Monitor[]> => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const monitors = (await res.json()) as Monitor[];
+  return monitors.map(normalizeMonitor);
+};
+
+export const getMonitorBySlug = async (
+  monitorSlug: string,
+): Promise<Monitor> => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorSlug}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const monitor = (await res.json()) as Monitor;
+  return normalizeMonitor(monitor);
+};
+
+export const createMonitor = async (monitorData: MonitorCreatePayload) => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(monitorData),
+  });
+
+  return res.json();
+};
+
+export const updateMonitor = async (
+  monitorId: string,
+  monitorData: MonitorUpdatePayload,
+) => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(monitorData),
+  });
+
+  return res.json();
+};
+
+export const updateMonitorState = async (
+  monitorId: string,
+  newState: string,
+) => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}/state`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ newState }),
+  });
+
+  return res.json();
+};
+
+export const deleteMonitor = async (monitorId: string) => {
+  await authFetch(`${SERVER_API_URL}/monitors/${monitorId}`, {
+    method: "DELETE",
+  });
+};

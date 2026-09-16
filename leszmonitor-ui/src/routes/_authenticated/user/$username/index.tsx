@@ -1,31 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
-import { useQuery } from "@tanstack/react-query";
-import { getUser } from "@/lib/data/userData.ts";
-import { UserProfilePage } from "@/components/leszmonitor/UserProfilePage.tsx";
+import { UserProfilePage } from "@/features/users/pages/UserProfilePage.tsx";
 
 export const Route = createFileRoute("/_authenticated/user/$username/")({
   head: ({ params }) => ({
     meta: [{ title: `${params.username} | Leszmonitor` }],
   }),
-  component: UserProfileComponent,
+  component: RouteComponent,
 });
 
-function UserProfileComponent() {
+function RouteComponent() {
   const { username } = Route.useParams();
-
-  const { data: user } = useQuery({
-    queryKey: ["users", username],
-    queryFn: () => getUser(username),
-  });
-
-  if (!user) {
-    return null;
-  }
-
-  return (
-    <PageContainer>
-      <UserProfilePage user={user} />
-    </PageContainer>
-  );
+  return <UserProfilePage username={username} />;
 }

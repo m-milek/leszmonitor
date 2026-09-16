@@ -1,18 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageContainer } from "@/components/leszmonitor/PageContainer.tsx";
-import { TypographyH1 } from "@/components/leszmonitor/ui/Typography.tsx";
+import { DocsPage } from "@/features/instance/pages/DocsPage.tsx";
 
 export const Route = createFileRoute("/_authenticated/docs/")({
   head: () => ({
     meta: [{ title: "Documentation | Leszmonitor" }],
   }),
-  component: DocsComponent,
+  component: DocsPage,
 });
-
-function DocsComponent() {
-  return (
-    <PageContainer>
-      <TypographyH1>Documentation</TypographyH1>
-    </PageContainer>
-  );
-}

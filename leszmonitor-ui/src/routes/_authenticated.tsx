@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { AppSidebar } from "@/components/leszmonitor/sidebar/AppSidebar.tsx";
-import { WebSocketProvider } from "@/components/leszmonitor/providers/WebSocketProvider.tsx";
+import { AppSidebar } from "@/components/layout/AppSidebar.tsx";
+import { WebSocketProvider } from "@/app/providers/WebSocketProvider.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
 export const Route = createFileRoute("/_authenticated")({

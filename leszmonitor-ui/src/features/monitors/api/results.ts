@@ -1,0 +1,47 @@
+import { authFetch } from "@/lib/api-client.ts";
+import { SERVER_API_URL } from "@/lib/consts.ts";
+import type { MonitorResult } from "@/features/monitors/model/types.ts";
+import type { Pagination } from "@/lib/types.ts";
+
+export const getLatestMonitorResultByMonitorId = async (
+  monitorId: string,
+): Promise<MonitorResult | null> => {
+  const res = await authFetch(
+    `${SERVER_API_URL}/monitors/${monitorId}/results/latest`,
+  );
+
+  if (res.status === 404) return null;
+  if (!res.ok)
+    throw new Error(`Failed to fetch latest result for ${monitorId}`);
+
+  return mapMonitorResult(await res.json());
+};
+
+export const getMonitorResultsByMonitorId = async (
+  monitorId: string,
+  pagination: Pagination,
+): Promise<MonitorResult[] | null> => {
+  console.log(
+    `Fetching results for monitor ${monitorId} with pagination:`,
+    pagination,
+  );
+  const queryParams = new URLSearchParams({
+    page: pagination.page.toString(),
+    per_page: pagination.perPage.toString(),
+  });
+  const res = await authFetch(
+    `${SERVER_API_URL}/monitors/${monitorId}/results?${queryParams.toString()}`,
+  );
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to fetch results for ${monitorId}`);
+
+  return (await res.json()).map(mapMonitorResult);
+};
+
+const mapMonitorResult = (result: MonitorResult): MonitorResult => {
+  return {
+    ...result,
+    createdAt: new Date(result.createdAt),
+  };
+};
