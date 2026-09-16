@@ -1,3 +1,4 @@
+import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LucidePlusCircle } from "lucide-react";
@@ -6,10 +7,6 @@ import { TypographyH1 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  deleteMonitor,
-  getAllMonitors,
-} from "@/features/monitors/monitors-api";
 import { MonitorListItem } from "@/features/monitors/components/MonitorListItem";
 import { QUERY_KEYS } from "@/lib/consts";
 
@@ -18,11 +15,11 @@ export function MonitorsPage() {
 
   const { data: monitors = [] } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS],
-    queryFn: () => getAllMonitors(),
+    queryFn: () => MonitorsApi.getAll(),
   });
 
   const { mutateAsync: deleteMutation } = useMutation({
-    mutationFn: (monitorId: string) => deleteMonitor(monitorId),
+    mutationFn: (monitorId: string) => MonitorsApi.remove(monitorId),
   });
 
   const navigate = useNavigate();

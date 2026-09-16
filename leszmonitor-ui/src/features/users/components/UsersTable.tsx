@@ -1,3 +1,4 @@
+import { UsersApi } from "@/features/users/users-api";
 import {
   UserRole,
   mapUserRoleToDisplayName,
@@ -9,7 +10,6 @@ import { type ColumnDef } from "@tanstack/table-core";
 import { DataTable } from "@/components/common/DataTable";
 import { MoreVertical, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { removeUser, updateUserRole } from "@/features/users/users-api";
 import { LMSelect } from "@/components/form/LMSelect";
 import {
   DropdownMenu,
@@ -26,7 +26,7 @@ const roleSelectItems = Object.values(UserRole).map((role) => ({
 const RoleCell = ({ user }: { user: User }) => {
   const queryClient = useQueryClient();
   const roleMutation = useMutation({
-    mutationFn: (role: UserRole) => updateUserRole(user.username, role),
+    mutationFn: (role: UserRole) => UsersApi.updateRole(user.username, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
@@ -46,7 +46,7 @@ const RoleCell = ({ user }: { user: User }) => {
 const ActionsCell = ({ user }: { user: User }) => {
   const queryClient = useQueryClient();
   const removeMutation = useMutation({
-    mutationFn: () => removeUser(user.username),
+    mutationFn: () => UsersApi.remove(user.username),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },

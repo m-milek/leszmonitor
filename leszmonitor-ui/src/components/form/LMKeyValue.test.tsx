@@ -1,10 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-  LMKeyValueInput,
-  pairsToRecord,
-} from "@/components/form/LMKeyValue";
+import { LMKeyValueInput, pairsToRecord } from "@/components/form/LMKeyValue";
 import { userEvent } from "@testing-library/user-event/dist/cjs/setup/index.js";
 
 function renderWithProvider(ui: React.ReactElement) {

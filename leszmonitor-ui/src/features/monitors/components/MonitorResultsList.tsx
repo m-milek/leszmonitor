@@ -1,12 +1,9 @@
+import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
-import type {
-  Monitor,
-  MonitorResult,
-} from "@/features/monitors/types";
+import type { Monitor, MonitorResult } from "@/features/monitors/types";
 import type { Pagination } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/consts";
-import { getMonitorResultsByMonitorId } from "@/features/monitors/results-api";
 import { Flex } from "@/components/common/Flex";
 import { StatusDot } from "@/components/common/StatusDot";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,7 +20,7 @@ export const MonitorResultsList = ({
   const { data: results } = useQuery({
     enabled: !!monitor,
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id, pagination],
-    queryFn: () => getMonitorResultsByMonitorId(monitor.id, pagination),
+    queryFn: () => MonitorsApi.results.getPage(monitor.id, pagination),
   });
 
   const getStatusDotStatus = (result: MonitorResult) => {

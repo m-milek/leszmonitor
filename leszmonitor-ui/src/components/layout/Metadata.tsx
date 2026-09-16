@@ -1,5 +1,5 @@
-import { Center } from "@/components/common/Center";
 import type { MetadataResponse } from "@/features/instance/metadata-api";
+import { Center } from "@/components/common/Center";
 import { LucideInfo } from "lucide-react";
 import { Flex } from "@/components/common/Flex";
 import {

@@ -19,7 +19,7 @@ const filterIntoParams = (filter: AuditLogFilters): URLSearchParams => {
   return params;
 };
 
-export const getAuditLogByFilter = async (
+const getByFilter = async (
   filter: AuditLogFilters,
 ): Promise<AuditLogEntry[]> => {
   const queryParams = filterIntoParams(filter);
@@ -43,4 +43,8 @@ export const getAuditLogByFilter = async (
     ...entry,
     createdAt: new Date(entry.createdAt),
   }));
+};
+
+export const AuditLogApi = {
+  getByFilter,
 };

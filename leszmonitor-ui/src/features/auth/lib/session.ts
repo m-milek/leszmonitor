@@ -1,6 +1,6 @@
+import { AuthApi } from "@/features/auth/auth-api";
+import { UsersApi } from "@/features/users/users-api";
 import { jwtDecode } from "jwt-decode";
-import { fetchLoginToken } from "@/features/auth/auth-api";
-import { getUser } from "@/features/users/users-api";
 import { isJwtClaims } from "@/lib/jwt";
 import { storeToken } from "@/features/auth/lib/token";
 import type { LoginPayload } from "@/features/auth/types";
@@ -18,7 +18,7 @@ export const establishSession = async (
   credentials: LoginPayload,
   { setUsername, setUser }: SessionSetters,
 ): Promise<boolean> => {
-  const loginResponse = await fetchLoginToken(credentials);
+  const loginResponse = await AuthApi.login(credentials);
 
   storeToken(loginResponse.jwt);
 
@@ -30,7 +30,7 @@ export const establishSession = async (
 
   setUsername(claims.username);
 
-  const user = await getUser(claims.username);
+  const user = await UsersApi.get(claims.username);
   setUser(user);
 
   return true;

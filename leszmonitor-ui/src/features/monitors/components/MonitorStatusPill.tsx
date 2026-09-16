@@ -1,7 +1,4 @@
-import type {
-  Monitor,
-  MonitorRunState,
-} from "@/features/monitors/types";
+import type { Monitor, MonitorRunState } from "@/features/monitors/types";
 
 export interface MonitorStatusPillProps {
   monitor: Monitor;

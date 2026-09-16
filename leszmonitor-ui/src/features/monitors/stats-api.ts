@@ -12,7 +12,7 @@ export interface LatencyStatsResponse {
   maxLatency: number;
 }
 
-export const getLatencyStatsByMonitorId = async (
+const getLatency = async (
   monitorId: string,
   { from, to = new Date(Date.now()) }: LatencyStatsParams,
 ): Promise<LatencyStatsResponse> => {
@@ -34,4 +34,8 @@ export const getLatencyStatsByMonitorId = async (
     throw new Error(`Failed to fetch latency stats for ${monitorId}`);
 
   return res.json();
+};
+
+export const statsApi = {
+  getLatency,
 };

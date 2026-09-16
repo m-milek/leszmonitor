@@ -8,7 +8,7 @@ export interface MetadataResponse {
   version: string;
 }
 
-export const getMetadata = async (): Promise<MetadataResponse> => {
+const get = async (): Promise<MetadataResponse> => {
   const res = await authFetch(`${SERVER_API_URL}/instance-metadata`, {
     method: "GET",
     headers: {
@@ -17,4 +17,8 @@ export const getMetadata = async (): Promise<MetadataResponse> => {
   });
 
   return await res.json();
+};
+
+export const MetadataApi = {
+  get,
 };

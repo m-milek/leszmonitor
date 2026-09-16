@@ -16,7 +16,7 @@ const mapTag = (tag: Tag): Tag => {
   };
 };
 
-export const getAllTags = async (): Promise<Tag[]> => {
+const getAll = async (): Promise<Tag[]> => {
   const res = await authFetch(`${SERVER_API_URL}/tags`, {
     method: "GET",
     headers: {
@@ -28,7 +28,7 @@ export const getAllTags = async (): Promise<Tag[]> => {
   return tags.map(mapTag);
 };
 
-export const getTagById = async (tagId: string): Promise<Tag> => {
+const getById = async (tagId: string): Promise<Tag> => {
   const res = await authFetch(`${SERVER_API_URL}/tags/${tagId}`, {
     method: "GET",
     headers: {
@@ -40,7 +40,7 @@ export const getTagById = async (tagId: string): Promise<Tag> => {
   return mapTag(tag);
 };
 
-export const createTag = async (tagData: TagPayload): Promise<Tag> => {
+const create = async (tagData: TagPayload): Promise<Tag> => {
   const res = await authFetch(`${SERVER_API_URL}/tags`, {
     method: "POST",
     headers: {
@@ -53,10 +53,7 @@ export const createTag = async (tagData: TagPayload): Promise<Tag> => {
   return mapTag(tag);
 };
 
-export const updateTag = async (
-  tagId: string,
-  tagData: TagPayload,
-): Promise<Tag> => {
+const update = async (tagId: string, tagData: TagPayload): Promise<Tag> => {
   const res = await authFetch(`${SERVER_API_URL}/tags/${tagId}`, {
     method: "PATCH",
     headers: {
@@ -69,8 +66,16 @@ export const updateTag = async (
   return mapTag(tag);
 };
 
-export const deleteTag = async (tagId: string): Promise<void> => {
+const remove = async (tagId: string): Promise<void> => {
   await authFetch(`${SERVER_API_URL}/tags/${tagId}`, {
     method: "DELETE",
   });
+};
+
+export const TagsApi = {
+  getAll,
+  getById,
+  create,
+  update,
+  remove,
 };

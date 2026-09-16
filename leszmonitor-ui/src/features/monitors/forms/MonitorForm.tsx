@@ -1,3 +1,4 @@
+import { TagsApi } from "@/features/tags/tags-api";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { slugFromString } from "@/lib/slugFromString";
@@ -14,17 +15,13 @@ import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
 import { LMTextareaField } from "@/components/form/LMTextareaField";
-import {
-  getFirstError,
-  isFieldInvalid,
-} from "@/components/form/field-state";
+import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 import { Flex } from "@/components/common/Flex";
 import { Divider } from "@/components/common/Divider";
 import { Switch } from "@/components/ui/switch";
 import { MonitorConfigFields } from "@/features/monitors/forms/fields/MonitorConfigFields";
 import { useMonitorForm } from "@/features/monitors/hooks/useMonitorForm";
 import { LMTagSelect } from "@/features/tags/components/LMTagSelect";
-import { getAllTags } from "@/features/tags/tags-api";
 import { QUERY_KEYS } from "@/lib/consts";
 
 export interface MonitorFormProps {
@@ -44,7 +41,7 @@ export function MonitorForm({
 
   const { data: tags = [] } = useQuery({
     queryKey: [QUERY_KEYS.TAGS],
-    queryFn: () => getAllTags(),
+    queryFn: () => TagsApi.getAll(),
   });
 
   const form = useMonitorForm({

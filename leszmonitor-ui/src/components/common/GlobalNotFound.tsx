@@ -1,8 +1,5 @@
 import { PageContainer } from "@/components/common/PageContainer";
-import {
-  TypographyH1,
-  TypographyH3,
-} from "@/components/common/Typography";
+import { TypographyH1, TypographyH3 } from "@/components/common/Typography";
 import { Center } from "@/components/common/Center";
 import { Flex } from "@/components/common/Flex";
 

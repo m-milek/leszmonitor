@@ -3,9 +3,7 @@ import { SERVER_API_URL } from "@/lib/consts";
 import type { MonitorResult } from "@/features/monitors/types";
 import type { Pagination } from "@/lib/types";
 
-export const getLatestMonitorResultByMonitorId = async (
-  monitorId: string,
-): Promise<MonitorResult | null> => {
+const getLatest = async (monitorId: string): Promise<MonitorResult | null> => {
   const res = await authFetch(
     `${SERVER_API_URL}/monitors/${monitorId}/results/latest`,
   );
@@ -17,7 +15,7 @@ export const getLatestMonitorResultByMonitorId = async (
   return mapMonitorResult(await res.json());
 };
 
-export const getMonitorResultsByMonitorId = async (
+const getPage = async (
   monitorId: string,
   pagination: Pagination,
 ): Promise<MonitorResult[] | null> => {
@@ -44,4 +42,9 @@ const mapMonitorResult = (result: MonitorResult): MonitorResult => {
     ...result,
     createdAt: new Date(result.createdAt),
   };
+};
+
+export const resultsApi = {
+  getLatest,
+  getPage,
 };

@@ -1,3 +1,4 @@
+import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PauseIcon, PencilIcon, PlayIcon } from "lucide-react";
@@ -7,12 +8,6 @@ import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
-import {
-  getMonitorBySlug,
-  updateMonitorState,
-} from "@/features/monitors/monitors-api";
-import { getMonitorResultsByMonitorId } from "@/features/monitors/results-api";
-import { getLatencyStatsByMonitorId } from "@/features/monitors/stats-api";
 import { MonitorResultsList } from "@/features/monitors/components/MonitorResultsList";
 import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
 import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog";
@@ -45,20 +40,20 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
   const { data: monitor } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS, monitorSlug],
-    queryFn: () => getMonitorBySlug(monitorSlug),
+    queryFn: () => MonitorsApi.getBySlug(monitorSlug),
   });
 
   const { data: monitorResults } = useQuery({
     enabled: !!monitor,
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", pagination],
-    queryFn: () => getMonitorResultsByMonitorId(monitor!.id, pagination),
+    queryFn: () => MonitorsApi.results.getPage(monitor!.id, pagination),
   });
 
   const { data: latencyStats } = useQuery({
     enabled: !!monitor,
     queryKey: [QUERY_KEYS.MONITOR_LATENCY_STATS, monitor?.id ?? ""],
     queryFn: () =>
-      getLatencyStatsByMonitorId(monitor!.id, {
+      MonitorsApi.stats.getLatency(monitor!.id, {
         from: new Date(Date.now() - 24 * 60 * 60 * 1000), // last 24 hours
       }),
   });
@@ -66,7 +61,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
   const mutation = useMutation({
     mutationKey: [QUERY_KEYS.MONITORS, monitorSlug],
     mutationFn: async () =>
-      updateMonitorState(monitor!.id, isPaused ? "active" : "paused"),
+      MonitorsApi.updateState(monitor!.id, isPaused ? "active" : "paused"),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.MONITORS, monitorSlug],

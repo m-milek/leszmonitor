@@ -1,3 +1,4 @@
+import { TagsApi } from "@/features/tags/tags-api";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/features/tags/components/Tag";
-import { deleteTag } from "@/features/tags/tags-api";
 import { QUERY_KEYS } from "@/lib/consts";
 import type { Tag as TagModel } from "@/features/tags/types";
 
@@ -26,7 +26,7 @@ export function DeleteTagDialog({ tag }: Readonly<DeleteTagDialogProps>) {
   const [isOpen, setIsOpen] = useState(false);
 
   const deleteTagMutation = useMutation({
-    mutationFn: () => deleteTag(tag.id),
+    mutationFn: () => TagsApi.remove(tag.id),
     onSuccess: () => {
       toast.success(`Tag "${tag.name}" deleted`);
       setIsOpen(false);

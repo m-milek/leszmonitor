@@ -1,12 +1,10 @@
+import type { TagPayload } from "@/features/tags/tags-api";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMColorPicker } from "@/components/form/LMColorPicker";
-import {
-  getFirstError,
-  isFieldInvalid,
-} from "@/components/form/field-state";
+import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 import { Tag } from "@/features/tags/components/Tag";
 import { Flex } from "@/components/common/Flex";
 import {
@@ -14,7 +12,6 @@ import {
   normalizeHexColor,
   randomTagColor,
 } from "@/features/tags/lib/colors";
-import type { TagPayload } from "@/features/tags/tags-api";
 
 export interface TagFormProps {
   id?: string;

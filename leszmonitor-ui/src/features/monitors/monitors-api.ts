@@ -1,3 +1,5 @@
+import { resultsApi } from "@/features/monitors/results-api";
+import { statsApi } from "@/features/monitors/stats-api";
 import { SERVER_API_URL } from "@/lib/consts";
 import { authFetch } from "@/lib/api-client";
 import type {
@@ -21,7 +23,7 @@ const normalizeMonitor = (monitor: Monitor): Monitor => {
   return monitor;
 };
 
-export const getAllMonitors = async (): Promise<Monitor[]> => {
+const getAll = async (): Promise<Monitor[]> => {
   const res = await authFetch(`${SERVER_API_URL}/monitors`, {
     method: "GET",
     headers: {
@@ -33,9 +35,7 @@ export const getAllMonitors = async (): Promise<Monitor[]> => {
   return monitors.map(normalizeMonitor);
 };
 
-export const getMonitorBySlug = async (
-  monitorSlug: string,
-): Promise<Monitor> => {
+const getBySlug = async (monitorSlug: string): Promise<Monitor> => {
   const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorSlug}`, {
     method: "GET",
     headers: {
@@ -47,7 +47,7 @@ export const getMonitorBySlug = async (
   return normalizeMonitor(monitor);
 };
 
-export const createMonitor = async (monitorData: MonitorCreatePayload) => {
+const create = async (monitorData: MonitorCreatePayload) => {
   const res = await authFetch(`${SERVER_API_URL}/monitors`, {
     method: "POST",
     headers: {
@@ -59,10 +59,7 @@ export const createMonitor = async (monitorData: MonitorCreatePayload) => {
   return res.json();
 };
 
-export const updateMonitor = async (
-  monitorId: string,
-  monitorData: MonitorUpdatePayload,
-) => {
+const update = async (monitorId: string, monitorData: MonitorUpdatePayload) => {
   const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}`, {
     method: "PATCH",
     headers: {
@@ -74,10 +71,7 @@ export const updateMonitor = async (
   return res.json();
 };
 
-export const updateMonitorState = async (
-  monitorId: string,
-  newState: string,
-) => {
+const updateState = async (monitorId: string, newState: string) => {
   const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}/state`, {
     method: "PATCH",
     headers: {
@@ -89,8 +83,19 @@ export const updateMonitorState = async (
   return res.json();
 };
 
-export const deleteMonitor = async (monitorId: string) => {
+const remove = async (monitorId: string) => {
   await authFetch(`${SERVER_API_URL}/monitors/${monitorId}`, {
     method: "DELETE",
   });
+};
+
+export const MonitorsApi = {
+  getAll,
+  getBySlug,
+  create,
+  update,
+  updateState,
+  remove,
+  results: resultsApi,
+  stats: statsApi,
 };

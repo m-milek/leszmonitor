@@ -1,6 +1,6 @@
+import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { createMonitor } from "@/features/monitors/monitors-api";
 import { QUERY_KEYS } from "@/lib/consts";
 import type { MonitorFormValues } from "@/features/monitors/schema";
 import { MonitorForm } from "@/features/monitors/forms/MonitorForm";
@@ -15,7 +15,7 @@ export function NewMonitorForm({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const createMonitorMutation = useMutation({
-    mutationFn: (monitor: MonitorFormValues) => createMonitor(monitor),
+    mutationFn: (monitor: MonitorFormValues) => MonitorsApi.create(monitor),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
     },

@@ -1,3 +1,4 @@
+import { UsersApi } from "@/features/users/users-api";
 import {
   Sidebar,
   SidebarContent,
@@ -22,7 +23,6 @@ import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/jwt";
 import { AppSidebarFooter } from "@/components/layout/AppSidebarFooter";
-import { getUser } from "@/features/users/users-api";
 import { readToken } from "@/features/auth/lib/token";
 import { AppSidebarHeader } from "@/components/layout/AppSidebarHeader";
 import { SidebarButton } from "@/components/layout/SidebarButton";
@@ -50,7 +50,7 @@ export const AppSidebar = () => {
 
   const { data: userData } = useQuery({
     queryKey: ["user", username],
-    queryFn: () => getUser(username!),
+    queryFn: () => UsersApi.get(username!),
     enabled: !!username,
     staleTime: 5 * 60 * 1000,
   });

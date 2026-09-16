@@ -1,12 +1,9 @@
+import { type RegisterUserPayload } from "@/features/users/users-api";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
-import {
-  getFirstError,
-  isFieldInvalid,
-} from "@/components/form/field-state";
-import { type RegisterUserPayload } from "@/features/users/users-api";
+import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 
 export interface RegisterUserFormProps {
   id?: string;

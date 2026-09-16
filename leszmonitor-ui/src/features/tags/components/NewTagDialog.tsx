@@ -1,3 +1,5 @@
+import { TagsApi } from "@/features/tags/tags-api";
+import { type TagPayload } from "@/features/tags/tags-api";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
@@ -13,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TagForm } from "@/features/tags/forms/TagForm";
-import { createTag, type TagPayload } from "@/features/tags/tags-api";
 import { QUERY_KEYS } from "@/lib/consts";
 
 const FORM_ID = "new-tag-form";
@@ -23,7 +24,7 @@ export function NewTagDialog() {
   const [isOpen, setIsOpen] = useState(false);
 
   const createTagMutation = useMutation({
-    mutationFn: (values: TagPayload) => createTag(values),
+    mutationFn: (values: TagPayload) => TagsApi.create(values),
     onSuccess: (tag) => {
       toast.success(`Tag "${tag.name}" created`);
       setIsOpen(false);

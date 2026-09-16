@@ -1,12 +1,9 @@
+import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1 } from "@/components/common/Typography";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  getMonitorBySlug,
-  updateMonitor,
-} from "@/features/monitors/monitors-api";
 import { MonitorForm } from "@/features/monitors/forms/MonitorForm";
 import {
   mapMonitorToFormValues,
@@ -23,12 +20,12 @@ export function MonitorEditPage({ monitorSlug }: MonitorEditPageProps) {
 
   const { data: monitor } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS, monitorSlug],
-    queryFn: () => getMonitorBySlug(monitorSlug),
+    queryFn: () => MonitorsApi.getBySlug(monitorSlug),
   });
 
   const updateMonitorMutation = useMutation({
     mutationFn: (values: MonitorFormValues) =>
-      updateMonitor(monitor?.id ?? monitorSlug, {
+      MonitorsApi.update(monitor?.id ?? monitorSlug, {
         ...values,
         id: monitor?.id ?? monitorSlug,
       }),

@@ -2,10 +2,7 @@ import { Flex } from "@/components/common/Flex";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
-import {
-  getFirstError,
-  isFieldInvalid,
-} from "@/components/form/field-state";
+import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 import type { TcpProtocol } from "@/features/monitors/types";
 import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
 

@@ -1,3 +1,5 @@
+import { UsersApi } from "@/features/users/users-api";
+import { type RegisterUserPayload } from "@/features/users/users-api";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -11,10 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo";
 import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm";
-import {
-  registerUser,
-  type RegisterUserPayload,
-} from "@/features/users/users-api";
 import { establishSession } from "@/features/auth/lib/session";
 import { useAppStore } from "@/app/store";
 
@@ -26,7 +24,7 @@ export function RegisterPage() {
   const handleSubmit = async (value: RegisterUserPayload) => {
     try {
       console.log("Registering user with values:", value);
-      await registerUser(value);
+      await UsersApi.register(value);
 
       const established = await establishSession(value, {
         setUsername,

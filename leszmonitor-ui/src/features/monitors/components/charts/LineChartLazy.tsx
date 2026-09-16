@@ -1,8 +1,5 @@
 import { lazy, Suspense } from "react";
-import type {
-  LineChart as LineChartImpl,
-  LineChartProps,
-} from "./LineChart";
+import type { LineChart as LineChartImpl, LineChartProps } from "./LineChart";
 
 const LineChartInner = lazy(() =>
   import("./LineChart").then((m) => ({ default: m.LineChart })),

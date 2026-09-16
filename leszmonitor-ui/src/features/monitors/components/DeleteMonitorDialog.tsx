@@ -1,3 +1,4 @@
+import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TrashIcon } from "lucide-react";
@@ -12,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { deleteMonitor } from "@/features/monitors/monitors-api";
 import { QUERY_KEYS } from "@/lib/consts";
 import type { Monitor } from "@/features/monitors/types";
 
@@ -29,7 +29,7 @@ export function DeleteMonitorDialog({
   const [isOpen, setIsOpen] = useState(false);
 
   const deleteMonitorMutation = useMutation({
-    mutationFn: () => deleteMonitor(monitor.id),
+    mutationFn: () => MonitorsApi.remove(monitor.id),
     onSuccess: () => {
       toast.success(`Monitor "${monitor.name}" deleted`);
       setIsOpen(false);

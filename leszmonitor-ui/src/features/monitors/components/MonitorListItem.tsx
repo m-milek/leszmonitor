@@ -1,3 +1,4 @@
+import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import type { Monitor } from "@/features/monitors/types";
 import { TypographyH3 } from "@/components/common/Typography";
@@ -8,7 +9,6 @@ import { LucideEdit, LucideTrash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusDot } from "@/components/common/StatusDot";
 import { QUERY_KEYS } from "@/lib/consts";
-import { getLatestMonitorResultByMonitorId } from "@/features/monitors/results-api";
 import { useQuery } from "@tanstack/react-query";
 import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
 
@@ -25,7 +25,7 @@ export function MonitorListItem({
 }: Readonly<MonitorListItemProps>) {
   const { data: lastResultData } = useQuery({
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id],
-    queryFn: () => getLatestMonitorResultByMonitorId(monitor.id),
+    queryFn: () => MonitorsApi.results.getLatest(monitor.id),
   });
 
   const dotStatus = monitorStatusToStatusDot(lastResultData?.status);

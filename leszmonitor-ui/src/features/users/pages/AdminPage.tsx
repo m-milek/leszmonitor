@@ -1,3 +1,5 @@
+import { UsersApi } from "@/features/users/users-api";
+import { type RegisterUserPayload } from "@/features/users/users-api";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
@@ -17,23 +19,18 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UsersTable } from "@/features/users/components/UsersTable";
 import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm";
-import {
-  getAllUsers,
-  registerUser,
-  type RegisterUserPayload,
-} from "@/features/users/users-api";
 
 export function AdminPage() {
   const queryClient = useQueryClient();
   const { data: users } = useQuery({
     queryKey: ["users"],
-    queryFn: () => getAllUsers(),
+    queryFn: () => UsersApi.getAll(),
   });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const registerMutation = useMutation({
-    mutationFn: (values: RegisterUserPayload) => registerUser(values),
+    mutationFn: (values: RegisterUserPayload) => UsersApi.register(values),
     onSuccess: () => {
       toast.success("User registered successfully");
       setIsDialogOpen(false);

@@ -1,10 +1,7 @@
-import type {
-  LoginPayload,
-  LoginResponse,
-} from "@/features/auth/types";
+import type { LoginPayload, LoginResponse } from "@/features/auth/types";
 import { SERVER_API_URL } from "@/lib/consts";
 
-export const fetchLoginToken = async ({
+const login = async ({
   username,
   password,
 }: LoginPayload): Promise<LoginResponse> => {
@@ -26,4 +23,8 @@ export const fetchLoginToken = async ({
   }
 
   return data;
+};
+
+export const AuthApi = {
+  login,
 };

@@ -1,3 +1,4 @@
+import { MetadataApi } from "@/features/instance/metadata-api";
 import type { User } from "@/features/users/types";
 import { LucideEllipsisVertical, LucideLogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import {
 import { Flex } from "@/components/common/Flex";
 import { Metadata } from "@/components/layout/Metadata";
 import { useQuery } from "@tanstack/react-query";
-import { getMetadata } from "@/features/instance/metadata-api";
 import { clearToken } from "@/features/auth/lib/token";
 
 export interface AppSidebarFooterProps {
@@ -29,7 +29,7 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
   };
 
   const { data: metadata } = useQuery({
-    queryFn: async () => getMetadata(),
+    queryFn: async () => MetadataApi.get(),
     queryKey: ["metadata"],
   });
 
