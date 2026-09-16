@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/m-milek/leszmonitor/constants"
+	"github.com/m-milek/leszmonitor/platform/constants"
 )
 
 func newSPAHandler(staticFiles embed.FS) http.Handler {

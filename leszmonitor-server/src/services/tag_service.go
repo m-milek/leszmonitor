@@ -6,19 +6,21 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/authorization"
-	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
-	"github.com/m-milek/leszmonitor/security"
+	"github.com/m-milek/leszmonitor/platform/apperr"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 type ITagService interface {
-	CreateTag(ctx context.Context, tag models.Tag) (*models.Tag, *ServiceError)
-	GetTagByID(ctx context.Context, id string) (*models.Tag, *ServiceError)
-	GetAllTags(ctx context.Context) ([]models.Tag, *ServiceError)
-	UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag, *ServiceError)
-	DeleteTag(ctx context.Context, id string) *ServiceError
+	CreateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError)
+	GetTagByID(ctx context.Context, id string) (*models.Tag, *apperr.ServiceError)
+	GetAllTags(ctx context.Context) ([]models.Tag, *apperr.ServiceError)
+	UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError)
+	DeleteTag(ctx context.Context, id string) *apperr.ServiceError
 }
 
 // TagService handles tag-related CRUD operations.
@@ -37,14 +39,14 @@ func NewTagService(deps TagServiceDeps) *TagService {
 }
 
 // CreateTag creates a new tag. The ID is always assigned server-side.
-func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameTag, "CreateTag")
+func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "CreateTag")
 	logger.Trace().Interface("tag", tag).Msg("Creating tag")
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
 	newTag := models.Tag{
@@ -57,19 +59,19 @@ func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag
 
 	if err := newTag.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Invalid tag")
-		return nil, NewBadRequestError("invalid tag: %w", err)
+		return nil, apperr.NewBadRequestError("invalid tag: %w", err)
 	}
 
-	tagFromDB, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Tag, *security.AuditLogParams, error) {
+	tagFromDB, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Tag, *audit.AuditLogParams, error) {
 		t, createErr := tx.Tags().InsertTag(ctx, newTag)
 		if createErr != nil {
 			return nil, nil, createErr
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &t.ID,
-			Action:     security.ActionCreateTag,
+			Action:     audit.ActionCreateTag,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Tag with ID %s created", t.ID),
 			After:      t,
@@ -78,7 +80,7 @@ func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag
 	})
 	if txErr != nil {
 		logger.Error().Err(txErr).Msg("Failed to create tag within transaction")
-		return nil, NewInternalError("failed to create tag within transaction: %w", txErr)
+		return nil, apperr.NewInternalError("failed to create tag within transaction: %w", txErr)
 	}
 
 	logger.Debug().Str("id", tagFromDB.ID.String()).Msg("Tag created")
@@ -86,24 +88,24 @@ func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag
 }
 
 // GetTagByID retrieves a single tag by its ID.
-func (s *TagService) GetTagByID(ctx context.Context, id string) (*models.Tag, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameTag, "GetTagByID")
+func (s *TagService) GetTagByID(ctx context.Context, id string) (*models.Tag, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "GetTagByID")
 	logger.Trace().Str("id", id).Msg("Retrieving tag by ID")
 
 	tagUUID, parseErr := uuid.Parse(id)
 	if parseErr != nil {
 		logger.Error().Str("id", id).Msg("Invalid tag ID format")
-		return nil, NewBadRequestError("invalid tag ID format: %w", parseErr)
+		return nil, apperr.NewBadRequestError("invalid tag ID format: %w", parseErr)
 	}
 
 	tag, err := s.db.Tags().GetTagByID(ctx, tagUUID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Tag not found in database")
-			return nil, NewNotFoundError("tag with ID %s not found", id)
+			return nil, apperr.NewNotFoundError("tag with ID %s not found", id)
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve tag from database")
-		return nil, NewInternalError("failed to retrieve tag: %w", err)
+		return nil, apperr.NewInternalError("failed to retrieve tag: %w", err)
 	}
 
 	logger.Debug().Str("id", id).Msg("Tag retrieved successfully")
@@ -111,14 +113,14 @@ func (s *TagService) GetTagByID(ctx context.Context, id string) (*models.Tag, *S
 }
 
 // GetAllTags retrieves every tag in the instance.
-func (s *TagService) GetAllTags(ctx context.Context) ([]models.Tag, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameTag, "GetAllTags")
+func (s *TagService) GetAllTags(ctx context.Context) ([]models.Tag, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "GetAllTags")
 	logger.Trace().Msg("Retrieving all tags")
 
 	allTags, err := s.db.Tags().GetAllTags(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve tags from database")
-		return nil, NewInternalError("failed to retrieve tags: %w", err)
+		return nil, apperr.NewInternalError("failed to retrieve tags: %w", err)
 	}
 
 	logger.Debug().Int("count", len(allTags)).Msg("Tags retrieved successfully")
@@ -126,28 +128,28 @@ func (s *TagService) GetAllTags(ctx context.Context) ([]models.Tag, *ServiceErro
 }
 
 // UpdateTag updates an existing tag.
-func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameTag, "UpdateTag")
+func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "UpdateTag")
 	logger.Trace().Interface("tag", tag).Msg("Updating tag")
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
 	tag.Normalize()
 	if err := tag.Validate(); err != nil {
 		logger.Error().Err(err).Str("id", tag.ID.String()).Msg("Invalid tag")
-		return nil, NewBadRequestError("invalid tag: %w", err)
+		return nil, apperr.NewBadRequestError("invalid tag: %w", err)
 	}
 
-	updatedTag, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Tag, *security.AuditLogParams, error) {
+	updatedTag, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Tag, *audit.AuditLogParams, error) {
 		existingTag, err := tx.Tags().GetTagByID(ctx, tag.ID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
 				logger.Error().Str("id", tag.ID.String()).Msg("Tag not found")
-				return nil, nil, NewNotFoundError("tag with ID %s not found", tag.ID)
+				return nil, nil, apperr.NewNotFoundError("tag with ID %s not found", tag.ID)
 			}
 			logger.Error().Err(err).Str("id", tag.ID.String()).Msg("Failed to retrieve existing tag for update")
 			return nil, nil, fmt.Errorf("failed to retrieve existing tag for update: %w", err)
@@ -159,10 +161,10 @@ func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag
 			return nil, nil, updateErr
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &t.ID,
-			Action:     security.ActionUpdateTag,
+			Action:     audit.ActionUpdateTag,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Tag with ID %s updated", t.ID),
 			Before:     existingTag,
@@ -171,11 +173,11 @@ func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag
 		return t, params, nil
 	})
 	if txErr != nil {
-		if serviceErr, ok2 := errors.AsType[*ServiceError](txErr); ok2 {
+		if serviceErr, ok2 := errors.AsType[*apperr.ServiceError](txErr); ok2 {
 			return nil, serviceErr
 		}
 		logger.Error().Err(txErr).Str("id", tag.ID.String()).Msg("Failed to update tag within transaction")
-		return nil, NewInternalError("failed to update tag within transaction: %w", txErr)
+		return nil, apperr.NewInternalError("failed to update tag within transaction: %w", txErr)
 	}
 
 	logger.Debug().Str("id", updatedTag.ID.String()).Msg("Tag updated")
@@ -183,28 +185,28 @@ func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag
 }
 
 // DeleteTag deletes a tag by its ID.
-func (s *TagService) DeleteTag(ctx context.Context, id string) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameTag, "DeleteTag")
+func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "DeleteTag")
 	logger.Trace().Str("id", id).Msg("Deleting tag")
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return NewUnauthorizedError("user claims not found in context")
+		return apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
 	tagUUID, err := uuid.Parse(id)
 	if err != nil {
 		logger.Error().Str("id", id).Msg("Invalid tag ID format")
-		return NewBadRequestError("invalid tag ID format: %w", err)
+		return apperr.NewBadRequestError("invalid tag ID format: %w", err)
 	}
 
-	txErr := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*security.AuditLogParams, error) {
+	txErr := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*audit.AuditLogParams, error) {
 		tagBeforeDelete, err := tx.Tags().GetTagByID(ctx, tagUUID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
 				logger.Error().Str("id", id).Msg("Tag not found in database")
-				return nil, NewNotFoundError("tag with ID %s not found", id)
+				return nil, apperr.NewNotFoundError("tag with ID %s not found", id)
 			}
 			logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve tag before deletion")
 			return nil, fmt.Errorf("failed to retrieve tag before deletion: %w", err)
@@ -215,10 +217,10 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *ServiceError {
 			return nil, delErr
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &tagUUID,
-			Action:     security.ActionDeleteTag,
+			Action:     audit.ActionDeleteTag,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Tag with ID %s deleted", tagUUID),
 			Before:     tagBeforeDelete,
@@ -226,15 +228,15 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *ServiceError {
 		return params, nil
 	})
 	if txErr != nil {
-		if serviceErr, ok2 := errors.AsType[*ServiceError](txErr); ok2 {
+		if serviceErr, ok2 := errors.AsType[*apperr.ServiceError](txErr); ok2 {
 			return serviceErr
 		}
 		if errors.Is(txErr, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Tag not found or already deleted")
-			return NewNotFoundError("tag not found or already deleted")
+			return apperr.NewNotFoundError("tag not found or already deleted")
 		}
 		logger.Error().Err(txErr).Str("id", id).Msg("Failed to delete tag")
-		return NewInternalError("failed to delete tag: %w", txErr)
+		return apperr.NewInternalError("failed to delete tag: %w", txErr)
 	}
 
 	logger.Debug().Str("id", id).Msg("Tag deleted")

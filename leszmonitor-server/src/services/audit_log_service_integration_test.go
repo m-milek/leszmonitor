@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/security"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,10 +18,10 @@ func TestIntegration_AuditLogService_Record(t *testing.T) {
 		user := "testuser"
 		resourceID := uuid.New()
 
-		entry := security.AuditLogParams{
+		entry := audit.AuditLogParams{
 			Username:   &user,
 			ResourceID: &resourceID,
-			Action:     security.ActionCreateMonitor,
+			Action:     audit.ActionCreateMonitor,
 			IsSuccess:  true,
 			Summary:    "Test log entry",
 		}
@@ -29,12 +29,12 @@ func TestIntegration_AuditLogService_Record(t *testing.T) {
 		err := auditLogService.Record(ctx, entry)
 		require.NoError(t, err)
 
-		filter := security.AuditLogFilter{ResourceID: &resourceID}
+		filter := audit.AuditLogFilter{ResourceID: &resourceID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 		require.Len(t, entries, 1)
 
-		assert.Equal(t, security.ActionCreateMonitor, entries[0].Action)
+		assert.Equal(t, audit.ActionCreateMonitor, entries[0].Action)
 		assert.Equal(t, "Test log entry", entries[0].Summary)
 		assert.Equal(t, "testuser", *entries[0].Username)
 	})
@@ -47,21 +47,21 @@ func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
 		user1 := "user1"
 		resource1 := uuid.New()
 
-		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+		require.NoError(t, auditLogService.Record(ctx, audit.AuditLogParams{
 			Username:   &user1,
 			ResourceID: &resource1,
-			Action:     security.ActionCreateMonitor,
+			Action:     audit.ActionCreateMonitor,
 			IsSuccess:  true,
 			Summary:    "Entry 1",
 		}))
-		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+		require.NoError(t, auditLogService.Record(ctx, audit.AuditLogParams{
 			Username:   &owner.Username,
 			ResourceID: &resource1,
-			Action:     security.ActionUpdateMonitor,
+			Action:     audit.ActionUpdateMonitor,
 			IsSuccess:  false,
 		}))
 
-		filter := security.AuditLogFilter{
+		filter := audit.AuditLogFilter{
 			ResourceID: &resource1,
 		}
 
@@ -77,22 +77,22 @@ func TestIntegration_AuditLogService_GetEntries(t *testing.T) {
 		bob := "bob"
 		resource := uuid.New()
 
-		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+		require.NoError(t, auditLogService.Record(ctx, audit.AuditLogParams{
 			Username:   &alice,
 			ResourceID: &resource,
-			Action:     security.ActionCreateMonitor,
+			Action:     audit.ActionCreateMonitor,
 			IsSuccess:  true,
 		}))
-		require.NoError(t, auditLogService.Record(ctx, security.AuditLogParams{
+		require.NoError(t, auditLogService.Record(ctx, audit.AuditLogParams{
 			Username:   &bob,
 			ResourceID: &resource,
-			Action:     security.ActionCreateMonitor,
+			Action:     audit.ActionCreateMonitor,
 			IsSuccess:  true,
 		}))
 
 		entries, svcErr := auditLogService.GetEntries(
 			ctx,
-			security.AuditLogFilter{Username: &alice},
+			audit.AuditLogFilter{Username: &alice},
 			util.Pagination{Page: 1, PerPage: 10},
 		)
 		require.Nil(t, svcErr)

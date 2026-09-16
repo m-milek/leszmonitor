@@ -3,11 +3,11 @@ package controllers
 import (
 	"net/http"
 
-	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/authorization"
-	"github.com/m-milek/leszmonitor/security"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/httpx"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/m-milek/leszmonitor/services"
-	util2 "github.com/m-milek/leszmonitor/util"
 )
 
 type AuditLogAPIController struct {
@@ -23,28 +23,28 @@ func NewAuditLogAPIController(service services.AuditLogService) AuditLogAPIContr
 func (c *AuditLogAPIController) GetAuditLogByQueryHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	pagination, paginationErr := util2.PaginationFromRequest(r)
+	pagination, paginationErr := util.PaginationFromRequest(r)
 	if paginationErr != nil {
-		util.RespondError(ctx, w, http.StatusBadRequest, paginationErr)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, paginationErr)
 		return
 	}
 
-	filters, filtersErr := security.AuditLogFilterFromRequest(r)
+	filters, filtersErr := audit.AuditLogFilterFromRequest(r)
 	if filtersErr != nil {
-		util.RespondError(ctx, w, http.StatusBadRequest, filtersErr)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, filtersErr)
 		return
 	}
 
-	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
 	results, err := c.service.GetEntries(ctx, *filters, *pagination)
 	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
+		httpx.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(ctx, w, http.StatusOK, results)
+	httpx.RespondJSON(ctx, w, http.StatusOK, results)
 }

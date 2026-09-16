@@ -4,7 +4,7 @@ package monitors
 // import (
 //	"github.com/google/uuid"
 //	shared "github.com/m-milek/leszmonitor/models/consts"
-//	"github.com/m-milek/leszmonitor/util"
+//	"github.com/m-milek/leszmonitor/platform/util"
 //)
 //
 //// TestMonitor provides a simple way to create monitors for testing

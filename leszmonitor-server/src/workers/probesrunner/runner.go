@@ -5,10 +5,9 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/events"
-	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/models/shared"
+	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )
 
@@ -142,7 +141,7 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 		}
 	}
 
-	events.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
+	monitors.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
 		Result:  result,
 		Monitor: r.monitor,
 	})

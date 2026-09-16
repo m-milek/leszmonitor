@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	util "github.com/m-milek/leszmonitor/api/api_util"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
 type healthCheckResponse struct {
@@ -19,5 +19,5 @@ func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp: time.Now(),
 	}
 
-	util.RespondJSON(ctx, w, http.StatusOK, response)
+	httpx.RespondJSON(ctx, w, http.StatusOK, response)
 }

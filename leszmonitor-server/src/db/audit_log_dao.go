@@ -7,18 +7,18 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/security"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type IAuditLogDAO interface {
-	InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error)
+	InsertAuditLogEntry(ctx context.Context, entry audit.AuditLogEntry) (any, error)
 	GetAuditLogEntries(
 		ctx context.Context,
-		filter security.AuditLogFilter,
+		filter audit.AuditLogFilter,
 		pagination util.Pagination,
-	) ([]security.AuditLogEntry, error)
-	Record(ctx context.Context, params security.AuditLogParams) error
+	) ([]audit.AuditLogEntry, error)
+	Record(ctx context.Context, params audit.AuditLogParams) error
 }
 
 type auditLogDAO struct {
@@ -31,7 +31,7 @@ func newAuditLogDAO(base baseDAO) IAuditLogDAO {
 	}
 }
 
-func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
+func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry audit.AuditLogEntry) (any, error) {
 	return dbWrap(ctx, "InsertAuditLogEntry", func() (any, error) {
 		_, err := a.pool.ExecContext(
 			ctx,
@@ -55,8 +55,8 @@ func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry security.Aud
 	})
 }
 
-func (a auditLogDAO) Record(ctx context.Context, params security.AuditLogParams) error {
-	entry, err := security.NewAuditLogEntry(ctx, params)
+func (a auditLogDAO) Record(ctx context.Context, params audit.AuditLogParams) error {
+	entry, err := audit.NewAuditLogEntry(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -66,12 +66,12 @@ func (a auditLogDAO) Record(ctx context.Context, params security.AuditLogParams)
 
 func (a auditLogDAO) GetAuditLogEntries(
 	ctx context.Context,
-	filter security.AuditLogFilter,
+	filter audit.AuditLogFilter,
 	pagination util.Pagination,
-) ([]security.AuditLogEntry, error) {
-	return dbWrap(ctx, "GetAuditLogEntries", func() ([]security.AuditLogEntry, error) {
+) ([]audit.AuditLogEntry, error) {
+	return dbWrap(ctx, "GetAuditLogEntries", func() ([]audit.AuditLogEntry, error) {
 		var (
-			entries    []security.AuditLogEntry
+			entries    []audit.AuditLogEntry
 			conditions []string
 			args       []any
 		)
@@ -117,7 +117,7 @@ func (a auditLogDAO) GetAuditLogEntries(
 			return nil, err
 		}
 		if entries == nil {
-			entries = []security.AuditLogEntry{}
+			entries = []audit.AuditLogEntry{}
 		}
 		return entries, nil
 	})

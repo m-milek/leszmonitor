@@ -6,28 +6,29 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/authorization"
-	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/models/monitors"
-	"github.com/m-milek/leszmonitor/security"
+	"github.com/m-milek/leszmonitor/platform/apperr"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 type IMonitorService interface {
 	CreateMonitor(
 		ctx context.Context,
 		monitor monitors.Monitor,
-	) (*MonitorCreateResponse, *ServiceError)
-	DeleteMonitor(ctx context.Context, id string) *ServiceError
-	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *ServiceError)
-	GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError)
-	UpdateMonitor(ctx context.Context, monitor monitors.Monitor) *ServiceError
+	) (*MonitorCreateResponse, *apperr.ServiceError)
+	DeleteMonitor(ctx context.Context, id string) *apperr.ServiceError
+	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *apperr.ServiceError)
+	GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *apperr.ServiceError)
+	UpdateMonitor(ctx context.Context, monitor monitors.Monitor) *apperr.ServiceError
 	UpdateMonitorStateByID(
 		ctx context.Context,
 		monitorID uuid.UUID,
 		state monitors.MonitorRunState,
-	) *ServiceError
+	) *apperr.ServiceError
 }
 
 // MonitorService handles monitor-related CRUD operations.
@@ -53,41 +54,41 @@ type MonitorCreateResponse struct {
 func (s *MonitorService) CreateMonitor(
 	ctx context.Context,
 	monitor monitors.Monitor,
-) (*MonitorCreateResponse, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "CreateMonitor")
+) (*MonitorCreateResponse, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "CreateMonitor")
 	logger.Trace().
 		Interface("monitor", monitor).
 		Msg("Creating monitor")
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
 	owner, err := s.db.Users().GetUserByUsername(ctx, userClaims.Username)
 	if err != nil {
 		logger.Error().Err(err).Str("username", userClaims.Username).Msg("Failed to find creating user")
-		return nil, NewInternalError("failed to find creating user: %w", err)
+		return nil, apperr.NewInternalError("failed to find creating user: %w", err)
 	}
 
 	initializedMonitor := monitors.InitializeFromPayload(monitor, owner.ID)
 
 	if err := initializedMonitor.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Invalid monitor configuration")
-		return nil, NewBadRequestError("invalid monitor configuration: %w", err)
+		return nil, apperr.NewBadRequestError("invalid monitor configuration: %w", err)
 	}
 
-	monitorFromDB, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*monitors.Monitor, *security.AuditLogParams, error) {
+	monitorFromDB, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*monitors.Monitor, *audit.AuditLogParams, error) {
 		m, createErr := tx.Monitors().InsertMonitor(ctx, *initializedMonitor)
 		if createErr != nil {
 			return nil, nil, createErr
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &m.ID,
-			Action:     security.ActionCreateMonitor,
+			Action:     audit.ActionCreateMonitor,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Monitor with ID %s created", m.ID),
 			After:      m,
@@ -96,10 +97,10 @@ func (s *MonitorService) CreateMonitor(
 	})
 	if txErr != nil {
 		logger.Error().Err(txErr).Msg("Failed to create monitor within transaction")
-		return nil, NewInternalError("failed to create monitor within transaction: %w", txErr)
+		return nil, apperr.NewInternalError("failed to create monitor within transaction: %w", txErr)
 	}
 
-	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		ID:      monitorFromDB.ID,
 		Status:  monitors.Created,
 		Monitor: monitorFromDB,
@@ -110,33 +111,33 @@ func (s *MonitorService) CreateMonitor(
 }
 
 // DeleteMonitor deletes a monitor by its slug.
-func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "DeleteMonitor")
+func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "DeleteMonitor")
 	logger.Trace().Str("id", id).Msg("Deleting monitor")
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return NewUnauthorizedError("user claims not found in context")
+		return apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
 	monitorUUID, err := uuid.Parse(id)
 	if err != nil {
 		logger.Error().Str("id", id).Msg("Invalid monitor ID format")
-		return NewBadRequestError("invalid monitor ID format: %w", err)
+		return apperr.NewBadRequestError("invalid monitor ID format: %w", err)
 	}
 
 	monitorBeforeDelete, err := s.db.Monitors().GetMonitorByID(ctx, monitorUUID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Monitor not found in database")
-			return NewNotFoundError("monitor with ID %s not found", id)
+			return apperr.NewNotFoundError("monitor with ID %s not found", id)
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor before deletion")
-		return NewInternalError("failed to retrieve monitor before deletion: %w", err)
+		return apperr.NewInternalError("failed to retrieve monitor before deletion: %w", err)
 	}
 
-	deletedID, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*uuid.UUID, *security.AuditLogParams, error) {
+	deletedID, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*uuid.UUID, *audit.AuditLogParams, error) {
 		delID, err := tx.Monitors().DeleteMonitorByID(ctx, monitorUUID)
 		if err != nil {
 			return nil, nil, err
@@ -145,10 +146,10 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *ServiceE
 			return nil, nil, db.ErrNotFound
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &monitorUUID,
-			Action:     security.ActionDeleteMonitor,
+			Action:     audit.ActionDeleteMonitor,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Monitor with ID %s deleted", monitorUUID.String()),
 			Before:     monitorBeforeDelete,
@@ -159,13 +160,13 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *ServiceE
 	if txErr != nil {
 		if errors.Is(txErr, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Monitor not found or already deleted")
-			return NewNotFoundError("monitor not found or already deleted")
+			return apperr.NewNotFoundError("monitor not found or already deleted")
 		}
 		logger.Error().Err(txErr).Str("id", id).Msg("Failed to delete monitor")
-		return NewInternalError("failed to delete monitor: %w", txErr)
+		return apperr.NewInternalError("failed to delete monitor: %w", txErr)
 	}
 
-	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		ID:      *deletedID,
 		Status:  monitors.Deleted,
 		Monitor: nil,
@@ -176,14 +177,14 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *ServiceE
 }
 
 // GetAllMonitors retrieves every monitor in the instance.
-func (s *MonitorService) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetAllMonitors")
+func (s *MonitorService) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetAllMonitors")
 	logger.Trace().Msg("Retrieving all monitors")
 
 	allMonitors, err := s.db.Monitors().GetAllMonitors(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
-		return nil, NewInternalError("failed to retrieve monitors: %w", err)
+		return nil, apperr.NewInternalError("failed to retrieve monitors: %w", err)
 	}
 
 	logger.Debug().Int("count", len(allMonitors)).Msg("Monitors retrieved successfully")
@@ -192,8 +193,8 @@ func (s *MonitorService) GetAllMonitors(ctx context.Context) ([]monitors.Monitor
 
 // GetMonitorByID retrieves a specific monitor either by its UUID or, if id does not parse as a
 // UUID, by its slug.
-func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorByID")
+func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monitors.Monitor, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "GetMonitorByID")
 	logger.Trace().Str("id", id).Msg("Retrieving monitor by ID or slug")
 
 	var (
@@ -210,10 +211,10 @@ func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monito
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Monitor not found in database")
-			return nil, NewNotFoundError("monitor with id %s not found", id)
+			return nil, apperr.NewNotFoundError("monitor with id %s not found", id)
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor from database")
-		return nil, NewInternalError("failed to retrieve monitor: %w", err)
+		return nil, apperr.NewInternalError("failed to retrieve monitor: %w", err)
 	}
 
 	logger.Debug().Str("id", id).Interface("monitor", monitor).Msg("Monitor retrieved successfully")
@@ -221,22 +222,22 @@ func (s *MonitorService) GetMonitorByID(ctx context.Context, id string) (*monito
 }
 
 // UpdateMonitor updates an existing monitor's configuration.
-func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Monitor) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "UpdateMonitor")
+func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Monitor) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "UpdateMonitor")
 	logger.Trace().Interface("monitor", monitor).Msg("Updating monitor")
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return NewUnauthorizedError("user claims not found in context")
+		return apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
-	txErr := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*security.AuditLogParams, error) {
+	txErr := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*audit.AuditLogParams, error) {
 		existingMonitor, err := tx.Monitors().GetMonitorByID(ctx, monitor.ID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
 				logger.Error().Str("id", monitor.ID.String()).Msg("Monitor not found")
-				return nil, NewNotFoundError("monitor with ID %s not found", monitor.ID)
+				return nil, apperr.NewNotFoundError("monitor with ID %s not found", monitor.ID)
 			}
 			logger.Error().Err(err).Str("id", monitor.ID.String()).Msg("Failed to retrieve existing monitor for update")
 			return nil, fmt.Errorf("failed to retrieve existing monitor for update: %w", err)
@@ -251,7 +252,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 				Str("id", monitor.ID.String()).
 				Interface("monitor", monitor).
 				Msg("Invalid monitor configuration")
-			return nil, NewBadRequestError("invalid monitor configuration: %w", err)
+			return nil, apperr.NewBadRequestError("invalid monitor configuration: %w", err)
 		}
 
 		_, err = tx.Monitors().UpdateMonitor(ctx, monitor)
@@ -260,10 +261,10 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 			return nil, fmt.Errorf("failed to update monitor in database: %w", err)
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &monitor.ID,
-			Action:     security.ActionUpdateMonitor,
+			Action:     audit.ActionUpdateMonitor,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Monitor with ID %s updated", monitor.ID),
 			Before:     existingMonitor,
@@ -273,14 +274,14 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor monitors.Mon
 		return params, nil
 	})
 	if txErr != nil {
-		if serviceErr, ok2 := errors.AsType[*ServiceError](txErr); ok2 {
+		if serviceErr, ok2 := errors.AsType[*apperr.ServiceError](txErr); ok2 {
 			return serviceErr
 		}
 		logger.Error().Err(txErr).Str("id", monitor.ID.String()).Msg("Failed to update monitor within transaction")
-		return NewInternalError("failed to update monitor within transaction: %w", txErr)
+		return apperr.NewInternalError("failed to update monitor within transaction: %w", txErr)
 	}
 
-	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		ID:      monitor.ID,
 		Status:  monitors.Edited,
 		Monitor: nil,
@@ -294,30 +295,30 @@ func (s *MonitorService) UpdateMonitorStateByID(
 	ctx context.Context,
 	monitorID uuid.UUID,
 	state monitors.MonitorRunState,
-) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "UpdateMonitorStateByID")
+) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "UpdateMonitorStateByID")
 	logger.Trace().Str("id", monitorID.String()).Str("newState", string(state)).Msg("Updating monitor state by ID")
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return NewUnauthorizedError("user claims not found in context")
+		return apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
 	if !monitors.IsValidMonitorState(string(state)) {
 		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Invalid monitor state provided")
-		return NewBadRequestError("invalid monitor state: %s", state)
+		return apperr.NewBadRequestError("invalid monitor state: %s", state)
 	}
 
-	txErr := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*security.AuditLogParams, error) {
+	txErr := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*audit.AuditLogParams, error) {
 		monitor, err := tx.Monitors().GetMonitorByID(ctx, monitorID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
 				logger.Error().Str("id", monitorID.String()).Msg("Monitor not found for state update")
-				return nil, NewNotFoundError("monitor with ID %s not found", monitorID.String())
+				return nil, apperr.NewNotFoundError("monitor with ID %s not found", monitorID.String())
 			}
 			logger.Error().Err(err).Str("id", monitorID.String()).Msg("Failed to retrieve monitor for state update")
-			return nil, NewInternalError("failed to retrieve monitor for state update: %w", err)
+			return nil, apperr.NewInternalError("failed to retrieve monitor for state update: %w", err)
 		}
 
 		if monitor.RunState == state {
@@ -338,13 +339,13 @@ func (s *MonitorService) UpdateMonitorStateByID(
 				Str("id", monitorID.String()).
 				Str("newState", string(state)).
 				Msg("Failed to update monitor state in database")
-			return nil, NewInternalError("failed to update monitor state in database: %w", updateErr)
+			return nil, apperr.NewInternalError("failed to update monitor state in database: %w", updateErr)
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &monitor.ID,
-			Action:     security.ActionUpdateMonitor,
+			Action:     audit.ActionUpdateMonitor,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Monitor with ID %s state updated to %s", monitor.ID, state),
 			Before:     oldMonitor,
@@ -354,13 +355,13 @@ func (s *MonitorService) UpdateMonitorStateByID(
 		return params, nil
 	})
 	if txErr != nil {
-		if serviceErr, ok2 := errors.AsType[*ServiceError](txErr); ok2 {
+		if serviceErr, ok2 := errors.AsType[*apperr.ServiceError](txErr); ok2 {
 			return serviceErr
 		}
-		return NewInternalError("failed to update monitor state: %w", txErr)
+		return apperr.NewInternalError("failed to update monitor state: %w", txErr)
 	}
 
-	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		ID:     monitorID,
 		Status: monitors.Edited,
 	})

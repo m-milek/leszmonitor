@@ -11,7 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type IMonitorResultDAO interface {

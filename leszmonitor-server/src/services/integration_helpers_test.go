@@ -6,12 +6,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/api/authorization"
-	"github.com/m-milek/leszmonitor/auth"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,7 +56,7 @@ func setupIntegrationTest(t *testing.T) (context.Context, *UserService, *models.
 	require.Nil(t, svcErr)
 	require.NotNil(t, user)
 
-	ctx = authorization.SetUserInContext(ctx, &auth.UserClaims{
+	ctx = auth.SetUserInContext(ctx, &auth.UserClaims{
 		Username: user.Username,
 	})
 

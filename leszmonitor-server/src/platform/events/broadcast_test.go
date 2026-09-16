@@ -12,7 +12,7 @@ func TestNewBroadcaster(t *testing.T) {
 	t.Parallel()
 	t.Run("Creates New Broadcaster", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 		assert.NotNil(t, broadcaster)
 		assert.NotNil(t, broadcaster.subscribers)
 		assert.Empty(t, broadcaster.subscribers)
@@ -20,9 +20,9 @@ func TestNewBroadcaster(t *testing.T) {
 
 	t.Run("Creates Broadcaster with Different Types", func(t *testing.T) {
 		t.Parallel()
-		stringBroadcaster := newEventBus[string]("test")
-		intBroadcaster := newEventBus[int]("test")
-		structBroadcaster := newEventBus[struct{ Value int }]("test")
+		stringBroadcaster := NewEventBus[string]("test")
+		intBroadcaster := NewEventBus[int]("test")
+		structBroadcaster := NewEventBus[struct{ Value int }]("test")
 
 		assert.NotNil(t, stringBroadcaster)
 		assert.NotNil(t, intBroadcaster)
@@ -34,7 +34,7 @@ func TestBroadcaster_Subscribe(t *testing.T) {
 	t.Parallel()
 	t.Run("Single Subscription", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 
 		ch := broadcaster.Subscribe()
 		assert.NotNil(t, ch)
@@ -51,7 +51,7 @@ func TestBroadcaster_Subscribe(t *testing.T) {
 
 	t.Run("Multiple Subscriptions", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[int]("test")
+		broadcaster := NewEventBus[int]("test")
 
 		ch1 := broadcaster.Subscribe()
 		ch2 := broadcaster.Subscribe()
@@ -70,7 +70,7 @@ func TestBroadcaster_Subscribe(t *testing.T) {
 
 	t.Run("Concurrent Subscriptions", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 		numSubscribers := 10
 		var wg sync.WaitGroup
 		channels := make([]<-chan string, numSubscribers)
@@ -100,7 +100,7 @@ func TestBroadcaster_Unsubscribe(t *testing.T) {
 	t.Parallel()
 	t.Run("Unsubscribe Existing Channel", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 
 		ch1 := broadcaster.Subscribe()
 		ch2 := broadcaster.Subscribe()
@@ -123,7 +123,7 @@ func TestBroadcaster_Unsubscribe(t *testing.T) {
 
 	t.Run("Unsubscribe Non-Existing Channel", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 
 		ch1 := broadcaster.Subscribe()
 		ch2 := make(chan string) // Not subscribed to broadcaster
@@ -136,7 +136,7 @@ func TestBroadcaster_Unsubscribe(t *testing.T) {
 
 	t.Run("Unsubscribe All Channels", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[int]("test")
+		broadcaster := NewEventBus[int]("test")
 
 		ch1 := broadcaster.Subscribe()
 		ch2 := broadcaster.Subscribe()
@@ -155,7 +155,7 @@ func TestBroadcaster_Unsubscribe(t *testing.T) {
 
 	t.Run("Concurrent Unsubscribe", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 		numSubscribers := 10
 		channels := make([]<-chan string, numSubscribers)
 
@@ -184,7 +184,7 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 	t.Parallel()
 	t.Run("Broadcast to Single Subscriber", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 		ch := broadcaster.Subscribe()
 
 		message := "test message"
@@ -200,7 +200,7 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 
 	t.Run("Broadcast to Multiple Subscribers", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[int]("test")
+		broadcaster := NewEventBus[int]("test")
 		numSubscribers := 5
 		channels := make([]<-chan int, numSubscribers)
 
@@ -223,7 +223,7 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 
 	t.Run("Broadcast to No Subscribers", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 
 		// Should not panic
 		broadcaster.Broadcast("test message")
@@ -232,7 +232,7 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 
 	t.Run("Broadcast Multiple Messages", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 		ch := broadcaster.Subscribe()
 
 		messages := []string{"msg1", "msg2", "msg3"}
@@ -253,7 +253,7 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 
 	t.Run("Broadcast with Full Channel Buffer", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[int]("test")
+		broadcaster := NewEventBus[int]("test")
 		ch := broadcaster.Subscribe()
 
 		// Fill the channel buffer (100 messages)
@@ -291,7 +291,7 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 
 	t.Run("Concurrent Broadcast", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[int]("test")
+		broadcaster := NewEventBus[int]("test")
 		ch := broadcaster.Subscribe()
 
 		numMessages := 10
@@ -326,7 +326,7 @@ func TestBroadcaster_Integration(t *testing.T) {
 	t.Parallel()
 	t.Run("Subscribe, Broadcast, Unsubscribe Flow", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 
 		// Subscribe multiple channels
 		ch1 := broadcaster.Subscribe()
@@ -384,7 +384,7 @@ func TestBroadcaster_Integration(t *testing.T) {
 			Data    []byte
 		}
 
-		broadcaster := newEventBus[Message]("test")
+		broadcaster := NewEventBus[Message]("test")
 		ch := broadcaster.Subscribe()
 
 		message := Message{
@@ -407,7 +407,7 @@ func TestBroadcaster_Integration(t *testing.T) {
 }
 
 // Helper function to setup a test eventBus with subscribers.
-func setupBroadcasterWithSubscribers[T any](broadcaster *eventBus[T], count int) []<-chan T {
+func setupBroadcasterWithSubscribers[T any](broadcaster *EventBus[T], count int) []<-chan T {
 	channels := make([]<-chan T, count)
 	for i := range count {
 		channels[i] = broadcaster.Subscribe()
@@ -419,7 +419,7 @@ func TestBroadcaster_EdgeCases(t *testing.T) {
 	t.Parallel()
 	t.Run("Unsubscribe Same Channel Twice", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 		ch := broadcaster.Subscribe()
 
 		broadcaster.Unsubscribe(ch)
@@ -432,7 +432,7 @@ func TestBroadcaster_EdgeCases(t *testing.T) {
 
 	t.Run("Broadcast After Unsubscribe", func(t *testing.T) {
 		t.Parallel()
-		broadcaster := newEventBus[string]("test")
+		broadcaster := NewEventBus[string]("test")
 		ch := broadcaster.Subscribe()
 
 		broadcaster.Unsubscribe(ch)

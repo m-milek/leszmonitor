@@ -11,9 +11,9 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/auth"
-	common "github.com/m-milek/leszmonitor/events"
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 type wsAuthMessage struct {
@@ -116,8 +116,8 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 	conn.SetReadDeadline(time.Time{})
 	conn.SetWriteDeadline(time.Time{})
 
-	monitorRunChannel := common.MonitorRunChannel.Subscribe()
-	defer common.MonitorRunChannel.Unsubscribe(monitorRunChannel)
+	monitorRunChannel := monitors.MonitorRunChannel.Subscribe()
+	defer monitors.MonitorRunChannel.Unsubscribe(monitorRunChannel)
 
 	var writeMu sync.Mutex
 

@@ -8,8 +8,8 @@ import (
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitors"
-	"github.com/m-milek/leszmonitor/security"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -67,13 +67,13 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		assert.Equal(t, "ping-api", monitorFromDB.Slug)
 
 		// Verify audit log was created
-		filter := security.AuditLogFilter{ResourceID: &monitorFromDB.ID}
+		filter := audit.AuditLogFilter{ResourceID: &monitorFromDB.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
 		for _, entry := range entries {
-			if entry.Action == security.ActionCreateMonitor {
+			if entry.Action == audit.ActionCreateMonitor {
 				found = true
 				assert.Equal(t, owner.Username, *entry.Username)
 				assert.Equal(t, monitorFromDB.ID.String(), entry.ResourceID.String())
@@ -116,13 +116,13 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, getErr.Code)
 
 		// Verify audit log was created
-		filter := security.AuditLogFilter{ResourceID: &monitor.ID}
+		filter := audit.AuditLogFilter{ResourceID: &monitor.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
 		for _, entry := range entries {
-			if entry.Action == security.ActionDeleteMonitor {
+			if entry.Action == audit.ActionDeleteMonitor {
 				found = true
 				assert.Equal(t, owner.Username, *entry.Username)
 				assert.Equal(t, monitor.ID.String(), entry.ResourceID.String())
@@ -205,13 +205,13 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		assert.Equal(t, 120, updatedMonitor.Interval)
 
 		// Verify audit log
-		filter := security.AuditLogFilter{ResourceID: &monitor.ID}
+		filter := audit.AuditLogFilter{ResourceID: &monitor.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
 		for _, entry := range entries {
-			if entry.Action == security.ActionUpdateMonitor {
+			if entry.Action == audit.ActionUpdateMonitor {
 				found = true
 				assert.Equal(t, owner.Username, *entry.Username)
 				assert.Equal(t, monitor.ID.String(), entry.ResourceID.String())

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/logdyhq/logdy-core/logdy"
-	appconfig "github.com/m-milek/leszmonitor/appconfig"
+	appconfig "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )

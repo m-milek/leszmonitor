@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/authorization"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/services"
 )
 
@@ -30,53 +30,53 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	monitor, err := decodeMonitorPayload(r)
 	if err != nil {
-		util.RespondError(ctx, w, http.StatusBadRequest, err)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, err)
 		return
 	}
 
 	if monitor.ProbeConfig == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "probeConfig is required")
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "probeConfig is required")
 		return
 	}
 
 	_, err = monitors.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
 	if err != nil {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
 		return
 	}
-	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
 	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, monitor)
 	if serviceErr != nil {
-		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
+		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
 	}
 
-	util.RespondJSON(ctx, w, http.StatusCreated, monitorCreateResponse)
+	httpx.RespondJSON(ctx, w, http.StatusCreated, monitorCreateResponse)
 }
 
 func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
 		return
 	}
 
-	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 	err := c.service.DeleteMonitor(ctx, monitorID)
 	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
+		httpx.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondMessage(ctx, w, http.StatusOK, "Monitor deleted successfully")
+	httpx.RespondMessage(ctx, w, http.StatusOK, "Monitor deleted successfully")
 }
 
 func (c *MonitorAPIController) GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,28 +84,28 @@ func (c *MonitorAPIController) GetAllMonitorsHandler(w http.ResponseWriter, r *h
 
 	allMonitors, err := c.service.GetAllMonitors(ctx)
 	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
+		httpx.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(ctx, w, http.StatusOK, allMonitors)
+	httpx.RespondJSON(ctx, w, http.StatusOK, allMonitors)
 }
 
 func (c *MonitorAPIController) GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
 		return
 	}
 
 	monitor, err := c.service.GetMonitorByID(ctx, monitorID)
 	if err != nil {
-		util.RespondError(ctx, w, err.Code, err.Err)
+		httpx.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	util.RespondJSON(ctx, w, http.StatusOK, monitor)
+	httpx.RespondJSON(ctx, w, http.StatusOK, monitor)
 }
 
 // UpdateMonitorHandler handles the update of an existing monitor.
@@ -114,39 +114,39 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
 		return
 	}
 
 	monitor, err := decodeMonitorPayload(r)
 	if err != nil {
-		util.RespondError(ctx, w, http.StatusBadRequest, err)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, err)
 		return
 	}
 
 	if monitor.ProbeConfig == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "probeConfig is required")
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "probeConfig is required")
 		return
 	}
 
 	_, err = monitors.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
 	if err != nil {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
 	}
 
-	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
 	serviceErr := c.service.UpdateMonitor(ctx, monitor)
 	if serviceErr != nil {
-		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
+		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
 	}
 
-	util.RespondMessage(ctx, w, http.StatusOK, "monitor updated successfully")
+	httpx.RespondMessage(ctx, w, http.StatusOK, "monitor updated successfully")
 }
 
 // decodeMonitorPayload decodes the request body into monitors.Monitor, and probeConfig separately as string.
@@ -187,28 +187,28 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
 		return
 	}
 
 	monitorUUID, err := uuid.Parse(monitorID)
 	if err != nil {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
 		return
 	}
 
 	payload := UpdateMonitorStatePayload{}
-	ok := util.DecodeJSONOrRespond(ctx, w, r, &payload)
+	ok := httpx.DecodeJSONOrRespond(ctx, w, r, &payload)
 	if !ok {
 		return
 	}
 
 	if payload.NewState == "" {
-		util.RespondMessage(ctx, w, http.StatusBadRequest, "newState is required")
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "newState is required")
 		return
 	}
 
-	_, ok = authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok = auth.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
@@ -219,9 +219,9 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 		monitors.MonitorRunState(payload.NewState),
 	)
 	if serviceErr != nil {
-		util.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
+		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
 	}
 
-	util.RespondMessage(ctx, w, http.StatusOK, "Monitor state updated successfully")
+	httpx.RespondMessage(ctx, w, http.StatusOK, "Monitor state updated successfully")
 }

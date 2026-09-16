@@ -7,26 +7,27 @@ import (
 	"os"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/api/authorization"
-	config "github.com/m-milek/leszmonitor/appconfig"
-	"github.com/m-milek/leszmonitor/auth"
-	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
-	"github.com/m-milek/leszmonitor/security"
+	"github.com/m-milek/leszmonitor/platform/apperr"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/log"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type IUserService interface {
-	GetAllUsers(ctx context.Context) ([]models.User, *ServiceError)
-	GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError)
-	RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError
-	Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError)
-	SetUserRole(ctx context.Context, username string, payload SetUserRolePayload) (*models.User, *ServiceError)
+	GetAllUsers(ctx context.Context) ([]models.User, *apperr.ServiceError)
+	GetUserByUsername(ctx context.Context, username string) (*models.User, *apperr.ServiceError)
+	RegisterUser(ctx context.Context, payload *UserRegisterPayload) *apperr.ServiceError
+	Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *apperr.ServiceError)
+	SetUserRole(ctx context.Context, username string, payload SetUserRolePayload) (*models.User, *apperr.ServiceError)
 }
 
 type SetUserRolePayload struct {
-	Role models.Role `json:"role"`
+	Role auth.Role `json:"role"`
 }
 
 type UserServiceDeps struct {
@@ -62,14 +63,14 @@ type LoginResponse struct {
 }
 
 // GetAllUsers retrieves all users from the database.
-func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "GetAllUsers")
+func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
 	users, err := s.db.Users().GetAllUsers(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error retrieving users")
-		return nil, NewInternalError("error retrieving users: %w", err)
+		return nil, apperr.NewInternalError("error retrieving users: %w", err)
 	}
 
 	logger.Debug().Int("count", len(users)).Msg("Successfully retrieved all users")
@@ -77,23 +78,23 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *ServiceE
 }
 
 // GetUserByUsername retrieves a user by their username.
-func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
+func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*models.User, *apperr.ServiceError) {
 	return s.internalGetUserByUsername(ctx, username)
 }
 
 // internalGetUserByUsername retrieves a user by their username without authorization checks.
-func (s *UserService) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "internalGetUserByUsername")
+func (s *UserService) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "internalGetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("username", username).Msg("User not found")
-			return nil, NewNotFoundError("user %s not found", username)
+			return nil, apperr.NewNotFoundError("user %s not found", username)
 		}
 		logger.Error().Err(err).Str("username", username).Msg("Error retrieving user")
-		return nil, NewInternalError("error retrieving user %s: %w", username, err)
+		return nil, apperr.NewInternalError("error retrieving user %s: %w", username, err)
 	}
 
 	logger.Debug().Str("username", username).Msg("Successfully retrieved user")
@@ -105,19 +106,19 @@ func (s *UserService) SetUserRole(
 	ctx context.Context,
 	username string,
 	payload SetUserRolePayload,
-) (*models.User, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "SetUserRole")
+) (*models.User, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "SetUserRole")
 	logger.Trace().Str("username", username).Str("role", string(payload.Role)).Msg("Setting user role")
 
 	if err := payload.Role.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Invalid role")
-		return nil, NewBadRequestError("invalid role: %w", err)
+		return nil, apperr.NewBadRequestError("invalid role: %w", err)
 	}
 
-	userClaims, ok := authorization.GetUserClaimsFromContext(ctx)
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
 	existingUser, getErr := s.internalGetUserByUsername(ctx, username)
@@ -130,16 +131,16 @@ func (s *UserService) SetUserRole(
 		return existingUser, nil
 	}
 
-	updatedUser, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *security.AuditLogParams, error) {
+	updatedUser, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *audit.AuditLogParams, error) {
 		u, err := tx.Users().UpdateUserRole(ctx, existingUser.ID, payload.Role)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &u.ID,
-			Action:     security.ActionUpdateUser,
+			Action:     audit.ActionUpdateUser,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("User %s role changed from %s to %s", username, existingUser.Role, payload.Role),
 			Before:     existingUser,
@@ -149,10 +150,10 @@ func (s *UserService) SetUserRole(
 	})
 	if txErr != nil {
 		if errors.Is(txErr, db.ErrNotFound) {
-			return nil, NewNotFoundError("user %s not found", username)
+			return nil, apperr.NewNotFoundError("user %s not found", username)
 		}
 		logger.Error().Err(txErr).Str("username", username).Msg("Failed to update user role")
-		return nil, NewInternalError("failed to update user role: %w", txErr)
+		return nil, apperr.NewInternalError("failed to update user role: %w", txErr)
 	}
 
 	logger.Debug().Str("username", username).Str("role", string(payload.Role)).Msg("User role updated successfully")
@@ -160,32 +161,32 @@ func (s *UserService) SetUserRole(
 }
 
 // RegisterUser registers a new user with the provided payload.
-func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "RegisterUser")
+func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPayload) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "RegisterUser")
 	logger.Trace().Str("username", payload.Username).Msg("Registering new user")
 
 	hashedPassword, err := hashPassword(payload.Password)
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Failed to hash password")
-		return NewInternalError("failed to hash password: %w", err)
+		return apperr.NewInternalError("failed to hash password: %w", err)
 	}
 
 	userModel, err := models.NewUser(payload.Username, hashedPassword)
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
-		return NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
+		return apperr.NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
 	}
 
-	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *security.AuditLogParams, error) {
+	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *audit.AuditLogParams, error) {
 		u, err := tx.Users().InsertUser(ctx, userModel)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &payload.Username,
 			ResourceID: &u.ID,
-			Action:     security.ActionCreateUser,
+			Action:     audit.ActionCreateUser,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("User %s registered", u.Username),
 			After:      u,
@@ -195,10 +196,10 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 	})
 	if txErr != nil {
 		if errors.Is(txErr, db.ErrAlreadyExists) {
-			return NewUnauthorizedError("failed to register user")
+			return apperr.NewUnauthorizedError("failed to register user")
 		}
 		logger.Error().Err(txErr).Str("username", payload.Username).Msg("Failed to create user in database")
-		return NewInternalError("failed to register user %s: %w", payload.Username, txErr)
+		return apperr.NewInternalError("failed to register user %s: %w", payload.Username, txErr)
 	}
 
 	logger.Trace().Str("username", payload.Username).Msg("User registered successfully")
@@ -207,8 +208,8 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 }
 
 // Login authenticates a user and returns a JWT token if successful.
-func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "Login")
+func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "Login")
 	logger.Info().Str("username", payload.Username).Msg("User login attempt")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
@@ -216,43 +217,43 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("username", payload.Username).Msg("User not found for login")
 
-			_ = s.db.AuditLog().Record(ctx, security.AuditLogParams{
+			_ = s.db.AuditLog().Record(ctx, audit.AuditLogParams{
 				Username:  &payload.Username,
-				Action:    security.ActionFailedLogin,
+				Action:    audit.ActionFailedLogin,
 				IsSuccess: false,
 				Summary:   fmt.Sprintf("Failed login attempt for unknown user: %s", payload.Username),
 			})
 
-			return nil, NewUnauthorizedError("invalid credentials")
+			return nil, apperr.NewUnauthorizedError("invalid credentials")
 		}
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Error retrieving user for login")
-		return nil, NewInternalError("error retrieving user %s: %w", payload.Username, err)
+		return nil, apperr.NewInternalError("error retrieving user %s: %w", payload.Username, err)
 	}
 
 	if err = checkPasswordHash(payload.Password, user.PasswordHash); err != nil {
 		logger.Error().Str("username", payload.Username).Msg("Invalid password for login")
 
-		_ = s.db.AuditLog().Record(ctx, security.AuditLogParams{
+		_ = s.db.AuditLog().Record(ctx, audit.AuditLogParams{
 			Username:   &payload.Username,
 			ResourceID: &user.ID,
-			Action:     security.ActionFailedLogin,
+			Action:     audit.ActionFailedLogin,
 			IsSuccess:  false,
 			Summary:    fmt.Sprintf("Failed login attempt for user: %s", payload.Username),
 		})
 
-		return nil, NewUnauthorizedError("invalid credentials")
+		return nil, apperr.NewUnauthorizedError("invalid credentials")
 	}
 
 	jwtToken, err := auth.NewJwt(payload.Username, models.GetIsInstanceAdmin(*user))
 	if jwtToken == nil {
 		logger.Error().Str("username", payload.Username).Err(err).Msg("Failed to generate JWT token")
-		return nil, NewInternalError("failed to generate JWT token")
+		return nil, apperr.NewInternalError("failed to generate JWT token")
 	}
 
-	_ = s.db.AuditLog().Record(ctx, security.AuditLogParams{
+	_ = s.db.AuditLog().Record(ctx, audit.AuditLogParams{
 		Username:   &payload.Username,
 		ResourceID: &user.ID,
-		Action:     security.ActionLogin,
+		Action:     audit.ActionLogin,
 		IsSuccess:  true,
 		Summary:    fmt.Sprintf("User %s logged in", payload.Username),
 	})
@@ -261,8 +262,8 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 	return &LoginResponse{Jwt: *jwtToken}, nil
 }
 
-func (s *UserService) EnsureAdminUserExists(ctx context.Context) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "EnsureAdminUserExists")
+func (s *UserService) EnsureAdminUserExists(ctx context.Context) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "EnsureAdminUserExists")
 	logger.Info().Msg("Ensuring admin user exists")
 
 	adminUser, err := s.db.Users().GetUserByUsername(ctx, os.Getenv(config.InstanceAdminUsername))
@@ -271,7 +272,7 @@ func (s *UserService) EnsureAdminUserExists(ctx context.Context) *ServiceError {
 			logger.Info().Msg("Admin user not found, creating...")
 			return s.createAdminUser(ctx)
 		}
-		return NewInternalError("error occurred while checking for admin user: %w", err)
+		return apperr.NewInternalError("error occurred while checking for admin user: %w", err)
 	}
 
 	logger.Info().Str("username", adminUser.Username).Msg("Admin user already exists")
@@ -279,31 +280,31 @@ func (s *UserService) EnsureAdminUserExists(ctx context.Context) *ServiceError {
 	return nil
 }
 
-func (s *UserService) createAdminUser(ctx context.Context) *ServiceError {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameUser, "CreateAdminUser")
+func (s *UserService) createAdminUser(ctx context.Context) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "CreateAdminUser")
 
 	hashedPassword, err := hashPassword(os.Getenv(config.InstanceAdminPassword))
 	if err != nil {
-		return NewInternalError("failed to hash admin password: %w", err)
+		return apperr.NewInternalError("failed to hash admin password: %w", err)
 	}
 
 	adminUserModel, err := models.NewUser(os.Getenv(config.InstanceAdminUsername), hashedPassword)
 	if err != nil {
-		return NewBadRequestError("invalid admin user data: %w", err)
+		return apperr.NewBadRequestError("invalid admin user data: %w", err)
 	}
 	adminUserModel.IsInstanceAdmin = true
-	adminUserModel.Role = models.RoleOwner
+	adminUserModel.Role = auth.RoleOwner
 
-	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *security.AuditLogParams, error) {
+	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *audit.AuditLogParams, error) {
 		u, err := tx.Users().InsertUser(ctx, adminUserModel)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		params := &security.AuditLogParams{
+		params := &audit.AuditLogParams{
 			Username:   &u.Username,
 			ResourceID: &u.ID,
-			Action:     security.ActionCreateUser,
+			Action:     audit.ActionCreateUser,
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Admin user %s created", u.Username),
 			After:      u,
@@ -316,7 +317,7 @@ func (s *UserService) createAdminUser(ctx context.Context) *ServiceError {
 			logger.Info().Msg("Admin user already exists")
 			return nil
 		}
-		return NewInternalError("failed to create admin user: %w", txErr)
+		return apperr.NewInternalError("failed to create admin user: %w", txErr)
 	}
 
 	logger.Info().Msg("Admin user created successfully")

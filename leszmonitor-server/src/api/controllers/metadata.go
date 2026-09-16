@@ -3,7 +3,7 @@ package controllers
 import (
 	"net/http"
 
-	util "github.com/m-milek/leszmonitor/api/api_util"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/services"
 )
 
@@ -22,5 +22,5 @@ func (c *InstanceMetadataAPIController) GetInstanceMetadataHandler(w http.Respon
 
 	metadata := c.service.GetInstanceMetadata()
 
-	util.RespondJSON(ctx, w, http.StatusOK, metadata)
+	httpx.RespondJSON(ctx, w, http.StatusOK, metadata)
 }

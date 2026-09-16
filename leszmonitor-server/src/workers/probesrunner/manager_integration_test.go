@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/events"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +28,7 @@ func TestIntegration_Manager_Lifecycle(t *testing.T) {
 	_, err := realDB.Monitors().UpdateMonitor(ctx, *monitor)
 	require.NoError(t, err)
 
-	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		Status: monitors.Edited,
 		ID:     monitor.ID,
 	})
@@ -40,7 +39,7 @@ func TestIntegration_Manager_Lifecycle(t *testing.T) {
 	assert.Equal(t, 10, runner.monitor.Interval)
 
 	// Test Deleted
-	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		Status: monitors.Deleted,
 		ID:     monitor.ID,
 	})
@@ -55,7 +54,7 @@ func TestIntegration_Manager_Lifecycle(t *testing.T) {
 	newMonitor.Name = "Brand New Monitor"
 	newMonitor.GenerateSlug()
 
-	events.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
+	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
 		Status:  monitors.Created,
 		Monitor: &newMonitor,
 	})

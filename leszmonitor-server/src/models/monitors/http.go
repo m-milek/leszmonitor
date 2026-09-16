@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/log"
-	"github.com/m-milek/leszmonitor/meta"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/models/shared"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/log"
+	"github.com/m-milek/leszmonitor/platform/meta"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type HTTPProbe struct {

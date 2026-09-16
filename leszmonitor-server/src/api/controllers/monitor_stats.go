@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/authorization"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/services"
 )
 
@@ -31,7 +31,7 @@ func (c *MonitorStatsAPIController) GetLatencyStatsByMonitorIDHandler(w http.Res
 
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		util.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
 		return
 	}
 
@@ -40,26 +40,31 @@ func (c *MonitorStatsAPIController) GetLatencyStatsByMonitorIDHandler(w http.Res
 
 	from, err := time.Parse(time.RFC3339, fromParam)
 	if err != nil {
-		util.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'from' parameter format, expected RFC3339"))
+		httpx.RespondError(
+			ctx,
+			w,
+			http.StatusBadRequest,
+			errors.New("invalid 'from' parameter format, expected RFC3339"),
+		)
 		return
 	}
 
 	to, err := time.Parse(time.RFC3339, toParam)
 	if err != nil {
-		util.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'to' parameter format, expected RFC3339"))
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'to' parameter format, expected RFC3339"))
 		return
 	}
 
-	_, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
 	if !ok {
 		return
 	}
 
 	stats, svcErr := c.service.GetStatsByMonitorID(ctx, monitorID, from, to)
 	if svcErr != nil {
-		util.RespondError(ctx, w, svcErr.Code, svcErr.Err)
+		httpx.RespondError(ctx, w, svcErr.Code, svcErr.Err)
 		return
 	}
 
-	util.RespondJSON(ctx, w, http.StatusOK, stats)
+	httpx.RespondJSON(ctx, w, http.StatusOK, stats)
 }

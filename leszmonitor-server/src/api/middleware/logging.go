@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 func Logger(ctx context.Context, next http.Handler) http.Handler {

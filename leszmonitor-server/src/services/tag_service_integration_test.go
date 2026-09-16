@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
-	"github.com/m-milek/leszmonitor/security"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,13 +31,13 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 		assert.False(t, created.CreatedAt.IsZero())
 
 		// Verify audit log was created
-		filter := security.AuditLogFilter{ResourceID: &created.ID}
+		filter := audit.AuditLogFilter{ResourceID: &created.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
 		for _, entry := range entries {
-			if entry.Action == security.ActionCreateTag {
+			if entry.Action == audit.ActionCreateTag {
 				found = true
 				assert.Equal(t, owner.Username, *entry.Username)
 				assert.Equal(t, created.ID.String(), entry.ResourceID.String())
@@ -180,13 +180,13 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 		assert.Equal(t, "Prod", all[0].Name)
 
 		// Verify audit log records both the before and after state
-		filter := security.AuditLogFilter{ResourceID: &created.ID}
+		filter := audit.AuditLogFilter{ResourceID: &created.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
 		for _, entry := range entries {
-			if entry.Action == security.ActionUpdateTag {
+			if entry.Action == audit.ActionUpdateTag {
 				found = true
 				assert.Equal(t, owner.Username, *entry.Username)
 				require.NotNil(t, entry.Before)
@@ -255,13 +255,13 @@ func TestIntegration_TagService_DeleteTag(t *testing.T) {
 		assert.Empty(t, all)
 
 		// Verify audit log was created with the pre-delete state
-		filter := security.AuditLogFilter{ResourceID: &created.ID}
+		filter := audit.AuditLogFilter{ResourceID: &created.ID}
 		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
 		for _, entry := range entries {
-			if entry.Action == security.ActionDeleteTag {
+			if entry.Action == audit.ActionDeleteTag {
 				found = true
 				assert.Equal(t, owner.Username, *entry.Username)
 				require.NotNil(t, entry.Before)

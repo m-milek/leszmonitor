@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/m-milek/leszmonitor/api/authorization"
-	"github.com/m-milek/leszmonitor/auth"
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 // JwtAuth middleware validates JWT tokens from the Authorization header.
@@ -30,7 +29,7 @@ func JwtAuth(next http.Handler) http.Handler {
 		}
 
 		// Store the user claims in the request context
-		ctx := authorization.SetUserInContext(r.Context(), userClaims)
+		ctx := auth.SetUserInContext(r.Context(), userClaims)
 
 		// Call the next handler with the updated context
 		next.ServeHTTP(rw, r.WithContext(ctx))

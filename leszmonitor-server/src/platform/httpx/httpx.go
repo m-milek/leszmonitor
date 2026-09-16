@@ -1,12 +1,12 @@
-package util
+package httpx
 
 import (
 	"context"
 	"encoding/json"
 	"net/http"
 
-	"github.com/m-milek/leszmonitor/constants"
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 func RespondJSON(ctx context.Context, w http.ResponseWriter, statusCode int, data any) {

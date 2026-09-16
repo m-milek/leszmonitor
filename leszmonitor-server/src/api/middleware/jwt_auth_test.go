@@ -5,9 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/m-milek/leszmonitor/api/authorization"
-	config "github.com/m-milek/leszmonitor/appconfig"
-	"github.com/m-milek/leszmonitor/auth"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	config "github.com/m-milek/leszmonitor/platform/config"
 )
 
 func TestJwtAuth_NoAuthHeader(t *testing.T) {
@@ -53,7 +52,7 @@ func TestJwtAuth_ValidToken(t *testing.T) {
 	handler := JwtAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 
-		claims, ok := authorization.GetUserClaimsFromContext(r.Context())
+		claims, ok := auth.GetUserClaimsFromContext(r.Context())
 		if !ok {
 			t.Fatal("expected claims in context, got nil")
 		}

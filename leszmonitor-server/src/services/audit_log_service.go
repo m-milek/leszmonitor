@@ -3,19 +3,21 @@ package services
 import (
 	"context"
 
-	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/security"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/apperr"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/log"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type IAuditLogger interface {
 	GetEntries(
 		ctx context.Context,
-		filter security.AuditLogFilter,
+		filter audit.AuditLogFilter,
 		pagination util.Pagination,
-	) ([]security.AuditLogEntry, *ServiceError)
-	Record(ctx context.Context, params security.AuditLogParams) error
+	) ([]audit.AuditLogEntry, *apperr.ServiceError)
+	Record(ctx context.Context, params audit.AuditLogParams) error
 }
 
 // AuditLogService provides methods to manage audit log entries, including retrieval and recording of actions for auditing purposes.
@@ -36,24 +38,24 @@ func NewAuditLogService(deps AuditLogServiceDeps) AuditLogService {
 
 func (s *AuditLogService) GetEntries(
 	ctx context.Context,
-	filter security.AuditLogFilter,
+	filter audit.AuditLogFilter,
 	pagination util.Pagination,
-) ([]security.AuditLogEntry, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "GetEntries")
+) ([]audit.AuditLogEntry, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "GetEntries")
 	logger.Trace().Interface("filter", filter).Interface("pagination", pagination).Msg("Retrieving audit log entries")
 
 	entries, dbErr := s.db.AuditLog().GetAuditLogEntries(ctx, filter, pagination)
 	if dbErr != nil {
 		logger.Error().Err(dbErr).Msg("Failed to retrieve audit log entries")
-		return nil, NewInternalError("failed to retrieve audit log entries: %w", dbErr)
+		return nil, apperr.NewInternalError("failed to retrieve audit log entries: %w", dbErr)
 	}
 
 	logger.Debug().Int("entryCount", len(entries)).Msg("Successfully retrieved audit log entries")
 	return entries, nil
 }
 
-func (s *AuditLogService) Record(ctx context.Context, params security.AuditLogParams) error {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "Record")
+func (s *AuditLogService) Record(ctx context.Context, params audit.AuditLogParams) error {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "Record")
 	logger.Trace().Interface("params", params).Msg("Recording audit log entry")
 
 	err := s.db.AuditLog().Record(ctx, params)

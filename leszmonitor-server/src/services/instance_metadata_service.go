@@ -1,7 +1,7 @@
 package services
 
 import (
-	"github.com/m-milek/leszmonitor/meta"
+	"github.com/m-milek/leszmonitor/platform/meta"
 )
 
 type InstanceMetadata struct {

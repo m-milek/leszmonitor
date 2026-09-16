@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-milek/leszmonitor/events"
-	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,8 +16,8 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 
 	_, realDB, monitor := setupFullDB(t)
 
-	runChannel := events.MonitorRunChannel.Subscribe()
-	defer events.MonitorRunChannel.Unsubscribe(runChannel)
+	runChannel := monitors.MonitorRunChannel.Subscribe()
+	defer monitors.MonitorRunChannel.Unsubscribe(runChannel)
 
 	runner := &probeRunner{
 		monitor:    *monitor,

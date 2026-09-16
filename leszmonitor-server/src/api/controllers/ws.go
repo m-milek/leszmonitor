@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	util "github.com/m-milek/leszmonitor/api/api_util"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 	websocketworker "github.com/m-milek/leszmonitor/workers/websocket"
 )
 
@@ -20,7 +20,7 @@ func WebSocketConnectionHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		util.RespondError(ctx, w, http.StatusInternalServerError, err)
+		httpx.RespondError(ctx, w, http.StatusInternalServerError, err)
 		return
 	}
 

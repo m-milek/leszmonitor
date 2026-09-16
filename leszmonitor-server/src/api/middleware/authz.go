@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	util "github.com/m-milek/leszmonitor/api/api_util"
-	"github.com/m-milek/leszmonitor/api/authorization"
-	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/services"
 )
 
@@ -22,13 +21,13 @@ func RequireInstanceAdmin() func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+			userClaims, ok := auth.ExtractUserOrRespond(ctx, w, r)
 			if !ok {
 				return
 			}
 
 			if !userClaims.IsInstanceAdmin {
-				util.RespondError(ctx, w, http.StatusForbidden, fmt.Errorf("requires instance admin privileges"))
+				httpx.RespondError(ctx, w, http.StatusForbidden, fmt.Errorf("requires instance admin privileges"))
 				return
 			}
 
@@ -41,13 +40,13 @@ func RequireInstanceAdmin() func(http.HandlerFunc) http.HandlerFunc {
 func RequireInstanceAdminHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+		userClaims, ok := auth.ExtractUserOrRespond(ctx, w, r)
 		if !ok {
 			return
 		}
 
 		if !userClaims.IsInstanceAdmin {
-			util.RespondError(ctx, w, http.StatusForbidden, fmt.Errorf("requires instance admin privileges"))
+			httpx.RespondError(ctx, w, http.StatusForbidden, fmt.Errorf("requires instance admin privileges"))
 			return
 		}
 
@@ -60,7 +59,7 @@ func RequireSelf(usernameParam string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+			userClaims, ok := auth.ExtractUserOrRespond(ctx, w, r)
 			if !ok {
 				return
 			}
@@ -72,7 +71,12 @@ func RequireSelf(usernameParam string) func(http.HandlerFunc) http.HandlerFunc {
 
 			targetUsername := r.PathValue(usernameParam)
 			if targetUsername != userClaims.Username {
-				util.RespondError(ctx, w, http.StatusForbidden, fmt.Errorf("access denied to another user's resources"))
+				httpx.RespondError(
+					ctx,
+					w,
+					http.StatusForbidden,
+					fmt.Errorf("access denied to another user's resources"),
+				)
 				return
 			}
 
@@ -84,12 +88,12 @@ func RequireSelf(usernameParam string) func(http.HandlerFunc) http.HandlerFunc {
 // RequirePermission checks if the user has the required permission.
 func RequirePermission(
 	authzService services.IAuthzMiddlewareService,
-	perm models.Permission,
+	perm auth.Permission,
 ) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			userClaims, ok := authorization.ExtractUserOrRespond(ctx, w, r)
+			userClaims, ok := auth.ExtractUserOrRespond(ctx, w, r)
 			if !ok {
 				return
 			}
@@ -101,11 +105,11 @@ func RequirePermission(
 
 			hasPerm, err := authzService.CheckUserPermission(ctx, userClaims.Username, perm)
 			if err != nil {
-				util.RespondError(ctx, w, http.StatusInternalServerError, err)
+				httpx.RespondError(ctx, w, http.StatusInternalServerError, err)
 				return
 			}
 			if !hasPerm {
-				util.RespondError(
+				httpx.RespondError(
 					ctx,
 					w,
 					http.StatusForbidden,

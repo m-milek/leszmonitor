@@ -6,9 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/events"
-	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )
 
@@ -36,8 +35,8 @@ func (w *Manager) Run(ctx context.Context) {
 
 	w.logger.Info().Msg("Starting probes worker...")
 
-	monitorMsgChannel := events.MonitorLifecycleChannel.Subscribe()
-	defer events.MonitorLifecycleChannel.Unsubscribe(monitorMsgChannel)
+	monitorMsgChannel := monitors.MonitorLifecycleChannel.Subscribe()
+	defer monitors.MonitorLifecycleChannel.Unsubscribe(monitorMsgChannel)
 
 	allMonitors, err := w.db.Monitors().GetAllMonitors(ctx)
 	if err != nil {

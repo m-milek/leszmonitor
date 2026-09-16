@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 type IAuthzMiddlewareService interface {
@@ -14,7 +15,7 @@ type IAuthzMiddlewareService interface {
 	CheckUserPermission(
 		ctx context.Context,
 		username string,
-		permission models.Permission,
+		permission auth.Permission,
 	) (bool, error)
 }
 
@@ -29,9 +30,9 @@ func NewAuthzMiddlewareService(db db.DB) IAuthzMiddlewareService {
 func (s *AuthzMiddlewareService) CheckUserPermission(
 	ctx context.Context,
 	username string,
-	permission models.Permission,
+	permission auth.Permission,
 ) (bool, error) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckUserPermission")
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckUserPermission")
 
 	user, err := s.db.Users().GetUserByUsername(ctx, username)
 	if err != nil {

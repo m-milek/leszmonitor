@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/util"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type Tag struct {

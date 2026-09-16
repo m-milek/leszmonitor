@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/m-milek/leszmonitor/constants"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/platform/apperr"
+	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 type IMonitorStatsService interface {
-	GetStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.MonitorStats, *ServiceError)
+	GetStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.MonitorStats, *apperr.ServiceError)
 }
 
 type MonitorStatsService struct {
@@ -29,8 +31,8 @@ func NewMonitorStatsService(deps MonitorStatsServiceDeps) MonitorStatsService {
 	}
 }
 
-func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.MonitorStats, *ServiceError) {
-	logger := MethodLoggerFromContext(ctx, constants.ServiceNameMonitorStats, "GetStatsByMonitorID")
+func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (models.MonitorStats, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitorStats, "GetStatsByMonitorID")
 	logger.Trace().
 		Str("monitorID", monitorID).
 		Time("from", from).
@@ -41,7 +43,7 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 	if err != nil {
 		if !errors.Is(err, db.ErrNotFound) {
 			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get stats")
-			return models.MonitorStats{}, &ServiceError{
+			return models.MonitorStats{}, &apperr.ServiceError{
 				Code: http.StatusInternalServerError,
 				Err:  errors.New("failed to get stats: " + err.Error()),
 			}
@@ -57,7 +59,7 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 			logger.Warn().Str("monitorID", monitorID).Msg("No status change data found for the given monitor ID and time range")
 			hasNoStatusChanges = true
 		} else {
-			return models.MonitorStats{}, &ServiceError{
+			return models.MonitorStats{}, &apperr.ServiceError{
 				Code: http.StatusInternalServerError,
 				Err:  errors.New("failed to get status change stats: " + err.Error()),
 			}
@@ -76,7 +78,7 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 				}, nil
 			}
 			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get oldest monitor result")
-			return models.MonitorStats{}, &ServiceError{
+			return models.MonitorStats{}, &apperr.ServiceError{
 				Code: http.StatusInternalServerError,
 				Err:  errors.New("failed to get oldest monitor result: " + err.Error()),
 			}
@@ -84,7 +86,7 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 		createdAt, err := time.Parse(time.RFC3339, oldestResult.GetCreatedAt())
 		if err != nil {
 			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to parse created_at of oldest monitor result")
-			return models.MonitorStats{}, &ServiceError{
+			return models.MonitorStats{}, &apperr.ServiceError{
 				Code: http.StatusInternalServerError,
 				Err:  errors.New("failed to parse created_at of oldest monitor result: " + err.Error()),
 			}

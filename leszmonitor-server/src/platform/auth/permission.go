@@ -1,4 +1,4 @@
-package models
+package auth
 
 // Permission represents a specific action that can be performed within the system.
 // Examples include "read:monitor", "edit:monitor", etc.

@@ -6,7 +6,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/controllers"
 	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/platform/auth"
 )
 
 func SetupRouters(
@@ -33,7 +33,7 @@ func SetupRouters(
 		"POST /api/v1/monitors",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionWriter,
+			auth.PermissionWriter,
 		)(
 			h.Monitor.CreateMonitorHandler,
 		),
@@ -42,7 +42,7 @@ func SetupRouters(
 		"GET /api/v1/monitors",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionReader,
+			auth.PermissionReader,
 		)(
 			h.Monitor.GetAllMonitorsHandler,
 		),
@@ -51,7 +51,7 @@ func SetupRouters(
 		"GET /api/v1/monitors/{monitorId}",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionReader,
+			auth.PermissionReader,
 		)(
 			h.Monitor.GetMonitorByIDHandler,
 		),
@@ -60,7 +60,7 @@ func SetupRouters(
 		"DELETE /api/v1/monitors/{monitorId}",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionWriter,
+			auth.PermissionWriter,
 		)(
 			h.Monitor.DeleteMonitorHandler,
 		),
@@ -69,7 +69,7 @@ func SetupRouters(
 		"PATCH /api/v1/monitors/{monitorId}",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionWriter,
+			auth.PermissionWriter,
 		)(
 			h.Monitor.UpdateMonitorHandler,
 		),
@@ -78,7 +78,7 @@ func SetupRouters(
 		"PATCH /api/v1/monitors/{monitorId}/state",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionWriter,
+			auth.PermissionWriter,
 		)(
 			h.Monitor.UpdateMonitorStateByIDHandler,
 		),
@@ -89,7 +89,7 @@ func SetupRouters(
 		"POST /api/v1/tags",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionWriter,
+			auth.PermissionWriter,
 		)(
 			h.Tag.CreateTagHandler,
 		),
@@ -98,7 +98,7 @@ func SetupRouters(
 		"GET /api/v1/tags",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionReader,
+			auth.PermissionReader,
 		)(
 			h.Tag.GetAllTagsHandler,
 		),
@@ -107,7 +107,7 @@ func SetupRouters(
 		"GET /api/v1/tags/{tagId}",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionReader,
+			auth.PermissionReader,
 		)(
 			h.Tag.GetTagByIDHandler,
 		),
@@ -116,7 +116,7 @@ func SetupRouters(
 		"PATCH /api/v1/tags/{tagId}",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionWriter,
+			auth.PermissionWriter,
 		)(
 			h.Tag.UpdateTagHandler,
 		),
@@ -125,7 +125,7 @@ func SetupRouters(
 		"DELETE /api/v1/tags/{tagId}",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionWriter,
+			auth.PermissionWriter,
 		)(
 			h.Tag.DeleteTagHandler,
 		),
@@ -136,7 +136,7 @@ func SetupRouters(
 		"GET /api/v1/monitors/{monitorId}/results/latest",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionReader,
+			auth.PermissionReader,
 		)(
 			h.MonitorResults.GetLatestMonitorResultByMonitorIDHandler,
 		),
@@ -145,7 +145,7 @@ func SetupRouters(
 		"GET /api/v1/monitors/{monitorId}/results",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionReader,
+			auth.PermissionReader,
 		)(
 			h.MonitorResults.GetMonitorResultsByMonitorIDHandler,
 		),
@@ -155,7 +155,7 @@ func SetupRouters(
 		"GET /api/v1/audit-log",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionInstanceAdmin,
+			auth.PermissionInstanceAdmin,
 		)(
 			h.AuditLog.GetAuditLogByQueryHandler,
 		),
@@ -170,7 +170,7 @@ func SetupRouters(
 		"GET /api/v1/monitors/{monitorId}/stats",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
-			models.PermissionReader,
+			auth.PermissionReader,
 		)(
 			h.MonitorStats.GetLatencyStatsByMonitorIDHandler,
 		),

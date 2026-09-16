@@ -8,11 +8,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/platform/auth"
 )
 
 type IUserDAO interface {
 	InsertUser(ctx context.Context, user *models.User) (*models.User, error)
-	UpdateUserRole(ctx context.Context, userID uuid.UUID, role models.Role) (*models.User, error)
+	UpdateUserRole(ctx context.Context, userID uuid.UUID, role auth.Role) (*models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	GetAllUsers(ctx context.Context) ([]models.User, error)
@@ -58,7 +59,7 @@ func (r *UserDAO) InsertUser(ctx context.Context, user *models.User) (*models.Us
 func (r *UserDAO) UpdateUserRole(
 	ctx context.Context,
 	userID uuid.UUID,
-	role models.Role,
+	role auth.Role,
 ) (*models.User, error) {
 	return dbWrap(ctx, "UpdateUserRole", func() (*models.User, error) {
 		var updatedUser models.User

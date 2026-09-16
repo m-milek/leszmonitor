@@ -11,12 +11,12 @@ import (
 
 	"github.com/m-milek/leszmonitor/api"
 	"github.com/m-milek/leszmonitor/api/controllers"
-	config "github.com/m-milek/leszmonitor/appconfig"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/log"
+	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/services"
 	"github.com/m-milek/leszmonitor/workers"
-	"github.com/m-milek/leszmonitor/workers/probesrunner"
+	probes "github.com/m-milek/leszmonitor/workers/probesrunner"
 	"github.com/m-milek/leszmonitor/workers/resultsprocessor"
 )
 

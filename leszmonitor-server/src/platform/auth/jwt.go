@@ -9,7 +9,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	config "github.com/m-milek/leszmonitor/appconfig"
+	config "github.com/m-milek/leszmonitor/platform/config"
 )
 
 // JwtClaims represents the claims stored in a Leszmonitor JWT token.

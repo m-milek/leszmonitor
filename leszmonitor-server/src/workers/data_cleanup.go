@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 const durationBetweenCleanups = time.Duration(600) * time.Second

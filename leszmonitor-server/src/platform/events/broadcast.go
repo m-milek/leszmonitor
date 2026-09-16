@@ -3,25 +3,25 @@ package events
 import (
 	"sync"
 
-	"github.com/m-milek/leszmonitor/log"
+	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )
 
-type eventBus[T any] struct {
+type EventBus[T any] struct {
 	mu          sync.Mutex
 	subscribers []chan T
 	logger      zerolog.Logger
 }
 
-func newEventBus[T any](busName string) *eventBus[T] {
+func NewEventBus[T any](busName string) *EventBus[T] {
 	logger := log.New().With().Str("component", "eventBus").Str("busName", busName).Logger()
-	return &eventBus[T]{
+	return &EventBus[T]{
 		subscribers: make([]chan T, 0),
 		logger:      logger,
 	}
 }
 
-func (b *eventBus[T]) Subscribe() <-chan T {
+func (b *EventBus[T]) Subscribe() <-chan T {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -30,7 +30,7 @@ func (b *eventBus[T]) Subscribe() <-chan T {
 	return ch
 }
 
-func (b *eventBus[T]) Unsubscribe(ch <-chan T) {
+func (b *EventBus[T]) Unsubscribe(ch <-chan T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -43,7 +43,7 @@ func (b *eventBus[T]) Unsubscribe(ch <-chan T) {
 	}
 }
 
-func (b *eventBus[T]) Broadcast(message T) {
+func (b *EventBus[T]) Broadcast(message T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

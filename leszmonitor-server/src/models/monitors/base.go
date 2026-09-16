@@ -8,12 +8,11 @@ import (
 	"github.com/google/uuid"
 	shared "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
-	util2 "github.com/m-milek/leszmonitor/models/util"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type Monitor struct {
-	util2.Timestamps
+	util.Timestamps
 	ID                     uuid.UUID        `json:"id"                     db:"id"`                       // ID is the unique identifier for the monitor, generated as a UUID
 	Slug                   string           `json:"slug"                   db:"slug"`                     // Slug is unique
 	Name                   string           `json:"name"                   db:"name"`                     // Name of the monitor

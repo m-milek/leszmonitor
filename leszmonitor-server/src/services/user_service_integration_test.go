@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -126,25 +126,25 @@ func TestIntegration_UserService_SetUserRole(t *testing.T) {
 
 		user, err := userService.GetUserByUsername(ctx, owner.Username)
 		require.Nil(t, err)
-		assert.Equal(t, models.RoleViewer, user.Role)
+		assert.Equal(t, auth.RoleViewer, user.Role)
 	})
 
 	t.Run("Successfully promotes a user", func(t *testing.T) {
 		ctx, userService, owner := setupIntegrationTest(t)
 
-		updated, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: models.RoleAdmin})
+		updated, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: auth.RoleAdmin})
 		require.Nil(t, err)
-		assert.Equal(t, models.RoleAdmin, updated.Role)
+		assert.Equal(t, auth.RoleAdmin, updated.Role)
 
 		refetched, err := userService.GetUserByUsername(ctx, owner.Username)
 		require.Nil(t, err)
-		assert.Equal(t, models.RoleAdmin, refetched.Role)
+		assert.Equal(t, auth.RoleAdmin, refetched.Role)
 	})
 
 	t.Run("Fails with 400 for an invalid role", func(t *testing.T) {
 		ctx, userService, owner := setupIntegrationTest(t)
 
-		_, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: models.Role("superuser")})
+		_, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: auth.Role("superuser")})
 		require.NotNil(t, err)
 		assert.Equal(t, http.StatusBadRequest, err.Code)
 	})
@@ -152,7 +152,7 @@ func TestIntegration_UserService_SetUserRole(t *testing.T) {
 	t.Run("Fails with 404 for a nonexistent user", func(t *testing.T) {
 		ctx, userService, _ := setupIntegrationTest(t)
 
-		_, err := userService.SetUserRole(ctx, "ghost", SetUserRolePayload{Role: models.RoleAdmin})
+		_, err := userService.SetUserRole(ctx, "ghost", SetUserRolePayload{Role: auth.RoleAdmin})
 		require.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
 	})

@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	config "github.com/m-milek/leszmonitor/appconfig"
-	"github.com/m-milek/leszmonitor/log"
+	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/log"
 
 	// Blank import to initialize the SQLite driver.
 	_ "modernc.org/sqlite"

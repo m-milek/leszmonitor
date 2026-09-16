@@ -5,8 +5,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/models"
-	"github.com/m-milek/leszmonitor/security"
-	"github.com/m-milek/leszmonitor/util"
+	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -34,7 +35,7 @@ func (r *MockUserDAO) InsertUser(ctx context.Context, user *models.User) (*model
 func (r *MockUserDAO) UpdateUserRole(
 	ctx context.Context,
 	userID uuid.UUID,
-	role models.Role,
+	role auth.Role,
 ) (*models.User, error) {
 	args := r.Called(ctx, userID, role)
 	if args.Get(0) == nil {
@@ -62,21 +63,21 @@ type MockAuditLogDAO struct {
 	mock.Mock
 }
 
-func (r *MockAuditLogDAO) InsertAuditLogEntry(ctx context.Context, entry security.AuditLogEntry) (any, error) {
+func (r *MockAuditLogDAO) InsertAuditLogEntry(ctx context.Context, entry audit.AuditLogEntry) (any, error) {
 	args := r.Called(ctx, entry)
 	return args.Get(0), args.Error(1)
 }
 
 func (r *MockAuditLogDAO) GetAuditLogEntries(
 	ctx context.Context,
-	filter security.AuditLogFilter,
+	filter audit.AuditLogFilter,
 	pagination util.Pagination,
-) ([]security.AuditLogEntry, error) {
+) ([]audit.AuditLogEntry, error) {
 	args := r.Called(ctx, filter, pagination)
-	return args.Get(0).([]security.AuditLogEntry), args.Error(1)
+	return args.Get(0).([]audit.AuditLogEntry), args.Error(1)
 }
 
-func (r *MockAuditLogDAO) Record(ctx context.Context, params security.AuditLogParams) error {
+func (r *MockAuditLogDAO) Record(ctx context.Context, params audit.AuditLogParams) error {
 	args := r.Called(ctx, params)
 	return args.Error(0)
 }

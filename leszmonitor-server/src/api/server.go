@@ -12,9 +12,9 @@ import (
 
 	"github.com/logdyhq/logdy-core/logdy"
 	"github.com/m-milek/leszmonitor/api/middleware"
-	appconfig "github.com/m-milek/leszmonitor/appconfig"
-	"github.com/m-milek/leszmonitor/log"
-	"github.com/m-milek/leszmonitor/util"
+	appconfig "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/log"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/rs/cors"
 )
 

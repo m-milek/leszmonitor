@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/m-milek/leszmonitor/security"
+	"github.com/m-milek/leszmonitor/platform/audit"
 )
 
 // WithTx executes fn inside a database transaction. If fn returns nil,
@@ -42,7 +42,7 @@ func (c *Client) WithTx(ctx context.Context, fn func(tx DB) error) error {
 func WithAuditedTx[T any](
 	ctx context.Context,
 	client DB,
-	fn func(tx DB) (T, *security.AuditLogParams, error),
+	fn func(tx DB) (T, *audit.AuditLogParams, error),
 ) (T, error) {
 	var result T
 	err := client.WithTx(ctx, func(tx DB) error {
@@ -66,7 +66,7 @@ func WithAuditedTx[T any](
 func WithAuditedVoidTx(
 	ctx context.Context,
 	client DB,
-	fn func(tx DB) (*security.AuditLogParams, error),
+	fn func(tx DB) (*audit.AuditLogParams, error),
 ) error {
 	return client.WithTx(ctx, func(tx DB) error {
 		params, err := fn(tx)

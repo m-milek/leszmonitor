@@ -5,11 +5,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/events"
-	"github.com/m-milek/leszmonitor/log"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
 	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/pkg/errors"
 )
 
@@ -28,8 +27,8 @@ func (p *ResultsProcessor) Run(ctx context.Context) {
 
 	logger.Info().Msg("Starting results processor...")
 
-	results := events.MonitorRunChannel.Subscribe()
-	defer events.MonitorRunChannel.Unsubscribe(results)
+	results := monitors.MonitorRunChannel.Subscribe()
+	defer monitors.MonitorRunChannel.Unsubscribe(results)
 
 	for {
 		select {

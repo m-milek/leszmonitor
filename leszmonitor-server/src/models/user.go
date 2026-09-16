@@ -6,8 +6,9 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	config "github.com/m-milek/leszmonitor/appconfig"
-	"github.com/m-milek/leszmonitor/models/util"
+	"github.com/m-milek/leszmonitor/platform/auth"
+	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 // User represents a user in the system.
@@ -16,7 +17,7 @@ type User struct {
 	ID              uuid.UUID `json:"id"              db:"id"`
 	Username        string    `json:"username"        db:"username"`
 	PasswordHash    string    `json:"-"               db:"password_hash"`
-	Role            Role      `json:"role"            db:"role"`
+	Role            auth.Role `json:"role"            db:"role"`
 	IsInstanceAdmin bool      `json:"isInstanceAdmin" db:"is_instance_admin"`
 }
 
@@ -25,7 +26,7 @@ func NewUser(username, hashedPassword string) (*User, error) {
 	user := &User{
 		Username:     username,
 		PasswordHash: hashedPassword,
-		Role:         RoleViewer,
+		Role:         auth.RoleViewer,
 	}
 	err := user.Validate()
 
