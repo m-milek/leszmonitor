@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { prepareResults } from "./prepare-results.ts";
-import type { MonitorResult } from "@/features/monitors/types.ts";
+import { prepareResults } from "./prepare-results";
+import type { MonitorResult } from "@/features/monitors/types";
 
 describe("prepareResults", () => {
   const createResult = (dateStr: string): MonitorResult =>

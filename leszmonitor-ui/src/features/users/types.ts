@@ -1,4 +1,4 @@
-import type { Timestamps } from "@/lib/types.ts";
+import type { Timestamps } from "@/lib/types";
 
 export enum UserRole {
   Owner = "owner",

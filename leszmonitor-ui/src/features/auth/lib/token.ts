@@ -1,4 +1,4 @@
-import { getCookie, setCookie } from "@/lib/cookies.ts";
+import { getCookie, setCookie } from "@/lib/cookies";
 
 export const LOGIN_TOKEN_COOKIE = "LOGIN_TOKEN";
 

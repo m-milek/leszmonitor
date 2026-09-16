@@ -6,7 +6,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-} from "@/components/ui/sidebar.tsx";
+} from "@/components/ui/sidebar";
 
 import {
   LucideBookText,
@@ -16,16 +16,16 @@ import {
   LucideSettings,
   LucideTag,
 } from "lucide-react";
-import { useAppStore } from "@/app/store.ts";
+import { useAppStore } from "@/app/store";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
-import type { JwtClaims } from "@/lib/jwt.ts";
-import { AppSidebarFooter } from "@/components/layout/AppSidebarFooter.tsx";
-import { getUser } from "@/features/users/users-api.ts";
-import { readToken } from "@/features/auth/lib/token.ts";
-import { AppSidebarHeader } from "@/components/layout/AppSidebarHeader.tsx";
-import { SidebarButton } from "@/components/layout/SidebarButton.tsx";
+import type { JwtClaims } from "@/lib/jwt";
+import { AppSidebarFooter } from "@/components/layout/AppSidebarFooter";
+import { getUser } from "@/features/users/users-api";
+import { readToken } from "@/features/auth/lib/token";
+import { AppSidebarHeader } from "@/components/layout/AppSidebarHeader";
+import { SidebarButton } from "@/components/layout/SidebarButton";
 
 export const AppSidebar = () => {
   const { username, setUsername, user, setUser } = useAppStore();

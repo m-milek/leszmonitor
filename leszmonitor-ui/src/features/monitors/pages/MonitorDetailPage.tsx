@@ -1,27 +1,27 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PauseIcon, PencilIcon, PlayIcon } from "lucide-react";
-import { PageContainer } from "@/components/common/PageContainer.tsx";
-import { TypographyH1, TypographyH2 } from "@/components/common/Typography.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
-import { ButtonGroup } from "@/components/ui/button-group.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { PageContainer } from "@/components/common/PageContainer";
+import { TypographyH1, TypographyH2 } from "@/components/common/Typography";
+import { Flex } from "@/components/common/Flex";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Button } from "@/components/ui/button";
 import {
   getMonitorBySlug,
   updateMonitorState,
-} from "@/features/monitors/monitors-api.ts";
-import { getMonitorResultsByMonitorId } from "@/features/monitors/results-api.ts";
-import { getLatencyStatsByMonitorId } from "@/features/monitors/stats-api.ts";
-import { MonitorResultsList } from "@/features/monitors/components/MonitorResultsList.tsx";
-import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill.tsx";
-import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog.tsx";
-import { LineChart } from "@/features/monitors/components/charts/LineChartLazy.tsx";
-import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart.tsx";
-import { formatTime } from "@/features/monitors/components/charts/utils.ts";
-import type { MonitorResult } from "@/features/monitors/types.ts";
-import type { Pagination } from "@/lib/types.ts";
-import { QUERY_KEYS } from "@/lib/consts.ts";
+} from "@/features/monitors/monitors-api";
+import { getMonitorResultsByMonitorId } from "@/features/monitors/results-api";
+import { getLatencyStatsByMonitorId } from "@/features/monitors/stats-api";
+import { MonitorResultsList } from "@/features/monitors/components/MonitorResultsList";
+import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
+import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog";
+import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
+import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
+import { formatTime } from "@/features/monitors/components/charts/utils";
+import type { MonitorResult } from "@/features/monitors/types";
+import type { Pagination } from "@/lib/types";
+import { QUERY_KEYS } from "@/lib/consts";
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;

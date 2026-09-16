@@ -1,5 +1,5 @@
-import { PageContainer } from "@/components/common/PageContainer.tsx";
-import { TypographyH1 } from "@/components/common/Typography.tsx";
+import { PageContainer } from "@/components/common/PageContainer";
+import { TypographyH1 } from "@/components/common/Typography";
 
 export function DocsPage() {
   return (

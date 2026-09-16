@@ -5,7 +5,7 @@ import {
   normalizeHexColor,
   randomTagColor,
   tagChipStyle,
-} from "@/features/tags/lib/colors.ts";
+} from "@/features/tags/lib/colors";
 
 describe("hslToHex", () => {
   const tests: [[number, number, number], string][] = [

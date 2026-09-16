@@ -1,9 +1,9 @@
-import type { User } from "@/features/users/types.ts";
-import { TypographyH1, TypographyH2 } from "@/components/common/Typography.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
-import { Initial } from "@/features/users/components/Initial.tsx";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
-import { CopyToClipboardButton } from "@/components/common/CopyToClipboardButton.tsx";
+import type { User } from "@/features/users/types";
+import { TypographyH1, TypographyH2 } from "@/components/common/Typography";
+import { Flex } from "@/components/common/Flex";
+import { Initial } from "@/features/users/components/Initial";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { CopyToClipboardButton } from "@/components/common/CopyToClipboardButton";
 
 export interface UserProfileProps {
   user: User;

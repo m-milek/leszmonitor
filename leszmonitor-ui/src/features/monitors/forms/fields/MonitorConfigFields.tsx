@@ -1,7 +1,7 @@
-import { HttpMonitorConfigFields } from "@/features/monitors/forms/fields/HttpMonitorConfigFields.tsx";
-import { TcpMonitorConfigFields } from "@/features/monitors/forms/fields/TcpMonitorConfigFields.tsx";
-import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm.ts";
-import { DnsMonitorConfigFields } from "@/features/monitors/forms/fields/DnsMonitorConfigFields.tsx";
+import { HttpMonitorConfigFields } from "@/features/monitors/forms/fields/HttpMonitorConfigFields";
+import { TcpMonitorConfigFields } from "@/features/monitors/forms/fields/TcpMonitorConfigFields";
+import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
+import { DnsMonitorConfigFields } from "@/features/monitors/forms/fields/DnsMonitorConfigFields";
 
 export function MonitorConfigFields({
   form,

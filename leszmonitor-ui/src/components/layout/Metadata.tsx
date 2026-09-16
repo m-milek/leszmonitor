@@ -1,12 +1,12 @@
-import { Center } from "@/components/common/Center.tsx";
-import type { MetadataResponse } from "@/features/instance/metadata-api.ts";
+import { Center } from "@/components/common/Center";
+import type { MetadataResponse } from "@/features/instance/metadata-api";
 import { LucideInfo } from "lucide-react";
-import { Flex } from "@/components/common/Flex.tsx";
+import { Flex } from "@/components/common/Flex";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+} from "@/components/ui/popover";
 
 interface MetadataProps {
   data?: MetadataResponse;

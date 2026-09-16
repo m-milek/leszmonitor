@@ -1,12 +1,12 @@
 import z from "zod";
-import { isSlugValid } from "@/lib/slugFromString.ts";
+import { isSlugValid } from "@/lib/slugFromString";
 import {
   httpMethods,
   tcpProtocols,
   recordTypes,
   type Monitor,
   type MonitorType,
-} from "@/features/monitors/types.ts";
+} from "@/features/monitors/types";
 
 export const httpMonitorConfigSchema = z.object({
   method: z.enum(httpMethods),

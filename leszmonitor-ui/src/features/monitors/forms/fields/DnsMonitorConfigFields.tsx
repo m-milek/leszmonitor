@@ -1,14 +1,14 @@
-import { Flex } from "@/components/common/Flex.tsx";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { LMInputField } from "@/components/form/LMInputField.tsx";
-import { LMSelect } from "@/components/form/LMSelect.tsx";
+import { Flex } from "@/components/common/Flex";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import { LMInputField } from "@/components/form/LMInputField";
+import { LMSelect } from "@/components/form/LMSelect";
 import {
   getFirstError,
   isFieldInvalid,
-} from "@/components/form/field-state.ts";
-import type { DnsRecordType } from "@/features/monitors/types.ts";
+} from "@/components/form/field-state";
+import type { DnsRecordType } from "@/features/monitors/types";
 import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
-import { LMListInput } from "@/components/form/LMListInput.tsx";
+import { LMListInput } from "@/components/form/LMListInput";
 
 const dnsRecordOptions = [
   { value: "A", label: "A" },

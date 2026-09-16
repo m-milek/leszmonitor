@@ -1,7 +1,7 @@
-import { Textarea } from "@/components/ui/textarea.tsx";
+import { Textarea } from "@/components/ui/textarea";
 import type { ComponentProps } from "react";
-import { cn } from "@/lib/utils.ts";
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
+import { cn } from "@/lib/utils";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 type TextareaProps = ComponentProps<typeof Textarea>;
 

@@ -5,10 +5,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table.tsx";
+} from "@/components/ui/table";
 import { flexRender, useReactTable } from "@tanstack/react-table";
 import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
-import { cn } from "@/lib/utils.ts";
+import { cn } from "@/lib/utils";
 
 export interface DataTableProps<T> {
   data: T[];

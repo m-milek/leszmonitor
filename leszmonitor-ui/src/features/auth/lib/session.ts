@@ -1,10 +1,10 @@
 import { jwtDecode } from "jwt-decode";
-import { fetchLoginToken } from "@/features/auth/auth-api.ts";
-import { getUser } from "@/features/users/users-api.ts";
-import { isJwtClaims } from "@/lib/jwt.ts";
-import { storeToken } from "@/features/auth/lib/token.ts";
-import type { LoginPayload } from "@/features/auth/types.ts";
-import type { User } from "@/features/users/types.ts";
+import { fetchLoginToken } from "@/features/auth/auth-api";
+import { getUser } from "@/features/users/users-api";
+import { isJwtClaims } from "@/lib/jwt";
+import { storeToken } from "@/features/auth/lib/token";
+import type { LoginPayload } from "@/features/auth/types";
+import type { User } from "@/features/users/types";
 
 export interface SessionSetters {
   setUsername: (username: string | null) => void;

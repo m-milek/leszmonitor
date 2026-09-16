@@ -1,6 +1,6 @@
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useState, useCallback, memo } from "react";
 import { Plus, X } from "lucide-react";
 

@@ -1,5 +1,5 @@
-import { authFetch } from "@/lib/api-client.ts";
-import { SERVER_API_URL } from "@/lib/consts.ts";
+import { authFetch } from "@/lib/api-client";
+import { SERVER_API_URL } from "@/lib/consts";
 
 export interface LatencyStatsParams {
   from: Date;

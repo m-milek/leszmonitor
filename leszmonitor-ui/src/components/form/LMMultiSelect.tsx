@@ -1,4 +1,4 @@
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 import {
   Combobox,
   ComboboxChip,

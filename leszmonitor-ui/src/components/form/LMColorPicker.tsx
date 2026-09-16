@@ -1,8 +1,8 @@
 import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
-import { LMInputField } from "@/components/form/LMInputField.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
-import { randomTagColor, tagChipStyle } from "@/features/tags/lib/colors.ts";
+import { Button } from "@/components/ui/button";
+import { LMInputField } from "@/components/form/LMInputField";
+import { Flex } from "@/components/common/Flex";
+import { randomTagColor, tagChipStyle } from "@/features/tags/lib/colors";
 
 export interface LMColorPickerProps {
   name: string;

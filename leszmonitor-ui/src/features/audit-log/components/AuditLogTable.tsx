@@ -1,8 +1,8 @@
 import { type ColumnDef } from "@tanstack/table-core";
-import type { AuditLogEntry } from "@/features/audit-log/types.ts";
-import { DataTable } from "@/components/common/DataTable.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { formatDate } from "@/lib/utils.ts";
+import type { AuditLogEntry } from "@/features/audit-log/types";
+import { DataTable } from "@/components/common/DataTable";
+import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/utils";
 import { CheckCircle2, LucideDiff, XCircle } from "lucide-react";
 import {
   Dialog,
@@ -10,9 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog.tsx";
-import { ShortId } from "@/components/common/ShortId.tsx";
-import { ResourceDiff } from "@/features/audit-log/components/ResourceDiff.tsx";
+} from "@/components/ui/dialog";
+import { ShortId } from "@/components/common/ShortId";
+import { ResourceDiff } from "@/features/audit-log/components/ResourceDiff";
 import { Button } from "@/components/ui/button";
 
 export interface AuditLogTableProps {

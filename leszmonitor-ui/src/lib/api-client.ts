@@ -1,4 +1,4 @@
-import { readToken } from "@/features/auth/lib/token.ts";
+import { readToken } from "@/features/auth/lib/token";
 
 export const authFetch = async (url: string, options?: RequestInit) => {
   const token = await readToken();

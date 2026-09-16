@@ -9,17 +9,17 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo.tsx";
-import { LMInputField } from "@/components/form/LMInputField.tsx";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo";
+import { LMInputField } from "@/components/form/LMInputField";
 import {
   getFirstError,
   isFieldInvalid,
-} from "@/components/form/field-state.ts";
-import { establishSession } from "@/features/auth/lib/session.ts";
-import { useAppStore } from "@/app/store.ts";
+} from "@/components/form/field-state";
+import { establishSession } from "@/features/auth/lib/session";
+import { useAppStore } from "@/app/store";
 
 const loginFormSchema = z.object({
   username: z.string().min(1, "Username is required"),

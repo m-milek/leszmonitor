@@ -1,20 +1,20 @@
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
-import { LMInputField } from "@/components/form/LMInputField.tsx";
-import { LMColorPicker } from "@/components/form/LMColorPicker.tsx";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { LMInputField } from "@/components/form/LMInputField";
+import { LMColorPicker } from "@/components/form/LMColorPicker";
 import {
   getFirstError,
   isFieldInvalid,
-} from "@/components/form/field-state.ts";
-import { Tag } from "@/features/tags/components/Tag.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
+} from "@/components/form/field-state";
+import { Tag } from "@/features/tags/components/Tag";
+import { Flex } from "@/components/common/Flex";
 import {
   isValidHexColor,
   normalizeHexColor,
   randomTagColor,
-} from "@/features/tags/lib/colors.ts";
-import type { TagPayload } from "@/features/tags/tags-api.ts";
+} from "@/features/tags/lib/colors";
+import type { TagPayload } from "@/features/tags/tags-api";
 
 export interface TagFormProps {
   id?: string;

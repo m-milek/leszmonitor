@@ -1,5 +1,5 @@
-import { SERVER_API_URL } from "@/lib/consts.ts";
-import { authFetch } from "@/lib/api-client.ts";
+import { SERVER_API_URL } from "@/lib/consts";
+import { authFetch } from "@/lib/api-client";
 
 export interface MetadataResponse {
   ciBuildNumber: string;

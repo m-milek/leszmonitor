@@ -1,7 +1,7 @@
-import { Input } from "@/components/ui/input.tsx";
+import { Input } from "@/components/ui/input";
 import type { ComponentProps } from "react";
-import { cn } from "@/lib/utils.ts";
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
+import { cn } from "@/lib/utils";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 type InputProps = ComponentProps<typeof Input>;
 

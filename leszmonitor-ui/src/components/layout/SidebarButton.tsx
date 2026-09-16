@@ -1,8 +1,8 @@
 import {
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar.tsx";
-import { cn } from "@/lib/utils.ts";
+} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
 
 interface SidebarButtonProps {

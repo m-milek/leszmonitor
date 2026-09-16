@@ -1,18 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PageContainer } from "@/components/common/PageContainer.tsx";
-import { TypographyH1 } from "@/components/common/Typography.tsx";
-import { Card, CardContent, CardFooter } from "@/components/ui/card.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { PageContainer } from "@/components/common/PageContainer";
+import { TypographyH1 } from "@/components/common/Typography";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   getMonitorBySlug,
   updateMonitor,
-} from "@/features/monitors/monitors-api.ts";
-import { MonitorForm } from "@/features/monitors/forms/MonitorForm.tsx";
+} from "@/features/monitors/monitors-api";
+import { MonitorForm } from "@/features/monitors/forms/MonitorForm";
 import {
   mapMonitorToFormValues,
   type MonitorFormValues,
-} from "@/features/monitors/schema.ts";
-import { QUERY_KEYS } from "@/lib/consts.ts";
+} from "@/features/monitors/schema";
+import { QUERY_KEYS } from "@/lib/consts";
 
 export interface MonitorEditPageProps {
   monitorSlug: string;

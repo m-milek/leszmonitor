@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button";
 import { LucideCheck, LucideCopy } from "lucide-react";
 
 export interface CopyToClipboardButtonProps {

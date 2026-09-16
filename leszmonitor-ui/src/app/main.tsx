@@ -6,8 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "../routeTree.gen";
 
 import "../styles.css";
-import { ToasterProvider } from "@/app/providers/ToasterProvider.tsx";
-// import reportWebVitals from "../reportWebVitals.ts";
+import { ToasterProvider } from "@/app/providers/ToasterProvider";
+// import reportWebVitals from "../reportWebVitals";
 
 export const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Initial } from "./Initial.tsx";
+import { Initial } from "./Initial";
 
 describe("UserInitial", () => {
   it("renders the first letter uppercased", () => {

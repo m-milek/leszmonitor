@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/sonner.tsx";
+import { Toaster } from "@/components/ui/sonner";
 
 export interface ToasterProviderProps {
   children: React.ReactNode;

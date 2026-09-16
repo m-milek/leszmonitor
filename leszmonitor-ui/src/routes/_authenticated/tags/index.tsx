@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TagsPage } from "@/features/tags/pages/TagsPage.tsx";
+import { TagsPage } from "@/features/tags/pages/TagsPage";
 
 export const Route = createFileRoute("/_authenticated/tags/")({
   head: () => ({

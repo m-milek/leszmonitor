@@ -1,8 +1,8 @@
-import { PageContainer } from "@/components/common/PageContainer.tsx";
-import { TypographyH1 } from "@/components/common/Typography.tsx";
-import { Card, CardContent, CardFooter } from "@/components/ui/card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { NewMonitorForm } from "@/features/monitors/forms/NewMonitorForm.tsx";
+import { PageContainer } from "@/components/common/PageContainer";
+import { TypographyH1 } from "@/components/common/Typography";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { NewMonitorForm } from "@/features/monitors/forms/NewMonitorForm";
 
 export function NewMonitorPage() {
   return (

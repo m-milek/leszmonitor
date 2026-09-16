@@ -5,9 +5,9 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
-} from "@/components/ui/combobox.tsx";
-import { cn } from "@/lib/utils.ts";
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
+} from "@/components/ui/combobox";
+import { cn } from "@/lib/utils";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 export interface LMComboboxProps {
   id: string;

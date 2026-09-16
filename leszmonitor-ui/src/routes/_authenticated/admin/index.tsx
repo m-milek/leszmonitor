@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminPage } from "@/features/users/pages/AdminPage.tsx";
+import { AdminPage } from "@/features/users/pages/AdminPage";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({

@@ -1,4 +1,4 @@
-import type { Timestamps } from "@/lib/types.ts";
+import type { Timestamps } from "@/lib/types";
 
 const monitorStatuses = ["up", "down", "paused", "maintenance"] as const;
 export type MonitorStatus = (typeof monitorStatuses)[number];
@@ -73,7 +73,7 @@ export type {
   MonitorFormValues,
   MonitorCreatePayload,
   MonitorUpdatePayload,
-} from "@/features/monitors/schema.ts";
+} from "@/features/monitors/schema";
 
 export interface MonitorErrorDetails {
   errorMessage: string;

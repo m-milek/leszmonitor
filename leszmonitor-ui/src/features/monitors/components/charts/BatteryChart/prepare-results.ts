@@ -1,4 +1,4 @@
-import type { MonitorResult } from "@/features/monitors/types.ts";
+import type { MonitorResult } from "@/features/monitors/types";
 
 export const prepareResults = (
   monitorResults: MonitorResult[],

@@ -1,13 +1,13 @@
-import type { MonitorResult } from "@/features/monitors/types.ts";
+import type { MonitorResult } from "@/features/monitors/types";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
-import { BAR_WIDTH } from "@/features/monitors/components/charts/BatteryChart/BatteryChart.tsx";
-import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data.ts";
-import { cn } from "@/lib/utils.ts";
+} from "@/components/ui/popover";
+import { Flex } from "@/components/common/Flex";
+import { BAR_WIDTH } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
+import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data";
+import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   up: "bg-green-500",

@@ -1,11 +1,11 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
-import { useAppStore } from "@/app/store.ts";
-import { readToken } from "@/features/auth/lib/token.ts";
+import { useAppStore } from "@/app/store";
+import { readToken } from "@/features/auth/lib/token";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { isMonitorResultMessage } from "@/features/monitors/types.ts";
-import { QUERY_KEYS, SERVER_WS_URL } from "@/lib/consts.ts";
+import { isMonitorResultMessage } from "@/features/monitors/types";
+import { QUERY_KEYS, SERVER_WS_URL } from "@/lib/consts";
 
 type WebSocketProviderProps = {
   children: ReactNode;

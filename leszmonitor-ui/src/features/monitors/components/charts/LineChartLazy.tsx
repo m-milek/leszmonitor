@@ -2,10 +2,10 @@ import { lazy, Suspense } from "react";
 import type {
   LineChart as LineChartImpl,
   LineChartProps,
-} from "./LineChart.tsx";
+} from "./LineChart";
 
 const LineChartInner = lazy(() =>
-  import("./LineChart.tsx").then((m) => ({ default: m.LineChart })),
+  import("./LineChart").then((m) => ({ default: m.LineChart })),
 ) as typeof LineChartImpl;
 
 export type { LineChartProps };

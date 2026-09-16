@@ -1,10 +1,10 @@
-import { SERVER_API_URL } from "@/lib/consts.ts";
-import { authFetch } from "@/lib/api-client.ts";
+import { SERVER_API_URL } from "@/lib/consts";
+import { authFetch } from "@/lib/api-client";
 import type {
   Monitor,
   MonitorCreatePayload,
   MonitorUpdatePayload,
-} from "@/features/monitors/types.ts";
+} from "@/features/monitors/types";
 
 const normalizeMonitor = (monitor: Monitor): Monitor => {
   if (typeof monitor.probeConfig === "string") {

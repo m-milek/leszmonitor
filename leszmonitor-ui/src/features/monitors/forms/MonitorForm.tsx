@@ -1,31 +1,31 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { slugFromString } from "@/lib/slugFromString.ts";
+import { slugFromString } from "@/lib/slugFromString";
 import {
   isValidMonitorType,
   type MonitorType,
-} from "@/features/monitors/types.ts";
+} from "@/features/monitors/types";
 import {
   type MonitorFormValues,
   defaultConfigs,
-} from "@/features/monitors/schema.ts";
-import { buildMonitorDefaults } from "@/features/monitors/forms/monitor-form-defaults.ts";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { LMInputField } from "@/components/form/LMInputField.tsx";
-import { LMSelect } from "@/components/form/LMSelect.tsx";
-import { LMTextareaField } from "@/components/form/LMTextareaField.tsx";
+} from "@/features/monitors/schema";
+import { buildMonitorDefaults } from "@/features/monitors/forms/monitor-form-defaults";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import { LMInputField } from "@/components/form/LMInputField";
+import { LMSelect } from "@/components/form/LMSelect";
+import { LMTextareaField } from "@/components/form/LMTextareaField";
 import {
   getFirstError,
   isFieldInvalid,
-} from "@/components/form/field-state.ts";
-import { Flex } from "@/components/common/Flex.tsx";
-import { Divider } from "@/components/common/Divider.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
-import { MonitorConfigFields } from "@/features/monitors/forms/fields/MonitorConfigFields.tsx";
-import { useMonitorForm } from "@/features/monitors/hooks/useMonitorForm.ts";
-import { LMTagSelect } from "@/features/tags/components/LMTagSelect.tsx";
-import { getAllTags } from "@/features/tags/tags-api.ts";
-import { QUERY_KEYS } from "@/lib/consts.ts";
+} from "@/components/form/field-state";
+import { Flex } from "@/components/common/Flex";
+import { Divider } from "@/components/common/Divider";
+import { Switch } from "@/components/ui/switch";
+import { MonitorConfigFields } from "@/features/monitors/forms/fields/MonitorConfigFields";
+import { useMonitorForm } from "@/features/monitors/hooks/useMonitorForm";
+import { LMTagSelect } from "@/features/tags/components/LMTagSelect";
+import { getAllTags } from "@/features/tags/tags-api";
+import { QUERY_KEYS } from "@/lib/consts";
 
 export interface MonitorFormProps {
   formId?: string;

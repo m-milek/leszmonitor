@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { PageContainer } from "@/components/common/PageContainer.tsx";
-import { TypographyH1, TypographyH2 } from "@/components/common/Typography.tsx";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
+import { PageContainer } from "@/components/common/PageContainer";
+import { TypographyH1, TypographyH2 } from "@/components/common/Typography";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,16 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { UsersTable } from "@/features/users/components/UsersTable.tsx";
-import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm.tsx";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UsersTable } from "@/features/users/components/UsersTable";
+import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm";
 import {
   getAllUsers,
   registerUser,
   type RegisterUserPayload,
-} from "@/features/users/users-api.ts";
+} from "@/features/users/users-api";
 
 export function AdminPage() {
   const queryClient = useQueryClient();

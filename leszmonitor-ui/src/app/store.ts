@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { User } from "@/features/users/types.ts";
+import type { User } from "@/features/users/types";
 import { ReadyState } from "react-use-websocket";
-import type { WebSocketStatus } from "@/app/providers/websocket-status.ts";
+import type { WebSocketStatus } from "@/app/providers/websocket-status";
 
 interface AppState {
   username: string | null;

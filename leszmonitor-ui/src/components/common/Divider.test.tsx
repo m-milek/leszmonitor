@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Divider } from "@/components/common/Divider.tsx";
+import { Divider } from "@/components/common/Divider";
 
 describe("Divider", () => {
   it("renders a horizontal divider when direction is 'row'", () => {

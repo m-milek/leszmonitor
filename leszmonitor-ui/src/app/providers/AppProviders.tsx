@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar.tsx";
-import { ThemeProvider } from "@/components/ui/theme-provider.tsx";
-import { TooltipProvider } from "@/components/ui/tooltip.tsx";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Keep the router devtools out of production bundles. `import.meta.env.PROD` is
 // statically inlined by Vite, so the dynamic import below is dropped entirely

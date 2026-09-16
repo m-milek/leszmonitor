@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils.ts";
+import { cn } from "@/lib/utils";
 
 export interface MainPanelContainerProps {
   className?: string;

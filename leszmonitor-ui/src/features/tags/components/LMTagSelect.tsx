@@ -1,6 +1,6 @@
 import React from "react";
 import { XIcon } from "lucide-react";
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 import {
   Combobox,
   ComboboxChip,
@@ -13,9 +13,9 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
-import { Tag } from "@/features/tags/components/Tag.tsx";
-import { tagChipStyle } from "@/features/tags/lib/colors.ts";
-import type { Tag as TagModel } from "@/features/tags/types.ts";
+import { Tag } from "@/features/tags/components/Tag";
+import { tagChipStyle } from "@/features/tags/lib/colors";
+import type { Tag as TagModel } from "@/features/tags/types";
 
 interface TagOption {
   value: string;

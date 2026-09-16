@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { createMonitor } from "@/features/monitors/monitors-api.ts";
-import { QUERY_KEYS } from "@/lib/consts.ts";
-import type { MonitorFormValues } from "@/features/monitors/schema.ts";
-import { MonitorForm } from "@/features/monitors/forms/MonitorForm.tsx";
+import { createMonitor } from "@/features/monitors/monitors-api";
+import { QUERY_KEYS } from "@/lib/consts";
+import type { MonitorFormValues } from "@/features/monitors/schema";
+import { MonitorForm } from "@/features/monitors/forms/MonitorForm";
 
 export interface NewMonitorFormProps {
   formId?: string;

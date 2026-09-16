@@ -1,12 +1,12 @@
 import { type ColumnDef } from "@tanstack/table-core";
 import { Minus } from "lucide-react";
-import type { Tag as TagModel } from "@/features/tags/types.ts";
-import { DataTable } from "@/components/common/DataTable.tsx";
-import { Tag } from "@/features/tags/components/Tag.tsx";
-import { ShortId } from "@/components/common/ShortId.tsx";
-import { formatDate } from "@/lib/utils.ts";
-import { normalizeHexColor } from "@/features/tags/lib/colors.ts";
-import { DeleteTagDialog } from "@/features/tags/components/DeleteTagDialog.tsx";
+import type { Tag as TagModel } from "@/features/tags/types";
+import { DataTable } from "@/components/common/DataTable";
+import { Tag } from "@/features/tags/components/Tag";
+import { ShortId } from "@/components/common/ShortId";
+import { formatDate } from "@/lib/utils";
+import { normalizeHexColor } from "@/features/tags/lib/colors";
+import { DeleteTagDialog } from "@/features/tags/components/DeleteTagDialog";
 
 export interface TagsTableProps {
   tags: TagModel[];

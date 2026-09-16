@@ -11,8 +11,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart.tsx";
-import { CHART_CONFIG } from "@/features/monitors/components/charts/charts-config.ts";
+} from "@/components/ui/chart";
+import { CHART_CONFIG } from "@/features/monitors/components/charts/charts-config";
 
 export interface LineChartProps<T> {
   data: T[];

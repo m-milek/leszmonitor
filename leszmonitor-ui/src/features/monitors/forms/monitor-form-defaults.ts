@@ -2,7 +2,7 @@ import {
   type MonitorFormValues,
   defaultConfigs,
   newMonitorSchemaDefaultValues,
-} from "@/features/monitors/schema.ts";
+} from "@/features/monitors/schema";
 
 export const buildMonitorDefaults = (
   defaultValues?: Partial<MonitorFormValues>,

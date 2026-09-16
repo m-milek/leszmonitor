@@ -5,10 +5,10 @@ import {
   redirect,
 } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { Providers } from "@/app/providers/AppProviders.tsx";
-import { GlobalNotFound } from "@/components/common/GlobalNotFound.tsx";
-import { isJwtValid } from "@/lib/jwt.ts";
-import { readTokenSync } from "@/features/auth/lib/token.ts";
+import { Providers } from "@/app/providers/AppProviders";
+import { GlobalNotFound } from "@/components/common/GlobalNotFound";
+import { isJwtValid } from "@/lib/jwt";
+import { readTokenSync } from "@/features/auth/lib/token";
 
 export interface RouterContext {
   queryClient: QueryClient;

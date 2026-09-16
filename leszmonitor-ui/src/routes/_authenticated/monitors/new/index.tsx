@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NewMonitorPage } from "@/features/monitors/pages/NewMonitorPage.tsx";
+import { NewMonitorPage } from "@/features/monitors/pages/NewMonitorPage";
 
 export const Route = createFileRoute("/_authenticated/monitors/new/")({
   head: () => ({

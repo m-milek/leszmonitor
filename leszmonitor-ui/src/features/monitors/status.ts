@@ -1,5 +1,5 @@
-import type { MonitorStatus } from "@/features/monitors/types.ts";
-import type { StatusDotProps } from "@/components/common/StatusDot.tsx";
+import type { MonitorStatus } from "@/features/monitors/types";
+import type { StatusDotProps } from "@/components/common/StatusDot";
 
 export const monitorStatusToStatusDot = (
   status: MonitorStatus | undefined,

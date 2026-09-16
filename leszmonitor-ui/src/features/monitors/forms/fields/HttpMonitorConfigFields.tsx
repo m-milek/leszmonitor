@@ -1,16 +1,16 @@
-import { Flex } from "@/components/common/Flex.tsx";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field.tsx";
-import { LMInputField } from "@/components/form/LMInputField.tsx";
-import { LMSelect } from "@/components/form/LMSelect.tsx";
-import { LMTextareaField } from "@/components/form/LMTextareaField.tsx";
+import { Flex } from "@/components/common/Flex";
+import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import { LMInputField } from "@/components/form/LMInputField";
+import { LMSelect } from "@/components/form/LMSelect";
+import { LMTextareaField } from "@/components/form/LMTextareaField";
 import {
   getFirstError,
   isFieldInvalid,
-} from "@/components/form/field-state.ts";
-import { LMSwitch } from "@/components/form/LMSwitch.tsx";
-import { LMKeyValueInput } from "@/components/form/LMKeyValue.tsx";
-import { LMMultiSelect } from "@/components/form/LMMultiSelect.tsx";
-import type { HttpMethod } from "@/features/monitors/types.ts";
+} from "@/components/form/field-state";
+import { LMSwitch } from "@/components/form/LMSwitch";
+import { LMKeyValueInput } from "@/components/form/LMKeyValue";
+import { LMMultiSelect } from "@/components/form/LMMultiSelect";
+import type { HttpMethod } from "@/features/monitors/types";
 import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
 
 const httpMethodItems = [

@@ -4,9 +4,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
-import { cn } from "@/lib/utils.ts";
+} from "@/components/ui/select";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
+import { cn } from "@/lib/utils";
 
 export interface LMSelectOption {
   value: string;

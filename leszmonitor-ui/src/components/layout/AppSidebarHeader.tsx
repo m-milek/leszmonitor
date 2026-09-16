@@ -1,8 +1,8 @@
-import { SidebarHeader } from "@/components/ui/sidebar.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
+import { SidebarHeader } from "@/components/ui/sidebar";
+import { Flex } from "@/components/common/Flex";
 import { Link } from "@tanstack/react-router";
-import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo.tsx";
-import { WebSocketStatusIndicator } from "@/components/layout/WebSocketStatusIndicator.tsx";
+import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo";
+import { WebSocketStatusIndicator } from "@/components/layout/WebSocketStatusIndicator";
 
 export function AppSidebarHeader() {
   return (

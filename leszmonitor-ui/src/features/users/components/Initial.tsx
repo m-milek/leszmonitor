@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { colorFromString } from "@/lib/colorFromString.ts";
+import { colorFromString } from "@/lib/colorFromString";
 
 export interface UserInitialProps {
   text: string;

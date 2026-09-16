@@ -1,7 +1,7 @@
-import type { Tag as TagModel } from "@/features/tags/types.ts";
-import { Badge } from "@/components/ui/badge.tsx";
-import { cn } from "@/lib/utils.ts";
-import { tagChipStyle } from "@/features/tags/lib/colors.ts";
+import type { Tag as TagModel } from "@/features/tags/types";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { tagChipStyle } from "@/features/tags/lib/colors";
 
 export interface TagProps {
   tag: Pick<TagModel, "name" | "colorHex"> &

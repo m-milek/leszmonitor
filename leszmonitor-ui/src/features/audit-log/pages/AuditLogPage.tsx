@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { PageContainer } from "@/components/common/PageContainer.tsx";
-import { TypographyH1 } from "@/components/common/Typography.tsx";
-import { AuditLogTable } from "@/features/audit-log/components/AuditLogTable.tsx";
-import { getAuditLogByFilter } from "@/features/audit-log/audit-log-api.ts";
-import type { AuditLogFilters } from "@/features/audit-log/types.ts";
+import { PageContainer } from "@/components/common/PageContainer";
+import { TypographyH1 } from "@/components/common/Typography";
+import { AuditLogTable } from "@/features/audit-log/components/AuditLogTable";
+import { getAuditLogByFilter } from "@/features/audit-log/audit-log-api";
+import type { AuditLogFilters } from "@/features/audit-log/types";
 
 export function AuditLogPage() {
   const [filters] = useState<AuditLogFilters>({});

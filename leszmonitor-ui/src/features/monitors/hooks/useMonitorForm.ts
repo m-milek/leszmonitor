@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import {
   type MonitorFormValues,
   newMonitorSchema,
-} from "@/features/monitors/schema.ts";
+} from "@/features/monitors/schema";
 
 interface UseMonitorFormOptions {
   defaultValues: MonitorFormValues;

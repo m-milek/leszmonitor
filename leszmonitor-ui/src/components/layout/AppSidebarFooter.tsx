@@ -1,18 +1,18 @@
-import type { User } from "@/features/users/types.ts";
+import type { User } from "@/features/users/types";
 import { LucideEllipsisVertical, LucideLogOut } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
-import { Metadata } from "@/components/layout/Metadata.tsx";
+} from "@/components/ui/dropdown-menu";
+import { Flex } from "@/components/common/Flex";
+import { Metadata } from "@/components/layout/Metadata";
 import { useQuery } from "@tanstack/react-query";
-import { getMetadata } from "@/features/instance/metadata-api.ts";
-import { clearToken } from "@/features/auth/lib/token.ts";
+import { getMetadata } from "@/features/instance/metadata-api";
+import { clearToken } from "@/features/auth/lib/token";
 
 export interface AppSidebarFooterProps {
   user: User;

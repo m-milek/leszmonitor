@@ -1,13 +1,13 @@
-import { Flex } from "@/components/common/Flex.tsx";
-import { Field, FieldLabel } from "@/components/ui/field.tsx";
-import { LMInputField } from "@/components/form/LMInputField.tsx";
-import { LMSelect } from "@/components/form/LMSelect.tsx";
+import { Flex } from "@/components/common/Flex";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { LMInputField } from "@/components/form/LMInputField";
+import { LMSelect } from "@/components/form/LMSelect";
 import {
   getFirstError,
   isFieldInvalid,
-} from "@/components/form/field-state.ts";
-import type { TcpProtocol } from "@/features/monitors/types.ts";
-import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm.ts";
+} from "@/components/form/field-state";
+import type { TcpProtocol } from "@/features/monitors/types";
+import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
 
 const protocolItems: { value: TcpProtocol; label: string }[] = [
   { value: "tcp", label: "TCP" },

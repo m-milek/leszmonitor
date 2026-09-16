@@ -1,5 +1,5 @@
-import { ErrorTooltip } from "@/components/form/ErrorTooltip.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
+import { ErrorTooltip } from "@/components/form/ErrorTooltip";
+import { Switch } from "@/components/ui/switch";
 
 export interface LMSwitchProps {
   name: string;

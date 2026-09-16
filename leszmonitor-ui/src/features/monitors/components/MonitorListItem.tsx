@@ -1,16 +1,16 @@
-import { monitorStatusToStatusDot } from "@/features/monitors/status.ts";
-import type { Monitor } from "@/features/monitors/types.ts";
-import { TypographyH3 } from "@/components/common/Typography.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
-import { StyledLink } from "@/components/common/StyledLink.tsx";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
+import { monitorStatusToStatusDot } from "@/features/monitors/status";
+import type { Monitor } from "@/features/monitors/types";
+import { TypographyH3 } from "@/components/common/Typography";
+import { Flex } from "@/components/common/Flex";
+import { StyledLink } from "@/components/common/StyledLink";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LucideEdit, LucideTrash2 } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
-import { StatusDot } from "@/components/common/StatusDot.tsx";
-import { QUERY_KEYS } from "@/lib/consts.ts";
-import { getLatestMonitorResultByMonitorId } from "@/features/monitors/results-api.ts";
+import { Button } from "@/components/ui/button";
+import { StatusDot } from "@/components/common/StatusDot";
+import { QUERY_KEYS } from "@/lib/consts";
+import { getLatestMonitorResultByMonitorId } from "@/features/monitors/results-api";
 import { useQuery } from "@tanstack/react-query";
-import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill.tsx";
+import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
 
 export interface MonitorListItemProps {
   monitor: Monitor;

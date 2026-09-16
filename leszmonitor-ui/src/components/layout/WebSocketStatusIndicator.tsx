@@ -1,12 +1,12 @@
-import { useAppStore } from "@/app/store.ts";
+import { useAppStore } from "@/app/store";
 import { ReadyState } from "react-use-websocket";
-import { cn } from "@/lib/utils.ts";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
-import type { WebSocketStatus } from "@/app/providers/websocket-status.ts";
+} from "@/components/ui/tooltip";
+import type { WebSocketStatus } from "@/app/providers/websocket-status";
 
 const connectionStatusLabel = {
   [ReadyState.CONNECTING]: "Connecting",

@@ -1,17 +1,17 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LucidePlusCircle } from "lucide-react";
-import { PageContainer } from "@/components/common/PageContainer.tsx";
-import { TypographyH1 } from "@/components/common/Typography.tsx";
-import { Flex } from "@/components/common/Flex.tsx";
-import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { PageContainer } from "@/components/common/PageContainer";
+import { TypographyH1 } from "@/components/common/Typography";
+import { Flex } from "@/components/common/Flex";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   deleteMonitor,
   getAllMonitors,
-} from "@/features/monitors/monitors-api.ts";
-import { MonitorListItem } from "@/features/monitors/components/MonitorListItem.tsx";
-import { QUERY_KEYS } from "@/lib/consts.ts";
+} from "@/features/monitors/monitors-api";
+import { MonitorListItem } from "@/features/monitors/components/MonitorListItem";
+import { QUERY_KEYS } from "@/lib/consts";
 
 export function MonitorsPage() {
   const queryClient = useQueryClient();

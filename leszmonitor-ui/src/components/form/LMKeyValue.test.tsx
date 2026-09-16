@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   LMKeyValueInput,
   pairsToRecord,
-} from "@/components/form/LMKeyValue.tsx";
+} from "@/components/form/LMKeyValue";
 import { userEvent } from "@testing-library/user-event/dist/cjs/setup/index.js";
 
 function renderWithProvider(ui: React.ReactElement) {

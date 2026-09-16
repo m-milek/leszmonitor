@@ -10,12 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Tag } from "@/features/tags/components/Tag.tsx";
-import { deleteTag } from "@/features/tags/tags-api.ts";
-import { QUERY_KEYS } from "@/lib/consts.ts";
-import type { Tag as TagModel } from "@/features/tags/types.ts";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Tag } from "@/features/tags/components/Tag";
+import { deleteTag } from "@/features/tags/tags-api";
+import { QUERY_KEYS } from "@/lib/consts";
+import type { Tag as TagModel } from "@/features/tags/types";
 
 export interface DeleteTagDialogProps {
   tag: TagModel;

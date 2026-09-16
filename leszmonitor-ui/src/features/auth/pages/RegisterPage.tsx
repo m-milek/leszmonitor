@@ -7,16 +7,16 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo.tsx";
-import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm.tsx";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo";
+import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm";
 import {
   registerUser,
   type RegisterUserPayload,
-} from "@/features/users/users-api.ts";
-import { establishSession } from "@/features/auth/lib/session.ts";
-import { useAppStore } from "@/app/store.ts";
+} from "@/features/users/users-api";
+import { establishSession } from "@/features/auth/lib/session";
+import { useAppStore } from "@/app/store";
 
 export function RegisterPage() {
   const navigate = useNavigate();
