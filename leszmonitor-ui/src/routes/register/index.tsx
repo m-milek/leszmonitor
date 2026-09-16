@@ -23,6 +23,9 @@ import { toast } from "sonner";
 import { RegisterUserForm } from "@/components/leszmonitor/forms/RegisterUserForm.tsx";
 
 export const Route = createFileRoute("/register/")({
+  head: () => ({
+    meta: [{ title: "Register | Leszmonitor" }],
+  }),
   component: RegisterComponent,
 });
 

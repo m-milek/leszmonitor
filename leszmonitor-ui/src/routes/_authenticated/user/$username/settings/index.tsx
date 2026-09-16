@@ -7,6 +7,9 @@ import { useTheme } from "@/components/ui/theme-provider.tsx";
 export const Route = createFileRoute(
   "/_authenticated/user/$username/settings/",
 )({
+  head: () => ({
+    meta: [{ title: "Settings | Leszmonitor" }],
+  }),
   component: RouteComponent,
 });
 

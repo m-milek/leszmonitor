@@ -5,6 +5,9 @@ import { getUser } from "@/lib/data/userData.ts";
 import { UserProfilePage } from "@/components/leszmonitor/UserProfilePage.tsx";
 
 export const Route = createFileRoute("/_authenticated/user/$username/")({
+  head: ({ params }) => ({
+    meta: [{ title: `${params.username} | Leszmonitor` }],
+  }),
   component: UserProfileComponent,
 });
 

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button.tsx";
 import { NewMonitorForm } from "@/components/leszmonitor/forms/NewMonitorForm.tsx";
 
 export const Route = createFileRoute("/_authenticated/monitors/new/")({
+  head: () => ({
+    meta: [{ title: "New Monitor | Leszmonitor" }],
+  }),
   component: NewMonitorComponent,
 });
 

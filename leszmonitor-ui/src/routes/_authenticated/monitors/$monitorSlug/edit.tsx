@@ -15,6 +15,14 @@ import {
 export const Route = createFileRoute(
   "/_authenticated/monitors/$monitorSlug/edit",
 )({
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData({
+      queryKey: [QUERY_KEYS.MONITORS, params.monitorSlug],
+      queryFn: () => getMonitorBySlug(params.monitorSlug),
+    }),
+  head: ({ loaderData }) => ({
+    meta: [{ title: `Edit ${loaderData?.name ?? "Monitor"} | Leszmonitor` }],
+  }),
   component: MonitorEditRoute,
 });
 

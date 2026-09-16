@@ -26,6 +26,9 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login/")({
+  head: () => ({
+    meta: [{ title: "Log in | Leszmonitor" }],
+  }),
   component: RouteComponent,
 });
 

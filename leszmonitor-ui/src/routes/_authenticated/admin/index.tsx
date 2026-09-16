@@ -26,6 +26,9 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({
+    meta: [{ title: "Administration | Leszmonitor" }],
+  }),
   component: AdminDashboardRoute,
 });
 
