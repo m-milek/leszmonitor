@@ -20,9 +20,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card.tsx";
 import { Flex } from "@/components/leszmonitor/ui/Flex.tsx";
 import { ButtonGroup } from "@/components/ui/button-group.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { PauseIcon, PlayIcon, TrashIcon } from "lucide-react";
+import { PauseIcon, PencilIcon, PlayIcon } from "lucide-react";
 import { MonitorStatusPill } from "@/components/leszmonitor/MonitorStatusPill.tsx";
 import { getLatencyStatsByMonitorId } from "@/lib/data/monitorStats.ts";
+import { DeleteMonitorDialog } from "@/components/leszmonitor/dialogs/DeleteMonitorDialog.tsx";
 
 const latencyChartConfig = {
   durationMs: {
@@ -41,6 +42,8 @@ function RouteComponent() {
   };
 
   const { monitorSlug } = Route.useParams();
+
+  const navigate = Route.useNavigate();
 
   const queryClient = useQueryClient();
 
@@ -85,6 +88,13 @@ function RouteComponent() {
     mutation.mutate();
   };
 
+  const handleEditMonitor = () => {
+    navigate({
+      to: "/monitors/$monitorSlug/edit",
+      params: { monitorSlug },
+    });
+  };
+
   return (
     <PageContainer>
       <TypographyH1>{monitor.name}</TypographyH1>
@@ -97,9 +107,17 @@ function RouteComponent() {
           >
             {isPaused ? <PlayIcon /> : <PauseIcon />}
           </Button>
-          <Button variant="destructive" className="size-10">
-            <TrashIcon />
+          <Button
+            variant="outline"
+            className="size-10"
+            onClick={handleEditMonitor}
+          >
+            <PencilIcon />
           </Button>
+          <DeleteMonitorDialog
+            monitor={monitor}
+            onDeleted={() => navigate({ to: "/monitors" })}
+          />
         </ButtonGroup>
         <MonitorStatusPill monitor={monitor} />
       </Flex>

@@ -101,3 +101,13 @@ CREATE TRIGGER IF NOT EXISTS update_tags_updated_at
 BEGIN
     UPDATE tags SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
 END;
+
+CREATE TABLE IF NOT EXISTS monitor_tags (
+    monitor_id TEXT NOT NULL,
+    tag_id     TEXT NOT NULL,
+
+    PRIMARY KEY (monitor_id, tag_id),
+    FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_monitor_tags_tag_id ON monitor_tags (tag_id);

@@ -24,6 +24,7 @@ type Monitor struct {
 	ResultRetentionSeconds int              `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
 	RunState               MonitorRunState  `json:"runState" db:"run_state"`                              // RunState indicates whether the monitor is currently running or stopped
 	OwnerID                uuid.UUID        `json:"ownerId"                db:"owner_id"`                 // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
+	TagIDs                 []uuid.UUID      `json:"tagIds"                 db:"-"`
 }
 
 type Probe interface {
@@ -54,6 +55,7 @@ func InitializeFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
 		ProbeConfig:            payload.ProbeConfig,
 		ResultRetentionSeconds: int((48 * time.Hour).Seconds()), // TODO: Make this configurable later
 		RunState:               MonitorStateActive,
+		TagIDs:                 payload.TagIDs,
 	}
 }
 
