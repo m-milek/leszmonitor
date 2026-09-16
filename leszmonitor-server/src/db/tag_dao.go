@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/models"
+	platformdb "github.com/m-milek/leszmonitor/platform/db"
 )
 
 type ITagDAO interface {
@@ -30,7 +31,7 @@ func newTagDAO(base baseDAO) ITagDAO {
 
 // InsertTag adds a new tag to the database and returns the created tag.
 func (r *tagDAO) InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, error) {
-	return dbWrap(ctx, "InsertTag", func() (*models.Tag, error) {
+	return platformdb.Wrap(ctx, "InsertTag", func() (*models.Tag, error) {
 		id := tag.ID
 		if id == uuid.Nil {
 			id = uuid.New()
@@ -48,7 +49,7 @@ func (r *tagDAO) InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, er
 			tag.ColorHex,
 		).StructScan(&createdTag)
 		if err != nil {
-			if isUniqueViolation(err) {
+			if platformdb.IsUniqueViolation(err) {
 				return nil, ErrAlreadyExists
 			}
 			return nil, err
@@ -59,7 +60,7 @@ func (r *tagDAO) InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, er
 }
 
 func (r *tagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*models.Tag, error) {
-	return dbWrap(ctx, "GetTagByID", func() (*models.Tag, error) {
+	return platformdb.Wrap(ctx, "GetTagByID", func() (*models.Tag, error) {
 		var tag models.Tag
 		err := sqlx.GetContext(
 			ctx,
@@ -81,7 +82,7 @@ func (r *tagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*models.Tag, err
 }
 
 func (r *tagDAO) GetAllTags(ctx context.Context) ([]models.Tag, error) {
-	return dbWrap(ctx, "GetAllTags", func() ([]models.Tag, error) {
+	return platformdb.Wrap(ctx, "GetAllTags", func() ([]models.Tag, error) {
 		var tags []models.Tag
 		err := sqlx.SelectContext(
 			ctx,
@@ -102,7 +103,7 @@ func (r *tagDAO) GetAllTags(ctx context.Context) ([]models.Tag, error) {
 }
 
 func (r *tagDAO) UpdateTag(ctx context.Context, newTag models.Tag) (*models.Tag, error) {
-	return dbWrap(ctx, "UpdateTag", func() (*models.Tag, error) {
+	return platformdb.Wrap(ctx, "UpdateTag", func() (*models.Tag, error) {
 		var updatedTag models.Tag
 		// updated_at is set explicitly because the AFTER UPDATE trigger fires
 		// after RETURNING has already captured the row.
@@ -129,7 +130,7 @@ func (r *tagDAO) UpdateTag(ctx context.Context, newTag models.Tag) (*models.Tag,
 }
 
 func (r *tagDAO) DeleteTagByID(ctx context.Context, tagID uuid.UUID) (*uuid.UUID, error) {
-	return dbWrap(ctx, "DeleteTagByID", func() (*uuid.UUID, error) {
+	return platformdb.Wrap(ctx, "DeleteTagByID", func() (*uuid.UUID, error) {
 		var id uuid.UUID
 		err := r.pool.QueryRowxContext(ctx, `DELETE FROM tags WHERE id = $1 RETURNING id`, tagID).
 			Scan(&id)

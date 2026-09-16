@@ -1,4 +1,4 @@
-package db
+package audit
 
 import (
 	"context"
@@ -7,32 +7,32 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type IAuditLogDAO interface {
-	InsertAuditLogEntry(ctx context.Context, entry audit.AuditLogEntry) (any, error)
+	InsertAuditLogEntry(ctx context.Context, entry AuditLogEntry) (any, error)
 	GetAuditLogEntries(
 		ctx context.Context,
-		filter audit.AuditLogFilter,
+		filter AuditLogFilter,
 		pagination util.Pagination,
-	) ([]audit.AuditLogEntry, error)
-	Record(ctx context.Context, params audit.AuditLogParams) error
+	) ([]AuditLogEntry, error)
+	Record(ctx context.Context, params AuditLogParams) error
 }
 
 type auditLogDAO struct {
-	baseDAO
+	pool db.Querier
 }
 
-func newAuditLogDAO(base baseDAO) IAuditLogDAO {
+func NewAuditLogDAO(pool db.Querier) IAuditLogDAO {
 	return &auditLogDAO{
-		baseDAO: base,
+		pool: pool,
 	}
 }
 
-func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry audit.AuditLogEntry) (any, error) {
-	return dbWrap(ctx, "InsertAuditLogEntry", func() (any, error) {
+func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry AuditLogEntry) (any, error) {
+	return db.Wrap(ctx, "InsertAuditLogEntry", func() (any, error) {
 		_, err := a.pool.ExecContext(
 			ctx,
 			`INSERT INTO audit_logs (id, username, resource_id, action, is_success, summary, before, after, trace_id, created_at)
@@ -55,8 +55,8 @@ func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry audit.AuditL
 	})
 }
 
-func (a auditLogDAO) Record(ctx context.Context, params audit.AuditLogParams) error {
-	entry, err := audit.NewAuditLogEntry(ctx, params)
+func (a auditLogDAO) Record(ctx context.Context, params AuditLogParams) error {
+	entry, err := NewAuditLogEntry(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -66,12 +66,12 @@ func (a auditLogDAO) Record(ctx context.Context, params audit.AuditLogParams) er
 
 func (a auditLogDAO) GetAuditLogEntries(
 	ctx context.Context,
-	filter audit.AuditLogFilter,
+	filter AuditLogFilter,
 	pagination util.Pagination,
-) ([]audit.AuditLogEntry, error) {
-	return dbWrap(ctx, "GetAuditLogEntries", func() ([]audit.AuditLogEntry, error) {
+) ([]AuditLogEntry, error) {
+	return db.Wrap(ctx, "GetAuditLogEntries", func() ([]AuditLogEntry, error) {
 		var (
-			entries    []audit.AuditLogEntry
+			entries    []AuditLogEntry
 			conditions []string
 			args       []any
 		)
@@ -117,7 +117,7 @@ func (a auditLogDAO) GetAuditLogEntries(
 			return nil, err
 		}
 		if entries == nil {
-			entries = []audit.AuditLogEntry{}
+			entries = []AuditLogEntry{}
 		}
 		return entries, nil
 	})

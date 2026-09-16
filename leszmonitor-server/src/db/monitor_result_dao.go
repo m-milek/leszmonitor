@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitorresult"
+	platformdb "github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
 
@@ -39,7 +40,7 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 	id string,
 	pagination *util.Pagination,
 ) ([]monitorresult.IMonitorResult, error) {
-	return dbWrap(ctx, "GetMonitorResultsByMonitorID", func() ([]monitorresult.IMonitorResult, error) {
+	return platformdb.Wrap(ctx, "GetMonitorResultsByMonitorID", func() ([]monitorresult.IMonitorResult, error) {
 		var results []monitorresult.MonitorResult
 
 		err := sqlx.SelectContext(ctx, r.pool, &results, `
@@ -81,7 +82,7 @@ func (r *monitorResultDAO) InsertMonitorResult(
 	ctx context.Context,
 	result monitorresult.IMonitorResult,
 ) (any, error) {
-	return dbWrap(ctx, "InsertMonitorResult", func() (any, error) {
+	return platformdb.Wrap(ctx, "InsertMonitorResult", func() (any, error) {
 		detailsJSON, err := json.Marshal(result.GetDetails())
 		if err != nil {
 			return nil, err
@@ -118,7 +119,7 @@ func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
 	ctx context.Context,
 	monitorID string,
 ) (monitorresult.IMonitorResult, error) {
-	return dbWrap(ctx, "GetLatestMonitorResultByMonitorID", func() (monitorresult.IMonitorResult, error) {
+	return platformdb.Wrap(ctx, "GetLatestMonitorResultByMonitorID", func() (monitorresult.IMonitorResult, error) {
 		var result monitorresult.MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `
@@ -179,7 +180,7 @@ func (r *monitorResultDAO) DeleteMonitorResultsOlderThanDuration(
 	monitorID uuid.UUID,
 	duration time.Duration,
 ) (int64, error) {
-	return dbWrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
+	return platformdb.Wrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
 		cutoffTime := time.Now().UTC().Add(-duration).Format(time.RFC3339)
 		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM monitor_results WHERE monitor_id = $1 AND created_at < $2`,

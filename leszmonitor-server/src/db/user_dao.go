@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/platform/auth"
+	platformdb "github.com/m-milek/leszmonitor/platform/db"
 )
 
 type IUserDAO interface {
@@ -30,7 +31,7 @@ func newUserDAO(dao baseDAO) IUserDAO {
 }
 
 func (r *UserDAO) InsertUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return dbWrap(ctx, "CreateUser", func() (*models.User, error) {
+	return platformdb.Wrap(ctx, "CreateUser", func() (*models.User, error) {
 		if user.ID == uuid.Nil {
 			user.ID = uuid.New()
 		}
@@ -46,7 +47,7 @@ func (r *UserDAO) InsertUser(ctx context.Context, user *models.User) (*models.Us
 		).StructScan(&createdUser)
 
 		if err != nil {
-			if isUniqueViolation(err) {
+			if platformdb.IsUniqueViolation(err) {
 				return nil, ErrAlreadyExists
 			}
 			return nil, err
@@ -61,7 +62,7 @@ func (r *UserDAO) UpdateUserRole(
 	userID uuid.UUID,
 	role auth.Role,
 ) (*models.User, error) {
-	return dbWrap(ctx, "UpdateUserRole", func() (*models.User, error) {
+	return platformdb.Wrap(ctx, "UpdateUserRole", func() (*models.User, error) {
 		var updatedUser models.User
 		err := r.pool.QueryRowxContext(
 			ctx,
@@ -80,7 +81,7 @@ func (r *UserDAO) UpdateUserRole(
 }
 
 func (r *UserDAO) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
-	return dbWrap(ctx, "GetUserByUsername", func() (*models.User, error) {
+	return platformdb.Wrap(ctx, "GetUserByUsername", func() (*models.User, error) {
 		var user models.User
 		err := sqlx.GetContext(ctx, r.pool, &user,
 			`SELECT id, username, role, password_hash, created_at, updated_at FROM users WHERE username=$1`,
@@ -96,7 +97,7 @@ func (r *UserDAO) GetUserByUsername(ctx context.Context, username string) (*mode
 }
 
 func (r *UserDAO) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	return dbWrap(ctx, "GetUserByID", func() (*models.User, error) {
+	return platformdb.Wrap(ctx, "GetUserByID", func() (*models.User, error) {
 		var user models.User
 		err := sqlx.GetContext(ctx, r.pool, &user,
 			`SELECT id, username, role, password_hash, created_at, updated_at FROM users WHERE id=$1`,
@@ -112,7 +113,7 @@ func (r *UserDAO) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, 
 }
 
 func (r *UserDAO) GetAllUsers(ctx context.Context) ([]models.User, error) {
-	return dbWrap(ctx, "GetAllUsers", func() ([]models.User, error) {
+	return platformdb.Wrap(ctx, "GetAllUsers", func() ([]models.User, error) {
 		var users []models.User
 		err := sqlx.SelectContext(ctx, r.pool, &users,
 			`SELECT id, username, role, password_hash, created_at, updated_at FROM users`)
