@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   install:
@@ -6,48 +6,48 @@ tasks:
     cmds:
       - npm ci
     sources:
-      - 'package.json'
-      - 'package-lock.json'
+      - "package.json"
+      - "package-lock.json"
     generates:
-      - 'node_modules/**/*'
+      - "node_modules/**/*"
   dev:
     desc: Run the front-end development server
-    deps: [ install ]
+    deps: [install]
     cmds:
       - npm run dev
 
   build:
     desc: Build the front-end for production
-    deps: [ install ]
+    deps: [install]
     cmds:
       - npm run build
     sources:
-      - 'src/**/*'
-      - 'public/**/*'
-      - 'index.html'
-      - 'vite.config.ts'
-      - 'package.json'
-      - 'tsconfig.json'
+      - "src/**/*"
+      - "public/**/*"
+      - "index.html"
+      - "vite.config.ts"
+      - "package.json"
+      - "tsconfig.json"
     generates:
-      - 'dist/**/*'
+      - "dist/**/*"
   start:
     desc: Start the front-end production server
-    deps: [ build ]
+    deps: [build]
     cmds:
       - npm run serve
   test:
     desc: Run the front-end tests
-    deps: [ install ]
+    deps: [install]
     cmds:
       - npm run test
   lint:
     desc: Lint the front-end code
-    deps: [ install ]
+    deps: [install]
     cmds:
       - npx eslint .
     sources:
-      - 'src/**/*.{js,ts,jsx,tsx}'
-      - 'eslint.config.js'
+      - "src/**/*.{js,ts,jsx,tsx}"
+      - "eslint.config.js"
   clean:
     desc: Clean front-end build artifacts
     cmds:
@@ -56,26 +56,26 @@ tasks:
 
   install:e2e:
     desc: Install dependencies for end-to-end tests
-    deps: [ install ]
+    deps: [install]
     cmds:
       - npx playwright install
 
   test:e2e:
-    deps: [ install:e2e ]
+    deps: [install:e2e]
     dir: ./e2e
     desc: Run end-to-end tests
     cmds:
       - npx playwright test
 
   test:e2e:headed:
-    deps: [ install:e2e ]
+    deps: [install:e2e]
     dir: ./e2e
     desc: Run end-to-end tests in headed mode
     cmds:
       - npx playwright test --headed
 
   test:e2e:ui:
-    deps: [ install:e2e ]
+    deps: [install:e2e]
     dir: ./e2e
     desc: Run end-to-end tests in headed mode
     cmds:
