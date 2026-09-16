@@ -167,7 +167,7 @@ func SetupRouters(
 	)
 
 	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}/stats/latency",
+		"GET /api/v1/monitors/{monitorId}/stats",
 		middleware.RequirePermission(
 			h.AuthzMiddlewareService,
 			models.PermissionReader,
