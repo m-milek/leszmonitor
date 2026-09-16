@@ -121,9 +121,7 @@ function SelectTrigger({
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onClearClick(
-                  e as unknown as React.MouseEvent<HTMLDivElement>,
-                );
+                onClearClick(e as unknown as React.MouseEvent<HTMLDivElement>);
               }
             }}
           >
