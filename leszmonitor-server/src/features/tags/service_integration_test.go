@@ -1,12 +1,10 @@
-package services
+package tags
 
 import (
 	"net/http"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
@@ -15,9 +13,9 @@ import (
 
 func TestIntegration_TagService_CreateTag(t *testing.T) {
 	t.Run("Successfully creates a tag", func(t *testing.T) {
-		ctx, tagService, _, owner := setupTagIntegrationTest(t)
+		ctx, tagService, database, owner := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, models.Tag{
+		created, svcErr := tagService.CreateTag(ctx, Tag{
 			Name:        "  Production ",
 			Description: "Production environment",
 			ColorHex:    "#ABC",
@@ -32,7 +30,8 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 
 		// Verify audit log was created
 		filter := audit.AuditLogFilter{ResourceID: &created.ID}
-		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, dbErr := audit.NewAuditLogDAO(database.Querier()).
+			GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
@@ -51,7 +50,7 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
 		clientID := uuid.New()
-		created, svcErr := tagService.CreateTag(ctx, models.Tag{
+		created, svcErr := tagService.CreateTag(ctx, Tag{
 			ID:       clientID,
 			Name:     "Staging",
 			ColorHex: "#001122",
@@ -63,11 +62,11 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 	t.Run("Rejects an invalid tag", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		_, svcErr := tagService.CreateTag(ctx, models.Tag{Name: "No color"})
+		_, svcErr := tagService.CreateTag(ctx, Tag{Name: "No color"})
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 
-		_, svcErr = tagService.CreateTag(ctx, models.Tag{Name: "", ColorHex: "#aabbcc"})
+		_, svcErr = tagService.CreateTag(ctx, Tag{Name: "", ColorHex: "#aabbcc"})
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -75,7 +74,7 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 	t.Run("Allows duplicate names", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		payload := models.Tag{Name: "Production", ColorHex: "#aabbcc"}
+		payload := Tag{Name: "Production", ColorHex: "#aabbcc"}
 		first, svcErr := tagService.CreateTag(ctx, payload)
 		require.Nil(t, svcErr)
 
@@ -89,7 +88,7 @@ func TestIntegration_TagService_GetTagByID(t *testing.T) {
 	t.Run("Returns the tag", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, models.Tag{
+		created, svcErr := tagService.CreateTag(ctx, Tag{
 			Name:        "Production",
 			Description: "Production environment",
 			ColorHex:    "#aabbcc",
@@ -125,9 +124,9 @@ func TestIntegration_TagService_GetAllTags(t *testing.T) {
 	t.Run("Returns every tag in the instance", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		t1, svcErr := tagService.CreateTag(ctx, models.Tag{Name: "Production", ColorHex: "#aabbcc"})
+		t1, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
-		t2, svcErr := tagService.CreateTag(ctx, models.Tag{Name: "Staging", ColorHex: "#001122"})
+		t2, svcErr := tagService.CreateTag(ctx, Tag{Name: "Staging", ColorHex: "#001122"})
 		require.Nil(t, svcErr)
 
 		all, svcErr := tagService.GetAllTags(ctx)
@@ -153,16 +152,16 @@ func TestIntegration_TagService_GetAllTags(t *testing.T) {
 
 func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Successfully updates a tag", func(t *testing.T) {
-		ctx, tagService, _, owner := setupTagIntegrationTest(t)
+		ctx, tagService, database, owner := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, models.Tag{
+		created, svcErr := tagService.CreateTag(ctx, Tag{
 			Name:        "Production",
 			Description: "Production environment",
 			ColorHex:    "#aabbcc",
 		})
 		require.Nil(t, svcErr)
 
-		updated, svcErr := tagService.UpdateTag(ctx, models.Tag{
+		updated, svcErr := tagService.UpdateTag(ctx, Tag{
 			ID:          created.ID,
 			Name:        "Prod",
 			Description: "Renamed",
@@ -181,7 +180,8 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 
 		// Verify audit log records both the before and after state
 		filter := audit.AuditLogFilter{ResourceID: &created.ID}
-		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, dbErr := audit.NewAuditLogDAO(database.Querier()).
+			GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
@@ -202,7 +202,7 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Returns not found for an unknown ID", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		_, svcErr := tagService.UpdateTag(ctx, models.Tag{
+		_, svcErr := tagService.UpdateTag(ctx, Tag{
 			ID:       uuid.New(),
 			Name:     "Ghost",
 			ColorHex: "#aabbcc",
@@ -214,10 +214,10 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Rejects an invalid tag", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, models.Tag{Name: "Production", ColorHex: "#aabbcc"})
+		created, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
 
-		_, svcErr = tagService.UpdateTag(ctx, models.Tag{ID: created.ID, Name: "Prod", ColorHex: "not-a-color"})
+		_, svcErr = tagService.UpdateTag(ctx, Tag{ID: created.ID, Name: "Prod", ColorHex: "not-a-color"})
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -225,12 +225,12 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Allows renaming onto an existing name", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		_, svcErr := tagService.CreateTag(ctx, models.Tag{Name: "Production", ColorHex: "#aabbcc"})
+		_, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
-		staging, svcErr := tagService.CreateTag(ctx, models.Tag{Name: "Staging", ColorHex: "#001122"})
+		staging, svcErr := tagService.CreateTag(ctx, Tag{Name: "Staging", ColorHex: "#001122"})
 		require.Nil(t, svcErr)
 
-		updated, svcErr := tagService.UpdateTag(ctx, models.Tag{
+		updated, svcErr := tagService.UpdateTag(ctx, Tag{
 			ID:       staging.ID,
 			Name:     "Production",
 			ColorHex: "#001122",
@@ -242,9 +242,9 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 
 func TestIntegration_TagService_DeleteTag(t *testing.T) {
 	t.Run("Successfully deletes a tag", func(t *testing.T) {
-		ctx, tagService, _, owner := setupTagIntegrationTest(t)
+		ctx, tagService, database, owner := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, models.Tag{Name: "Production", ColorHex: "#aabbcc"})
+		created, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
 
 		svcErr = tagService.DeleteTag(ctx, created.ID.String())
@@ -256,7 +256,8 @@ func TestIntegration_TagService_DeleteTag(t *testing.T) {
 
 		// Verify audit log was created with the pre-delete state
 		filter := audit.AuditLogFilter{ResourceID: &created.ID}
-		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, dbErr := audit.NewAuditLogDAO(database.Querier()).
+			GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false

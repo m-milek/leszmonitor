@@ -1,20 +1,18 @@
-package controllers
+package tags
 
 import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 type TagAPIController struct {
-	service services.ITagService
+	service ITagService
 }
 
-func NewTagAPIController(service services.ITagService) TagAPIController {
+func NewTagAPIController(service ITagService) TagAPIController {
 	return TagAPIController{
 		service: service,
 	}
@@ -42,7 +40,7 @@ func (c *TagAPIController) CreateTagHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	tag, serviceErr := c.service.CreateTag(ctx, models.Tag{
+	tag, serviceErr := c.service.CreateTag(ctx, Tag{
 		Name:        payload.Name,
 		Description: payload.Description,
 		ColorHex:    payload.ColorHex,
@@ -108,7 +106,7 @@ func (c *TagAPIController) UpdateTagHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	tag, serviceErr := c.service.UpdateTag(ctx, models.Tag{
+	tag, serviceErr := c.service.UpdateTag(ctx, Tag{
 		ID:          tagUUID,
 		Name:        payload.Name,
 		Description: payload.Description,

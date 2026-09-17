@@ -1,4 +1,4 @@
-package services
+package tags
 
 import (
 	"context"
@@ -6,20 +6,19 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 type ITagService interface {
-	CreateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError)
-	GetTagByID(ctx context.Context, id string) (*models.Tag, *apperr.ServiceError)
-	GetAllTags(ctx context.Context) ([]models.Tag, *apperr.ServiceError)
-	UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError)
+	CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.ServiceError)
+	GetTagByID(ctx context.Context, id string) (*Tag, *apperr.ServiceError)
+	GetAllTags(ctx context.Context) ([]Tag, *apperr.ServiceError)
+	UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.ServiceError)
 	DeleteTag(ctx context.Context, id string) *apperr.ServiceError
 }
 
@@ -39,7 +38,7 @@ func NewTagService(deps TagServiceDeps) *TagService {
 }
 
 // CreateTag creates a new tag. The ID is always assigned server-side.
-func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError) {
+func (s *TagService) CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "CreateTag")
 	logger.Trace().Interface("tag", tag).Msg("Creating tag")
 
@@ -49,7 +48,7 @@ func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag
 		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
-	newTag := models.Tag{
+	newTag := Tag{
 		ID:          uuid.New(),
 		Name:        tag.Name,
 		Description: tag.Description,
@@ -62,8 +61,8 @@ func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag
 		return nil, apperr.NewBadRequestError("invalid tag: %w", err)
 	}
 
-	tagFromDB, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Tag, *audit.AuditLogParams, error) {
-		t, createErr := tx.Tags().InsertTag(ctx, newTag)
+	tagFromDB, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*Tag, *audit.AuditLogParams, error) {
+		t, createErr := NewTagDAO(q).InsertTag(ctx, newTag)
 		if createErr != nil {
 			return nil, nil, createErr
 		}
@@ -88,7 +87,7 @@ func (s *TagService) CreateTag(ctx context.Context, tag models.Tag) (*models.Tag
 }
 
 // GetTagByID retrieves a single tag by its ID.
-func (s *TagService) GetTagByID(ctx context.Context, id string) (*models.Tag, *apperr.ServiceError) {
+func (s *TagService) GetTagByID(ctx context.Context, id string) (*Tag, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "GetTagByID")
 	logger.Trace().Str("id", id).Msg("Retrieving tag by ID")
 
@@ -98,7 +97,7 @@ func (s *TagService) GetTagByID(ctx context.Context, id string) (*models.Tag, *a
 		return nil, apperr.NewBadRequestError("invalid tag ID format: %w", parseErr)
 	}
 
-	tag, err := s.db.Tags().GetTagByID(ctx, tagUUID)
+	tag, err := NewTagDAO(s.db.Querier()).GetTagByID(ctx, tagUUID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("id", id).Msg("Tag not found in database")
@@ -113,11 +112,11 @@ func (s *TagService) GetTagByID(ctx context.Context, id string) (*models.Tag, *a
 }
 
 // GetAllTags retrieves every tag in the instance.
-func (s *TagService) GetAllTags(ctx context.Context) ([]models.Tag, *apperr.ServiceError) {
+func (s *TagService) GetAllTags(ctx context.Context) ([]Tag, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "GetAllTags")
 	logger.Trace().Msg("Retrieving all tags")
 
-	allTags, err := s.db.Tags().GetAllTags(ctx)
+	allTags, err := NewTagDAO(s.db.Querier()).GetAllTags(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to retrieve tags from database")
 		return nil, apperr.NewInternalError("failed to retrieve tags: %w", err)
@@ -128,7 +127,7 @@ func (s *TagService) GetAllTags(ctx context.Context) ([]models.Tag, *apperr.Serv
 }
 
 // UpdateTag updates an existing tag.
-func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag, *apperr.ServiceError) {
+func (s *TagService) UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "UpdateTag")
 	logger.Trace().Interface("tag", tag).Msg("Updating tag")
 
@@ -144,8 +143,8 @@ func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag
 		return nil, apperr.NewBadRequestError("invalid tag: %w", err)
 	}
 
-	updatedTag, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.Tag, *audit.AuditLogParams, error) {
-		existingTag, err := tx.Tags().GetTagByID(ctx, tag.ID)
+	updatedTag, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*Tag, *audit.AuditLogParams, error) {
+		existingTag, err := NewTagDAO(q).GetTagByID(ctx, tag.ID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
 				logger.Error().Str("id", tag.ID.String()).Msg("Tag not found")
@@ -155,7 +154,7 @@ func (s *TagService) UpdateTag(ctx context.Context, tag models.Tag) (*models.Tag
 			return nil, nil, fmt.Errorf("failed to retrieve existing tag for update: %w", err)
 		}
 
-		t, updateErr := tx.Tags().UpdateTag(ctx, tag)
+		t, updateErr := NewTagDAO(q).UpdateTag(ctx, tag)
 		if updateErr != nil {
 			logger.Error().Err(updateErr).Str("id", tag.ID.String()).Msg("Failed to update tag in database")
 			return nil, nil, updateErr
@@ -201,8 +200,8 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceEr
 		return apperr.NewBadRequestError("invalid tag ID format: %w", err)
 	}
 
-	txErr := db.WithAuditedVoidTx(ctx, s.db, func(tx db.DB) (*audit.AuditLogParams, error) {
-		tagBeforeDelete, err := tx.Tags().GetTagByID(ctx, tagUUID)
+	txErr := audit.WithAuditedVoidTx(ctx, s.db, func(q db.Querier) (*audit.AuditLogParams, error) {
+		tagBeforeDelete, err := NewTagDAO(q).GetTagByID(ctx, tagUUID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
 				logger.Error().Str("id", id).Msg("Tag not found in database")
@@ -212,7 +211,7 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceEr
 			return nil, fmt.Errorf("failed to retrieve tag before deletion: %w", err)
 		}
 
-		if _, delErr := tx.Tags().DeleteTagByID(ctx, tagUUID); delErr != nil {
+		if _, delErr := NewTagDAO(q).DeleteTagByID(ctx, tagUUID); delErr != nil {
 			logger.Error().Err(delErr).Str("id", id).Msg("Failed to delete tag in database")
 			return nil, delErr
 		}

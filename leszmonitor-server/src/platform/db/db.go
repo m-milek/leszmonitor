@@ -36,6 +36,12 @@ const timeoutDuration = 1000 * time.Second
 // Querier is the query surface shared by *sqlx.DB and *sqlx.Tx.
 type Querier = sqlx.ExtContext
 
+// DB is the database handle used by services.
+type DB interface {
+	Querier() Querier
+	WithTx(ctx context.Context, fn func(q Querier) error) error
+}
+
 // Client owns the SQLite connection pool.
 type Client struct {
 	sqlxDB *sqlx.DB

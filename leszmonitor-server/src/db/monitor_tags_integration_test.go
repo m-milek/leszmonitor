@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/stretchr/testify/require"
@@ -26,7 +26,7 @@ func setupMonitorTagsTest(t *testing.T) (context.Context, *Client) {
 
 func insertTestTag(ctx context.Context, t *testing.T, client *Client, name string) uuid.UUID {
 	t.Helper()
-	tag, err := client.Tags().InsertTag(ctx, models.Tag{Name: name, ColorHex: "#aabbcc"})
+	tag, err := tags.NewTagDAO(client.Querier()).InsertTag(ctx, tags.Tag{Name: name, ColorHex: "#aabbcc"})
 	require.NoError(t, err)
 	return tag.ID
 }

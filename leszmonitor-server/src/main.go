@@ -12,6 +12,7 @@ import (
 	"github.com/m-milek/leszmonitor/api"
 	"github.com/m-milek/leszmonitor/api/controllers"
 	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/features/tags"
 	config "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/services"
@@ -74,7 +75,7 @@ func main() {
 	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
 		DB: database,
 	})
-	tagService := services.NewTagService(services.TagServiceDeps{
+	tagService := tags.NewTagService(tags.TagServiceDeps{
 		DB: database,
 	})
 	instanceMetadataService := services.NewInstanceMetadataService(services.InstanceMetadataServiceDeps{})
@@ -84,7 +85,7 @@ func main() {
 	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
 	monitorStatsAPIController := controllers.NewMonitorStatsAPIController(monitorStatsService)
 	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
-	tagAPIController := controllers.NewTagAPIController(tagService)
+	tagAPIController := tags.NewTagAPIController(tagService)
 	instanceMetadataAPIController := controllers.NewInstanceMetadataAPIController(instanceMetadataService)
 
 	authzMiddlewareService := services.NewAuthzMiddlewareService(database)

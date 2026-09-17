@@ -6,6 +6,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/api/controllers"
 	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/auth"
 )
 
@@ -85,51 +86,9 @@ func SetupRouters(
 	)
 
 	// Tags
-	protectedRouter.HandleFunc(
-		"POST /api/v1/tags",
-		middleware.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionWriter,
-		)(
-			h.Tag.CreateTagHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/tags",
-		middleware.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionReader,
-		)(
-			h.Tag.GetAllTagsHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/tags/{tagId}",
-		middleware.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionReader,
-		)(
-			h.Tag.GetTagByIDHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"PATCH /api/v1/tags/{tagId}",
-		middleware.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionWriter,
-		)(
-			h.Tag.UpdateTagHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"DELETE /api/v1/tags/{tagId}",
-		middleware.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionWriter,
-		)(
-			h.Tag.DeleteTagHandler,
-		),
-	)
+	tags.RegisterRoutes(protectedRouter, h.Tag, func(perm auth.Permission) func(http.HandlerFunc) http.HandlerFunc {
+		return middleware.RequirePermission(h.AuthzMiddlewareService, perm)
+	})
 
 	// MonitorResults
 	protectedRouter.HandleFunc(

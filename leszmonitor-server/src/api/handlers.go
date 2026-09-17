@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/m-milek/leszmonitor/api/controllers"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/services"
 )
 
@@ -11,7 +12,7 @@ type Handlers struct {
 	MonitorStats           controllers.MonitorStatsAPIController
 	AuditLog               controllers.AuditLogAPIController
 	User                   controllers.UserAPIController
-	Tag                    controllers.TagAPIController
+	Tag                    tags.TagAPIController
 	InstanceMetadata       controllers.InstanceMetadataAPIController
 	AuthzMiddlewareService services.IAuthzMiddlewareService
 }

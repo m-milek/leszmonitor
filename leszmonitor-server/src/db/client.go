@@ -21,7 +21,7 @@ type DB interface {
 	MonitorStatusChanges() IMonitorStatusChangeDAO
 	MonitorStats() IMonitorStatsDAO
 	AuditLog() audit.IAuditLogDAO
-	Tags() ITagDAO
+	Querier() platformdb.Querier
 	WithTx(ctx context.Context, fn func(q platformdb.Querier) error) error
 	Close()
 }
@@ -29,6 +29,7 @@ type DB interface {
 // Client implements DB on top of a platform DB client.
 type Client struct {
 	root *platformdb.Client
+	pool platformdb.Querier
 	// cached DAOs to avoid re-allocation on every getter call
 	users                IUserDAO
 	monitors             IMonitorDAO
@@ -36,7 +37,6 @@ type Client struct {
 	monitorStatusChanges IMonitorStatusChangeDAO
 	monitorStats         IMonitorStatsDAO
 	auditLog             audit.IAuditLogDAO
-	tags                 ITagDAO
 }
 
 type baseDAO struct {
@@ -53,13 +53,13 @@ func newClient(root *platformdb.Client, pool platformdb.Querier) *Client {
 	base := newBaseDAO(pool)
 	return &Client{
 		root:                 root,
+		pool:                 pool,
 		users:                newUserDAO(base),
 		monitors:             newMonitorDAO(base),
 		monitorResults:       newMonitorResultDAO(base),
 		monitorStatusChanges: newMonitorStatusChangeDAO(base),
 		monitorStats:         newMonitorStatsDAO(base),
 		auditLog:             audit.NewAuditLogDAO(pool),
-		tags:                 newTagDAO(base),
 	}
 }
 
@@ -70,6 +70,11 @@ func New(ctx context.Context, dsn string) (*Client, error) {
 		return nil, err
 	}
 	return newClient(root, root.Querier()), nil
+}
+
+// Querier returns the Querier the client is bound to.
+func (c *Client) Querier() platformdb.Querier {
+	return c.pool
 }
 
 // WithTx executes fn inside a database transaction. Nested transactions are not supported.
@@ -95,7 +100,6 @@ func (c *Client) MonitorResults() IMonitorResultDAO             { return c.monit
 func (c *Client) MonitorStatusChanges() IMonitorStatusChangeDAO { return c.monitorStatusChanges }
 func (c *Client) MonitorStats() IMonitorStatsDAO                { return c.monitorStats }
 func (c *Client) AuditLog() audit.IAuditLogDAO                  { return c.auditLog }
-func (c *Client) Tags() ITagDAO                                 { return c.tags }
 
 // WithAuditedTx executes fn inside a database transaction and, if successful, records an audit log.
 // It returns the result from fn and any error that occurred.

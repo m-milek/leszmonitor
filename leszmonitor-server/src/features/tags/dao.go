@@ -1,4 +1,4 @@
-package db
+package tags
 
 import (
 	"context"
@@ -7,37 +7,36 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/models"
-	platformdb "github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/db"
 )
 
 type ITagDAO interface {
-	InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, error)
-	GetTagByID(ctx context.Context, id uuid.UUID) (*models.Tag, error)
-	GetAllTags(ctx context.Context) ([]models.Tag, error)
-	UpdateTag(ctx context.Context, newTag models.Tag) (*models.Tag, error)
+	InsertTag(ctx context.Context, tag Tag) (*Tag, error)
+	GetTagByID(ctx context.Context, id uuid.UUID) (*Tag, error)
+	GetAllTags(ctx context.Context) ([]Tag, error)
+	UpdateTag(ctx context.Context, newTag Tag) (*Tag, error)
 	DeleteTagByID(ctx context.Context, tagID uuid.UUID) (*uuid.UUID, error)
 }
 
 type tagDAO struct {
-	baseDAO
+	pool db.Querier
 }
 
-func newTagDAO(base baseDAO) ITagDAO {
+func NewTagDAO(pool db.Querier) ITagDAO {
 	return &tagDAO{
-		baseDAO: base,
+		pool: pool,
 	}
 }
 
 // InsertTag adds a new tag to the database and returns the created tag.
-func (r *tagDAO) InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, error) {
-	return platformdb.Wrap(ctx, "InsertTag", func() (*models.Tag, error) {
+func (r *tagDAO) InsertTag(ctx context.Context, tag Tag) (*Tag, error) {
+	return db.Wrap(ctx, "InsertTag", func() (*Tag, error) {
 		id := tag.ID
 		if id == uuid.Nil {
 			id = uuid.New()
 		}
 
-		var createdTag models.Tag
+		var createdTag Tag
 		err := r.pool.QueryRowxContext(
 			ctx,
 			`INSERT INTO tags (id, name, description, color_hex)
@@ -49,8 +48,8 @@ func (r *tagDAO) InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, er
 			tag.ColorHex,
 		).StructScan(&createdTag)
 		if err != nil {
-			if platformdb.IsUniqueViolation(err) {
-				return nil, ErrAlreadyExists
+			if db.IsUniqueViolation(err) {
+				return nil, db.ErrAlreadyExists
 			}
 			return nil, err
 		}
@@ -59,9 +58,9 @@ func (r *tagDAO) InsertTag(ctx context.Context, tag models.Tag) (*models.Tag, er
 	})
 }
 
-func (r *tagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*models.Tag, error) {
-	return platformdb.Wrap(ctx, "GetTagByID", func() (*models.Tag, error) {
-		var tag models.Tag
+func (r *tagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*Tag, error) {
+	return db.Wrap(ctx, "GetTagByID", func() (*Tag, error) {
+		var tag Tag
 		err := sqlx.GetContext(
 			ctx,
 			r.pool,
@@ -73,7 +72,7 @@ func (r *tagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*models.Tag, err
 		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
@@ -81,9 +80,9 @@ func (r *tagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*models.Tag, err
 	})
 }
 
-func (r *tagDAO) GetAllTags(ctx context.Context) ([]models.Tag, error) {
-	return platformdb.Wrap(ctx, "GetAllTags", func() ([]models.Tag, error) {
-		var tags []models.Tag
+func (r *tagDAO) GetAllTags(ctx context.Context) ([]Tag, error) {
+	return db.Wrap(ctx, "GetAllTags", func() ([]Tag, error) {
+		var tags []Tag
 		err := sqlx.SelectContext(
 			ctx,
 			r.pool,
@@ -96,15 +95,15 @@ func (r *tagDAO) GetAllTags(ctx context.Context) ([]models.Tag, error) {
 			return nil, err
 		}
 		if tags == nil {
-			tags = []models.Tag{}
+			tags = []Tag{}
 		}
 		return tags, nil
 	})
 }
 
-func (r *tagDAO) UpdateTag(ctx context.Context, newTag models.Tag) (*models.Tag, error) {
-	return platformdb.Wrap(ctx, "UpdateTag", func() (*models.Tag, error) {
-		var updatedTag models.Tag
+func (r *tagDAO) UpdateTag(ctx context.Context, newTag Tag) (*Tag, error) {
+	return db.Wrap(ctx, "UpdateTag", func() (*Tag, error) {
+		var updatedTag Tag
 		// updated_at is set explicitly because the AFTER UPDATE trigger fires
 		// after RETURNING has already captured the row.
 		err := r.pool.QueryRowxContext(
@@ -120,7 +119,7 @@ func (r *tagDAO) UpdateTag(ctx context.Context, newTag models.Tag) (*models.Tag,
 		).StructScan(&updatedTag)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
@@ -130,13 +129,13 @@ func (r *tagDAO) UpdateTag(ctx context.Context, newTag models.Tag) (*models.Tag,
 }
 
 func (r *tagDAO) DeleteTagByID(ctx context.Context, tagID uuid.UUID) (*uuid.UUID, error) {
-	return platformdb.Wrap(ctx, "DeleteTagByID", func() (*uuid.UUID, error) {
+	return db.Wrap(ctx, "DeleteTagByID", func() (*uuid.UUID, error) {
 		var id uuid.UUID
 		err := r.pool.QueryRowxContext(ctx, `DELETE FROM tags WHERE id = $1 RETURNING id`, tagID).
 			Scan(&id)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
