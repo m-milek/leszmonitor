@@ -1,4 +1,4 @@
-package api
+package app
 
 import (
 	"github.com/m-milek/leszmonitor/features/auditlog"

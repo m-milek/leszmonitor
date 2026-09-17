@@ -14,8 +14,8 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/users"
 
-	"github.com/m-milek/leszmonitor/api"
-	probes "github.com/m-milek/leszmonitor/features/monitors/probes"
+	"github.com/m-milek/leszmonitor/app"
+	"github.com/m-milek/leszmonitor/features/monitors/probes"
 	"github.com/m-milek/leszmonitor/features/monitors/resultsprocessor"
 	"github.com/m-milek/leszmonitor/features/tags"
 	config "github.com/m-milek/leszmonitor/platform/config"
@@ -92,7 +92,7 @@ func main() {
 
 	authzMiddlewareService := users.NewAuthzMiddlewareService(database)
 
-	handlers := api.Handlers{
+	handlers := app.Handlers{
 		User:                   userAPIController,
 		Monitor:                monitorAPIController,
 		MonitorResults:         monitorResultsAPIController,
@@ -109,9 +109,9 @@ func main() {
 	}
 
 	// Start the server
-	serverConfig := api.DefaultServerConfig()
+	serverConfig := app.DefaultServerConfig()
 	logger.Info().Msg("Starting API server...")
-	server, done, err := api.StartServer(appCtx, serverConfig, staticFiles, handlers)
+	server, done, err := app.StartServer(appCtx, serverConfig, staticFiles, handlers)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to start API server")
 		os.Exit(1)
