@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/m-milek/leszmonitor/features/users"
+
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/m-milek/leszmonitor/platform/auth"
@@ -15,7 +16,7 @@ import (
 )
 
 // setupIntegrationTest initializes a temporary SQLite DB, sets up services, and registers a test user.
-func setupIntegrationTest(t *testing.T) (context.Context, *UserService, *models.User) {
+func setupIntegrationTest(t *testing.T) (context.Context, *users.UserService, *users.User) {
 	ctx := context.Background()
 
 	t.Setenv("JWT_SECRET", "test_secret_key_1234567890123456")
@@ -39,12 +40,12 @@ func setupIntegrationTest(t *testing.T) (context.Context, *UserService, *models.
 		db.Set(nil)
 	})
 
-	userService := NewUserService(UserServiceDeps{
+	userService := users.NewUserService(users.UserServiceDeps{
 		DB: realDB,
 	})
 
 	// Setup Phase: Create a real user in the DB
-	registerPayload := &UserRegisterPayload{
+	registerPayload := &users.UserRegisterPayload{
 		Username:        "integration_user",
 		Password:        "Password123!",
 		PasswordConfirm: "Password123!",
@@ -65,7 +66,7 @@ func setupIntegrationTest(t *testing.T) (context.Context, *UserService, *models.
 
 func setupAuditLogIntegrationTest(
 	t *testing.T,
-) (context.Context, AuditLogService, *UserService, *models.User) {
+) (context.Context, AuditLogService, *users.UserService, *users.User) {
 	ctx, userService, user := setupIntegrationTest(t)
 
 	auditLogService := NewAuditLogService(AuditLogServiceDeps{
@@ -77,7 +78,7 @@ func setupAuditLogIntegrationTest(
 
 func setupMonitorResultsIntegrationTest(
 	t *testing.T,
-) (context.Context, *MonitorResultsService, *UserService, *models.User) {
+) (context.Context, *MonitorResultsService, *users.UserService, *users.User) {
 	ctx, userService, user := setupIntegrationTest(t)
 
 	service := NewMonitorResultsService(MonitorResultsServiceDeps{
@@ -89,7 +90,7 @@ func setupMonitorResultsIntegrationTest(
 
 func setupMonitorIntegrationTest(
 	t *testing.T,
-) (context.Context, *MonitorService, *UserService, *models.User) {
+) (context.Context, *MonitorService, *users.UserService, *users.User) {
 	ctx, userService, user := setupIntegrationTest(t)
 
 	monitorService := NewMonitorService(MonitorServiceDeps{
@@ -101,7 +102,7 @@ func setupMonitorIntegrationTest(
 
 func setupMonitorStatsIntegrationTest(
 	t *testing.T,
-) (context.Context, *MonitorStatsService, *UserService, *models.User) {
+) (context.Context, *MonitorStatsService, *users.UserService, *users.User) {
 	ctx, userService, user := setupIntegrationTest(t)
 
 	monitorStatsService := NewMonitorStatsService(MonitorStatsServiceDeps{
@@ -122,7 +123,7 @@ func insertTestMonitor(t *testing.T, ctx context.Context) *monitors.Monitor {
 	}
 	payload.GenerateSlug()
 
-	owner, err := db.Get().Users().GetUserByUsername(ctx, "integration_user")
+	owner, err := users.NewUserDAO(db.Get().Querier()).GetUserByUsername(ctx, "integration_user")
 	require.NoError(t, err)
 	monitor := monitors.InitializeFromPayload(payload, owner.ID)
 

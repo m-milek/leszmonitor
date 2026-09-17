@@ -149,7 +149,7 @@ func (r *monitorResultDAO) GetOldestMonitorResultByMonitorID(
 	ctx context.Context,
 	monitorID string,
 ) (monitorresult.IMonitorResult, error) {
-	return dbWrap(ctx, "GetOldestMonitorResultByMonitorID", func() (monitorresult.IMonitorResult, error) {
+	return platformdb.Wrap(ctx, "GetOldestMonitorResultByMonitorID", func() (monitorresult.IMonitorResult, error) {
 		var result monitorresult.MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `

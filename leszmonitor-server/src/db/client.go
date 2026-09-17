@@ -15,7 +15,6 @@ var ErrAlreadyExists = platformdb.ErrAlreadyExists
 
 // DB defines the database access surface. It returns DAO interfaces for easy mocking.
 type DB interface {
-	Users() IUserDAO
 	Monitors() IMonitorDAO
 	MonitorResults() IMonitorResultDAO
 	MonitorStatusChanges() IMonitorStatusChangeDAO
@@ -31,7 +30,6 @@ type Client struct {
 	root *platformdb.Client
 	pool platformdb.Querier
 	// cached DAOs to avoid re-allocation on every getter call
-	users                IUserDAO
 	monitors             IMonitorDAO
 	monitorResults       IMonitorResultDAO
 	monitorStatusChanges IMonitorStatusChangeDAO
@@ -54,7 +52,6 @@ func newClient(root *platformdb.Client, pool platformdb.Querier) *Client {
 	return &Client{
 		root:                 root,
 		pool:                 pool,
-		users:                newUserDAO(base),
 		monitors:             newMonitorDAO(base),
 		monitorResults:       newMonitorResultDAO(base),
 		monitorStatusChanges: newMonitorStatusChangeDAO(base),
@@ -94,7 +91,6 @@ func (c *Client) Close() {
 
 // DAO getters (return interfaces for mocking)
 
-func (c *Client) Users() IUserDAO                               { return c.users }
 func (c *Client) Monitors() IMonitorDAO                         { return c.monitors }
 func (c *Client) MonitorResults() IMonitorResultDAO             { return c.monitorResults }
 func (c *Client) MonitorStatusChanges() IMonitorStatusChangeDAO { return c.monitorStatusChanges }

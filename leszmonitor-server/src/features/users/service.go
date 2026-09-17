@@ -1,4 +1,4 @@
-package services
+package users
 
 import (
 	"context"
@@ -7,23 +7,22 @@ import (
 	"os"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	config "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type IUserService interface {
-	GetAllUsers(ctx context.Context) ([]models.User, *apperr.ServiceError)
-	GetUserByUsername(ctx context.Context, username string) (*models.User, *apperr.ServiceError)
+	GetAllUsers(ctx context.Context) ([]User, *apperr.ServiceError)
+	GetUserByUsername(ctx context.Context, username string) (*User, *apperr.ServiceError)
 	RegisterUser(ctx context.Context, payload *UserRegisterPayload) *apperr.ServiceError
 	Login(ctx context.Context, payload LoginPayload) (*LoginResponse, *apperr.ServiceError)
-	SetUserRole(ctx context.Context, username string, payload SetUserRolePayload) (*models.User, *apperr.ServiceError)
+	SetUserRole(ctx context.Context, username string, payload SetUserRolePayload) (*User, *apperr.ServiceError)
 }
 
 type SetUserRolePayload struct {
@@ -63,11 +62,11 @@ type LoginResponse struct {
 }
 
 // GetAllUsers retrieves all users from the database.
-func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *apperr.ServiceError) {
+func (s *UserService) GetAllUsers(ctx context.Context) ([]User, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "GetAllUsers")
 	logger.Trace().Msg("Retrieving all users")
 
-	users, err := s.db.Users().GetAllUsers(ctx)
+	users, err := NewUserDAO(s.db.Querier()).GetAllUsers(ctx)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error retrieving users")
 		return nil, apperr.NewInternalError("error retrieving users: %w", err)
@@ -78,16 +77,16 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]models.User, *apperr.S
 }
 
 // GetUserByUsername retrieves a user by their username.
-func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*models.User, *apperr.ServiceError) {
+func (s *UserService) GetUserByUsername(ctx context.Context, username string) (*User, *apperr.ServiceError) {
 	return s.internalGetUserByUsername(ctx, username)
 }
 
 // internalGetUserByUsername retrieves a user by their username without authorization checks.
-func (s *UserService) internalGetUserByUsername(ctx context.Context, username string) (*models.User, *apperr.ServiceError) {
+func (s *UserService) internalGetUserByUsername(ctx context.Context, username string) (*User, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "internalGetUserByUsername")
 	logger.Trace().Str("username", username).Msg("Retrieving user by username")
 
-	user, err := s.db.Users().GetUserByUsername(ctx, username)
+	user, err := NewUserDAO(s.db.Querier()).GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("username", username).Msg("User not found")
@@ -106,7 +105,7 @@ func (s *UserService) SetUserRole(
 	ctx context.Context,
 	username string,
 	payload SetUserRolePayload,
-) (*models.User, *apperr.ServiceError) {
+) (*User, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "SetUserRole")
 	logger.Trace().Str("username", username).Str("role", string(payload.Role)).Msg("Setting user role")
 
@@ -131,8 +130,8 @@ func (s *UserService) SetUserRole(
 		return existingUser, nil
 	}
 
-	updatedUser, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *audit.AuditLogParams, error) {
-		u, err := tx.Users().UpdateUserRole(ctx, existingUser.ID, payload.Role)
+	updatedUser, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*User, *audit.AuditLogParams, error) {
+		u, err := NewUserDAO(q).UpdateUserRole(ctx, existingUser.ID, payload.Role)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -171,14 +170,14 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 		return apperr.NewInternalError("failed to hash password: %w", err)
 	}
 
-	userModel, err := models.NewUser(payload.Username, hashedPassword)
+	userModel, err := NewUser(payload.Username, hashedPassword)
 	if err != nil {
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
 		return apperr.NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
 	}
 
-	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *audit.AuditLogParams, error) {
-		u, err := tx.Users().InsertUser(ctx, userModel)
+	_, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*User, *audit.AuditLogParams, error) {
+		u, err := NewUserDAO(q).InsertUser(ctx, userModel)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -212,12 +211,12 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "Login")
 	logger.Info().Str("username", payload.Username).Msg("User login attempt")
 
-	user, err := s.db.Users().GetUserByUsername(ctx, payload.Username)
+	user, err := NewUserDAO(s.db.Querier()).GetUserByUsername(ctx, payload.Username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("username", payload.Username).Msg("User not found for login")
 
-			_ = s.db.AuditLog().Record(ctx, audit.AuditLogParams{
+			_ = audit.NewAuditLogDAO(s.db.Querier()).Record(ctx, audit.AuditLogParams{
 				Username:  &payload.Username,
 				Action:    audit.ActionFailedLogin,
 				IsSuccess: false,
@@ -233,7 +232,7 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 	if err = checkPasswordHash(payload.Password, user.PasswordHash); err != nil {
 		logger.Error().Str("username", payload.Username).Msg("Invalid password for login")
 
-		_ = s.db.AuditLog().Record(ctx, audit.AuditLogParams{
+		_ = audit.NewAuditLogDAO(s.db.Querier()).Record(ctx, audit.AuditLogParams{
 			Username:   &payload.Username,
 			ResourceID: &user.ID,
 			Action:     audit.ActionFailedLogin,
@@ -244,13 +243,13 @@ func (s *UserService) Login(ctx context.Context, payload LoginPayload) (*LoginRe
 		return nil, apperr.NewUnauthorizedError("invalid credentials")
 	}
 
-	jwtToken, err := auth.NewJwt(payload.Username, models.GetIsInstanceAdmin(*user))
+	jwtToken, err := auth.NewJwt(payload.Username, GetIsInstanceAdmin(*user))
 	if jwtToken == nil {
 		logger.Error().Str("username", payload.Username).Err(err).Msg("Failed to generate JWT token")
 		return nil, apperr.NewInternalError("failed to generate JWT token")
 	}
 
-	_ = s.db.AuditLog().Record(ctx, audit.AuditLogParams{
+	_ = audit.NewAuditLogDAO(s.db.Querier()).Record(ctx, audit.AuditLogParams{
 		Username:   &payload.Username,
 		ResourceID: &user.ID,
 		Action:     audit.ActionLogin,
@@ -266,7 +265,7 @@ func (s *UserService) EnsureAdminUserExists(ctx context.Context) *apperr.Service
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameUser, "EnsureAdminUserExists")
 	logger.Info().Msg("Ensuring admin user exists")
 
-	adminUser, err := s.db.Users().GetUserByUsername(ctx, os.Getenv(config.InstanceAdminUsername))
+	adminUser, err := NewUserDAO(s.db.Querier()).GetUserByUsername(ctx, os.Getenv(config.InstanceAdminUsername))
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Info().Msg("Admin user not found, creating...")
@@ -288,15 +287,15 @@ func (s *UserService) createAdminUser(ctx context.Context) *apperr.ServiceError 
 		return apperr.NewInternalError("failed to hash admin password: %w", err)
 	}
 
-	adminUserModel, err := models.NewUser(os.Getenv(config.InstanceAdminUsername), hashedPassword)
+	adminUserModel, err := NewUser(os.Getenv(config.InstanceAdminUsername), hashedPassword)
 	if err != nil {
 		return apperr.NewBadRequestError("invalid admin user data: %w", err)
 	}
 	adminUserModel.IsInstanceAdmin = true
 	adminUserModel.Role = auth.RoleOwner
 
-	_, txErr := db.WithAuditedTx(ctx, s.db, func(tx db.DB) (*models.User, *audit.AuditLogParams, error) {
-		u, err := tx.Users().InsertUser(ctx, adminUserModel)
+	_, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*User, *audit.AuditLogParams, error) {
+		u, err := NewUserDAO(q).InsertUser(ctx, adminUserModel)
 		if err != nil {
 			return nil, nil, err
 		}

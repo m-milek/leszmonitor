@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/m-milek/leszmonitor/features/users"
+
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
 	"github.com/m-milek/leszmonitor/models/consts"
 	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/stretchr/testify/require"
@@ -33,9 +34,9 @@ func setupDB(t *testing.T) (context.Context, db.DB) {
 func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 	ctx, realDB := setupDB(t)
 
-	user, err := models.NewUser("testuser", "testpassword123")
+	user, err := users.NewUser("testuser", "testpassword123")
 	require.NoError(t, err)
-	insertedUser, err := realDB.Users().InsertUser(ctx, user)
+	insertedUser, err := users.NewUserDAO(realDB.Querier()).InsertUser(ctx, user)
 	require.NoError(t, err)
 
 	payload := monitors.Monitor{

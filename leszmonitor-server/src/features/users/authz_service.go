@@ -1,12 +1,12 @@
-package services
+package users
 
 import (
 	"context"
 	"errors"
 
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 )
 
@@ -34,7 +34,7 @@ func (s *AuthzMiddlewareService) CheckUserPermission(
 ) (bool, error) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameAuthzMiddleware, "CheckUserPermission")
 
-	user, err := s.db.Users().GetUserByUsername(ctx, username)
+	user, err := NewUserDAO(s.db.Querier()).GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("username", username).Msg("User not found")

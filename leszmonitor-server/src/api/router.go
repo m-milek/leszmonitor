@@ -4,8 +4,9 @@ import (
 	"embed"
 	"net/http"
 
+	"github.com/m-milek/leszmonitor/features/users"
+
 	"github.com/m-milek/leszmonitor/api/controllers"
-	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/auth"
 )
@@ -17,22 +18,12 @@ func SetupRouters(
 	h Handlers,
 ) {
 	// Users
-	protectedRouter.HandleFunc("GET /api/v1/users", h.User.GetAllUsersHandler)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/users/{username}",
-		middleware.RequireSelf("username")(h.User.GetUserHandler),
-	)
-	protectedRouter.HandleFunc(
-		"PATCH /api/v1/users/{username}/role",
-		middleware.RequireInstanceAdmin()(h.User.SetUserRoleHandler),
-	)
-	publicRouter.HandleFunc("POST /api/v1/auth/register", h.User.UserRegisterHandler)
-	publicRouter.HandleFunc("POST /api/v1/auth/login", h.User.UserLoginHandler)
+	users.RegisterRoutes(publicRouter, protectedRouter, h.User)
 
 	// Monitors
 	protectedRouter.HandleFunc(
 		"POST /api/v1/monitors",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionWriter,
 		)(
@@ -41,7 +32,7 @@ func SetupRouters(
 	)
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionReader,
 		)(
@@ -50,7 +41,7 @@ func SetupRouters(
 	)
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionReader,
 		)(
@@ -59,7 +50,7 @@ func SetupRouters(
 	)
 	protectedRouter.HandleFunc(
 		"DELETE /api/v1/monitors/{monitorId}",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionWriter,
 		)(
@@ -68,7 +59,7 @@ func SetupRouters(
 	)
 	protectedRouter.HandleFunc(
 		"PATCH /api/v1/monitors/{monitorId}",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionWriter,
 		)(
@@ -77,7 +68,7 @@ func SetupRouters(
 	)
 	protectedRouter.HandleFunc(
 		"PATCH /api/v1/monitors/{monitorId}/state",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionWriter,
 		)(
@@ -87,13 +78,13 @@ func SetupRouters(
 
 	// Tags
 	tags.RegisterRoutes(protectedRouter, h.Tag, func(perm auth.Permission) func(http.HandlerFunc) http.HandlerFunc {
-		return middleware.RequirePermission(h.AuthzMiddlewareService, perm)
+		return users.RequirePermission(h.AuthzMiddlewareService, perm)
 	})
 
 	// MonitorResults
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results/latest",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionReader,
 		)(
@@ -102,7 +93,7 @@ func SetupRouters(
 	)
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionReader,
 		)(
@@ -112,7 +103,7 @@ func SetupRouters(
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/audit-log",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionInstanceAdmin,
 		)(
@@ -127,7 +118,7 @@ func SetupRouters(
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/stats",
-		middleware.RequirePermission(
+		users.RequirePermission(
 			h.AuthzMiddlewareService,
 			auth.PermissionReader,
 		)(

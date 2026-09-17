@@ -1,18 +1,17 @@
-package controllers
+package users
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/platform/httpx"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 type UserAPIController struct {
-	service services.IUserService
+	service IUserService
 }
 
-func NewUserAPIController(service services.IUserService) UserAPIController {
+func NewUserAPIController(service IUserService) UserAPIController {
 	return UserAPIController{
 		service: service,
 	}
@@ -20,7 +19,7 @@ func NewUserAPIController(service services.IUserService) UserAPIController {
 
 func (c *UserAPIController) UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var payload services.UserRegisterPayload
+	var payload UserRegisterPayload
 	if !httpx.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
@@ -36,7 +35,7 @@ func (c *UserAPIController) UserRegisterHandler(w http.ResponseWriter, r *http.R
 
 func (c *UserAPIController) UserLoginHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var payload services.LoginPayload
+	var payload LoginPayload
 	if !httpx.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}
@@ -86,7 +85,7 @@ func (c *UserAPIController) SetUserRoleHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var payload services.SetUserRolePayload
+	var payload SetUserRolePayload
 	if !httpx.DecodeJSONOrRespond(ctx, w, r, &payload) {
 		return
 	}

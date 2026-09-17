@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/m-milek/leszmonitor/features/users"
+
 	"github.com/m-milek/leszmonitor/api"
 	"github.com/m-milek/leszmonitor/api/controllers"
 	"github.com/m-milek/leszmonitor/db"
@@ -60,7 +62,7 @@ func main() {
 
 	database := db.Get()
 
-	userService := services.NewUserService(services.UserServiceDeps{
+	userService := users.NewUserService(users.UserServiceDeps{
 		DB: database,
 	})
 	monitorService := services.NewMonitorService(services.MonitorServiceDeps{
@@ -80,7 +82,7 @@ func main() {
 	})
 	instanceMetadataService := services.NewInstanceMetadataService(services.InstanceMetadataServiceDeps{})
 
-	userAPIController := controllers.NewUserAPIController(userService)
+	userAPIController := users.NewUserAPIController(userService)
 	monitorAPIController := controllers.NewMonitorAPIController(monitorService)
 	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
 	monitorStatsAPIController := controllers.NewMonitorStatsAPIController(monitorStatsService)
@@ -88,7 +90,7 @@ func main() {
 	tagAPIController := tags.NewTagAPIController(tagService)
 	instanceMetadataAPIController := controllers.NewInstanceMetadataAPIController(instanceMetadataService)
 
-	authzMiddlewareService := services.NewAuthzMiddlewareService(database)
+	authzMiddlewareService := users.NewAuthzMiddlewareService(database)
 
 	handlers := api.Handlers{
 		User:                   userAPIController,

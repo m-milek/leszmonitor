@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/m-milek/leszmonitor/features/users"
+
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/models/monitors"
@@ -66,7 +68,7 @@ func (s *MonitorService) CreateMonitor(
 		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
-	owner, err := s.db.Users().GetUserByUsername(ctx, userClaims.Username)
+	owner, err := users.NewUserDAO(s.db.Querier()).GetUserByUsername(ctx, userClaims.Username)
 	if err != nil {
 		logger.Error().Err(err).Str("username", userClaims.Username).Msg("Failed to find creating user")
 		return nil, apperr.NewInternalError("failed to find creating user: %w", err)

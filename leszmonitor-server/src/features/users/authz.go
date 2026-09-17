@@ -1,4 +1,4 @@
-package middleware
+package users
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 type SlugSource string
@@ -87,7 +86,7 @@ func RequireSelf(usernameParam string) func(http.HandlerFunc) http.HandlerFunc {
 
 // RequirePermission checks if the user has the required permission.
 func RequirePermission(
-	authzService services.IAuthzMiddlewareService,
+	authzService IAuthzMiddlewareService,
 	perm auth.Permission,
 ) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
