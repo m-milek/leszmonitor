@@ -1,4 +1,4 @@
-package monitors
+package results
 
 import (
 	"encoding/json"
@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 )
 
 func TestParseResultDetails(t *testing.T) {
 	t.Run("HTTP details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"statusCode": 200}`)
-		details, err := ParseResultDetails(HTTPConfigType, rawJSON)
+		details, err := ParseResultDetails(kind.HTTPConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -28,7 +29,7 @@ func TestParseResultDetails(t *testing.T) {
 
 	t.Run("TCP details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"latencyMs": 42}`)
-		details, err := ParseResultDetails(TCPConfigType, rawJSON)
+		details, err := ParseResultDetails(kind.TCPConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -48,8 +49,8 @@ func TestMonitorResultJSON(t *testing.T) {
 	t.Run("Marshal", func(t *testing.T) {
 		original := NewMonitorResult(
 			uuid.New(),
-			HTTPConfigType,
-			MonitorStatusUp,
+			kind.HTTPConfigType,
+			kind.MonitorStatusUp,
 			false,
 			100,
 			"",

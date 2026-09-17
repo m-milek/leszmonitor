@@ -1,15 +1,16 @@
-package monitors
+package results
 
 import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 )
 
 type IMonitorResult interface {
 	GetID() uuid.UUID
 	GetMonitorID() uuid.UUID
-	GetStatus() MonitorStatus
+	GetStatus() kind.MonitorStatus
 	GetIsManuallyTriggered() bool
 	GetDurationMs() int64
 	GetDetails() IMonitorResultDetails
@@ -27,14 +28,14 @@ type ErrorDetails struct {
 }
 
 type baseMonitorResult struct {
-	ID                  uuid.UUID     `json:"id"                     db:"id"`
-	MonitorID           uuid.UUID     `json:"monitorId"              db:"monitor_id"`
-	Status              MonitorStatus `json:"status" db:"status"`
-	IsManuallyTriggered bool          `json:"isManuallyTriggered"    db:"is_manually_triggered"`
-	DurationMs          int64         `json:"durationMs"             db:"duration_ms"`
-	ErrorDetailsJSON    []byte        `json:"-"                      db:"error_details"`
-	ErrorDetails        *ErrorDetails `json:"errorDetails,omitempty" db:"-"`
-	CreatedAt           string        `json:"createdAt"              db:"created_at"`
+	ID                  uuid.UUID          `json:"id"                     db:"id"`
+	MonitorID           uuid.UUID          `json:"monitorId"              db:"monitor_id"`
+	Status              kind.MonitorStatus `json:"status" db:"status"`
+	IsManuallyTriggered bool               `json:"isManuallyTriggered"    db:"is_manually_triggered"`
+	DurationMs          int64              `json:"durationMs"             db:"duration_ms"`
+	ErrorDetailsJSON    []byte             `json:"-"                      db:"error_details"`
+	ErrorDetails        *ErrorDetails      `json:"errorDetails,omitempty" db:"-"`
+	CreatedAt           string             `json:"createdAt"              db:"created_at"`
 }
 
 type MonitorResult struct {
@@ -47,8 +48,8 @@ type MonitorResult struct {
 
 func NewMonitorResult(
 	monitorID uuid.UUID,
-	monitorType ProbeType,
-	status MonitorStatus,
+	monitorType kind.ProbeType,
+	status kind.MonitorStatus,
 	isManuallyTriggered bool,
 	durationMs int64,
 	errorMessage string,
@@ -80,7 +81,7 @@ func (m *MonitorResult) GetMonitorID() uuid.UUID {
 	return m.MonitorID
 }
 
-func (m *MonitorResult) GetStatus() MonitorStatus {
+func (m *MonitorResult) GetStatus() kind.MonitorStatus {
 	return m.Status
 }
 
@@ -112,7 +113,7 @@ func (m *MonitorResult) AddFailure(fail string) {
 		m.ErrorDetails = &ErrorDetails{}
 	}
 	m.ErrorDetails.Failures = append(m.ErrorDetails.Failures, fail)
-	m.Status = MonitorStatusDown
+	m.Status = kind.MonitorStatusDown
 }
 
 func (m *MonitorResult) SetDuration(duration int64) {

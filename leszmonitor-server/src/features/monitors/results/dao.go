@@ -1,4 +1,4 @@
-package monitors
+package results
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -194,7 +195,7 @@ func (r *monitorResultDAO) DeleteMonitorResultsOlderThanDuration(
 }
 
 func processResultDetails(result *MonitorResult) error {
-	details, err := ParseResultDetails(ProbeType(result.MonitorType), result.DetailsJSON)
+	details, err := ParseResultDetails(kind.ProbeType(result.MonitorType), result.DetailsJSON)
 	if err != nil && !errors.Is(err, ErrEmptyDetails) {
 		return err
 	}

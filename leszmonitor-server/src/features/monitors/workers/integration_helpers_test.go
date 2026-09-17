@@ -1,10 +1,11 @@
-package probes
+package workers
 
 import (
 	"context"
 	"path/filepath"
 	"testing"
 
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/google/uuid"
@@ -42,7 +43,7 @@ func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 		Name:        "Test Monitor " + uuid.New().String(),
 		Description: "Testing monitor results",
 		Interval:    1,
-		Type:        monitors.HTTPConfigType,
+		Type:        kind.HTTPConfigType,
 		ProbeConfig: `{"method": "GET", "url": "http://localhost:8080", "expectedStatusCodes": [200]}`,
 		RunState:    monitors.MonitorStateActive,
 	}

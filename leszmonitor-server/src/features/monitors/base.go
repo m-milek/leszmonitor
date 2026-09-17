@@ -1,11 +1,11 @@
 package monitors
 
 import (
-	"context"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
 
@@ -16,17 +16,12 @@ type Monitor struct {
 	Name                   string          `json:"name"                   db:"name"`                     // Name of the monitor
 	Description            string          `json:"description"            db:"description"`              // Description of the monitor
 	Interval               int             `json:"interval"               db:"interval"`                 // Interval determines how often to run the monitor in seconds
-	Type                   ProbeType       `json:"type"                   db:"kind"`                     // Type of the monitor (http, tcp, etc.)
+	Type                   kind.ProbeType  `json:"type"                   db:"kind"`                     // Type of the monitor (http, tcp, etc.)
 	ProbeConfig            string          `json:"probeConfig"            db:"config"`                   // JSON string containing the specific configuration for the monitor type
 	ResultRetentionSeconds int             `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
 	RunState               MonitorRunState `json:"runState" db:"run_state"`                              // RunState indicates whether the monitor is currently running or stopped
 	OwnerID                uuid.UUID       `json:"ownerId"                db:"owner_id"`                 // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
 	TagIDs                 []uuid.UUID     `json:"tagIds"                 db:"-"`
-}
-
-type Probe interface {
-	Run(ctx context.Context, monitorID uuid.UUID) (IMonitorResult, error)
-	Validate() error
 }
 
 type MonitorRunState string

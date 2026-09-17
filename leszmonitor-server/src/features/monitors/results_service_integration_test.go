@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
@@ -18,21 +20,29 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		monitor := insertTestMonitor(t, ctx)
 
 		// Insert 2 results
-		res1 := NewMonitorResult(monitor.ID, HTTPConfigType, MonitorStatusUp, false, 100, "", nil)
+		res1 := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 100, "", nil)
 		res1.CreatedAt = time.Now().UTC().Add(-10 * time.Minute).Format(time.RFC3339)
-		_, err := NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res1)
+		_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res1)
 		require.NoError(t, err)
 
-		res2 := NewMonitorResult(monitor.ID, HTTPConfigType, MonitorStatusDown, false, 200, "failed", nil)
+		res2 := results.NewMonitorResult(
+			monitor.ID,
+			kind.HTTPConfigType,
+			kind.MonitorStatusDown,
+			false,
+			200,
+			"failed",
+			nil,
+		)
 		res2.CreatedAt = time.Now().UTC().Add(-5 * time.Minute).Format(time.RFC3339)
-		_, err = NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res2)
+		_, err = results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res2)
 		require.NoError(t, err)
 
 		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
 		require.Nil(t, svcErr)
 		require.NotNil(t, latest)
 		assert.Equal(t, res2.ID, latest.GetID())
-		assert.Equal(t, MonitorStatusDown, latest.GetStatus())
+		assert.Equal(t, kind.MonitorStatusDown, latest.GetStatus())
 	})
 
 	t.Run("Fails with 404 when no results exist", func(t *testing.T) {
@@ -55,8 +65,16 @@ func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 
 		// Insert 3 results
 		for i := range 3 {
-			res := NewMonitorResult(monitor.ID, HTTPConfigType, MonitorStatusUp, false, int64(100+i), "", nil)
-			_, err := NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res)
+			res := results.NewMonitorResult(
+				monitor.ID,
+				kind.HTTPConfigType,
+				kind.MonitorStatusUp,
+				false,
+				int64(100+i),
+				"",
+				nil,
+			)
+			_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res)
 			require.NoError(t, err)
 		}
 

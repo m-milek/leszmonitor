@@ -1,4 +1,4 @@
-package monitors
+package probe
 
 //
 // import (
@@ -15,7 +15,7 @@ package monitors
 //	Description string
 //	Interval    int
 //	ProjectID   string
-//	Type        ProbeType
+//	Type        kind.ProbeType
 //
 //	// Config fields
 //	HTTPConfig *HttpProbe
@@ -32,7 +32,7 @@ package monitors
 //		Description: "Test monitor description",
 //		Interval:    60,
 //		ProjectID:   "test_owner",
-//		Type:        HTTPConfigType,
+//		Type:        kind.HTTPConfigType,
 //		HttpConfig: &HttpProbe{
 //			Method:              "GET",
 //			URL:                 "https://example.com",
@@ -43,7 +43,7 @@ package monitors
 //
 //// AsHttp configures the monitor as an HTTP monitor
 //func (t *TestMonitor) AsHttp() *TestMonitor {
-//	t.Type = HTTPConfigType
+//	t.Type = kind.HTTPConfigType
 //	if t.HttpConfig == nil {
 //		t.HttpConfig = &HttpProbe{
 //			Method:              "GET",
@@ -57,7 +57,7 @@ package monitors
 //
 //// AsTCP configures the monitor as a tcpType monitor
 //func (t *TestMonitor) AsTCP() *TestMonitor {
-//	t.Type = TCPConfigType
+//	t.Type = kind.TCPConfigType
 //	if t.TCPConfig == nil {
 //		t.TCPConfig = &TCPProbe{
 //			Host:       "example.com",
@@ -83,12 +83,12 @@ package monitors
 //	}
 //
 //	switch t.Type {
-//	case HTTPConfigType:
+//	case kind.HTTPConfigType:
 //		return &HttpMonitor{
 //			BaseMonitor: base,
 //			Config:      *t.HttpConfig,
 //		}
-//	case TCPConfigType:
+//	case kind.TCPConfigType:
 //		return &TCPMonitor{
 //			BaseMonitor: base,
 //			Config:      *t.TCPConfig,

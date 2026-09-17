@@ -1,10 +1,11 @@
-package resultsprocessor
+package workers
 
 import (
 	"context"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/pkg/errors"
@@ -43,7 +44,8 @@ func (p *ResultsProcessor) Run(ctx context.Context) {
 }
 
 func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.MonitorRunMessage) error {
-	previousResult, err := monitors.NewMonitorResultDAO(database.Querier()).GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID.String())
+	previousResult, err := results.NewMonitorResultDAO(database.Querier()).
+		GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID.String())
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			previousResult = nil
@@ -52,7 +54,7 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 		}
 	}
 
-	_, err = monitors.NewMonitorResultDAO(database.Querier()).InsertMonitorResult(ctx, msg.Result)
+	_, err = results.NewMonitorResultDAO(database.Querier()).InsertMonitorResult(ctx, msg.Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to insert monitor result")
 	}
@@ -65,14 +67,20 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 	return nil
 }
 
-func isStatusChange(previous monitors.IMonitorResult, current monitors.IMonitorResult) bool {
+func isStatusChange(previous results.IMonitorResult, current results.IMonitorResult) bool {
 	if previous == nil {
 		return false
 	}
 	return previous.GetStatus() != current.GetStatus()
 }
 
-func handleStatusChange(ctx context.Context, db db.DB, monitor monitors.Monitor, previous monitors.IMonitorResult, current monitors.IMonitorResult) error {
+func handleStatusChange(
+	ctx context.Context,
+	db db.DB,
+	monitor monitors.Monitor,
+	previous results.IMonitorResult,
+	current results.IMonitorResult,
+) error {
 	logger := log.FromContext(ctx)
 	monitorStatusChange := monitors.MonitorStatusChange{
 		ID:             uuid.New(),

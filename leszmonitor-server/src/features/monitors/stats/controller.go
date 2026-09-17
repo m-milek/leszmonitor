@@ -1,4 +1,4 @@
-package monitors
+package stats
 
 import (
 	"errors"

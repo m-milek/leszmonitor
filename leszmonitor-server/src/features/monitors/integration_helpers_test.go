@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/users"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -61,18 +64,6 @@ func setupIntegrationTest(t *testing.T) (context.Context, *users.UserService, *u
 	return ctx, userService, user
 }
 
-func setupMonitorResultsIntegrationTest(
-	t *testing.T,
-) (context.Context, *MonitorResultsService, *users.UserService, *users.User) {
-	ctx, userService, user := setupIntegrationTest(t)
-
-	service := NewMonitorResultsService(MonitorResultsServiceDeps{
-		DB: db.Get(),
-	})
-
-	return ctx, service, userService, user
-}
-
 func setupMonitorIntegrationTest(
 	t *testing.T,
 ) (context.Context, *MonitorService, *users.UserService, *users.User) {
@@ -85,12 +76,24 @@ func setupMonitorIntegrationTest(
 	return ctx, monitorService, userService, user
 }
 
-func setupMonitorStatsIntegrationTest(
+func setupMonitorResultsIntegrationTest(
 	t *testing.T,
-) (context.Context, *MonitorStatsService, *users.UserService, *users.User) {
+) (context.Context, *results.MonitorResultsService, *users.UserService, *users.User) {
 	ctx, userService, user := setupIntegrationTest(t)
 
-	monitorStatsService := NewMonitorStatsService(MonitorStatsServiceDeps{
+	service := results.NewMonitorResultsService(results.MonitorResultsServiceDeps{
+		DB: db.Get(),
+	})
+
+	return ctx, service, userService, user
+}
+
+func setupMonitorStatsIntegrationTest(
+	t *testing.T,
+) (context.Context, *stats.MonitorStatsService, *users.UserService, *users.User) {
+	ctx, userService, user := setupIntegrationTest(t)
+
+	monitorStatsService := stats.NewMonitorStatsService(stats.MonitorStatsServiceDeps{
 		DB: db.Get(),
 	})
 
@@ -103,7 +106,7 @@ func insertTestMonitor(t *testing.T, ctx context.Context) *Monitor {
 		Name:        "Test Monitor " + uuid.New().String(),
 		Description: "Testing monitor results",
 		Interval:    60,
-		Type:        HTTPConfigType,
+		Type:        kind.HTTPConfigType,
 		ProbeConfig: "{}",
 	}
 	payload.GenerateSlug()

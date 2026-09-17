@@ -1,4 +1,4 @@
-package monitors
+package probe
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 )
 
 const testDNSServer = "8.8.8.8:53"
@@ -35,14 +37,14 @@ func assertDNSProbeRun(t *testing.T, probe DNSProbe, wantSuccess bool, timeout t
 		if err != nil {
 			t.Fatalf("Expected success, got error: %v", err)
 		}
-		if result.GetStatus() != MonitorStatusUp {
+		if result.GetStatus() != kind.MonitorStatusUp {
 			t.Fatalf("Expected success, got errors: %+v", result.GetErrorDetails())
 		}
 	} else {
 		if err != nil {
 			return
 		}
-		if result.GetStatus() == MonitorStatusUp {
+		if result.GetStatus() == kind.MonitorStatusUp {
 			t.Fatalf("Expected failure, got success")
 		}
 	}
@@ -51,7 +53,7 @@ func assertDNSProbeRun(t *testing.T, probe DNSProbe, wantSuccess bool, timeout t
 		return
 	}
 
-	details, ok := result.GetDetails().(*DNSResultDetails)
+	details, ok := result.GetDetails().(*results.DNSResultDetails)
 	if !ok {
 		t.Fatalf("Expected DNS result details")
 	}

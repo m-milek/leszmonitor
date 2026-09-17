@@ -1,10 +1,12 @@
-package probes
+package workers
 
 import (
 	"context"
 	"time"
 
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/monitors/probe"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
@@ -108,7 +110,7 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 		return
 	}
 
-	probe, err := monitors.UnmarshalProbeFromBytes(r.monitor.Type, []byte(r.monitor.ProbeConfig))
+	probe, err := probe.UnmarshalProbeFromBytes(r.monitor.Type, []byte(r.monitor.ProbeConfig))
 	if err != nil {
 		r.logger.Error().Err(err).Msg("Failed to unmarshal probe config")
 		return
@@ -125,7 +127,7 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 	}
 	r.logger.Info().Any("monitor_result", result).Msg("Monitor result")
 
-	if result.GetStatus() != monitors.MonitorStatusUp {
+	if result.GetStatus() != kind.MonitorStatusUp {
 		d := result.GetErrorDetails()
 		if d.ErrorMessage != "" || len(d.Errors) > 0 {
 			r.logger.Error().

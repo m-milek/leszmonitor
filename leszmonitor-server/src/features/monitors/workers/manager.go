@@ -1,4 +1,4 @@
-package probes
+package workers
 
 import (
 	"context"

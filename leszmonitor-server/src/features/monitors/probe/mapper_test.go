@@ -1,9 +1,10 @@
-package monitors
+package probe
 
 import (
 	"encoding/json"
 	"testing"
 
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +17,7 @@ func TestUnmarshalConfigFromBytes(t *testing.T) {
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalProbeFromBytes(HTTPConfigType, bytes)
+		parsed, err := UnmarshalProbeFromBytes(kind.HTTPConfigType, bytes)
 		require.NoError(t, err)
 		assert.IsType(t, &HTTPProbe{}, parsed)
 		assert.Equal(t, config.URL, parsed.(*HTTPProbe).URL)
@@ -29,7 +30,7 @@ func TestUnmarshalConfigFromBytes(t *testing.T) {
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalProbeFromBytes(TCPConfigType, bytes)
+		parsed, err := UnmarshalProbeFromBytes(kind.TCPConfigType, bytes)
 		require.NoError(t, err)
 		assert.IsType(t, &TCPProbe{}, parsed)
 		assert.Equal(t, config.Host, parsed.(*TCPProbe).Host)

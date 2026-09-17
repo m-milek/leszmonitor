@@ -1,4 +1,4 @@
-package monitors
+package probe
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -191,7 +192,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 		}
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
-		assert.Equal(t, MonitorStatusUp, response.GetStatus())
+		assert.Equal(t, kind.MonitorStatusUp, response.GetStatus())
 		assert.Equal(t, int64(100), response.GetDurationMs())
 		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
 	})
@@ -208,7 +209,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
-		assert.Equal(t, MonitorStatusDown, response.GetStatus())
+		assert.Equal(t, kind.MonitorStatusDown, response.GetStatus())
 	})
 
 	t.Run("Successful TCPConfigType After Retry", func(t *testing.T) {
@@ -226,7 +227,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
-		assert.Equal(t, MonitorStatusUp, response.GetStatus())
+		assert.Equal(t, kind.MonitorStatusUp, response.GetStatus())
 		assert.Equal(t, int64(150), response.GetDurationMs())
 	})
 }

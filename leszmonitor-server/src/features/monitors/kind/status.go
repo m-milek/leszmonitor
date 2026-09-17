@@ -1,4 +1,4 @@
-package monitors
+package kind
 
 type MonitorStatus string
 

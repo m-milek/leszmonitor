@@ -2,6 +2,7 @@ package realtime
 
 import (
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 )
 
 var (
@@ -15,11 +16,11 @@ type baseNotification struct {
 type monitorRunNotification struct {
 	baseNotification
 
-	MonitorID string                  `json:"monitorId"`
-	Response  monitors.IMonitorResult `json:"response"`
+	MonitorID string                 `json:"monitorId"`
+	Response  results.IMonitorResult `json:"response"`
 }
 
-func newMonitorRunNotification(result monitors.IMonitorResult, monitor monitors.Monitor) *monitorRunNotification {
+func newMonitorRunNotification(result results.IMonitorResult, monitor monitors.Monitor) *monitorRunNotification {
 	return &monitorRunNotification{
 		baseNotification: baseNotification{
 			Type: notificationTypeMonitorRun,

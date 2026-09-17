@@ -3,6 +3,7 @@ package monitors
 import (
 	"testing"
 
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ func createTestBaseMonitor() Monitor {
 		Name:                   name,
 		Description:            "Test Description",
 		Interval:               60,
-		Type:                   HTTPConfigType,
+		Type:                   kind.HTTPConfigType,
 		ResultRetentionSeconds: 60,
 		RunState:               MonitorStateActive,
 	}

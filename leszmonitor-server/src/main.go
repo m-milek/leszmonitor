@@ -15,8 +15,9 @@ import (
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/m-milek/leszmonitor/app"
-	"github.com/m-milek/leszmonitor/features/monitors/probes"
-	"github.com/m-milek/leszmonitor/features/monitors/resultsprocessor"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
+	"github.com/m-milek/leszmonitor/features/monitors/workers"
 	"github.com/m-milek/leszmonitor/features/tags"
 	config "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -28,14 +29,14 @@ var staticFiles embed.FS
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Go(func() {
-		manager := probes.NewManager(db.Get())
+		manager := workers.NewManager(db.Get())
 		manager.Run(ctx)
 	})
 	wg.Go(func() {
-		monitors.StartDataCleanupWorker(ctx)
+		workers.StartDataCleanupWorker(ctx)
 	})
 	wg.Go(func() {
-		resultsProcessor := resultsprocessor.NewResultsProcessor(db.Get())
+		resultsProcessor := workers.NewResultsProcessor(db.Get())
 		resultsProcessor.Run(ctx)
 	})
 }
@@ -68,10 +69,10 @@ func main() {
 	monitorService := monitors.NewMonitorService(monitors.MonitorServiceDeps{
 		DB: database,
 	})
-	monitorResultService := monitors.NewMonitorResultsService(monitors.MonitorResultsServiceDeps{
+	monitorResultService := results.NewMonitorResultsService(results.MonitorResultsServiceDeps{
 		DB: database,
 	})
-	monitorStatsService := monitors.NewMonitorStatsService(monitors.MonitorStatsServiceDeps{
+	monitorStatsService := stats.NewMonitorStatsService(stats.MonitorStatsServiceDeps{
 		DB: database,
 	})
 	auditLogService := auditlog.NewAuditLogService(auditlog.AuditLogServiceDeps{
@@ -84,8 +85,8 @@ func main() {
 
 	userAPIController := users.NewUserAPIController(userService)
 	monitorAPIController := monitors.NewMonitorAPIController(monitorService)
-	monitorResultsAPIController := monitors.NewMonitorResultsAPIController(monitorResultService)
-	monitorStatsAPIController := monitors.NewMonitorStatsAPIController(monitorStatsService)
+	monitorResultsAPIController := results.NewMonitorResultsAPIController(monitorResultService)
+	monitorStatsAPIController := stats.NewMonitorStatsAPIController(monitorStatsService)
 	auditLogAPIController := auditlog.NewAuditLogAPIController(auditLogService)
 	tagAPIController := tags.NewTagAPIController(tagService)
 	instanceMetadataAPIController := instance.NewInstanceMetadataAPIController(instanceMetadataService)

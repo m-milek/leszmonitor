@@ -3,6 +3,8 @@ package monitors
 import (
 	"net/http"
 
+	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/platform/auth"
 )
 
@@ -10,8 +12,8 @@ import (
 func RegisterRoutes(
 	protectedRouter *http.ServeMux,
 	c MonitorAPIController,
-	results MonitorResultsAPIController,
-	stats MonitorStatsAPIController,
+	results results.MonitorResultsAPIController,
+	stats stats.MonitorStatsAPIController,
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
 	protectedRouter.HandleFunc(
