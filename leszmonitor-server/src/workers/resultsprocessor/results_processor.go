@@ -5,9 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/pkg/errors"
 )
@@ -67,16 +65,16 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 	return nil
 }
 
-func isStatusChange(previous monitorresult.IMonitorResult, current monitorresult.IMonitorResult) bool {
+func isStatusChange(previous monitors.IMonitorResult, current monitors.IMonitorResult) bool {
 	if previous == nil {
 		return false
 	}
 	return previous.GetStatus() != current.GetStatus()
 }
 
-func handleStatusChange(ctx context.Context, db db.DB, monitor monitors.Monitor, previous monitorresult.IMonitorResult, current monitorresult.IMonitorResult) error {
+func handleStatusChange(ctx context.Context, db db.DB, monitor monitors.Monitor, previous monitors.IMonitorResult, current monitors.IMonitorResult) error {
 	logger := log.FromContext(ctx)
-	monitorStatusChange := models.MonitorStatusChange{
+	monitorStatusChange := monitors.MonitorStatusChange{
 		ID:             uuid.New(),
 		MonitorID:      monitor.ID,
 		CausedByID:     current.GetID(),

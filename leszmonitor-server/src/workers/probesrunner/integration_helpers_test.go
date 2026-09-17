@@ -9,8 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,7 +42,7 @@ func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 		Name:        "Test Monitor " + uuid.New().String(),
 		Description: "Testing monitor results",
 		Interval:    1,
-		Type:        consts.HTTPConfigType,
+		Type:        monitors.HTTPConfigType,
 		ProbeConfig: `{"method": "GET", "url": "http://localhost:8080", "expectedStatusCodes": [200]}`,
 		RunState:    monitors.MonitorStateActive,
 	}

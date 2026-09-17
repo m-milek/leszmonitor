@@ -1,4 +1,4 @@
-package monitorresult
+package monitors
 
 type HTTPResultDetails struct {
 	StatusCode    int               `json:"statusCode"`

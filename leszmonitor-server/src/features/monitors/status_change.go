@@ -1,4 +1,4 @@
-package models
+package monitors
 
 import "github.com/google/uuid"
 

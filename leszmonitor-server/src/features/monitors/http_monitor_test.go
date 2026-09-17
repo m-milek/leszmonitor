@@ -9,9 +9,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	_const "github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -24,7 +21,7 @@ func TestHttpProbeFromReader(t *testing.T) {
 		"expectedStatusCodes": [200]
 	}`
 
-	probe, err := ProbeFromJSON(jsonInput, _const.HTTPConfigType)
+	probe, err := ProbeFromJSON(jsonInput, HTTPConfigType)
 
 	require.NoError(t, err)
 	assert.NotNil(t, probe)
@@ -37,7 +34,7 @@ func TestHttpProbeFromReader(t *testing.T) {
 func TestHttpMonitorFromReaderInvalidJSON(t *testing.T) {
 	jsonInput := `invalid json`
 
-	monitor, err := ProbeFromJSON(jsonInput, _const.HTTPConfigType)
+	monitor, err := ProbeFromJSON(jsonInput, HTTPConfigType)
 
 	require.Error(t, err)
 	assert.Nil(t, monitor)
@@ -130,10 +127,10 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 
 	response, _ := probe.Run(context.Background(), uuid.Nil)
 
-	assert.Equal(t, shared.MonitorStatusUp, response.GetStatus())
+	assert.Equal(t, MonitorStatusUp, response.GetStatus())
 	assert.Empty(t, response.GetErrorDetails().Errors)
 
-	details, ok := response.GetDetails().(*monitorresult.HTTPResultDetails)
+	details, ok := response.GetDetails().(*HTTPResultDetails)
 	assert.True(t, ok)
 	assert.Equal(t, 200, details.StatusCode)
 	assert.Empty(t, response.GetErrorDetails().Failures)
@@ -155,7 +152,7 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 
 	response, _ := probe.Run(context.Background(), uuid.Nil)
 
-	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
+	assert.Equal(t, MonitorStatusDown, response.GetStatus())
 
 	assert.Contains(t, response.GetErrorDetails().Failures[0], "Unexpected status code")
 
@@ -172,7 +169,7 @@ func TestHttpMonitorRunError(t *testing.T) {
 
 	response, _ := probe.Run(context.Background(), uuid.Nil)
 
-	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
+	assert.Equal(t, MonitorStatusDown, response.GetStatus())
 	assert.NotEmpty(t, response.GetErrorDetails().Failures)
 	assert.Contains(t, response.GetErrorDetails().Failures[0], "connection refused")
 
@@ -195,7 +192,7 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 
 	response, _ := probe.Run(context.Background(), uuid.Nil)
 
-	assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
+	assert.Equal(t, MonitorStatusDown, response.GetStatus())
 
 	failures := response.GetErrorDetails().Failures
 	assert.Len(t, failures, 3)

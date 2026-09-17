@@ -1,4 +1,4 @@
-package shared
+package monitors
 
 type MonitorStatus string
 

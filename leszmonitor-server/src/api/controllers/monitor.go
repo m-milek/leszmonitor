@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/services"

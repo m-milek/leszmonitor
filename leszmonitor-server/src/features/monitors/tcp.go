@@ -8,9 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
 
@@ -49,17 +46,17 @@ func NewTCPProbe(host string, port int, protocol string, timeout, retryCount int
 	return probe, nil
 }
 
-func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.IMonitorResult, error) {
-	result := monitorresult.NewMonitorResult(
+func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (IMonitorResult, error) {
+	result := NewMonitorResult(
 		monitorID,
-		consts.TCPConfigType,
-		shared.MonitorStatusUp,
+		TCPConfigType,
+		MonitorStatusUp,
 		false,
 		0,
 		"",
-		&monitorresult.TCPResultDetails{},
+		&TCPResultDetails{},
 	)
-	details := result.GetDetails().(*monitorresult.TCPResultDetails)
+	details := result.GetDetails().(*TCPResultDetails)
 
 	portString := strconv.Itoa(m.Port)
 	address := net.JoinHostPort(m.Host, portString)

@@ -6,9 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/tags"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,7 +36,7 @@ func testMonitor(tagIDs []uuid.UUID) monitors.Monitor {
 		Slug:                   "test-monitor",
 		Name:                   "Test Monitor",
 		Interval:               60,
-		Type:                   consts.HTTPConfigType,
+		Type:                   monitors.HTTPConfigType,
 		ProbeConfig:            `{"method":"GET","url":"http://example.com"}`,
 		ResultRetentionSeconds: 3600,
 		RunState:               monitors.MonitorStateActive,

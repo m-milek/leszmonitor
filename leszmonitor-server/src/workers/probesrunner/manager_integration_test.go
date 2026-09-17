@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

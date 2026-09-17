@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/shared"
 )
 
 const testDNSServer = "8.8.8.8:53"
@@ -37,14 +35,14 @@ func assertDNSProbeRun(t *testing.T, probe DNSProbe, wantSuccess bool, timeout t
 		if err != nil {
 			t.Fatalf("Expected success, got error: %v", err)
 		}
-		if result.GetStatus() != shared.MonitorStatusUp {
+		if result.GetStatus() != MonitorStatusUp {
 			t.Fatalf("Expected success, got errors: %+v", result.GetErrorDetails())
 		}
 	} else {
 		if err != nil {
 			return
 		}
-		if result.GetStatus() == shared.MonitorStatusUp {
+		if result.GetStatus() == MonitorStatusUp {
 			t.Fatalf("Expected failure, got success")
 		}
 	}
@@ -53,7 +51,7 @@ func assertDNSProbeRun(t *testing.T, probe DNSProbe, wantSuccess bool, timeout t
 		return
 	}
 
-	details, ok := result.GetDetails().(*monitorresult.DNSResultDetails)
+	details, ok := result.GetDetails().(*DNSResultDetails)
 	if !ok {
 		t.Fatalf("Expected DNS result details")
 	}

@@ -3,12 +3,12 @@ package db
 import (
 	"context"
 
-	"github.com/m-milek/leszmonitor/models"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	platformdb "github.com/m-milek/leszmonitor/platform/db"
 )
 
 type IMonitorStatusChangeDAO interface {
-	InsertStatusChange(ctx context.Context, statusChange models.MonitorStatusChange) (any, error)
+	InsertStatusChange(ctx context.Context, statusChange monitors.MonitorStatusChange) (any, error)
 }
 
 type monitorStatusChangeDAO struct {
@@ -21,7 +21,7 @@ func newMonitorStatusChangeDAO(base baseDAO) IMonitorStatusChangeDAO {
 	}
 }
 
-func (r *monitorStatusChangeDAO) InsertStatusChange(ctx context.Context, statusChange models.MonitorStatusChange) (any, error) {
+func (r *monitorStatusChangeDAO) InsertStatusChange(ctx context.Context, statusChange monitors.MonitorStatusChange) (any, error) {
 	return platformdb.Wrap(ctx, "InsertStatusChange", func() (any, error) {
 		query := `
 			INSERT INTO monitor_status_changes (id, monitor_id, caused_by_id, previous_status, next_status)

@@ -3,24 +3,22 @@ package monitors
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/m-milek/leszmonitor/models/consts"
 )
 
-func mapProbeType(kind consts.ProbeType) Probe {
+func mapProbeType(kind ProbeType) Probe {
 	switch kind {
-	case consts.HTTPConfigType:
+	case HTTPConfigType:
 		return &HTTPProbe{}
-	case consts.TCPConfigType:
+	case TCPConfigType:
 		return &TCPProbe{}
-	case consts.DNSConfigType:
+	case DNSConfigType:
 		return &DNSProbe{}
 	default:
 		return nil
 	}
 }
 
-func ProbeFromJSON(probeConfig string, probeType consts.ProbeType) (Probe, error) {
+func ProbeFromJSON(probeConfig string, probeType ProbeType) (Probe, error) {
 	// Map the monitor type to the appropriate config type
 	probe := mapProbeType(probeType)
 	if probe == nil {
@@ -35,7 +33,7 @@ func ProbeFromJSON(probeConfig string, probeType consts.ProbeType) (Probe, error
 	return probe, nil
 }
 
-func UnmarshalProbeFromBytes(kind consts.ProbeType, data []byte) (Probe, error) {
+func UnmarshalProbeFromBytes(kind ProbeType, data []byte) (Probe, error) {
 	config := mapProbeType(kind)
 	if config == nil {
 		return nil, fmt.Errorf("unknown monitor config type: %s", kind)

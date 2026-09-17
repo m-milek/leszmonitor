@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/stretchr/testify/assert"
 )

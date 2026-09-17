@@ -2,7 +2,6 @@ package monitors
 
 import (
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
 )
 
 type MonitorLifecycleState string
@@ -21,5 +20,5 @@ type MonitorLifecycleMessage struct {
 
 type MonitorRunMessage struct {
 	Monitor Monitor
-	Result  monitorresult.IMonitorResult
+	Result  IMonitorResult
 }

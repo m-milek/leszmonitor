@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/log"
@@ -16,12 +16,12 @@ type IMonitorResultsService interface {
 	GetLatestMonitorResultByMonitorID(
 		ctx context.Context,
 		monitorID string,
-	) (monitorresult.IMonitorResult, *apperr.ServiceError)
+	) (monitors.IMonitorResult, *apperr.ServiceError)
 	GetMonitorResultsByMonitorID(
 		ctx context.Context,
 		id string,
 		pagination *util.Pagination,
-	) ([]monitorresult.IMonitorResult, *apperr.ServiceError)
+	) ([]monitors.IMonitorResult, *apperr.ServiceError)
 }
 
 type MonitorResultsService struct {
@@ -41,7 +41,7 @@ func NewMonitorResultsService(deps MonitorResultsServiceDeps) *MonitorResultsSer
 func (s *MonitorResultsService) GetLatestMonitorResultByMonitorID(
 	ctx context.Context,
 	monitorID string,
-) (monitorresult.IMonitorResult, *apperr.ServiceError) {
+) (monitors.IMonitorResult, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitorResults, "GetLatestMonitorResultByMonitorID")
 	logger.Trace().Str("monitorID", monitorID).Msg("Retrieving latest monitor result by monitor ID")
 
@@ -63,7 +63,7 @@ func (s *MonitorResultsService) GetMonitorResultsByMonitorID(
 	ctx context.Context,
 	id string,
 	pagination *util.Pagination,
-) ([]monitorresult.IMonitorResult, *apperr.ServiceError) {
+) ([]monitors.IMonitorResult, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitorResults, "GetMonitorResultsByMonitorID")
 	logger.Trace().
 		Str("monitorID", id).

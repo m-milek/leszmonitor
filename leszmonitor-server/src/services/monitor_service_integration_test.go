@@ -6,8 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +48,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 			Name:        "Ping API",
 			Description: "Pings our main API every minute",
 			Interval:    60,
-			Type:        consts.HTTPConfigType,
+			Type:        monitors.HTTPConfigType,
 			ProbeConfig: "{}",
 		}
 		payload.GenerateSlug()
@@ -63,7 +62,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		monitorFromDB, svcErr := monitorService.GetMonitorByID(ctx, resp.MonitorID)
 		require.Nil(t, svcErr)
 		assert.Equal(t, "Ping API", monitorFromDB.Name)
-		assert.Equal(t, consts.HTTPConfigType, monitorFromDB.Type)
+		assert.Equal(t, monitors.HTTPConfigType, monitorFromDB.Type)
 		assert.Equal(t, "ping-api", monitorFromDB.Slug)
 
 		// Verify audit log was created
@@ -89,7 +88,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		payload := monitors.Monitor{
 			Name:     "",  // Empty name makes it invalid
 			Interval: -10, // Invalid interval
-			Type:     consts.HTTPConfigType,
+			Type:     monitors.HTTPConfigType,
 		}
 
 		resp, svcErr := monitorService.CreateMonitor(ctx, payload)
@@ -245,7 +244,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 			Name:        "Fake",
 			Description: "Fake",
 			Interval:    60,
-			Type:        consts.HTTPConfigType,
+			Type:        monitors.HTTPConfigType,
 			ProbeConfig: "{}",
 		}
 

@@ -8,9 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )
@@ -38,18 +35,18 @@ type DNSCNAMEExpectedValues struct {
 	CNAME string `json:"cname"`
 }
 
-func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.IMonitorResult, error) {
+func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (IMonitorResult, error) {
 	logger := log.FromContext(ctx)
-	result := monitorresult.NewMonitorResult(
+	result := NewMonitorResult(
 		monitorID,
-		consts.DNSConfigType,
-		shared.MonitorStatusUp,
+		DNSConfigType,
+		MonitorStatusUp,
 		false,
 		0,
 		"",
-		&monitorresult.DNSResultDetails{},
+		&DNSResultDetails{},
 	)
-	details := result.GetDetails().(*monitorresult.DNSResultDetails)
+	details := result.GetDetails().(*DNSResultDetails)
 
 	resolver := makeResolver(p.DNSServer)
 	rt := string(p.RecordType)
@@ -274,12 +271,12 @@ func dnsIPNetwork(recordType DNSRecordType) string {
 
 // earlyErrorWithErr is like earlyError but includes an error in the log.
 func earlyErrorWithErr(
-	result monitorresult.IMonitorResult,
+	result IMonitorResult,
 	logger *zerolog.Logger,
 	userMsg string,
 	err error,
 	logMsg string,
-) monitorresult.IMonitorResult {
+) IMonitorResult {
 	result.AddFailure(userMsg)
 	logger.Trace().Err(err).Msg(logMsg)
 	result.SetDuration(0)
@@ -290,9 +287,9 @@ func earlyErrorWithErr(
 // toStr converts a resolved record to a string for comparison.
 // desc is used in error messages (e.g. "A", "AAAA", "TXT").
 func checkExpected[R any](
-	result monitorresult.IMonitorResult,
+	result IMonitorResult,
 	logger *zerolog.Logger,
-	details *monitorresult.DNSResultDetails,
+	details *DNSResultDetails,
 	expectedValues []string,
 	resolvedRecords []R,
 	recordToAny func(R) any,

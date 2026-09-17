@@ -13,9 +13,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/shared"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/platform/meta"
 	"github.com/m-milek/leszmonitor/platform/util"
@@ -36,18 +33,18 @@ type HTTPProbe struct {
 
 const httpTimeout = 10 * time.Second
 
-func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (monitorresult.IMonitorResult, error) {
+func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (IMonitorResult, error) {
 	logger := log.FromContext(ctx)
-	result := monitorresult.NewMonitorResult(
+	result := NewMonitorResult(
 		monitorID,
-		consts.HTTPConfigType,
-		shared.MonitorStatusUp,
+		HTTPConfigType,
+		MonitorStatusUp,
 		false,
 		0,
 		"",
-		&monitorresult.HTTPResultDetails{},
+		&HTTPResultDetails{},
 	)
-	details, castErr := result.GetDetails().(*monitorresult.HTTPResultDetails)
+	details, castErr := result.GetDetails().(*HTTPResultDetails)
 	if !castErr {
 		logger.Error().Msg("Failed to cast monitor result details to HTTPResultDetails")
 		return nil, errors.New("failed to cast monitor result details to HTTPResultDetails")
@@ -181,7 +178,7 @@ func (m *HTTPProbe) executeRequest(httpClient *httpRequestExecutor) (*http.Respo
 
 func (m *HTTPProbe) checkStatusCode(
 	response *http.Response,
-	result monitorresult.IMonitorResult,
+	result IMonitorResult,
 ) {
 	if m.ExpectedStatusCodes == nil {
 		return
@@ -199,7 +196,7 @@ func (m *HTTPProbe) checkStatusCode(
 
 func (m *HTTPProbe) checkResponseTime(
 	elapsed time.Duration,
-	result monitorresult.IMonitorResult,
+	result IMonitorResult,
 ) {
 	if m.ExpectedResponseTime == nil {
 		return
@@ -216,7 +213,7 @@ func (m *HTTPProbe) checkResponseTime(
 
 func (m *HTTPProbe) checkResponseHeaders(
 	response *http.Response,
-	result monitorresult.IMonitorResult,
+	result IMonitorResult,
 ) {
 	if len(m.ExpectedHeaders) == 0 {
 		return
@@ -233,7 +230,7 @@ func (m *HTTPProbe) checkResponseHeaders(
 
 func (m *HTTPProbe) checkResponseBody(
 	response *http.Response,
-	result monitorresult.IMonitorResult,
+	result IMonitorResult,
 ) error {
 	if m.ExpectedBodyRegex == "" {
 		return nil

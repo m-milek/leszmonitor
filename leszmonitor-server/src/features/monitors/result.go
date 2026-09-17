@@ -1,17 +1,15 @@
-package monitorresult
+package monitors
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/shared"
 )
 
 type IMonitorResult interface {
 	GetID() uuid.UUID
 	GetMonitorID() uuid.UUID
-	GetStatus() shared.MonitorStatus
+	GetStatus() MonitorStatus
 	GetIsManuallyTriggered() bool
 	GetDurationMs() int64
 	GetDetails() IMonitorResultDetails
@@ -29,14 +27,14 @@ type ErrorDetails struct {
 }
 
 type baseMonitorResult struct {
-	ID                  uuid.UUID            `json:"id"                     db:"id"`
-	MonitorID           uuid.UUID            `json:"monitorId"              db:"monitor_id"`
-	Status              shared.MonitorStatus `json:"status" db:"status"`
-	IsManuallyTriggered bool                 `json:"isManuallyTriggered"    db:"is_manually_triggered"`
-	DurationMs          int64                `json:"durationMs"             db:"duration_ms"`
-	ErrorDetailsJSON    []byte               `json:"-"                      db:"error_details"`
-	ErrorDetails        *ErrorDetails        `json:"errorDetails,omitempty" db:"-"`
-	CreatedAt           string               `json:"createdAt"              db:"created_at"`
+	ID                  uuid.UUID     `json:"id"                     db:"id"`
+	MonitorID           uuid.UUID     `json:"monitorId"              db:"monitor_id"`
+	Status              MonitorStatus `json:"status" db:"status"`
+	IsManuallyTriggered bool          `json:"isManuallyTriggered"    db:"is_manually_triggered"`
+	DurationMs          int64         `json:"durationMs"             db:"duration_ms"`
+	ErrorDetailsJSON    []byte        `json:"-"                      db:"error_details"`
+	ErrorDetails        *ErrorDetails `json:"errorDetails,omitempty" db:"-"`
+	CreatedAt           string        `json:"createdAt"              db:"created_at"`
 }
 
 type MonitorResult struct {
@@ -49,8 +47,8 @@ type MonitorResult struct {
 
 func NewMonitorResult(
 	monitorID uuid.UUID,
-	monitorType consts.ProbeType,
-	status shared.MonitorStatus,
+	monitorType ProbeType,
+	status MonitorStatus,
 	isManuallyTriggered bool,
 	durationMs int64,
 	errorMessage string,
@@ -82,7 +80,7 @@ func (m *MonitorResult) GetMonitorID() uuid.UUID {
 	return m.MonitorID
 }
 
-func (m *MonitorResult) GetStatus() shared.MonitorStatus {
+func (m *MonitorResult) GetStatus() MonitorStatus {
 	return m.Status
 }
 
@@ -114,7 +112,7 @@ func (m *MonitorResult) AddFailure(fail string) {
 		m.ErrorDetails = &ErrorDetails{}
 	}
 	m.ErrorDetails.Failures = append(m.ErrorDetails.Failures, fail)
-	m.Status = shared.MonitorStatusDown
+	m.Status = MonitorStatusDown
 }
 
 func (m *MonitorResult) SetDuration(duration int64) {

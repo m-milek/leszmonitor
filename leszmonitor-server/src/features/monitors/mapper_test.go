@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	shared "github.com/m-milek/leszmonitor/models/consts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +16,7 @@ func TestUnmarshalConfigFromBytes(t *testing.T) {
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalProbeFromBytes(shared.HTTPConfigType, bytes)
+		parsed, err := UnmarshalProbeFromBytes(HTTPConfigType, bytes)
 		require.NoError(t, err)
 		assert.IsType(t, &HTTPProbe{}, parsed)
 		assert.Equal(t, config.URL, parsed.(*HTTPProbe).URL)
@@ -30,7 +29,7 @@ func TestUnmarshalConfigFromBytes(t *testing.T) {
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalProbeFromBytes(shared.TCPConfigType, bytes)
+		parsed, err := UnmarshalProbeFromBytes(TCPConfigType, bytes)
 		require.NoError(t, err)
 		assert.IsType(t, &TCPProbe{}, parsed)
 		assert.Equal(t, config.Host, parsed.(*TCPProbe).Host)

@@ -1,4 +1,4 @@
-package monitorresult
+package monitors
 
 import (
 	"encoding/json"
@@ -6,14 +6,12 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	consts "github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/shared"
 )
 
 func TestParseResultDetails(t *testing.T) {
 	t.Run("HTTP details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"statusCode": 200}`)
-		details, err := ParseResultDetails(consts.HTTPConfigType, rawJSON)
+		details, err := ParseResultDetails(HTTPConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -30,7 +28,7 @@ func TestParseResultDetails(t *testing.T) {
 
 	t.Run("TCP details parsing", func(t *testing.T) {
 		rawJSON := []byte(`{"latencyMs": 42}`)
-		details, err := ParseResultDetails(consts.TCPConfigType, rawJSON)
+		details, err := ParseResultDetails(TCPConfigType, rawJSON)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -50,8 +48,8 @@ func TestMonitorResultJSON(t *testing.T) {
 	t.Run("Marshal", func(t *testing.T) {
 		original := NewMonitorResult(
 			uuid.New(),
-			consts.HTTPConfigType,
-			shared.MonitorStatusUp,
+			HTTPConfigType,
+			MonitorStatusUp,
 			false,
 			100,
 			"",

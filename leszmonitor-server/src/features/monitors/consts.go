@@ -1,4 +1,4 @@
-package consts
+package monitors
 
 type ProbeType string
 

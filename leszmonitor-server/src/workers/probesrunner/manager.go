@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )

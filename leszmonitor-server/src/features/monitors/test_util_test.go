@@ -3,7 +3,6 @@ package monitors
 //
 // import (
 //	"github.com/google/uuid"
-//	shared "github.com/m-milek/leszmonitor/models/consts"
 //	"github.com/m-milek/leszmonitor/platform/util"
 //)
 //
@@ -16,7 +15,7 @@ package monitors
 //	Description string
 //	Interval    int
 //	ProjectID   string
-//	Type        shared.ProbeType
+//	Type        ProbeType
 //
 //	// Config fields
 //	HTTPConfig *HttpProbe
@@ -33,7 +32,7 @@ package monitors
 //		Description: "Test monitor description",
 //		Interval:    60,
 //		ProjectID:   "test_owner",
-//		Type:        shared.HTTPConfigType,
+//		Type:        HTTPConfigType,
 //		HttpConfig: &HttpProbe{
 //			Method:              "GET",
 //			URL:                 "https://example.com",
@@ -44,7 +43,7 @@ package monitors
 //
 //// AsHttp configures the monitor as an HTTP monitor
 //func (t *TestMonitor) AsHttp() *TestMonitor {
-//	t.Type = shared.HTTPConfigType
+//	t.Type = HTTPConfigType
 //	if t.HttpConfig == nil {
 //		t.HttpConfig = &HttpProbe{
 //			Method:              "GET",
@@ -58,7 +57,7 @@ package monitors
 //
 //// AsTCP configures the monitor as a tcpType monitor
 //func (t *TestMonitor) AsTCP() *TestMonitor {
-//	t.Type = shared.TCPConfigType
+//	t.Type = TCPConfigType
 //	if t.TCPConfig == nil {
 //		t.TCPConfig = &TCPProbe{
 //			Host:       "example.com",
@@ -84,12 +83,12 @@ package monitors
 //	}
 //
 //	switch t.Type {
-//	case shared.HTTPConfigType:
+//	case HTTPConfigType:
 //		return &HttpMonitor{
 //			BaseMonitor: base,
 //			Config:      *t.HttpConfig,
 //		}
-//	case shared.TCPConfigType:
+//	case TCPConfigType:
 //		return &TCPMonitor{
 //			BaseMonitor: base,
 //			Config:      *t.TCPConfig,

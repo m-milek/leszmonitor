@@ -9,8 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models/consts"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/stretchr/testify/require"
 )
@@ -118,7 +117,7 @@ func insertTestMonitor(t *testing.T, ctx context.Context) *monitors.Monitor {
 		Name:        "Test Monitor " + uuid.New().String(),
 		Description: "Testing monitor results",
 		Interval:    60,
-		Type:        consts.HTTPConfigType,
+		Type:        monitors.HTTPConfigType,
 		ProbeConfig: "{}",
 	}
 	payload.GenerateSlug()

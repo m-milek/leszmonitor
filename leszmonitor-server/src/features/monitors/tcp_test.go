@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/models/shared"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -149,7 +148,7 @@ func TestTCPMonitor_Validate(t *testing.T) {
 func TestTCPAddress(t *testing.T) {
 	// This is a bit tricky to test without making actual network calls
 	// We'll use a known reliable service for a simple integration test
-	t.Run("Successful shared.TCPConfigType", func(t *testing.T) {
+	t.Run("Successful TCPConfigType", func(t *testing.T) {
 		// Skip this test in CI environments or when offline
 		if testing.Short() {
 			t.Skip("Skipping network-dependent test in short mode")
@@ -163,12 +162,12 @@ func TestTCPAddress(t *testing.T) {
 		}
 	})
 
-	t.Run("Failed shared.TCPConfigType - Invalid Host", func(t *testing.T) {
+	t.Run("Failed TCPConfigType - Invalid Host", func(t *testing.T) {
 		success, _ := dialAddress("tcp", "invalid-host-that-does-not-exist:80", 1*time.Second)
 		assert.False(t, success)
 	})
 
-	t.Run("Failed shared.TCPConfigType - Invalid Port", func(t *testing.T) {
+	t.Run("Failed TCPConfigType - Invalid Port", func(t *testing.T) {
 		success, _ := dialAddress("tcp", "localhost:99999", 1*time.Second)
 		assert.False(t, success)
 	})
@@ -180,7 +179,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 	originalDialAddress := dialAddress
 	defer func() { dialAddressFunc = originalDialAddress }()
 
-	t.Run("Successful shared.TCPConfigType", func(t *testing.T) {
+	t.Run("Successful TCPConfigType", func(t *testing.T) {
 		probe := setupTCPProbe()
 
 		// Mock the dialAddress function
@@ -192,12 +191,12 @@ func TestTCPMonitor_Run(t *testing.T) {
 		}
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
-		assert.Equal(t, shared.MonitorStatusUp, response.GetStatus())
+		assert.Equal(t, MonitorStatusUp, response.GetStatus())
 		assert.Equal(t, int64(100), response.GetDurationMs())
 		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
 	})
 
-	t.Run("Failed shared.TCPConfigType with Retries", func(t *testing.T) {
+	t.Run("Failed TCPConfigType with Retries", func(t *testing.T) {
 		probe := setupTCPProbe()
 		callCount := 0
 
@@ -209,10 +208,10 @@ func TestTCPMonitor_Run(t *testing.T) {
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
-		assert.Equal(t, shared.MonitorStatusDown, response.GetStatus())
+		assert.Equal(t, MonitorStatusDown, response.GetStatus())
 	})
 
-	t.Run("Successful shared.TCPConfigType After Retry", func(t *testing.T) {
+	t.Run("Successful TCPConfigType After Retry", func(t *testing.T) {
 		probe := setupTCPProbe()
 		callCount := 0
 
@@ -227,7 +226,7 @@ func TestTCPMonitor_Run(t *testing.T) {
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 2, callCount, "Should have tried 2 times")
-		assert.Equal(t, shared.MonitorStatusUp, response.GetStatus())
+		assert.Equal(t, MonitorStatusUp, response.GetStatus())
 		assert.Equal(t, int64(150), response.GetDurationMs())
 	})
 }

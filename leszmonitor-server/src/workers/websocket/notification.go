@@ -1,8 +1,7 @@
 package websocket
 
 import (
-	"github.com/m-milek/leszmonitor/models/monitorresult"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 )
 
 var (
@@ -16,11 +15,11 @@ type baseNotification struct {
 type monitorRunNotification struct {
 	baseNotification
 
-	MonitorID string                       `json:"monitorId"`
-	Response  monitorresult.IMonitorResult `json:"response"`
+	MonitorID string                  `json:"monitorId"`
+	Response  monitors.IMonitorResult `json:"response"`
 }
 
-func newMonitorRunNotification(result monitorresult.IMonitorResult, monitor monitors.Monitor) *monitorRunNotification {
+func newMonitorRunNotification(result monitors.IMonitorResult, monitor monitors.Monitor) *monitorRunNotification {
 	return &monitorRunNotification{
 		baseNotification: baseNotification{
 			Type: notificationTypeMonitorRun,

@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/auth"

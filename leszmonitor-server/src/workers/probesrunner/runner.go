@@ -5,8 +5,7 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/models/monitors"
-	"github.com/m-milek/leszmonitor/models/shared"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )
@@ -126,7 +125,7 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 	}
 	r.logger.Info().Any("monitor_result", result).Msg("Monitor result")
 
-	if result.GetStatus() != shared.MonitorStatusUp {
+	if result.GetStatus() != monitors.MonitorStatusUp {
 		d := result.GetErrorDetails()
 		if d.ErrorMessage != "" || len(d.Errors) > 0 {
 			r.logger.Error().

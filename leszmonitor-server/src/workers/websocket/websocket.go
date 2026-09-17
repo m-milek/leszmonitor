@@ -11,7 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/m-milek/leszmonitor/api/middleware"
-	"github.com/m-milek/leszmonitor/models/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/log"
 )
