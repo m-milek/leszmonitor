@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,7 +30,7 @@ func TestIntegration_AuditLogService_Record(t *testing.T) {
 		require.NoError(t, err)
 
 		filter := audit.AuditLogFilter{ResourceID: &resourceID}
-		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, dbErr := audit.NewAuditLogDAO(db.Get().Querier()).GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 		require.Len(t, entries, 1)
 

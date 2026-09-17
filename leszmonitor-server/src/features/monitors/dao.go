@@ -1,4 +1,4 @@
-package db
+package monitors
 
 import (
 	"context"
@@ -7,35 +7,34 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/features/monitors"
-	platformdb "github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/db"
 )
 
 type IMonitorDAO interface {
-	GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error)
-	GetMonitorBySlug(ctx context.Context, slug string) (*monitors.Monitor, error)
-	GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error)
+	GetMonitorByID(ctx context.Context, id uuid.UUID) (*Monitor, error)
+	GetMonitorBySlug(ctx context.Context, slug string) (*Monitor, error)
+	GetAllMonitors(ctx context.Context) ([]Monitor, error)
 	DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error)
-	InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error)
-	UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (any, error)
+	InsertMonitor(ctx context.Context, monitor Monitor) (*Monitor, error)
+	UpdateMonitor(ctx context.Context, newMonitor Monitor) (any, error)
 }
 
 type monitorDAO struct {
-	baseDAO
+	pool db.Querier
 }
 
-func newMonitorDAO(dao baseDAO) IMonitorDAO {
+func NewMonitorDAO(pool db.Querier) IMonitorDAO {
 	return &monitorDAO{
-		baseDAO: dao,
+		pool: pool,
 	}
 }
 
 func (r *monitorDAO) GetMonitorBySlug(
 	ctx context.Context,
 	slug string,
-) (*monitors.Monitor, error) {
-	return platformdb.Wrap(ctx, "GetMonitorBySlug", func() (*monitors.Monitor, error) {
-		var monitor monitors.Monitor
+) (*Monitor, error) {
+	return db.Wrap(ctx, "GetMonitorBySlug", func() (*Monitor, error) {
+		var monitor Monitor
 		err := sqlx.GetContext(
 			ctx,
 			r.pool,
@@ -47,7 +46,7 @@ func (r *monitorDAO) GetMonitorBySlug(
 		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
@@ -60,9 +59,9 @@ func (r *monitorDAO) GetMonitorBySlug(
 	})
 }
 
-func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitors.Monitor, error) {
-	return platformdb.Wrap(ctx, "GetMonitorByID", func() (*monitors.Monitor, error) {
-		var monitor monitors.Monitor
+func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*Monitor, error) {
+	return db.Wrap(ctx, "GetMonitorByID", func() (*Monitor, error) {
+		var monitor Monitor
 		err := sqlx.GetContext(
 			ctx,
 			r.pool,
@@ -74,7 +73,7 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitor
 		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
@@ -87,9 +86,9 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*monitor
 	})
 }
 
-func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, error) {
-	return platformdb.Wrap(ctx, "GetAllMonitors", func() ([]monitors.Monitor, error) {
-		var allMonitors []monitors.Monitor
+func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]Monitor, error) {
+	return db.Wrap(ctx, "GetAllMonitors", func() ([]Monitor, error) {
+		var allMonitors []Monitor
 		err := sqlx.SelectContext(
 			ctx,
 			r.pool,
@@ -101,7 +100,7 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, er
 			return nil, err
 		}
 		if allMonitors == nil {
-			allMonitors = []monitors.Monitor{}
+			allMonitors = []Monitor{}
 		}
 
 		if err = r.attachTagsToAll(ctx, allMonitors); err != nil {
@@ -113,13 +112,13 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]monitors.Monitor, er
 }
 
 func (r *monitorDAO) DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error) {
-	return platformdb.Wrap(ctx, "DeleteMonitor", func() (*uuid.UUID, error) {
+	return db.Wrap(ctx, "DeleteMonitor", func() (*uuid.UUID, error) {
 		var id uuid.UUID
 		err := r.pool.QueryRowxContext(ctx, `DELETE FROM monitors WHERE id = $1 RETURNING id`, monitorID.String()).
 			Scan(&id)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
@@ -128,7 +127,7 @@ func (r *monitorDAO) DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID)
 	})
 }
 
-func (r *monitorDAO) attachTags(ctx context.Context, monitor *monitors.Monitor) error {
+func (r *monitorDAO) attachTags(ctx context.Context, monitor *Monitor) error {
 	tagIDs := []uuid.UUID{}
 	err := sqlx.SelectContext(
 		ctx,
@@ -145,7 +144,7 @@ func (r *monitorDAO) attachTags(ctx context.Context, monitor *monitors.Monitor) 
 	return nil
 }
 
-func (r *monitorDAO) attachTagsToAll(ctx context.Context, allMonitors []monitors.Monitor) error {
+func (r *monitorDAO) attachTagsToAll(ctx context.Context, allMonitors []Monitor) error {
 	var rows []struct {
 		MonitorID uuid.UUID `db:"monitor_id"`
 		TagID     uuid.UUID `db:"tag_id"`
@@ -202,8 +201,8 @@ func (r *monitorDAO) replaceMonitorTags(
 }
 
 // InsertMonitor adds a new monitor to the database and returns the created monitor.
-func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor) (*monitors.Monitor, error) {
-	return platformdb.Wrap(ctx, "InsertMonitor", func() (*monitors.Monitor, error) {
+func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor Monitor) (*Monitor, error) {
+	return db.Wrap(ctx, "InsertMonitor", func() (*Monitor, error) {
 		id := monitor.ID
 		if id == uuid.Nil {
 			id = uuid.New()
@@ -225,8 +224,8 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor
 			monitor.OwnerID,
 		)
 		if err != nil {
-			if platformdb.IsUniqueViolation(err) {
-				return nil, ErrAlreadyExists
+			if db.IsUniqueViolation(err) {
+				return nil, db.ErrAlreadyExists
 			}
 			return nil, err
 		}
@@ -239,8 +238,8 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor monitors.Monitor
 	})
 }
 
-func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor monitors.Monitor) (any, error) {
-	return platformdb.Wrap(ctx, "UpdateMonitor", func() (any, error) {
+func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor Monitor) (any, error) {
+	return db.Wrap(ctx, "UpdateMonitor", func() (any, error) {
 		res, err := r.pool.ExecContext(ctx,
 			`UPDATE monitors
 			SET slug=$1, name=$2, description=$3, interval=$4, kind=$5, run_state=$6, config=$7
@@ -255,8 +254,8 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor monitors.Moni
 			newMonitor.ID,
 		)
 		if err != nil {
-			if platformdb.IsUniqueViolation(err) {
-				return nil, ErrAlreadyExists
+			if db.IsUniqueViolation(err) {
+				return nil, db.ErrAlreadyExists
 			}
 			return nil, err
 		}
@@ -266,7 +265,7 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor monitors.Moni
 			return nil, err
 		}
 		if rowsAffected == 0 {
-			return nil, ErrNotFound
+			return nil, db.ErrNotFound
 		}
 
 		if err = r.replaceMonitorTags(ctx, newMonitor.ID, newMonitor.TagIDs); err != nil {

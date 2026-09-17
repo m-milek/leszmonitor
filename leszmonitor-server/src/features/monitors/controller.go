@@ -1,4 +1,4 @@
-package controllers
+package monitors
 
 import (
 	"encoding/json"
@@ -6,17 +6,15 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 type MonitorAPIController struct {
-	service services.IMonitorService
+	service IMonitorService
 }
 
-func NewMonitorAPIController(service services.IMonitorService) MonitorAPIController {
+func NewMonitorAPIController(service IMonitorService) MonitorAPIController {
 	return MonitorAPIController{
 		service: service,
 	}
@@ -39,7 +37,7 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, err = monitors.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
+	_, err = ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
 	if err != nil {
 		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
 		return
@@ -129,7 +127,7 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, err = monitors.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
+	_, err = ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
 	if err != nil {
 		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
@@ -149,17 +147,17 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 	httpx.RespondMessage(ctx, w, http.StatusOK, "monitor updated successfully")
 }
 
-// decodeMonitorPayload decodes the request body into monitors.Monitor, and probeConfig separately as string.
+// decodeMonitorPayload decodes the request body into Monitor, and probeConfig separately as string.
 // FE sends probeConfig as JSON object, but we want to store it as string in the database, so we need to handle it separately.
-func decodeMonitorPayload(r *http.Request) (monitors.Monitor, error) {
+func decodeMonitorPayload(r *http.Request) (Monitor, error) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		return monitors.Monitor{}, err
+		return Monitor{}, err
 	}
 
 	var rawPayload map[string]json.RawMessage
 	if err := json.Unmarshal(bodyBytes, &rawPayload); err != nil {
-		return monitors.Monitor{}, err
+		return Monitor{}, err
 	}
 
 	probeConfigRaw := rawPayload["probeConfig"]
@@ -167,12 +165,12 @@ func decodeMonitorPayload(r *http.Request) (monitors.Monitor, error) {
 
 	payloadBytes, err := json.Marshal(rawPayload)
 	if err != nil {
-		return monitors.Monitor{}, err
+		return Monitor{}, err
 	}
 
-	var monitor monitors.Monitor
+	var monitor Monitor
 	if err := json.Unmarshal(payloadBytes, &monitor); err != nil {
-		return monitors.Monitor{}, err
+		return Monitor{}, err
 	}
 
 	monitor.ProbeConfig = string(probeConfigRaw)
@@ -216,7 +214,7 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 	serviceErr := c.service.UpdateMonitorStateByID(
 		ctx,
 		monitorUUID,
-		monitors.MonitorRunState(payload.NewState),
+		MonitorRunState(payload.NewState),
 	)
 	if serviceErr != nil {
 		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)

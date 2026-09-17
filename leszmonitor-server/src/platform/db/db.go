@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -156,6 +157,46 @@ func Wrap[T any](ctx context.Context, operationName string, operation func() (T,
 	}
 
 	return result.Result, err
+}
+
+// --------------------------
+// Singleton management (unexported global within the db package for convenience)
+// --------------------------.
+var (
+	instance *Client
+	instMu   sync.RWMutex
+)
+
+// Get returns the current DB singleton (maybe nil if not initialized).
+func Get() *Client {
+	instMu.RLock()
+	defer instMu.RUnlock()
+	return instance
+}
+
+// Set sets the DB singleton. Useful for tests to inject a different client.
+func Set(client *Client) {
+	instMu.Lock()
+	defer instMu.Unlock()
+	if instance != nil {
+		// Close previous instance if it was a real client
+		instance.Close()
+	}
+	instance = client
+}
+
+// InitFromEnv initializes the DB singleton using the DSN from environment.
+func InitFromEnv(ctx context.Context) error {
+	logger := log.FromContext(ctx)
+
+	client, err := NewFromEnv(ctx)
+	if err != nil {
+		return err
+	}
+
+	Set(client)
+	logger.Info().Msg("SQLite connection established.")
+	return nil
 }
 
 func setupSQLiteConfig(dsn string) string {

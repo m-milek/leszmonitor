@@ -8,8 +8,8 @@ import (
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,7 +49,7 @@ func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 	payload.GenerateSlug()
 	monitor := monitors.InitializeFromPayload(payload, insertedUser.ID)
 
-	insertedMonitor, err := realDB.Monitors().InsertMonitor(ctx, *monitor)
+	insertedMonitor, err := monitors.NewMonitorDAO(realDB.Querier()).InsertMonitor(ctx, *monitor)
 	require.NoError(t, err)
 
 	return ctx, realDB, insertedMonitor

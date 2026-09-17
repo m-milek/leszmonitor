@@ -1,10 +1,10 @@
-package workers
+package monitors
 
 import (
 	"context"
 	"time"
 
-	"github.com/m-milek/leszmonitor/db"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 )
 
@@ -25,7 +25,7 @@ func StartDataCleanupWorker(ctx context.Context) {
 			logger.Info().Msg("Data cleanup worker shutting down...")
 			return
 		case <-ticker.C:
-			allMonitors, err := db.Get().Monitors().GetAllMonitors(ctx)
+			allMonitors, err := NewMonitorDAO(db.Get().Querier()).GetAllMonitors(ctx)
 
 			if err != nil {
 				logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
@@ -39,8 +39,7 @@ func StartDataCleanupWorker(ctx context.Context) {
 
 			logger.Debug().Msgf("Starting data cleanup for %d monitors", len(allMonitors))
 			for _, monitor := range allMonitors {
-				_, err := db.Get().
-					MonitorResults().
+				_, err := NewMonitorResultDAO(db.Get().Querier()).
 					DeleteMonitorResultsOlderThanDuration(ctx, monitor.ID, time.Duration(monitor.ResultRetentionSeconds)*time.Second)
 				if err != nil {
 					logger.Error().

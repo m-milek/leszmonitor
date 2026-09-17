@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )

@@ -1,4 +1,4 @@
-package db
+package monitors
 
 import (
 	"context"
@@ -9,20 +9,19 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/m-milek/leszmonitor/features/monitors"
-	platformdb "github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type IMonitorResultDAO interface {
-	InsertMonitorResult(ctx context.Context, result monitors.IMonitorResult) (any, error)
-	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitors.IMonitorResult, error)
-	GetOldestMonitorResultByMonitorID(ctx context.Context, monitorID string) (monitors.IMonitorResult, error)
+	InsertMonitorResult(ctx context.Context, result IMonitorResult) (any, error)
+	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (IMonitorResult, error)
+	GetOldestMonitorResultByMonitorID(ctx context.Context, monitorID string) (IMonitorResult, error)
 	GetMonitorResultsByMonitorID(
 		ctx context.Context,
 		id string,
 		pagination *util.Pagination,
-	) ([]monitors.IMonitorResult, error)
+	) ([]IMonitorResult, error)
 	DeleteMonitorResultsOlderThanDuration(
 		ctx context.Context,
 		monitorID uuid.UUID,
@@ -31,16 +30,16 @@ type IMonitorResultDAO interface {
 }
 
 type monitorResultDAO struct {
-	baseDAO
+	pool db.Querier
 }
 
 func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 	ctx context.Context,
 	id string,
 	pagination *util.Pagination,
-) ([]monitors.IMonitorResult, error) {
-	return platformdb.Wrap(ctx, "GetMonitorResultsByMonitorID", func() ([]monitors.IMonitorResult, error) {
-		var results []monitors.MonitorResult
+) ([]IMonitorResult, error) {
+	return db.Wrap(ctx, "GetMonitorResultsByMonitorID", func() ([]IMonitorResult, error) {
+		var results []MonitorResult
 
 		err := sqlx.SelectContext(ctx, r.pool, &results, `
 			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
@@ -52,12 +51,12 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
 
-		var monitorResults []monitors.IMonitorResult
+		var monitorResults []IMonitorResult
 		for _, r := range results {
 			err = processResultDetails(&r)
 			if err != nil {
@@ -71,17 +70,17 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 	})
 }
 
-func newMonitorResultDAO(dao baseDAO) IMonitorResultDAO {
+func NewMonitorResultDAO(pool db.Querier) IMonitorResultDAO {
 	return &monitorResultDAO{
-		baseDAO: dao,
+		pool: pool,
 	}
 }
 
 func (r *monitorResultDAO) InsertMonitorResult(
 	ctx context.Context,
-	result monitors.IMonitorResult,
+	result IMonitorResult,
 ) (any, error) {
-	return platformdb.Wrap(ctx, "InsertMonitorResult", func() (any, error) {
+	return db.Wrap(ctx, "InsertMonitorResult", func() (any, error) {
 		detailsJSON, err := json.Marshal(result.GetDetails())
 		if err != nil {
 			return nil, err
@@ -117,9 +116,9 @@ func (r *monitorResultDAO) InsertMonitorResult(
 func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
 	ctx context.Context,
 	monitorID string,
-) (monitors.IMonitorResult, error) {
-	return platformdb.Wrap(ctx, "GetLatestMonitorResultByMonitorID", func() (monitors.IMonitorResult, error) {
-		var result monitors.MonitorResult
+) (IMonitorResult, error) {
+	return db.Wrap(ctx, "GetLatestMonitorResultByMonitorID", func() (IMonitorResult, error) {
+		var result MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `
             SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
@@ -130,7 +129,7 @@ func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
 
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
@@ -147,9 +146,9 @@ func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
 func (r *monitorResultDAO) GetOldestMonitorResultByMonitorID(
 	ctx context.Context,
 	monitorID string,
-) (monitors.IMonitorResult, error) {
-	return platformdb.Wrap(ctx, "GetOldestMonitorResultByMonitorID", func() (monitors.IMonitorResult, error) {
-		var result monitors.MonitorResult
+) (IMonitorResult, error) {
+	return db.Wrap(ctx, "GetOldestMonitorResultByMonitorID", func() (IMonitorResult, error) {
+		var result MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `
 			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
@@ -160,7 +159,7 @@ func (r *monitorResultDAO) GetOldestMonitorResultByMonitorID(
 
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return nil, ErrNotFound
+				return nil, db.ErrNotFound
 			}
 			return nil, err
 		}
@@ -179,7 +178,7 @@ func (r *monitorResultDAO) DeleteMonitorResultsOlderThanDuration(
 	monitorID uuid.UUID,
 	duration time.Duration,
 ) (int64, error) {
-	return platformdb.Wrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
+	return db.Wrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
 		cutoffTime := time.Now().UTC().Add(-duration).Format(time.RFC3339)
 		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM monitor_results WHERE monitor_id = $1 AND created_at < $2`,
@@ -194,15 +193,15 @@ func (r *monitorResultDAO) DeleteMonitorResultsOlderThanDuration(
 	})
 }
 
-func processResultDetails(result *monitors.MonitorResult) error {
-	details, err := monitors.ParseResultDetails(monitors.ProbeType(result.MonitorType), result.DetailsJSON)
-	if err != nil && !errors.Is(err, monitors.ErrEmptyDetails) {
+func processResultDetails(result *MonitorResult) error {
+	details, err := ParseResultDetails(ProbeType(result.MonitorType), result.DetailsJSON)
+	if err != nil && !errors.Is(err, ErrEmptyDetails) {
 		return err
 	}
 	result.Details = details
 
 	if len(result.ErrorDetailsJSON) > 0 {
-		var errorDetails monitors.ErrorDetails
+		var errorDetails ErrorDetails
 		if err := json.Unmarshal(result.ErrorDetailsJSON, &errorDetails); err == nil {
 			if errorDetails.ErrorMessage != "" || len(errorDetails.Errors) > 0 || len(errorDetails.Failures) > 0 {
 				result.ErrorDetails = &errorDetails

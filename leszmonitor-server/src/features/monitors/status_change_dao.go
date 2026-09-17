@@ -1,28 +1,27 @@
-package db
+package monitors
 
 import (
 	"context"
 
-	"github.com/m-milek/leszmonitor/features/monitors"
-	platformdb "github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/db"
 )
 
 type IMonitorStatusChangeDAO interface {
-	InsertStatusChange(ctx context.Context, statusChange monitors.MonitorStatusChange) (any, error)
+	InsertStatusChange(ctx context.Context, statusChange MonitorStatusChange) (any, error)
 }
 
 type monitorStatusChangeDAO struct {
-	baseDAO
+	pool db.Querier
 }
 
-func newMonitorStatusChangeDAO(base baseDAO) IMonitorStatusChangeDAO {
+func NewMonitorStatusChangeDAO(pool db.Querier) IMonitorStatusChangeDAO {
 	return &monitorStatusChangeDAO{
-		baseDAO: base,
+		pool: pool,
 	}
 }
 
-func (r *monitorStatusChangeDAO) InsertStatusChange(ctx context.Context, statusChange monitors.MonitorStatusChange) (any, error) {
-	return platformdb.Wrap(ctx, "InsertStatusChange", func() (any, error) {
+func (r *monitorStatusChangeDAO) InsertStatusChange(ctx context.Context, statusChange MonitorStatusChange) (any, error) {
+	return db.Wrap(ctx, "InsertStatusChange", func() (any, error) {
 		query := `
 			INSERT INTO monitor_status_changes (id, monitor_id, caused_by_id, previous_status, next_status)
 			VALUES ($1, $2, $3, $4, $5)`

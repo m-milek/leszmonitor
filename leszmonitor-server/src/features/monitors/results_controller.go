@@ -1,4 +1,4 @@
-package controllers
+package monitors
 
 import (
 	"errors"
@@ -6,14 +6,13 @@ import (
 
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 type MonitorResultsAPIController struct {
-	service services.IMonitorResultsService
+	service IMonitorResultsService
 }
 
-func NewMonitorResultsAPIController(service services.IMonitorResultsService) MonitorResultsAPIController {
+func NewMonitorResultsAPIController(service IMonitorResultsService) MonitorResultsAPIController {
 	return MonitorResultsAPIController{
 		service: service,
 	}

@@ -1,13 +1,12 @@
-package services
+package monitors
 
 import (
 	"context"
 	"errors"
 
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -16,12 +15,12 @@ type IMonitorResultsService interface {
 	GetLatestMonitorResultByMonitorID(
 		ctx context.Context,
 		monitorID string,
-	) (monitors.IMonitorResult, *apperr.ServiceError)
+	) (IMonitorResult, *apperr.ServiceError)
 	GetMonitorResultsByMonitorID(
 		ctx context.Context,
 		id string,
 		pagination *util.Pagination,
-	) ([]monitors.IMonitorResult, *apperr.ServiceError)
+	) ([]IMonitorResult, *apperr.ServiceError)
 }
 
 type MonitorResultsService struct {
@@ -41,11 +40,11 @@ func NewMonitorResultsService(deps MonitorResultsServiceDeps) *MonitorResultsSer
 func (s *MonitorResultsService) GetLatestMonitorResultByMonitorID(
 	ctx context.Context,
 	monitorID string,
-) (monitors.IMonitorResult, *apperr.ServiceError) {
+) (IMonitorResult, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitorResults, "GetLatestMonitorResultByMonitorID")
 	logger.Trace().Str("monitorID", monitorID).Msg("Retrieving latest monitor result by monitor ID")
 
-	result, err := s.db.MonitorResults().GetLatestMonitorResultByMonitorID(ctx, monitorID)
+	result, err := NewMonitorResultDAO(s.db.Querier()).GetLatestMonitorResultByMonitorID(ctx, monitorID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("monitorID", monitorID).Msg("No monitor result found for given monitor ID")
@@ -63,14 +62,14 @@ func (s *MonitorResultsService) GetMonitorResultsByMonitorID(
 	ctx context.Context,
 	id string,
 	pagination *util.Pagination,
-) ([]monitors.IMonitorResult, *apperr.ServiceError) {
+) ([]IMonitorResult, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitorResults, "GetMonitorResultsByMonitorID")
 	logger.Trace().
 		Str("monitorID", id).
 		Interface("pagination", pagination).
 		Msg("Retrieving monitor results by monitor ID")
 
-	results, err := s.db.MonitorResults().GetMonitorResultsByMonitorID(ctx, id, pagination)
+	results, err := NewMonitorResultDAO(s.db.Querier()).GetMonitorResultsByMonitorID(ctx, id, pagination)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("monitorID", id).Msg("No monitor results found for given monitor ID")

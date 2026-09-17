@@ -4,6 +4,7 @@ import (
 	"embed"
 	"net/http"
 
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/m-milek/leszmonitor/api/controllers"
@@ -21,85 +22,16 @@ func SetupRouters(
 	users.RegisterRoutes(publicRouter, protectedRouter, h.User)
 
 	// Monitors
-	protectedRouter.HandleFunc(
-		"POST /api/v1/monitors",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionWriter,
-		)(
-			h.Monitor.CreateMonitorHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionReader,
-		)(
-			h.Monitor.GetAllMonitorsHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionReader,
-		)(
-			h.Monitor.GetMonitorByIDHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"DELETE /api/v1/monitors/{monitorId}",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionWriter,
-		)(
-			h.Monitor.DeleteMonitorHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"PATCH /api/v1/monitors/{monitorId}",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionWriter,
-		)(
-			h.Monitor.UpdateMonitorHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"PATCH /api/v1/monitors/{monitorId}/state",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionWriter,
-		)(
-			h.Monitor.UpdateMonitorStateByIDHandler,
-		),
+	monitors.RegisterRoutes(
+		protectedRouter,
+		h.Monitor,
+		h.MonitorResults,
+		h.MonitorStats,
+		requirePermission(h),
 	)
 
 	// Tags
-	tags.RegisterRoutes(protectedRouter, h.Tag, func(perm auth.Permission) func(http.HandlerFunc) http.HandlerFunc {
-		return users.RequirePermission(h.AuthzMiddlewareService, perm)
-	})
-
-	// MonitorResults
-	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}/results/latest",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionReader,
-		)(
-			h.MonitorResults.GetLatestMonitorResultByMonitorIDHandler,
-		),
-	)
-	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}/results",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionReader,
-		)(
-			h.MonitorResults.GetMonitorResultsByMonitorIDHandler,
-		),
-	)
+	tags.RegisterRoutes(protectedRouter, h.Tag, requirePermission(h))
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/audit-log",
@@ -116,16 +48,6 @@ func SetupRouters(
 		h.InstanceMetadata.GetInstanceMetadataHandler,
 	)
 
-	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}/stats",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionReader,
-		)(
-			h.MonitorStats.GetLatencyStatsByMonitorIDHandler,
-		),
-	)
-
 	// WebSocket
 	publicRouter.HandleFunc("GET /api/ws", controllers.WebSocketConnectionHandler)
 
@@ -134,4 +56,11 @@ func SetupRouters(
 
 	// SPA Handler for UI
 	publicRouter.Handle("/", newSPAHandler(staticFiles))
+}
+
+// requirePermission builds the permission middleware factory handed to feature routers.
+func requirePermission(h Handlers) func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc {
+	return func(perm auth.Permission) func(http.HandlerFunc) http.HandlerFunc {
+		return users.RequirePermission(h.AuthzMiddlewareService, perm)
+	}
 }

@@ -1,11 +1,10 @@
-package services
+package monitors
 
 import (
 	"testing"
 	"time"
 
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,10 +19,10 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 
 		// Insert 3 results with known latencies: 100, 200, 300 → avg=200, min=100, max=300
 		for _, latency := range []int64{100, 200, 300} {
-			res := monitors.NewMonitorResult(monitor.ID, monitors.HTTPConfigType, monitors.MonitorStatusUp, false, latency, "", nil)
+			res := NewMonitorResult(monitor.ID, HTTPConfigType, MonitorStatusUp, false, latency, "", nil)
 			// Store created_at in UTC RFC3339 so SQLite string comparisons work correctly with the DAO's UTC-formatted query bounds
 			res.CreatedAt = now.Add(-30 * time.Minute).Format(time.RFC3339)
-			_, err := db.Get().MonitorResults().InsertMonitorResult(ctx, &res)
+			_, err := NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res)
 			require.NoError(t, err)
 		}
 
@@ -60,15 +59,15 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		now := time.Now().UTC()
 
 		// Result inside the query range: latency 500
-		resIn := monitors.NewMonitorResult(monitor.ID, monitors.HTTPConfigType, monitors.MonitorStatusUp, false, 500, "", nil)
+		resIn := NewMonitorResult(monitor.ID, HTTPConfigType, MonitorStatusUp, false, 500, "", nil)
 		resIn.CreatedAt = now.Add(-30 * time.Minute).Format(time.RFC3339)
-		_, err := db.Get().MonitorResults().InsertMonitorResult(ctx, &resIn)
+		_, err := NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &resIn)
 		require.NoError(t, err)
 
 		// Result outside the query range (too old): latency 9999, should be excluded
-		resOut := monitors.NewMonitorResult(monitor.ID, monitors.HTTPConfigType, monitors.MonitorStatusUp, false, 9999, "", nil)
+		resOut := NewMonitorResult(monitor.ID, HTTPConfigType, MonitorStatusUp, false, 9999, "", nil)
 		resOut.CreatedAt = now.Add(-3 * time.Hour).Format(time.RFC3339)
-		_, err = db.Get().MonitorResults().InsertMonitorResult(ctx, &resOut)
+		_, err = NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &resOut)
 		require.NoError(t, err)
 
 		from := now.Add(-1 * time.Hour)

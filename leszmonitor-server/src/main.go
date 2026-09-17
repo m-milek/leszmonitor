@@ -9,18 +9,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/m-milek/leszmonitor/api"
 	"github.com/m-milek/leszmonitor/api/controllers"
-	"github.com/m-milek/leszmonitor/db"
+	probes "github.com/m-milek/leszmonitor/features/monitors/probes"
+	"github.com/m-milek/leszmonitor/features/monitors/resultsprocessor"
 	"github.com/m-milek/leszmonitor/features/tags"
 	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/services"
-	"github.com/m-milek/leszmonitor/workers"
-	probes "github.com/m-milek/leszmonitor/workers/probesrunner"
-	"github.com/m-milek/leszmonitor/workers/resultsprocessor"
 )
 
 //go:embed all:static
@@ -32,7 +32,7 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 		manager.Run(ctx)
 	})
 	wg.Go(func() {
-		workers.StartDataCleanupWorker(ctx)
+		monitors.StartDataCleanupWorker(ctx)
 	})
 	wg.Go(func() {
 		resultsProcessor := resultsprocessor.NewResultsProcessor(db.Get())
@@ -65,13 +65,13 @@ func main() {
 	userService := users.NewUserService(users.UserServiceDeps{
 		DB: database,
 	})
-	monitorService := services.NewMonitorService(services.MonitorServiceDeps{
+	monitorService := monitors.NewMonitorService(monitors.MonitorServiceDeps{
 		DB: database,
 	})
-	monitorResultService := services.NewMonitorResultsService(services.MonitorResultsServiceDeps{
+	monitorResultService := monitors.NewMonitorResultsService(monitors.MonitorResultsServiceDeps{
 		DB: database,
 	})
-	monitorStatsService := services.NewMonitorStatsService(services.MonitorStatsServiceDeps{
+	monitorStatsService := monitors.NewMonitorStatsService(monitors.MonitorStatsServiceDeps{
 		DB: database,
 	})
 	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
@@ -83,9 +83,9 @@ func main() {
 	instanceMetadataService := services.NewInstanceMetadataService(services.InstanceMetadataServiceDeps{})
 
 	userAPIController := users.NewUserAPIController(userService)
-	monitorAPIController := controllers.NewMonitorAPIController(monitorService)
-	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
-	monitorStatsAPIController := controllers.NewMonitorStatsAPIController(monitorStatsService)
+	monitorAPIController := monitors.NewMonitorAPIController(monitorService)
+	monitorResultsAPIController := monitors.NewMonitorResultsAPIController(monitorResultService)
+	monitorStatsAPIController := monitors.NewMonitorStatsAPIController(monitorStatsService)
 	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
 	tagAPIController := tags.NewTagAPIController(tagService)
 	instanceMetadataAPIController := controllers.NewInstanceMetadataAPIController(instanceMetadataService)

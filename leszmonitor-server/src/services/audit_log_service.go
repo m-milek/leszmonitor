@@ -3,10 +3,10 @@ package services
 import (
 	"context"
 
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -44,7 +44,7 @@ func (s *AuditLogService) GetEntries(
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "GetEntries")
 	logger.Trace().Interface("filter", filter).Interface("pagination", pagination).Msg("Retrieving audit log entries")
 
-	entries, dbErr := s.db.AuditLog().GetAuditLogEntries(ctx, filter, pagination)
+	entries, dbErr := audit.NewAuditLogDAO(s.db.Querier()).GetAuditLogEntries(ctx, filter, pagination)
 	if dbErr != nil {
 		logger.Error().Err(dbErr).Msg("Failed to retrieve audit log entries")
 		return nil, apperr.NewInternalError("failed to retrieve audit log entries: %w", dbErr)
@@ -58,7 +58,7 @@ func (s *AuditLogService) Record(ctx context.Context, params audit.AuditLogParam
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameAuditLog, "Record")
 	logger.Trace().Interface("params", params).Msg("Recording audit log entry")
 
-	err := s.db.AuditLog().Record(ctx, params)
+	err := audit.NewAuditLogDAO(s.db.Querier()).Record(ctx, params)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to save audit log entry")
 		return err

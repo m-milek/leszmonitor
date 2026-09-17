@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/pkg/errors"
 )
@@ -43,7 +43,7 @@ func (p *ResultsProcessor) Run(ctx context.Context) {
 }
 
 func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.MonitorRunMessage) error {
-	previousResult, err := database.MonitorResults().GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID.String())
+	previousResult, err := monitors.NewMonitorResultDAO(database.Querier()).GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID.String())
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			previousResult = nil
@@ -52,7 +52,7 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 		}
 	}
 
-	_, err = database.MonitorResults().InsertMonitorResult(ctx, msg.Result)
+	_, err = monitors.NewMonitorResultDAO(database.Querier()).InsertMonitorResult(ctx, msg.Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to insert monitor result")
 	}
@@ -81,7 +81,7 @@ func handleStatusChange(ctx context.Context, db db.DB, monitor monitors.Monitor,
 		PreviousStatus: string(previous.GetStatus()),
 		NextStatus:     string(current.GetStatus()),
 	}
-	_, err := db.MonitorStatusChanges().InsertStatusChange(ctx, monitorStatusChange)
+	_, err := monitors.NewMonitorStatusChangeDAO(db.Querier()).InsertStatusChange(ctx, monitorStatusChange)
 	if err != nil {
 		return errors.Wrap(err, "failed to insert monitor status change")
 	}

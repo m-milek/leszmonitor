@@ -1,13 +1,12 @@
-package services
+package monitors
 
 import (
 	"net/http"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/audit"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,11 +43,11 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 	t.Run("Successfully creates a monitor", func(t *testing.T) {
 		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
-		payload := monitors.Monitor{
+		payload := Monitor{
 			Name:        "Ping API",
 			Description: "Pings our main API every minute",
 			Interval:    60,
-			Type:        monitors.HTTPConfigType,
+			Type:        HTTPConfigType,
 			ProbeConfig: "{}",
 		}
 		payload.GenerateSlug()
@@ -62,12 +61,12 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		monitorFromDB, svcErr := monitorService.GetMonitorByID(ctx, resp.MonitorID)
 		require.Nil(t, svcErr)
 		assert.Equal(t, "Ping API", monitorFromDB.Name)
-		assert.Equal(t, monitors.HTTPConfigType, monitorFromDB.Type)
+		assert.Equal(t, HTTPConfigType, monitorFromDB.Type)
 		assert.Equal(t, "ping-api", monitorFromDB.Slug)
 
 		// Verify audit log was created
 		filter := audit.AuditLogFilter{ResourceID: &monitorFromDB.ID}
-		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, dbErr := audit.NewAuditLogDAO(db.Get().Querier()).GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
@@ -85,10 +84,10 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 	t.Run("Fails with 400 Bad Request for invalid monitor payload", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		payload := monitors.Monitor{
+		payload := Monitor{
 			Name:     "",  // Empty name makes it invalid
 			Interval: -10, // Invalid interval
-			Type:     monitors.HTTPConfigType,
+			Type:     HTTPConfigType,
 		}
 
 		resp, svcErr := monitorService.CreateMonitor(ctx, payload)
@@ -116,7 +115,7 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 
 		// Verify audit log was created
 		filter := audit.AuditLogFilter{ResourceID: &monitor.ID}
-		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, dbErr := audit.NewAuditLogDAO(db.Get().Querier()).GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
@@ -205,7 +204,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 
 		// Verify audit log
 		filter := audit.AuditLogFilter{ResourceID: &monitor.ID}
-		entries, dbErr := db.Get().AuditLog().GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		entries, dbErr := audit.NewAuditLogDAO(db.Get().Querier()).GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
 		require.NoError(t, dbErr)
 
 		found := false
@@ -227,7 +226,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		originalState := monitor.RunState
 
 		// Try to illegally change state
-		monitor.RunState = monitors.MonitorStateStopped
+		monitor.RunState = MonitorStateStopped
 
 		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.Nil(t, svcErr)
@@ -239,12 +238,12 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		fakeMonitor := monitors.Monitor{
+		fakeMonitor := Monitor{
 			ID:          uuid.New(),
 			Name:        "Fake",
 			Description: "Fake",
 			Interval:    60,
-			Type:        monitors.HTTPConfigType,
+			Type:        HTTPConfigType,
 			ProbeConfig: "{}",
 		}
 
@@ -271,11 +270,11 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(t, ctx)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorStateStopped)
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
-		assert.Equal(t, monitors.MonitorStateStopped, retrieved.RunState)
+		assert.Equal(t, MonitorStateStopped, retrieved.RunState)
 	})
 
 	t.Run("Returns nil if state is already the desired state", func(t *testing.T) {
@@ -283,14 +282,14 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(t, ctx)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorStateStopped)
 		require.Nil(t, svcErr)
 
-		svcErr = monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
+		svcErr = monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorStateStopped)
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
-		assert.Equal(t, monitors.MonitorStateStopped, retrieved.RunState)
+		assert.Equal(t, MonitorStateStopped, retrieved.RunState)
 	})
 
 	t.Run("Fails with 400 for invalid monitor state", func(t *testing.T) {
@@ -298,7 +297,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(t, ctx)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunState("invalid_state"))
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorRunState("invalid_state"))
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -306,7 +305,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), monitors.MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), MonitorStateStopped)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})

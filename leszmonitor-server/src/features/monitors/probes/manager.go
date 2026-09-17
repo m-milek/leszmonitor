@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/db"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
 )
@@ -38,7 +38,7 @@ func (w *Manager) Run(ctx context.Context) {
 	monitorMsgChannel := monitors.MonitorLifecycleChannel.Subscribe()
 	defer monitors.MonitorLifecycleChannel.Unsubscribe(monitorMsgChannel)
 
-	allMonitors, err := w.db.Monitors().GetAllMonitors(ctx)
+	allMonitors, err := monitors.NewMonitorDAO(w.db.Querier()).GetAllMonitors(ctx)
 	if err != nil {
 		w.logger.Error().Err(err).Msg("Failed to retrieve monitors from database")
 		return
@@ -69,7 +69,7 @@ func (w *Manager) dispatch(ctx context.Context, msg monitors.MonitorLifecycleMes
 			w.start(ctx, *msg.Monitor)
 		}
 	case monitors.Edited:
-		updated, err := w.db.Monitors().GetMonitorByID(ctx, msg.ID)
+		updated, err := monitors.NewMonitorDAO(w.db.Querier()).GetMonitorByID(ctx, msg.ID)
 		if err != nil {
 			w.logger.Error().Err(err).Str("monitor_id", msg.ID.String()).Msg("Failed to refetch monitor after edit")
 			return

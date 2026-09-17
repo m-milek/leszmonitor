@@ -1,12 +1,12 @@
-package services
+package monitors
 
 import (
 	"context"
 	"path/filepath"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/users"
-
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/stretchr/testify/require"
@@ -61,14 +61,58 @@ func setupIntegrationTest(t *testing.T) (context.Context, *users.UserService, *u
 	return ctx, userService, user
 }
 
-func setupAuditLogIntegrationTest(
+func setupMonitorResultsIntegrationTest(
 	t *testing.T,
-) (context.Context, AuditLogService, *users.UserService, *users.User) {
+) (context.Context, *MonitorResultsService, *users.UserService, *users.User) {
 	ctx, userService, user := setupIntegrationTest(t)
 
-	auditLogService := NewAuditLogService(AuditLogServiceDeps{
+	service := NewMonitorResultsService(MonitorResultsServiceDeps{
 		DB: db.Get(),
 	})
 
-	return ctx, auditLogService, userService, user
+	return ctx, service, userService, user
+}
+
+func setupMonitorIntegrationTest(
+	t *testing.T,
+) (context.Context, *MonitorService, *users.UserService, *users.User) {
+	ctx, userService, user := setupIntegrationTest(t)
+
+	monitorService := NewMonitorService(MonitorServiceDeps{
+		DB: db.Get(),
+	})
+
+	return ctx, monitorService, userService, user
+}
+
+func setupMonitorStatsIntegrationTest(
+	t *testing.T,
+) (context.Context, *MonitorStatsService, *users.UserService, *users.User) {
+	ctx, userService, user := setupIntegrationTest(t)
+
+	monitorStatsService := NewMonitorStatsService(MonitorStatsServiceDeps{
+		DB: db.Get(),
+	})
+
+	return ctx, &monitorStatsService, userService, user
+}
+
+// insertTestMonitor is a helper to directly insert a monitor and return it.
+func insertTestMonitor(t *testing.T, ctx context.Context) *Monitor {
+	payload := Monitor{
+		Name:        "Test Monitor " + uuid.New().String(),
+		Description: "Testing monitor results",
+		Interval:    60,
+		Type:        HTTPConfigType,
+		ProbeConfig: "{}",
+	}
+	payload.GenerateSlug()
+
+	owner, err := users.NewUserDAO(db.Get().Querier()).GetUserByUsername(ctx, "integration_user")
+	require.NoError(t, err)
+	monitor := InitializeFromPayload(payload, owner.ID)
+
+	inserted, dbErr := NewMonitorDAO(db.Get().Querier()).InsertMonitor(ctx, *monitor)
+	require.NoError(t, dbErr)
+	return inserted
 }

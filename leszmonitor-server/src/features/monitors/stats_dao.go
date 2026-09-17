@@ -1,4 +1,4 @@
-package db
+package monitors
 
 import (
 	"context"
@@ -6,25 +6,25 @@ import (
 	"errors"
 	"time"
 
-	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/platform/db"
 )
 
 type IMonitorStatsDAO interface {
-	GetLatencyStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (monitors.LatencyStats, error)
-	GetStatusChangeStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (monitors.StatusChangeStats, error)
+	GetLatencyStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (LatencyStats, error)
+	GetStatusChangeStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (StatusChangeStats, error)
 }
 
 type monitorStatsDAO struct {
-	baseDAO
+	pool db.Querier
 }
 
-func newMonitorStatsDAO(base baseDAO) IMonitorStatsDAO {
+func NewMonitorStatsDAO(pool db.Querier) IMonitorStatsDAO {
 	return &monitorStatsDAO{
-		baseDAO: base,
+		pool: pool,
 	}
 }
 
-func (m *monitorStatsDAO) GetLatencyStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (monitors.LatencyStats, error) {
+func (m *monitorStatsDAO) GetLatencyStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (LatencyStats, error) {
 	query := `
 		SELECT AVG(duration_ms), MIN(duration_ms), MAX(duration_ms)
 		FROM monitor_results
@@ -35,19 +35,19 @@ func (m *monitorStatsDAO) GetLatencyStatsByMonitorID(ctx context.Context, monito
 	var avgLatency, minLatency, maxLatency sql.NullFloat64
 	row := m.pool.QueryRowxContext(ctx, query, monitorID, from.UTC().Format(time.RFC3339), to.UTC().Format(time.RFC3339))
 	if err := row.Scan(&avgLatency, &minLatency, &maxLatency); err != nil {
-		return monitors.LatencyStats{}, err
+		return LatencyStats{}, err
 	}
 	if !avgLatency.Valid {
-		return monitors.LatencyStats{}, ErrNotFound
+		return LatencyStats{}, db.ErrNotFound
 	}
-	return monitors.LatencyStats{
+	return LatencyStats{
 		Avg: avgLatency.Float64,
 		Min: minLatency.Float64,
 		Max: maxLatency.Float64,
 	}, nil
 }
 
-func (m *monitorStatsDAO) GetStatusChangeStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (monitors.StatusChangeStats, error) {
+func (m *monitorStatsDAO) GetStatusChangeStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (StatusChangeStats, error) {
 	var lastCreatedAt string
 	query := `
 		SELECT created_at
@@ -59,19 +59,19 @@ func (m *monitorStatsDAO) GetStatusChangeStatsByMonitorID(ctx context.Context, m
 	row := m.pool.QueryRowxContext(ctx, query, monitorID)
 	if err := row.Scan(&lastCreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return monitors.StatusChangeStats{}, ErrNotFound
+			return StatusChangeStats{}, db.ErrNotFound
 		}
-		return monitors.StatusChangeStats{}, err
+		return StatusChangeStats{}, err
 	}
 
 	secondsInCurrentStatus, err := time.Parse(time.RFC3339, lastCreatedAt)
 	if err != nil {
-		return monitors.StatusChangeStats{}, err
+		return StatusChangeStats{}, err
 	}
 
 	duration := time.Since(secondsInCurrentStatus)
 
-	return monitors.StatusChangeStats{
+	return StatusChangeStats{
 		SecondsInCurrentStatus: int64(duration.Seconds()),
 	}, nil
 }

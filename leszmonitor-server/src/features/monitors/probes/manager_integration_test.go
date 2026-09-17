@@ -25,7 +25,7 @@ func TestIntegration_Manager_Lifecycle(t *testing.T) {
 
 	// Test Edited
 	monitor.Interval = 10
-	_, err := realDB.Monitors().UpdateMonitor(ctx, *monitor)
+	_, err := monitors.NewMonitorDAO(realDB.Querier()).UpdateMonitor(ctx, *monitor)
 	require.NoError(t, err)
 
 	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{
