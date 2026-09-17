@@ -1,4 +1,4 @@
-package websocket
+package realtime
 
 import (
 	"github.com/m-milek/leszmonitor/features/monitors"

@@ -1,11 +1,10 @@
-package middleware
+package auth
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/m-milek/leszmonitor/platform/auth"
 	config "github.com/m-milek/leszmonitor/platform/config"
 )
 
@@ -43,7 +42,7 @@ func TestJwtAuth_InvalidToken(t *testing.T) {
 func TestJwtAuth_ValidToken(t *testing.T) {
 	t.Setenv(config.JwtSecret, "test-secret")
 	t.Setenv(config.JwtExpiryHours, "1")
-	token, err := auth.NewJwt("testuser", false)
+	token, err := NewJwt("testuser", false)
 	if err != nil {
 		t.Fatalf("failed to generate token: %v", err)
 	}
@@ -52,7 +51,7 @@ func TestJwtAuth_ValidToken(t *testing.T) {
 	handler := JwtAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 
-		claims, ok := auth.GetUserClaimsFromContext(r.Context())
+		claims, ok := GetUserClaimsFromContext(r.Context())
 		if !ok {
 			t.Fatal("expected claims in context, got nil")
 		}

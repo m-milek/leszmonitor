@@ -4,10 +4,12 @@ import (
 	"embed"
 	"net/http"
 
+	"github.com/m-milek/leszmonitor/features/auditlog"
+	"github.com/m-milek/leszmonitor/features/instance"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/realtime"
 	"github.com/m-milek/leszmonitor/features/users"
 
-	"github.com/m-milek/leszmonitor/api/controllers"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/auth"
 )
@@ -33,26 +35,17 @@ func SetupRouters(
 	// Tags
 	tags.RegisterRoutes(protectedRouter, h.Tag, requirePermission(h))
 
-	protectedRouter.HandleFunc(
-		"GET /api/v1/audit-log",
-		users.RequirePermission(
-			h.AuthzMiddlewareService,
-			auth.PermissionInstanceAdmin,
-		)(
-			h.AuditLog.GetAuditLogByQueryHandler,
-		),
-	)
+	// Audit log
+	auditlog.RegisterRoutes(protectedRouter, h.AuditLog, requirePermission(h))
 
-	protectedRouter.HandleFunc(
-		"GET /api/v1/instance-metadata",
-		h.InstanceMetadata.GetInstanceMetadataHandler,
-	)
+	// Instance metadata
+	instance.RegisterRoutes(protectedRouter, h.InstanceMetadata)
 
 	// WebSocket
-	publicRouter.HandleFunc("GET /api/ws", controllers.WebSocketConnectionHandler)
+	realtime.RegisterRoutes(publicRouter)
 
 	// Health
-	protectedRouter.HandleFunc("GET /api/v1/health", controllers.GetHealthCheckHandler)
+	protectedRouter.HandleFunc("GET /api/v1/health", GetHealthCheckHandler)
 
 	// SPA Handler for UI
 	publicRouter.Handle("/", newSPAHandler(staticFiles))

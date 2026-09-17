@@ -1,4 +1,4 @@
-package controllers
+package auditlog
 
 import (
 	"net/http"
@@ -7,14 +7,13 @@ import (
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 type AuditLogAPIController struct {
-	service services.AuditLogService
+	service AuditLogService
 }
 
-func NewAuditLogAPIController(service services.AuditLogService) AuditLogAPIController {
+func NewAuditLogAPIController(service AuditLogService) AuditLogAPIController {
 	return AuditLogAPIController{
 		service: service,
 	}

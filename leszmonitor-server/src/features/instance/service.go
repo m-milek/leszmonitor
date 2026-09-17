@@ -1,4 +1,4 @@
-package services
+package instance
 
 import (
 	"github.com/m-milek/leszmonitor/platform/meta"

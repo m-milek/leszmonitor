@@ -1,17 +1,16 @@
-package controllers
+package instance
 
 import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/platform/httpx"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 type InstanceMetadataAPIController struct {
-	service services.IInstanceMetadataService
+	service IInstanceMetadataService
 }
 
-func NewInstanceMetadataAPIController(service services.IInstanceMetadataService) InstanceMetadataAPIController {
+func NewInstanceMetadataAPIController(service IInstanceMetadataService) InstanceMetadataAPIController {
 	return InstanceMetadataAPIController{
 		service: service,
 	}

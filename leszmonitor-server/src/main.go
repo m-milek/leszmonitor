@@ -9,18 +9,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/m-milek/leszmonitor/features/auditlog"
+	"github.com/m-milek/leszmonitor/features/instance"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/m-milek/leszmonitor/api"
-	"github.com/m-milek/leszmonitor/api/controllers"
 	probes "github.com/m-milek/leszmonitor/features/monitors/probes"
 	"github.com/m-milek/leszmonitor/features/monitors/resultsprocessor"
 	"github.com/m-milek/leszmonitor/features/tags"
 	config "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
-	"github.com/m-milek/leszmonitor/services"
 )
 
 //go:embed all:static
@@ -74,21 +74,21 @@ func main() {
 	monitorStatsService := monitors.NewMonitorStatsService(monitors.MonitorStatsServiceDeps{
 		DB: database,
 	})
-	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
+	auditLogService := auditlog.NewAuditLogService(auditlog.AuditLogServiceDeps{
 		DB: database,
 	})
 	tagService := tags.NewTagService(tags.TagServiceDeps{
 		DB: database,
 	})
-	instanceMetadataService := services.NewInstanceMetadataService(services.InstanceMetadataServiceDeps{})
+	instanceMetadataService := instance.NewInstanceMetadataService(instance.InstanceMetadataServiceDeps{})
 
 	userAPIController := users.NewUserAPIController(userService)
 	monitorAPIController := monitors.NewMonitorAPIController(monitorService)
 	monitorResultsAPIController := monitors.NewMonitorResultsAPIController(monitorResultService)
 	monitorStatsAPIController := monitors.NewMonitorStatsAPIController(monitorStatsService)
-	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
+	auditLogAPIController := auditlog.NewAuditLogAPIController(auditLogService)
 	tagAPIController := tags.NewTagAPIController(tagService)
-	instanceMetadataAPIController := controllers.NewInstanceMetadataAPIController(instanceMetadataService)
+	instanceMetadataAPIController := instance.NewInstanceMetadataAPIController(instanceMetadataService)
 
 	authzMiddlewareService := users.NewAuthzMiddlewareService(database)
 

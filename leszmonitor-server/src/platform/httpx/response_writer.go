@@ -1,4 +1,4 @@
-package middleware
+package httpx
 
 import (
 	"bufio"
@@ -15,6 +15,11 @@ type responseWriter struct {
 
 func newResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{w, http.StatusOK}
+}
+
+// WrapResponseWriter wraps w so the status code is captured and [http.Hijacker] stays available.
+func WrapResponseWriter(w http.ResponseWriter) http.ResponseWriter {
+	return newResponseWriter(w)
 }
 
 // WriteHeader captures the status code.

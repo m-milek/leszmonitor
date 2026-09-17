@@ -1,11 +1,10 @@
-package controllers
+package realtime
 
 import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
 	"github.com/m-milek/leszmonitor/platform/httpx"
-	websocketworker "github.com/m-milek/leszmonitor/workers/websocket"
 )
 
 var upgrader = websocket.Upgrader{
@@ -24,5 +23,5 @@ func WebSocketConnectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	websocketworker.RunWebSocketWorker(ctx, conn)
+	RunWebSocketWorker(ctx, conn)
 }

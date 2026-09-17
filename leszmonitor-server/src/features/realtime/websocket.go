@@ -1,4 +1,4 @@
-package websocket
+package realtime
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/m-milek/leszmonitor/api/middleware"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/log"
@@ -83,7 +82,7 @@ func authenticateConnection(ctx context.Context, conn *websocket.Conn) (context.
 		return ctx, err
 	}
 
-	return middleware.SetUserContext(ctx, userClaims), nil
+	return auth.SetUserContext(ctx, userClaims), nil
 }
 
 func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {

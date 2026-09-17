@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/logdyhq/logdy-core/logdy"
-	"github.com/m-milek/leszmonitor/api/middleware"
+	"github.com/m-milek/leszmonitor/platform/auth"
 	appconfig "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/rs/cors"
@@ -86,7 +87,7 @@ func createServer(
 		}
 
 		// Apply JWT auth to protected API paths
-		middleware.JwtAuth(protectedRouter).ServeHTTP(w, r)
+		auth.JwtAuth(protectedRouter).ServeHTTP(w, r)
 	})
 
 	c := cors.New(cors.Options{
@@ -98,8 +99,8 @@ func createServer(
 
 	handler := c.Handler(combinedHandler)
 
-	handler = middleware.Logger(ctx, handler)
-	handler = middleware.Recoverer(ctx, handler)
+	handler = httpx.Logger(ctx, handler)
+	handler = httpx.Recoverer(ctx, handler)
 
 	server := &http.Server{
 		Addr:         net.JoinHostPort(config.Host, config.Port),
