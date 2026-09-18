@@ -32,10 +32,10 @@ WORKDIR /app/src
 
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w \
-    -X github.com/m-milek/leszmonitor/meta.CIBuildNumber=$CI_BUILD_NUMBER \
-    -X github.com/m-milek/leszmonitor/meta.GitCommit=$GIT_COMMIT \
-    -X github.com/m-milek/leszmonitor/meta.ImageTag=$IMAGE_TAG \
-    -X github.com/m-milek/leszmonitor/meta.Version=$VERSION" \
+    -X github.com/m-milek/leszmonitor/platform/meta.CIBuildNumber=$CI_BUILD_NUMBER \
+    -X github.com/m-milek/leszmonitor/platform/meta.GitCommit=$GIT_COMMIT \
+    -X github.com/m-milek/leszmonitor/platform/meta.ImageTag=$IMAGE_TAG \
+    -X github.com/m-milek/leszmonitor/platform/meta.Version=$VERSION" \
     -o main .
 RUN mkdir -p /var/log/leszmonitor
 

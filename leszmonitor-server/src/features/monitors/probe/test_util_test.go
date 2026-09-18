@@ -1,0 +1,98 @@
+package probe
+
+//
+// import (
+//	"github.com/google/uuid"
+//	"github.com/m-milek/leszmonitor/platform/util"
+//)
+//
+//// TestMonitor provides a simple way to create monitors for testing
+//type TestMonitor struct {
+//	// Base fields
+//	ID          uuid.UUID
+//	Slug        string
+//	Name        string
+//	Description string
+//	Interval    int
+//	ProjectID   string
+//	Type        kind.ProbeType
+//
+//	// Config fields
+//	HTTPConfig *HttpProbe
+//	TCPConfig  *TCPProbe
+//}
+//
+//// NewTestMonitor creates a new test monitor with default values
+//func NewTestMonitor() *TestMonitor {
+//	name := "Test Monitor"
+//	return &TestMonitor{
+//		ID:          uuid.Nil,
+//		Slug:        util.SlugFromString(name),
+//		Name:        name,
+//		Description: "Test monitor description",
+//		Interval:    60,
+//		ProjectID:   "test_owner",
+//		Type:        kind.HTTPConfigType,
+//		HttpConfig: &HttpProbe{
+//			Method:              "GET",
+//			URL:                 "https://example.com",
+//			ExpectedStatusCodes: []int{200},
+//		},
+//	}
+//}
+//
+//// AsHttp configures the monitor as an HTTP monitor
+//func (t *TestMonitor) AsHttp() *TestMonitor {
+//	t.Type = kind.HTTPConfigType
+//	if t.HttpConfig == nil {
+//		t.HttpConfig = &HttpProbe{
+//			Method:              "GET",
+//			URL:                 "https://example.com",
+//			ExpectedStatusCodes: []int{200},
+//		}
+//	}
+//	t.TCPConfig = nil
+//	return t
+//}
+//
+//// AsTCP configures the monitor as a tcpType monitor
+//func (t *TestMonitor) AsTCP() *TestMonitor {
+//	t.Type = kind.TCPConfigType
+//	if t.TCPConfig == nil {
+//		t.TCPConfig = &TCPProbe{
+//			Host:       "example.com",
+//			Port:       80,
+//			Protocol:   "tcp",
+//			Timeout:    5000,
+//			RetryCount: 3,
+//		}
+//	}
+//	t.HttpConfig = nil
+//	return t
+//}
+//
+//// Build creates the monitor instance
+//func (t *TestMonitor) Build() IMonitor {
+//	base := BaseMonitor{
+//		ID:          t.ID,
+//		Slug:        t.Slug,
+//		Name:        t.Name,
+//		Description: t.Description,
+//		Interval:    t.Interval,
+//		Type:        t.Type,
+//	}
+//
+//	switch t.Type {
+//	case kind.HTTPConfigType:
+//		return &HttpMonitor{
+//			BaseMonitor: base,
+//			Config:      *t.HttpConfig,
+//		}
+//	case kind.TCPConfigType:
+//		return &TCPMonitor{
+//			BaseMonitor: base,
+//			Config:      *t.TCPConfig,
+//		}
+//	}
+//	return nil
+//}

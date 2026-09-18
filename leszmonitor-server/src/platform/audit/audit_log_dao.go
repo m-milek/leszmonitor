@@ -1,0 +1,124 @@
+package audit
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"strings"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
+)
+
+type IAuditLogDAO interface {
+	InsertAuditLogEntry(ctx context.Context, entry AuditLogEntry) (any, error)
+	GetAuditLogEntries(
+		ctx context.Context,
+		filter AuditLogFilter,
+		pagination util.Pagination,
+	) ([]AuditLogEntry, error)
+	Record(ctx context.Context, params AuditLogParams) error
+}
+
+type auditLogDAO struct {
+	pool db.Querier
+}
+
+func NewAuditLogDAO(pool db.Querier) IAuditLogDAO {
+	return &auditLogDAO{
+		pool: pool,
+	}
+}
+
+func (a auditLogDAO) InsertAuditLogEntry(ctx context.Context, entry AuditLogEntry) (any, error) {
+	return db.Wrap(ctx, "InsertAuditLogEntry", func() (any, error) {
+		_, err := a.pool.ExecContext(
+			ctx,
+			`INSERT INTO audit_logs (id, username, resource_id, action, is_success, summary, before, after, trace_id, created_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+			entry.ID,
+			entry.Username,
+			entry.ResourceID,
+			entry.Action,
+			entry.IsSuccess,
+			entry.Summary,
+			entry.Before,
+			entry.After,
+			entry.TraceID,
+			entry.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+}
+
+func (a auditLogDAO) Record(ctx context.Context, params AuditLogParams) error {
+	entry, err := NewAuditLogEntry(ctx, params)
+	if err != nil {
+		return err
+	}
+	_, err = a.InsertAuditLogEntry(ctx, entry)
+	return err
+}
+
+func (a auditLogDAO) GetAuditLogEntries(
+	ctx context.Context,
+	filter AuditLogFilter,
+	pagination util.Pagination,
+) ([]AuditLogEntry, error) {
+	return db.Wrap(ctx, "GetAuditLogEntries", func() ([]AuditLogEntry, error) {
+		var (
+			entries    []AuditLogEntry
+			conditions []string
+			args       []any
+		)
+		if filter.Username != nil {
+			conditions = append(conditions, "username = ?")
+			args = append(args, *filter.Username)
+		}
+		if filter.ResourceID != nil {
+			conditions = append(conditions, "resource_id = ?")
+			args = append(args, *filter.ResourceID)
+		}
+		if filter.Action != nil {
+			conditions = append(conditions, "action = ?")
+			args = append(args, *filter.Action)
+		}
+		if filter.IsSuccess != nil {
+			conditions = append(conditions, "is_success = ?")
+			args = append(args, *filter.IsSuccess)
+		}
+		if filter.TraceID != nil {
+			conditions = append(conditions, "trace_id = ?")
+			args = append(args, *filter.TraceID)
+		}
+		if filter.StartDate != nil {
+			conditions = append(conditions, "created_at >= ?")
+			args = append(args, *filter.StartDate)
+		}
+		if filter.EndDate != nil {
+			conditions = append(conditions, "created_at <= ?")
+			args = append(args, *filter.EndDate)
+		}
+
+		query := `SELECT id, username, resource_id, action, is_success, summary, before, after, trace_id, created_at
+	          FROM audit_logs`
+		if len(conditions) > 0 {
+			query += " WHERE " + strings.Join(conditions, " AND ")
+		}
+		query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+		args = append(args, pagination.PerPage, pagination.Offset())
+
+		err := sqlx.SelectContext(ctx, a.pool, &entries, query, args...)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+		if entries == nil {
+			entries = []AuditLogEntry{}
+		}
+		return entries, nil
+	})
+}

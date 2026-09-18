@@ -1,0 +1,61 @@
+package results
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/m-milek/leszmonitor/platform/httpx"
+	"github.com/m-milek/leszmonitor/platform/util"
+)
+
+type MonitorResultsAPIController struct {
+	service IMonitorResultsService
+}
+
+func NewMonitorResultsAPIController(service IMonitorResultsService) MonitorResultsAPIController {
+	return MonitorResultsAPIController{
+		service: service,
+	}
+}
+
+func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	monitorID := r.PathValue("monitorId")
+	if monitorID == "" {
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
+		return
+	}
+
+	result, svcErr := c.service.GetLatestMonitorResultByMonitorID(ctx, monitorID)
+	if svcErr != nil {
+		httpx.RespondError(ctx, w, svcErr.Code, svcErr.Err)
+		return
+	}
+
+	httpx.RespondJSON(ctx, w, http.StatusOK, result)
+}
+
+func (c *MonitorResultsAPIController) GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	monitorID := r.PathValue("monitorId")
+	if monitorID == "" {
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
+		return
+	}
+
+	pagination, paginationErr := util.PaginationFromRequest(r)
+	if paginationErr != nil {
+		httpx.RespondError(ctx, w, http.StatusBadRequest, paginationErr)
+		return
+	}
+
+	results, svcErr := c.service.GetMonitorResultsByMonitorID(ctx, monitorID, pagination)
+	if svcErr != nil {
+		httpx.RespondError(ctx, w, svcErr.Code, svcErr.Err)
+		return
+	}
+
+	httpx.RespondJSON(ctx, w, http.StatusOK, results)
+}

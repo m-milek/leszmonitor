@@ -1,0 +1,101 @@
+package monitors
+
+import (
+	"testing"
+
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/platform/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func createTestBaseMonitor() Monitor {
+	name := "Test BaseMonitor"
+	return Monitor{
+		Slug:                   util.SlugFromString(name),
+		Name:                   name,
+		Description:            "Test Description",
+		Interval:               60,
+		Type:                   kind.HTTPConfigType,
+		ResultRetentionSeconds: 60,
+		RunState:               MonitorStateActive,
+	}
+}
+
+func TestBaseMonitorValidateSuccess(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	err := monitor.Validate()
+	require.NoError(t, err)
+}
+
+func TestBaseMonitorValidateEmptyName(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.Name = ""
+	err := monitor.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "name cannot be empty")
+}
+
+func TestBaseMonitorValidateZeroInterval(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.Interval = 0
+	err := monitor.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "interval must be greater than zero")
+}
+
+func TestBaseMonitorValidateNegativeInterval(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.Interval = -10
+	err := monitor.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "interval must be greater than zero")
+}
+
+func TestBaseMonitorValidateEmptyType(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.Type = ""
+	err := monitor.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "type cannot be empty")
+}
+
+func TestBaseMonitorValidateZeroResultRetentionSeconds(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.ResultRetentionSeconds = 0
+	err := monitor.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "result retention period must be greater than zero")
+}
+
+func TestBaseMonitorValidateNegativeResultRetentionSeconds(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.ResultRetentionSeconds = -10
+	err := monitor.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "result retention period must be greater than zero")
+}
+
+func TestBaseMonitorValidateInvalidState(t *testing.T) {
+	monitor := createTestBaseMonitor()
+	monitor.RunState = "invalid_state"
+	err := monitor.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "state must be either 'running' or 'stopped'")
+}
+
+func TestBaseMonitorGenerateSlug(t *testing.T) {
+	t.Run("Slug is empty", func(t *testing.T) {
+		monitor := createTestBaseMonitor()
+		monitor.Slug = ""
+		monitor.GenerateSlug()
+		assert.NotEmpty(t, monitor.Slug, "Generated slug should not be empty")
+	})
+
+	t.Run("Slug is already set", func(t *testing.T) {
+		monitor := createTestBaseMonitor()
+		originalSlug := monitor.Slug
+		monitor.GenerateSlug()
+		assert.Equal(t, originalSlug, monitor.Slug, "Slug should remain unchanged if already set")
+	})
+}

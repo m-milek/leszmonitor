@@ -9,15 +9,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/m-milek/leszmonitor/api"
-	"github.com/m-milek/leszmonitor/api/controllers"
-	config "github.com/m-milek/leszmonitor/appconfig"
-	"github.com/m-milek/leszmonitor/db"
-	"github.com/m-milek/leszmonitor/log"
-	"github.com/m-milek/leszmonitor/services"
-	"github.com/m-milek/leszmonitor/workers"
-	"github.com/m-milek/leszmonitor/workers/probesrunner"
-	"github.com/m-milek/leszmonitor/workers/resultsprocessor"
+	"github.com/m-milek/leszmonitor/features/auditlog"
+	"github.com/m-milek/leszmonitor/features/instance"
+	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/users"
+
+	"github.com/m-milek/leszmonitor/app"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
+	"github.com/m-milek/leszmonitor/features/monitors/workers"
+	"github.com/m-milek/leszmonitor/features/tags"
+	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 //go:embed all:static
@@ -25,14 +29,14 @@ var staticFiles embed.FS
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Go(func() {
-		manager := probes.NewManager(db.Get())
+		manager := workers.NewManager(db.Get())
 		manager.Run(ctx)
 	})
 	wg.Go(func() {
 		workers.StartDataCleanupWorker(ctx)
 	})
 	wg.Go(func() {
-		resultsProcessor := resultsprocessor.NewResultsProcessor(db.Get())
+		resultsProcessor := workers.NewResultsProcessor(db.Get())
 		resultsProcessor.Run(ctx)
 	})
 }
@@ -59,37 +63,37 @@ func main() {
 
 	database := db.Get()
 
-	userService := services.NewUserService(services.UserServiceDeps{
+	userService := users.NewUserService(users.UserServiceDeps{
 		DB: database,
 	})
-	monitorService := services.NewMonitorService(services.MonitorServiceDeps{
+	monitorService := monitors.NewMonitorService(monitors.MonitorServiceDeps{
 		DB: database,
 	})
-	monitorResultService := services.NewMonitorResultsService(services.MonitorResultsServiceDeps{
+	monitorResultService := results.NewMonitorResultsService(results.MonitorResultsServiceDeps{
 		DB: database,
 	})
-	monitorStatsService := services.NewMonitorStatsService(services.MonitorStatsServiceDeps{
+	monitorStatsService := stats.NewMonitorStatsService(stats.MonitorStatsServiceDeps{
 		DB: database,
 	})
-	auditLogService := services.NewAuditLogService(services.AuditLogServiceDeps{
+	auditLogService := auditlog.NewAuditLogService(auditlog.AuditLogServiceDeps{
 		DB: database,
 	})
-	tagService := services.NewTagService(services.TagServiceDeps{
+	tagService := tags.NewTagService(tags.TagServiceDeps{
 		DB: database,
 	})
-	instanceMetadataService := services.NewInstanceMetadataService(services.InstanceMetadataServiceDeps{})
+	instanceMetadataService := instance.NewInstanceMetadataService(instance.InstanceMetadataServiceDeps{})
 
-	userAPIController := controllers.NewUserAPIController(userService)
-	monitorAPIController := controllers.NewMonitorAPIController(monitorService)
-	monitorResultsAPIController := controllers.NewMonitorResultsAPIController(monitorResultService)
-	monitorStatsAPIController := controllers.NewMonitorStatsAPIController(monitorStatsService)
-	auditLogAPIController := controllers.NewAuditLogAPIController(auditLogService)
-	tagAPIController := controllers.NewTagAPIController(tagService)
-	instanceMetadataAPIController := controllers.NewInstanceMetadataAPIController(instanceMetadataService)
+	userAPIController := users.NewUserAPIController(userService)
+	monitorAPIController := monitors.NewMonitorAPIController(monitorService)
+	monitorResultsAPIController := results.NewMonitorResultsAPIController(monitorResultService)
+	monitorStatsAPIController := stats.NewMonitorStatsAPIController(monitorStatsService)
+	auditLogAPIController := auditlog.NewAuditLogAPIController(auditLogService)
+	tagAPIController := tags.NewTagAPIController(tagService)
+	instanceMetadataAPIController := instance.NewInstanceMetadataAPIController(instanceMetadataService)
 
-	authzMiddlewareService := services.NewAuthzMiddlewareService(database)
+	authzMiddlewareService := users.NewAuthzMiddlewareService(database)
 
-	handlers := api.Handlers{
+	handlers := app.Handlers{
 		User:                   userAPIController,
 		Monitor:                monitorAPIController,
 		MonitorResults:         monitorResultsAPIController,
@@ -106,9 +110,9 @@ func main() {
 	}
 
 	// Start the server
-	serverConfig := api.DefaultServerConfig()
+	serverConfig := app.DefaultServerConfig()
 	logger.Info().Msg("Starting API server...")
-	server, done, err := api.StartServer(appCtx, serverConfig, staticFiles, handlers)
+	server, done, err := app.StartServer(appCtx, serverConfig, staticFiles, handlers)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to start API server")
 		os.Exit(1)
