@@ -55,17 +55,11 @@ func (c *MonitorStatsAPIController) GetLatencyStatsByMonitorIDHandler(w http.Res
 		return
 	}
 
-	stats, svcErr := c.service.GetLatencyStatsByMonitorID(ctx, monitorID, from, to)
+	stats, svcErr := c.service.GetStatsByMonitorID(ctx, monitorID, from, to)
 	if svcErr != nil {
 		util.RespondError(ctx, w, svcErr.Code, svcErr.Err)
 		return
 	}
 
-	response := LatencyStatsResponse{
-		AverageLatency: stats.Avg,
-		MinLatency:     stats.Min,
-		MaxLatency:     stats.Max,
-	}
-
-	util.RespondJSON(ctx, w, http.StatusOK, response)
+	util.RespondJSON(ctx, w, http.StatusOK, stats)
 }

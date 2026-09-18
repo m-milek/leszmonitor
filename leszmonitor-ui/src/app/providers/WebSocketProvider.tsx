@@ -44,6 +44,9 @@ export function WebSocketProvider({
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.MONITOR_RESULTS, data.monitorId],
         });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.MONITOR_LATENCY_STATS, data.monitorId],
+        });
       }
     } catch {
       console.log("Received WebSocket message:", event.data);

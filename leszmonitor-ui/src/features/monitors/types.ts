@@ -126,3 +126,19 @@ export const isMonitorResultMessage = (
     typeof (obj as any).response === "object"
   );
 };
+
+export interface LatencyStats {
+  avg: number;
+  min: number;
+  max: number;
+}
+export interface StatusChangeStats {
+  secondsInCurrentStatus: number;
+}
+export interface UptimeStats {}
+
+export interface MonitorStats {
+  latency: LatencyStats;
+  statusChange: StatusChangeStats;
+  uptime: UptimeStats;
+}

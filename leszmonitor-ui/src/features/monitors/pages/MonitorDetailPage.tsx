@@ -17,6 +17,7 @@ import { formatTime } from "@/features/monitors/components/charts/utils";
 import type { MonitorResult } from "@/features/monitors/types";
 import type { Pagination } from "@/lib/types";
 import { QUERY_KEYS } from "@/lib/consts";
+import { formatDuration } from "@/lib/utils.ts";
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;
@@ -49,11 +50,11 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
     queryFn: () => MonitorsApi.results.getPage(monitor!.id, pagination),
   });
 
-  const { data: latencyStats } = useQuery({
+  const { data: stats } = useQuery({
     enabled: !!monitor,
     queryKey: [QUERY_KEYS.MONITOR_LATENCY_STATS, monitor?.id ?? ""],
     queryFn: () =>
-      MonitorsApi.stats.getLatency(monitor!.id, {
+      MonitorsApi.stats.get(monitor!.id, {
         from: new Date(Date.now() - 24 * 60 * 60 * 1000), // last 24 hours
       }),
   });
@@ -74,6 +75,8 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
   }
 
   const isPaused = monitor.runState === "paused";
+
+  const monitorStatus = monitorResults?.[0]?.status ?? "unknown";
 
   const handleToggleMonitorState = () => {
     mutation.mutate();
@@ -124,11 +127,15 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
       <Card>
         <CardContent className="min-w-0">
           <TypographyH2>Latency (last 24h)</TypographyH2>
-          {latencyStats && (
+          {stats && (
             <>
-              <p>Avg: {latencyStats.averageLatency.toFixed(2)} ms</p>
-              <p>Min: {latencyStats.minLatency.toFixed(2)} ms</p>
-              <p>Max: {latencyStats.maxLatency.toFixed(2)} ms</p>
+              <p>Avg: {stats.latency.avg.toFixed(2)} ms</p>
+              <p>Min: {stats.latency.min.toFixed(2)} ms</p>
+              <p>Max: {stats.latency.max.toFixed(2)} ms</p>
+              <p>
+                {monitorStatus.toUpperCase()} for{"  "}
+                {formatDuration(stats.statusChange.secondsInCurrentStatus)}
+              </p>
             </>
           )}
         </CardContent>
