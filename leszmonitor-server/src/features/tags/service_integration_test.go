@@ -1,10 +1,11 @@
-package tags
+package tags_test
 
 import (
 	"net/http"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,7 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 	t.Run("Successfully creates a tag", func(t *testing.T) {
 		ctx, tagService, database, owner := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, Tag{
+		created, svcErr := tagService.CreateTag(ctx, tags.Tag{
 			Name:        "  Production ",
 			Description: "Production environment",
 			ColorHex:    "#ABC",
@@ -50,7 +51,7 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
 		clientID := uuid.New()
-		created, svcErr := tagService.CreateTag(ctx, Tag{
+		created, svcErr := tagService.CreateTag(ctx, tags.Tag{
 			ID:       clientID,
 			Name:     "Staging",
 			ColorHex: "#001122",
@@ -62,11 +63,11 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 	t.Run("Rejects an invalid tag", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		_, svcErr := tagService.CreateTag(ctx, Tag{Name: "No color"})
+		_, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "No color"})
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 
-		_, svcErr = tagService.CreateTag(ctx, Tag{Name: "", ColorHex: "#aabbcc"})
+		_, svcErr = tagService.CreateTag(ctx, tags.Tag{Name: "", ColorHex: "#aabbcc"})
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -74,7 +75,7 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 	t.Run("Allows duplicate names", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		payload := Tag{Name: "Production", ColorHex: "#aabbcc"}
+		payload := tags.Tag{Name: "Production", ColorHex: "#aabbcc"}
 		first, svcErr := tagService.CreateTag(ctx, payload)
 		require.Nil(t, svcErr)
 
@@ -88,7 +89,7 @@ func TestIntegration_TagService_GetTagByID(t *testing.T) {
 	t.Run("Returns the tag", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, Tag{
+		created, svcErr := tagService.CreateTag(ctx, tags.Tag{
 			Name:        "Production",
 			Description: "Production environment",
 			ColorHex:    "#aabbcc",
@@ -124,9 +125,9 @@ func TestIntegration_TagService_GetAllTags(t *testing.T) {
 	t.Run("Returns every tag in the instance", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		t1, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
+		t1, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
-		t2, svcErr := tagService.CreateTag(ctx, Tag{Name: "Staging", ColorHex: "#001122"})
+		t2, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Staging", ColorHex: "#001122"})
 		require.Nil(t, svcErr)
 
 		all, svcErr := tagService.GetAllTags(ctx)
@@ -154,14 +155,14 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Successfully updates a tag", func(t *testing.T) {
 		ctx, tagService, database, owner := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, Tag{
+		created, svcErr := tagService.CreateTag(ctx, tags.Tag{
 			Name:        "Production",
 			Description: "Production environment",
 			ColorHex:    "#aabbcc",
 		})
 		require.Nil(t, svcErr)
 
-		updated, svcErr := tagService.UpdateTag(ctx, Tag{
+		updated, svcErr := tagService.UpdateTag(ctx, tags.Tag{
 			ID:          created.ID,
 			Name:        "Prod",
 			Description: "Renamed",
@@ -202,7 +203,7 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Returns not found for an unknown ID", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		_, svcErr := tagService.UpdateTag(ctx, Tag{
+		_, svcErr := tagService.UpdateTag(ctx, tags.Tag{
 			ID:       uuid.New(),
 			Name:     "Ghost",
 			ColorHex: "#aabbcc",
@@ -214,10 +215,10 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Rejects an invalid tag", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
+		created, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
 
-		_, svcErr = tagService.UpdateTag(ctx, Tag{ID: created.ID, Name: "Prod", ColorHex: "not-a-color"})
+		_, svcErr = tagService.UpdateTag(ctx, tags.Tag{ID: created.ID, Name: "Prod", ColorHex: "not-a-color"})
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -225,12 +226,12 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 	t.Run("Allows renaming onto an existing name", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		_, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
+		_, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
-		staging, svcErr := tagService.CreateTag(ctx, Tag{Name: "Staging", ColorHex: "#001122"})
+		staging, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Staging", ColorHex: "#001122"})
 		require.Nil(t, svcErr)
 
-		updated, svcErr := tagService.UpdateTag(ctx, Tag{
+		updated, svcErr := tagService.UpdateTag(ctx, tags.Tag{
 			ID:       staging.ID,
 			Name:     "Production",
 			ColorHex: "#001122",
@@ -244,7 +245,7 @@ func TestIntegration_TagService_DeleteTag(t *testing.T) {
 	t.Run("Successfully deletes a tag", func(t *testing.T) {
 		ctx, tagService, database, owner := setupTagIntegrationTest(t)
 
-		created, svcErr := tagService.CreateTag(ctx, Tag{Name: "Production", ColorHex: "#aabbcc"})
+		created, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
 
 		svcErr = tagService.DeleteTag(ctx, created.ID.String())

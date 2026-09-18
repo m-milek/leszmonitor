@@ -1,10 +1,11 @@
-package monitors
+package monitors_test
 
 import (
 	"net/http"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -17,8 +18,8 @@ func TestIntegration_MonitorService_GetAllMonitors(t *testing.T) {
 	t.Run("Returns every monitor in the instance", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		m1 := insertTestMonitor(t, ctx)
-		m2 := insertTestMonitor(t, ctx)
+		m1 := insertTestMonitor(ctx, t)
+		m2 := insertTestMonitor(ctx, t)
 
 		all, svcErr := monitorService.GetAllMonitors(ctx)
 		require.Nil(t, svcErr)
@@ -44,7 +45,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 	t.Run("Successfully creates a monitor", func(t *testing.T) {
 		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
-		payload := Monitor{
+		payload := monitors.Monitor{
 			Name:        "Ping API",
 			Description: "Pings our main API every minute",
 			Interval:    60,
@@ -85,7 +86,7 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 	t.Run("Fails with 400 Bad Request for invalid monitor payload", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		payload := Monitor{
+		payload := monitors.Monitor{
 			Name:     "",  // Empty name makes it invalid
 			Interval: -10, // Invalid interval
 			Type:     kind.HTTPConfigType,
@@ -103,7 +104,7 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
 		// Insert a monitor to delete
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		// Delete it
 		svcErr := monitorService.DeleteMonitor(ctx, monitor.ID.String())
@@ -145,7 +146,7 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 	t.Run("Successfully retrieves a monitor by ID", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		retrieved, svcErr := monitorService.GetMonitorByID(ctx, monitor.ID.String())
 		require.Nil(t, svcErr)
@@ -166,7 +167,7 @@ func TestIntegration_MonitorService_GetMonitorByID(t *testing.T) {
 	t.Run("Successfully retrieves a monitor by slug when the id does not parse as a UUID", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		retrieved, svcErr := monitorService.GetMonitorByID(ctx, monitor.Slug)
 		require.Nil(t, svcErr)
@@ -189,7 +190,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	t.Run("Successfully updates a monitor and records audit log", func(t *testing.T) {
 		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		// Modify it
 		monitor.Name = "Updated Name"
@@ -223,11 +224,11 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	t.Run("Preserves state even if explicitly changed in payload", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 		originalState := monitor.RunState
 
 		// Try to illegally change state
-		monitor.RunState = MonitorStateStopped
+		monitor.RunState = monitors.MonitorStateStopped
 
 		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.Nil(t, svcErr)
@@ -239,7 +240,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		fakeMonitor := Monitor{
+		fakeMonitor := monitors.Monitor{
 			ID:          uuid.New(),
 			Name:        "Fake",
 			Description: "Fake",
@@ -256,7 +257,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 	t.Run("Fails with 400 for invalid configuration", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 		monitor.Name = "" // Invalid
 
 		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
@@ -269,36 +270,36 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	t.Run("Successfully updates a monitor state", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
-		assert.Equal(t, MonitorStateStopped, retrieved.RunState)
+		assert.Equal(t, monitors.MonitorStateStopped, retrieved.RunState)
 	})
 
 	t.Run("Returns nil if state is already the desired state", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
 
-		svcErr = monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorStateStopped)
+		svcErr = monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
-		assert.Equal(t, MonitorStateStopped, retrieved.RunState)
+		assert.Equal(t, monitors.MonitorStateStopped, retrieved.RunState)
 	})
 
 	t.Run("Fails with 400 for invalid monitor state", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, MonitorRunState("invalid_state"))
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunState("invalid_state"))
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -306,7 +307,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), MonitorStateStopped)
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), monitors.MonitorStateStopped)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})

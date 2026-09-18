@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -68,7 +69,7 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 	}
 
 	if hasNoStatusChanges {
-		oldestResult, err := NewMonitorResultDAO(s.db.Querier()).GetOldestMonitorResultByMonitorID(ctx, monitorID)
+		oldestResult, err := results.NewMonitorResultDAO(s.db.Querier()).GetOldestMonitorResultByMonitorID(ctx, monitorID)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
 				logger.Warn().Str("monitorID", monitorID).Msg("No monitor results found for the given monitor ID")

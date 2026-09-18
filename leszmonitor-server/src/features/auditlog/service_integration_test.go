@@ -1,4 +1,4 @@
-package auditlog
+package auditlog_test
 
 import (
 	"testing"

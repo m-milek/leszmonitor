@@ -1,25 +1,26 @@
-package monitors_test
+package stats_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/users"
 	"github.com/m-milek/leszmonitor/internal/testsupport"
 	"github.com/m-milek/leszmonitor/platform/db"
 )
 
-func setupMonitorIntegrationTest(
+func setupMonitorStatsIntegrationTest(
 	t *testing.T,
-) (context.Context, *monitors.MonitorService, *users.UserService, *users.User) {
+) (context.Context, *stats.MonitorStatsService, *users.UserService, *users.User) {
 	ctx, userService, user := testsupport.Setup(t)
 
-	monitorService := monitors.NewMonitorService(monitors.MonitorServiceDeps{
+	monitorStatsService := stats.NewMonitorStatsService(stats.MonitorStatsServiceDeps{
 		DB: db.Get(),
 	})
 
-	return ctx, monitorService, userService, user
+	return ctx, &monitorStatsService, userService, user
 }
 
 func insertTestMonitor(ctx context.Context, t *testing.T) *monitors.Monitor {

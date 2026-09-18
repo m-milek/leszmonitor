@@ -1,4 +1,4 @@
-package monitors
+package stats
 
 type LatencyStats struct {
 	Avg float64 `json:"avg"`

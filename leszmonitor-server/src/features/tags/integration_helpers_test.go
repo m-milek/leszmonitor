@@ -1,32 +1,23 @@
-package tags
+package tags_test
 
 import (
 	"context"
-	"path/filepath"
 	"testing"
 
-	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/features/tags"
+	"github.com/m-milek/leszmonitor/features/users"
+	"github.com/m-milek/leszmonitor/internal/testsupport"
 	"github.com/m-milek/leszmonitor/platform/db"
-	"github.com/stretchr/testify/require"
 )
 
-// setupTagIntegrationTest initializes a temporary SQLite DB, sets up the tag service and puts a test user in the context.
-func setupTagIntegrationTest(t *testing.T) (context.Context, *TagService, *db.Client, *auth.UserClaims) {
-	ctx := context.Background()
+func setupTagIntegrationTest(
+	t *testing.T,
+) (context.Context, *tags.TagService, *db.Client, *users.User) {
+	ctx, _, user := testsupport.Setup(t)
 
-	dsn := "file:" + filepath.Join(t.TempDir(), "testdb.sqlite") + "?_pragma=foreign_keys(1)"
-	database, err := db.New(ctx, dsn)
-	require.NoError(t, err)
-	t.Cleanup(database.Close)
-
-	tagService := NewTagService(TagServiceDeps{
-		DB: database,
+	tagService := tags.NewTagService(tags.TagServiceDeps{
+		DB: db.Get(),
 	})
 
-	owner := &auth.UserClaims{
-		Username: "integration_user",
-	}
-	ctx = auth.SetUserInContext(ctx, owner)
-
-	return ctx, tagService, database, owner
+	return ctx, tagService, db.Get(), user
 }

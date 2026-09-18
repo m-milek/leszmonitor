@@ -1,9 +1,10 @@
-package users
+package users_test
 
 import (
 	"net/http"
 	"testing"
 
+	"github.com/m-milek/leszmonitor/features/users"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,7 @@ func TestIntegration_UserService_RegisterUser(t *testing.T) {
 	t.Run("Successfully registers a new user", func(t *testing.T) {
 		ctx, userService, _ := setupIntegrationTest(t)
 
-		payload := &UserRegisterPayload{
+		payload := &users.UserRegisterPayload{
 			Username:        "new_user",
 			Password:        "Password123!",
 			PasswordConfirm: "Password123!",
@@ -32,7 +33,7 @@ func TestIntegration_UserService_RegisterUser(t *testing.T) {
 	t.Run("Fails to register a duplicate user", func(t *testing.T) {
 		ctx, userService, owner := setupIntegrationTest(t)
 
-		payload := &UserRegisterPayload{
+		payload := &users.UserRegisterPayload{
 			Username:        owner.Username, // Already registered by setupIntegrationTest
 			Password:        "Password123!",
 			PasswordConfirm: "Password123!",
@@ -48,13 +49,13 @@ func TestIntegration_UserService_Login(t *testing.T) {
 	t.Run("Successfully logs in with valid credentials", func(t *testing.T) {
 		ctx, userService, _ := setupIntegrationTest(t)
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{
+		require.Nil(t, userService.RegisterUser(ctx, &users.UserRegisterPayload{
 			Username:        "login_user",
 			Password:        "MySecretPassword!",
 			PasswordConfirm: "MySecretPassword!",
 		}))
 
-		payload := LoginPayload{
+		payload := users.LoginPayload{
 			Username: "login_user",
 			Password: "MySecretPassword!",
 		}
@@ -68,13 +69,13 @@ func TestIntegration_UserService_Login(t *testing.T) {
 	t.Run("Fails to log in with invalid password", func(t *testing.T) {
 		ctx, userService, _ := setupIntegrationTest(t)
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{
+		require.Nil(t, userService.RegisterUser(ctx, &users.UserRegisterPayload{
 			Username:        "login_user2",
 			Password:        "MySecretPassword!",
 			PasswordConfirm: "MySecretPassword!",
 		}))
 
-		payload := LoginPayload{
+		payload := users.LoginPayload{
 			Username: "login_user2",
 			Password: "WrongPassword!",
 		}
@@ -88,7 +89,7 @@ func TestIntegration_UserService_Login(t *testing.T) {
 	t.Run("Fails to log in with nonexistent user", func(t *testing.T) {
 		ctx, userService, _ := setupIntegrationTest(t)
 
-		payload := LoginPayload{
+		payload := users.LoginPayload{
 			Username: "nonexistent",
 			Password: "Password!",
 		}
@@ -132,7 +133,7 @@ func TestIntegration_UserService_SetUserRole(t *testing.T) {
 	t.Run("Successfully promotes a user", func(t *testing.T) {
 		ctx, userService, owner := setupIntegrationTest(t)
 
-		updated, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: auth.RoleAdmin})
+		updated, err := userService.SetUserRole(ctx, owner.Username, users.SetUserRolePayload{Role: auth.RoleAdmin})
 		require.Nil(t, err)
 		assert.Equal(t, auth.RoleAdmin, updated.Role)
 
@@ -144,7 +145,7 @@ func TestIntegration_UserService_SetUserRole(t *testing.T) {
 	t.Run("Fails with 400 for an invalid role", func(t *testing.T) {
 		ctx, userService, owner := setupIntegrationTest(t)
 
-		_, err := userService.SetUserRole(ctx, owner.Username, SetUserRolePayload{Role: auth.Role("superuser")})
+		_, err := userService.SetUserRole(ctx, owner.Username, users.SetUserRolePayload{Role: auth.Role("superuser")})
 		require.NotNil(t, err)
 		assert.Equal(t, http.StatusBadRequest, err.Code)
 	})
@@ -152,7 +153,7 @@ func TestIntegration_UserService_SetUserRole(t *testing.T) {
 	t.Run("Fails with 404 for a nonexistent user", func(t *testing.T) {
 		ctx, userService, _ := setupIntegrationTest(t)
 
-		_, err := userService.SetUserRole(ctx, "ghost", SetUserRolePayload{Role: auth.RoleAdmin})
+		_, err := userService.SetUserRole(ctx, "ghost", users.SetUserRolePayload{Role: auth.RoleAdmin})
 		require.NotNil(t, err)
 		assert.Equal(t, http.StatusNotFound, err.Code)
 	})
@@ -162,12 +163,12 @@ func TestIntegration_UserService_GetAllUsers(t *testing.T) {
 	t.Run("Successfully retrieves all users", func(t *testing.T) {
 		ctx, userService, owner := setupIntegrationTest(t)
 
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{
+		require.Nil(t, userService.RegisterUser(ctx, &users.UserRegisterPayload{
 			Username:        "user1",
 			Password:        "Pass1!",
 			PasswordConfirm: "Pass1!",
 		}))
-		require.Nil(t, userService.RegisterUser(ctx, &UserRegisterPayload{
+		require.Nil(t, userService.RegisterUser(ctx, &users.UserRegisterPayload{
 			Username:        "user2",
 			Password:        "Pass2!",
 			PasswordConfirm: "Pass2!",

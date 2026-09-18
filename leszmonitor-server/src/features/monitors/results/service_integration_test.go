@@ -1,4 +1,4 @@
-package monitors
+package results_test
 
 import (
 	"net/http"
@@ -17,7 +17,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 	t.Run("Successfully gets latest monitor result", func(t *testing.T) {
 		ctx, service, _, _ := setupMonitorResultsIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		// Insert 2 results
 		res1 := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 100, "", nil)
@@ -48,7 +48,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 	t.Run("Fails with 404 when no results exist", func(t *testing.T) {
 		ctx, service, _, _ := setupMonitorResultsIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
 		require.NotNil(t, svcErr)
@@ -61,7 +61,7 @@ func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 	t.Run("Successfully gets paginated monitor results", func(t *testing.T) {
 		ctx, service, _, _ := setupMonitorResultsIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		// Insert 3 results
 		for i := range 3 {

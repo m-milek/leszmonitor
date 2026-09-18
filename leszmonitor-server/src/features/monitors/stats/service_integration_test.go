@@ -1,4 +1,4 @@
-package monitors
+package stats_test
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 	t.Run("Returns correct avg/min/max latency for results in range", func(t *testing.T) {
 		ctx, service, _, _ := setupMonitorStatsIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		now := time.Now().UTC()
 
@@ -49,7 +49,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 	t.Run("Returns empty stats when no results exist for monitor", func(t *testing.T) {
 		ctx, service, _, _ := setupMonitorStatsIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		from := time.Now().UTC().Add(-1 * time.Hour)
 		to := time.Now().UTC().Add(1 * time.Hour)
@@ -64,7 +64,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 	t.Run("Only includes results within the specified time range", func(t *testing.T) {
 		ctx, service, _, _ := setupMonitorStatsIntegrationTest(t)
 
-		monitor := insertTestMonitor(t, ctx)
+		monitor := insertTestMonitor(ctx, t)
 
 		now := time.Now().UTC()
 
