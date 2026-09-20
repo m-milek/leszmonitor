@@ -1,7 +1,9 @@
 package monitors_test
 
 import (
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/google/uuid"
@@ -310,5 +312,51 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 		svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), monitors.MonitorStateStopped)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
+	})
+}
+
+func TestIntegration_MonitorService_RunMonitorManuallyByID(t *testing.T) {
+	t.Run("Successfully runs a monitor and records audit log", func(t *testing.T) {
+		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		payload := monitors.Monitor{
+			Name:        "Manual Run Target",
+			Description: "Monitor run manually in tests",
+			Interval:    60,
+			Type:        kind.HTTPConfigType,
+			ProbeConfig: fmt.Sprintf(`{"method":"GET","url":%q,"expectedStatusCodes":[200]}`, server.URL),
+		}
+		payload.GenerateSlug()
+
+		created, svcErr := monitorService.CreateMonitor(ctx, payload)
+		require.Nil(t, svcErr)
+
+		monitor, svcErr := monitorService.GetMonitorByID(ctx, created.MonitorID)
+		require.Nil(t, svcErr)
+
+		svcErr = monitorService.RunMonitorManuallyByID(ctx, monitor.ID)
+		require.Nil(t, svcErr)
+
+		filter := audit.AuditLogFilter{ResourceID: &monitor.ID}
+		entries, dbErr := audit.NewAuditLogDAO(db.Get().Querier()).GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
+		require.NoError(t, dbErr)
+
+		found := false
+		for _, entry := range entries {
+			if entry.Action == audit.ActionRunMonitorManually {
+				found = true
+				assert.Equal(t, owner.Username, *entry.Username)
+				assert.Equal(t, monitor.ID.String(), entry.ResourceID.String())
+				assert.True(t, entry.IsSuccess)
+				assert.NotNil(t, entry.After)
+				break
+			}
+		}
+		assert.True(t, found, "Audit log for manual monitor run not found")
 	})
 }

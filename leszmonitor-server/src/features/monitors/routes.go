@@ -40,6 +40,10 @@ func RegisterRoutes(
 		"PATCH /api/v1/monitors/{monitorId}/state",
 		requirePermission(auth.PermissionWriter)(c.UpdateMonitorStateByIDHandler),
 	)
+	protectedRouter.HandleFunc(
+		"POST /api/v1/monitors/{monitorId}/run",
+		requirePermission(auth.PermissionWriter)(c.RunMonitorManuallyByIDHandler),
+	)
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results/latest",
