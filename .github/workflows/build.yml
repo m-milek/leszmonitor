@@ -19,7 +19,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26.1'
+          go-version: '1.27.1'
           cache: true
           cache-dependency-path: leszmonitor-server/src/go.sum
 
@@ -38,6 +38,12 @@ jobs:
 
       - name: Test Server
         run: task server:coverage
+
+      - name: Go Test Report
+        if: always()
+        uses: robherley/go-test-action@v1.1.0
+        with:
+          fromJSONFile: leszmonitor-server/src/test-output.json
 
       - name: Upload Go Coverage Report
         uses: actions/upload-artifact@v6

@@ -31,6 +31,7 @@ bin
 tmp
 .env*
 src/coverage.out
+src/test-output.json
 
 .DS_Store
 
