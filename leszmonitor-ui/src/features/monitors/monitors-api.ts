@@ -89,6 +89,14 @@ const remove = async (monitorId: string) => {
   });
 };
 
+const run = async (monitorId: string) => {
+  const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}/run`, {
+    method: "POST",
+  });
+
+  return res.json();
+};
+
 export const MonitorsApi = {
   getAll,
   getBySlug,
@@ -96,6 +104,7 @@ export const MonitorsApi = {
   update,
   updateState,
   remove,
+  run,
   results: resultsApi,
   stats: statsApi,
 };

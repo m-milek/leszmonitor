@@ -224,3 +224,31 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 
 	httpx.RespondMessage(ctx, w, http.StatusOK, "Monitor state updated successfully")
 }
+
+func (c *MonitorAPIController) RunMonitorManuallyByIDHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	monitorID := r.PathValue("monitorId")
+	if monitorID == "" {
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		return
+	}
+
+	monitorUUID, err := uuid.Parse(monitorID)
+	if err != nil {
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		return
+	}
+
+	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
+	if !ok {
+		return
+	}
+
+	serviceErr := c.service.RunMonitorManuallyByID(ctx, monitorUUID)
+	if serviceErr != nil {
+		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
+		return
+	}
+
+	httpx.RespondMessage(ctx, w, http.StatusOK, "Monitor run manually successfully")
+}

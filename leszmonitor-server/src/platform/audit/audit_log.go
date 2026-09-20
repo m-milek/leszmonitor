@@ -14,18 +14,19 @@ import (
 type AuditLogAction string
 
 const (
-	ActionCreateMonitor  AuditLogAction = "monitor.create"
-	ActionUpdateMonitor  AuditLogAction = "monitor.update"
-	ActionDeleteMonitor  AuditLogAction = "monitor.delete"
-	ActionCreateUser     AuditLogAction = "user.create"
-	ActionUpdateUser     AuditLogAction = "user.update"
-	ActionDeleteUser     AuditLogAction = "user.delete"
-	ActionCreateTag      AuditLogAction = "tag.create"
-	ActionUpdateTag      AuditLogAction = "tag.update"
-	ActionDeleteTag      AuditLogAction = "tag.delete"
-	ActionLogin          AuditLogAction = "auth.login"
-	ActionFailedLogin    AuditLogAction = "auth.failed_login"
-	ActionPasswordChange AuditLogAction = "auth.password_change"
+	ActionCreateMonitor      AuditLogAction = "monitor.create"
+	ActionUpdateMonitor      AuditLogAction = "monitor.update"
+	ActionDeleteMonitor      AuditLogAction = "monitor.delete"
+	ActionRunMonitorManually AuditLogAction = "monitor.run_manual"
+	ActionCreateUser         AuditLogAction = "user.create"
+	ActionUpdateUser         AuditLogAction = "user.update"
+	ActionDeleteUser         AuditLogAction = "user.delete"
+	ActionCreateTag          AuditLogAction = "tag.create"
+	ActionUpdateTag          AuditLogAction = "tag.update"
+	ActionDeleteTag          AuditLogAction = "tag.delete"
+	ActionLogin              AuditLogAction = "auth.login"
+	ActionFailedLogin        AuditLogAction = "auth.failed_login"
+	ActionPasswordChange     AuditLogAction = "auth.password_change"
 )
 
 type AuditLogEntry struct {

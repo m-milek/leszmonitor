@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/m-milek/leszmonitor/features/monitors/probe"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/google/uuid"
@@ -30,11 +31,14 @@ type IMonitorService interface {
 		monitorID uuid.UUID,
 		state MonitorRunState,
 	) *apperr.ServiceError
+	RunMonitorManuallyByID(ctx context.Context, monitorUUID uuid.UUID) *apperr.ServiceError
 }
 
 // MonitorService handles monitor-related CRUD operations.
 type MonitorService struct {
-	db db.DB
+	db         db.DB
+	monitorDAO IMonitorDAO
+	userDAO    users.IUserDAO
 }
 
 type MonitorServiceDeps struct {
@@ -43,7 +47,9 @@ type MonitorServiceDeps struct {
 
 func NewMonitorService(deps MonitorServiceDeps) *MonitorService {
 	return &MonitorService{
-		db: deps.DB,
+		db:         deps.DB,
+		monitorDAO: NewMonitorDAO(deps.DB.Querier()),
+		userDAO:    users.NewUserDAO(deps.DB.Querier()),
 	}
 }
 
@@ -67,7 +73,7 @@ func (s *MonitorService) CreateMonitor(
 		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
-	owner, err := users.NewUserDAO(s.db.Querier()).GetUserByUsername(ctx, userClaims.Username)
+	owner, err := s.userDAO.GetUserByUsername(ctx, userClaims.Username)
 	if err != nil {
 		logger.Error().Err(err).Str("username", userClaims.Username).Msg("Failed to find creating user")
 		return nil, apperr.NewInternalError("failed to find creating user: %w", err)
@@ -368,5 +374,60 @@ func (s *MonitorService) UpdateMonitorStateByID(
 	})
 
 	logger.Debug().Str("id", monitorID.String()).Str("newState", string(state)).Msg("Monitor state updated")
+	return nil
+}
+
+func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID uuid.UUID) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "RunMonitorManuallyByID")
+	logger.Trace().Str("id", monitorUUID.String()).Msg("Running monitor manually by ID")
+
+	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
+	if !ok {
+		return apperr.NewUnauthorizedError("user claims not found in context")
+	}
+
+	monitor, err := NewMonitorDAO(s.db.Querier()).GetMonitorByID(ctx, monitorUUID)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return apperr.NewNotFoundError("monitor with ID %s not found", monitorUUID.String())
+		}
+		return apperr.NewInternalError("failed to retrieve monitor for manual run: %w", err)
+	}
+
+	if err := monitor.Validate(); err != nil {
+		return apperr.NewBadRequestError("monitor validation failed: %w", err)
+	}
+
+	monitorProbe, err := probe.UnmarshalProbeFromBytes(monitor.Type, []byte(monitor.ProbeConfig))
+	if err != nil {
+		return apperr.NewInternalError("failed to unmarshal probe config for manual run: %w", err)
+	}
+
+	if err := monitorProbe.Validate(); err != nil {
+		return apperr.NewBadRequestError("probe config validation failed for manual run: %w", err)
+	}
+
+	result, err := monitorProbe.Run(ctx, monitor.ID)
+	if err != nil {
+		return apperr.NewInternalError("probe execution failed for manual run: %w", err)
+	}
+
+	auditErr := audit.NewAuditLogDAO(s.db.Querier()).Record(ctx, audit.AuditLogParams{
+		Username:   &userClaims.Username,
+		ResourceID: &monitor.ID,
+		Action:     audit.ActionRunMonitorManually,
+		IsSuccess:  true,
+		Summary:    fmt.Sprintf("Monitor with ID %s run manually", monitor.ID),
+		After:      result,
+	})
+	if auditErr != nil {
+		return apperr.NewInternalError("failed to record audit log for manual run: %w", auditErr)
+	}
+
+	MonitorRunChannel.Broadcast(MonitorRunMessage{
+		Result:  result,
+		Monitor: *monitor,
+	})
+
 	return nil
 }

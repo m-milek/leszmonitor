@@ -1,7 +1,12 @@
 import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PauseIcon, PencilIcon, PlayIcon } from "lucide-react";
+import {
+  LucideCirclePlay,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+} from "lucide-react";
 import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1, TypographyH2 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
@@ -70,6 +75,16 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
     },
   });
 
+  const manuallyRunMutation = useMutation({
+    mutationKey: [QUERY_KEYS.MONITORS, monitorSlug, "run"],
+    mutationFn: async () => MonitorsApi.run(monitor!.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", pagination],
+      });
+    },
+  });
+
   if (!monitor) {
     return null;
   }
@@ -80,6 +95,10 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
   const handleToggleMonitorState = () => {
     mutation.mutate();
+  };
+
+  const handleManuallyRunMonitor = () => {
+    manuallyRunMutation.mutate();
   };
 
   const statusCounts = stats?.uptime.statusToCount ?? {};
@@ -112,6 +131,13 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
             onClick={handleEditMonitor}
           >
             <PencilIcon />
+          </Button>
+          <Button
+            variant="outline"
+            className="size-10"
+            onClick={handleManuallyRunMonitor}
+          >
+            <LucideCirclePlay />
           </Button>
           <DeleteMonitorDialog
             monitor={monitor}
