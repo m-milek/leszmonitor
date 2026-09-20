@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { colorFromString } from "@/lib/colorFromString";
 
 export interface UserInitialProps {

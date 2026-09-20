@@ -53,11 +53,9 @@ export function AdminPage() {
             </p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Add User
-              </Button>
+            <DialogTrigger render={<Button size="sm" />}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

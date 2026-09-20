@@ -1,13 +1,7 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
 import {
   formatDuration as dateFnsFormatDuration,
   intervalToDuration,
 } from "date-fns";
-
-export const cn = (...inputs: ClassValue[]): string => {
-  return twMerge(clsx(inputs));
-};
 
 export const formatDate = (date: Date): string => {
   return date.toLocaleDateString(undefined, {

@@ -54,15 +54,17 @@ const ActionsCell = ({ user }: { user: User }) => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center justify-center p-2 outline-none rounded-md hover:bg-accent hover:text-accent-foreground">
-          <MoreVertical className="w-4 h-4" />
-        </button>
+      <DropdownMenuTrigger
+        render={
+          <button className="flex items-center justify-center p-2 outline-none rounded-md hover:bg-accent hover:text-accent-foreground" />
+        }
+      >
+        <MoreVertical className="w-4 h-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItemIcon
           icon={Trash2}
-          className="text-destructive focus:text-destructive"
+          variant="destructive"
           onClick={() => removeMutation.mutate()}
         >
           Delete

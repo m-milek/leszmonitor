@@ -20,9 +20,7 @@ export function ErrorTooltip({
 }: Readonly<ErrorTooltipProps>) {
   return (
     <Tooltip open={isOpen}>
-      <TooltipTrigger asChild>
-        <span>{children}</span>
-      </TooltipTrigger>
+      <TooltipTrigger render={<span />}>{children}</TooltipTrigger>
       {isOpen && (
         <TooltipContent
           side={side}

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 const COLOR_MAP = {
   success: "bg-green-500",

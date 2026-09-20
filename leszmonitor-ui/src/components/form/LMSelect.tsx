@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ErrorTooltip } from "@/components/form/ErrorTooltip";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 export interface LMSelectOption {
   value: string;
@@ -29,8 +29,7 @@ export function LMSelect(props: Readonly<LMSelectProps>) {
   return (
     <Select
       value={props.value}
-      onValueChange={props.onValueChange}
-      autoComplete="off"
+      onValueChange={(value) => props.onValueChange?.(value ?? "")}
     >
       <ErrorTooltip
         isOpen={props.isInvalid ?? false}
@@ -46,7 +45,7 @@ export function LMSelect(props: Readonly<LMSelectProps>) {
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>
       </ErrorTooltip>
-      <SelectContent position="popper">
+      <SelectContent alignItemWithTrigger={false}>
         {props.items?.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}

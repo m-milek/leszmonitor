@@ -1,10 +1,9 @@
-import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cn } from "@/lib/utils";
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
+import { cn } from "cn";
 
-interface FlexProps extends React.HTMLAttributes<HTMLDivElement> {
+interface FlexProps extends useRender.ComponentProps<"div"> {
   direction?: "row" | "column" | "row-reverse" | "column-reverse";
-  asChild?: boolean;
 }
 
 const directionClass: Record<string, string> = {
@@ -14,19 +13,15 @@ const directionClass: Record<string, string> = {
   "column-reverse": "flex-col-reverse",
 };
 
-const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
-  ({ direction = "row", asChild, className, ...props }, ref) => {
-    const Comp = asChild ? Slot : "div";
-
-    return (
-      <Comp
-        ref={ref}
-        className={cn("flex", directionClass[direction], className)}
-        {...props}
-      />
-    );
-  },
-);
-Flex.displayName = "Flex";
+function Flex({ direction = "row", className, render, ...props }: FlexProps) {
+  return useRender({
+    defaultTagName: "div",
+    render,
+    props: mergeProps<"div">(
+      { className: cn("flex", directionClass[direction], className) },
+      props,
+    ),
+  });
+}
 
 export { Flex, type FlexProps };

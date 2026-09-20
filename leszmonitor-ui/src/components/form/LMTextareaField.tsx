@@ -1,6 +1,6 @@
 import { Textarea } from "@/components/ui/textarea";
 import type { ComponentProps } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 type TextareaProps = ComponentProps<typeof Textarea>;
