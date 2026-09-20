@@ -1,6 +1,6 @@
 import { useAppStore } from "@/app/store";
 import { ReadyState } from "react-use-websocket";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import {
   Tooltip,
   TooltipContent,
@@ -52,8 +52,8 @@ export const WebSocketStatusIndicator = () => {
   const { webSocketConnectionStatus: wsStatus } = useAppStore();
   const { label, colorClass } = displayWebSocketStatus(wsStatus);
   return (
-    <Tooltip delayDuration={500}>
-      <TooltipTrigger>
+    <Tooltip>
+      <TooltipTrigger delay={500}>
         <div className={cn("h-3 w-3 rounded-full", colorClass)} />
       </TooltipTrigger>
       <TooltipContent side="top">Connection Status: {label}</TooltipContent>

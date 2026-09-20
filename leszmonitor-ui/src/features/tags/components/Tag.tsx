@@ -1,6 +1,6 @@
 import type { Tag as TagModel } from "@/features/tags/types";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { tagChipStyle } from "@/features/tags/lib/colors";
 
 export interface TagProps {

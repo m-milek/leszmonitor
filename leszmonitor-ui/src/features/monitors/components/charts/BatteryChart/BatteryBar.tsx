@@ -7,7 +7,7 @@ import {
 import { Flex } from "@/components/common/Flex";
 import { BAR_WIDTH } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 const STATUS_COLORS: Record<string, string> = {
   up: "bg-green-500",

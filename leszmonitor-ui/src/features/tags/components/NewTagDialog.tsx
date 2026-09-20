@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -37,11 +38,9 @@ export function NewTagDialog() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Tag
-        </Button>
+      <DialogTrigger render={<Button size="sm" />}>
+        <Plus className="mr-2 h-4 w-4" />
+        Add Tag
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -57,7 +56,8 @@ export function NewTagDialog() {
             await createTagMutation.mutateAsync(values);
           }}
         />
-        <DialogFooter showCloseButton>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Close</DialogClose>
           <Button
             type="submit"
             form={FORM_ID}

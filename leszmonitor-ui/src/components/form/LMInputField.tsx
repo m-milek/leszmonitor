@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import type { ComponentProps } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 type InputProps = ComponentProps<typeof Input>;

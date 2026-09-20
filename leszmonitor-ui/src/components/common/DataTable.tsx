@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { flexRender, useReactTable } from "@tanstack/react-table";
 import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 export interface DataTableProps<T> {
   data: T[];

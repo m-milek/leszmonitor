@@ -65,10 +65,8 @@ const columns: ColumnDef<AuditLogEntry>[] = [
         </Button>
       ) : (
         <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost">
-              <LucideDiff />
-            </Button>
+          <DialogTrigger render={<Button variant="ghost" />}>
+            <LucideDiff />
           </DialogTrigger>
           <DialogContent className="max-w-[90vw] sm:max-w-300 w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>

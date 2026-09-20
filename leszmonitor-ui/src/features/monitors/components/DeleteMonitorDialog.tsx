@@ -43,15 +43,17 @@ export function DeleteMonitorDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="destructive"
-          className="size-10"
-          title={`Delete monitor ${monitor.name}`}
-          aria-label={`Delete monitor ${monitor.name}`}
-        >
-          <TrashIcon />
-        </Button>
+      <DialogTrigger
+        render={
+          <Button
+            variant="destructive"
+            className="size-10"
+            title={`Delete monitor ${monitor.name}`}
+            aria-label={`Delete monitor ${monitor.name}`}
+          />
+        }
+      >
+        <TrashIcon />
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

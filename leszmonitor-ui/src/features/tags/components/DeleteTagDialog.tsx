@@ -39,15 +39,17 @@ export function DeleteTagDialog({ tag }: Readonly<DeleteTagDialogProps>) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          title={`Delete tag ${tag.name}`}
-          aria-label={`Delete tag ${tag.name}`}
-        >
-          <Trash2 className="text-destructive" />
-        </Button>
+      <DialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            title={`Delete tag ${tag.name}`}
+            aria-label={`Delete tag ${tag.name}`}
+          />
+        }
+      >
+        <Trash2 className="text-destructive" />
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
