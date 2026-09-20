@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -57,7 +58,10 @@ export function NewTagDialog() {
             await createTagMutation.mutateAsync(values);
           }}
         />
-        <DialogFooter showCloseButton>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
           <Button
             type="submit"
             form={FORM_ID}
