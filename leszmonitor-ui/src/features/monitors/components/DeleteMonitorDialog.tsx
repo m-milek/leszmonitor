@@ -2,7 +2,7 @@ import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TrashIcon } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import {
   Dialog,
   DialogContent,
@@ -31,13 +31,19 @@ export function DeleteMonitorDialog({
   const deleteMonitorMutation = useMutation({
     mutationFn: () => MonitorsApi.remove(monitor.id),
     onSuccess: () => {
-      toast.success(`Monitor "${monitor.name}" deleted`);
+      toast.add({
+        title: `Monitor "${monitor.name}" deleted`,
+        type: "success",
+      });
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
       onDeleted?.();
     },
     onError: (error) => {
-      toast.error("Failed to delete monitor: " + error.message);
+      toast.add({
+        title: "Failed to delete monitor: " + error.message,
+        type: "error",
+      });
     },
   });
 

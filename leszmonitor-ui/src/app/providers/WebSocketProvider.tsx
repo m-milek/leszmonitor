@@ -2,7 +2,7 @@ import { type ReactNode, useCallback, useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
 import { useAppStore } from "@/app/store";
 import { readToken } from "@/features/auth/lib/token";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { isMonitorResultMessage } from "@/features/monitors/types";
 import { QUERY_KEYS, SERVER_WS_URL } from "@/lib/consts";
@@ -33,13 +33,20 @@ export function WebSocketProvider({
 
       if (isMonitorResultMessage(data)) {
         if (data.response.status === "up") {
-          toast.success(`Monitor ${data.monitorId} succeeded`);
+          toast.add({
+            title: `Monitor ${data.monitorId} succeeded`,
+            type: "success",
+          });
         } else if (data.response.status === "down") {
-          toast.error(`Monitor ${data.monitorId} failed`);
+          toast.add({
+            title: `Monitor ${data.monitorId} failed`,
+            type: "error",
+          });
         } else {
-          toast.info(
-            `Monitor ${data.monitorId} status: ${data.response.status}`,
-          );
+          toast.add({
+            title: `Monitor ${data.monitorId} status: ${data.response.status}`,
+            type: "info",
+          });
         }
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.MONITOR_RESULTS, data.monitorId],

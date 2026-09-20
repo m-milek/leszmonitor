@@ -3,7 +3,7 @@ import { type RegisterUserPayload } from "@/features/users/users-api";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1, TypographyH2 } from "@/components/common/Typography";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -32,12 +32,15 @@ export function AdminPage() {
   const registerMutation = useMutation({
     mutationFn: (values: RegisterUserPayload) => UsersApi.register(values),
     onSuccess: () => {
-      toast.success("User registered successfully");
+      toast.add({ title: "User registered successfully", type: "success" });
       setIsDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error) => {
-      toast.error("Failed to register user: " + error.message);
+      toast.add({
+        title: "Failed to register user: " + error.message,
+        type: "error",
+      });
     },
   });
 

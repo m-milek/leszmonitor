@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import {
   Card,
   CardContent,
@@ -50,9 +50,11 @@ export function LoginPage() {
       } catch (error) {
         if (error instanceof Error) {
           console.error(error);
-          toast.error(
-            "Failed to log in. Please check your credentials and try again.",
-          );
+          toast.add({
+            title:
+              "Failed to log in. Please check your credentials and try again.",
+            type: "error",
+          });
         }
       }
     },
