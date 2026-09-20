@@ -1,5 +1,9 @@
 package stats
 
+import (
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
+)
+
 type LatencyStats struct {
 	Avg float64 `json:"avg"`
 	Min float64 `json:"min"`
@@ -11,7 +15,8 @@ type StatusChangeStats struct {
 }
 
 type UptimeStats struct {
-	UptimePercentage float64 `json:"uptimePercentage"`
+	StatusToCount      map[kind.MonitorStatus]int     `json:"statusToCount"`
+	StatusToPercentage map[kind.MonitorStatus]float64 `json:"statusToPercentage"`
 }
 
 type MonitorStats struct {

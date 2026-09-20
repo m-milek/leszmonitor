@@ -14,7 +14,7 @@ type IMonitorResult interface {
 	GetIsManuallyTriggered() bool
 	GetDurationMs() int64
 	GetDetails() IMonitorResultDetails
-	GetCreatedAt() string
+	GetCreatedAt() time.Time
 	AddFailure(fail string)
 	SetDuration(duration int64)
 	SetDetails(details IMonitorResultDetails)
@@ -35,7 +35,7 @@ type baseMonitorResult struct {
 	DurationMs          int64              `json:"durationMs"             db:"duration_ms"`
 	ErrorDetailsJSON    []byte             `json:"-"                      db:"error_details"`
 	ErrorDetails        *ErrorDetails      `json:"errorDetails,omitempty" db:"-"`
-	CreatedAt           string             `json:"createdAt"              db:"created_at"`
+	CreatedAt           time.Time          `json:"createdAt"              db:"created_at"`
 }
 
 type MonitorResult struct {
@@ -62,7 +62,7 @@ func NewMonitorResult(
 			Status:              status,
 			IsManuallyTriggered: isManuallyTriggered,
 			DurationMs:          durationMs,
-			CreatedAt:           time.Now().UTC().Format(time.RFC3339),
+			CreatedAt:           time.Now().UTC(),
 		},
 		MonitorType: string(monitorType),
 		Details:     details,
@@ -104,7 +104,7 @@ func (m *MonitorResult) GetDetails() IMonitorResultDetails {
 	return m.Details
 }
 
-func (m *MonitorResult) GetCreatedAt() string {
+func (m *MonitorResult) GetCreatedAt() time.Time {
 	return m.CreatedAt
 }
 

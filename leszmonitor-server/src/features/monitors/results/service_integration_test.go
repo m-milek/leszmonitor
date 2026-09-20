@@ -21,7 +21,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 
 		// Insert 2 results
 		res1 := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 100, "", nil)
-		res1.CreatedAt = time.Now().UTC().Add(-10 * time.Minute).Format(time.RFC3339)
+		res1.CreatedAt = time.Now().UTC().Add(-10 * time.Minute)
 		_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res1)
 		require.NoError(t, err)
 
@@ -34,7 +34,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 			"failed",
 			nil,
 		)
-		res2.CreatedAt = time.Now().UTC().Add(-5 * time.Minute).Format(time.RFC3339)
+		res2.CreatedAt = time.Now().UTC().Add(-5 * time.Minute)
 		_, err = results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res2)
 		require.NoError(t, err)
 

@@ -19,13 +19,7 @@ func NewMonitorStatsAPIController(service MonitorStatsService) MonitorStatsAPICo
 	}
 }
 
-type LatencyStatsResponse struct {
-	AverageLatency float64 `json:"averageLatency"`
-	MinLatency     float64 `json:"minLatency"`
-	MaxLatency     float64 `json:"maxLatency"`
-}
-
-func (c *MonitorStatsAPIController) GetLatencyStatsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *MonitorStatsAPIController) GetStatsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	monitorID := r.PathValue("monitorId")

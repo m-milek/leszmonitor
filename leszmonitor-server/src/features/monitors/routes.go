@@ -52,6 +52,6 @@ func RegisterRoutes(
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/stats",
-		requirePermission(auth.PermissionReader)(stats.GetLatencyStatsByMonitorIDHandler),
+		requirePermission(auth.PermissionReader)(stats.GetStatsByMonitorIDHandler),
 	)
 }

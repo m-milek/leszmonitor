@@ -2,11 +2,11 @@ package stats
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"time"
 
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -18,7 +18,9 @@ type IMonitorStatsService interface {
 }
 
 type MonitorStatsService struct {
-	db db.DB
+	db                db.DB
+	statusChangeDAO   statuschange.IMonitorStatusChangeDAO
+	monitorResultsDAO results.IMonitorResultDAO
 }
 
 type MonitorStatsServiceDeps struct {
@@ -26,8 +28,12 @@ type MonitorStatsServiceDeps struct {
 }
 
 func NewMonitorStatsService(deps MonitorStatsServiceDeps) MonitorStatsService {
+	statusChangeDAO := statuschange.NewMonitorStatusChangeDAO(deps.DB.Querier())
+	monitorResultsDAO := results.NewMonitorResultDAO(deps.DB.Querier())
 	return MonitorStatsService{
-		db: deps.DB,
+		db:                deps.DB,
+		statusChangeDAO:   statusChangeDAO,
+		monitorResultsDAO: monitorResultsDAO,
 	}
 }
 
@@ -39,69 +45,83 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 		Time("to", to).
 		Msg("Getting stats by monitor ID")
 
-	statsDAO := NewMonitorStatsDAO(s.db.Querier())
-
-	latencyStats, err := statsDAO.GetLatencyStatsByMonitorID(ctx, monitorID, from, to)
+	monitorResults, err := s.monitorResultsDAO.GetMonitorResultsByMonitorIDInTimeWindow(ctx, monitorID, from, to)
 	if err != nil {
-		if !errors.Is(err, db.ErrNotFound) {
-			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get stats")
-			return MonitorStats{}, &apperr.ServiceError{
-				Code: http.StatusInternalServerError,
-				Err:  errors.New("failed to get stats: " + err.Error()),
-			}
-		}
-		logger.Warn().Str("monitorID", monitorID).Msg("No latency data found for the given monitor ID and time range")
+		logger.Error().Err(err).Msg("Failed to get monitor results by monitor ID in time window")
+		return MonitorStats{}, apperr.NewInternalError("failed to get monitor results: %w", err)
 	}
-
-	hasNoStatusChanges := false
-	var statusChangeStats StatusChangeStats
-	statusChangeStats, err = statsDAO.GetStatusChangeStatsByMonitorID(ctx, monitorID, from, to)
+	statusChanges, err := s.statusChangeDAO.GetStatusChangesByMonitorID(ctx, monitorID, from, to)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			logger.Warn().Str("monitorID", monitorID).Msg("No status change data found for the given monitor ID and time range")
-			hasNoStatusChanges = true
-		} else {
-			return MonitorStats{}, &apperr.ServiceError{
-				Code: http.StatusInternalServerError,
-				Err:  errors.New("failed to get status change stats: " + err.Error()),
-			}
-		}
+		logger.Error().Err(err).Msg("Failed to get status changes by monitor ID in time window")
+		return MonitorStats{}, apperr.NewInternalError("failed to get status changes: %w", err)
 	}
 
-	if hasNoStatusChanges {
-		oldestResult, err := results.NewMonitorResultDAO(s.db.Querier()).GetOldestMonitorResultByMonitorID(ctx, monitorID)
-		if err != nil {
-			if errors.Is(err, db.ErrNotFound) {
-				logger.Warn().Str("monitorID", monitorID).Msg("No monitor results found for the given monitor ID")
-				return MonitorStats{
-					Latency:      latencyStats,
-					StatusChange: StatusChangeStats{},
-					Uptime:       UptimeStats{},
-				}, nil
-			}
-			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to get oldest monitor result")
-			return MonitorStats{}, &apperr.ServiceError{
-				Code: http.StatusInternalServerError,
-				Err:  errors.New("failed to get oldest monitor result: " + err.Error()),
-			}
-		}
-		createdAt, err := time.Parse(time.RFC3339, oldestResult.GetCreatedAt())
-		if err != nil {
-			logger.Error().Err(err).Str("monitorID", monitorID).Msg("Failed to parse created_at of oldest monitor result")
-			return MonitorStats{}, &apperr.ServiceError{
-				Code: http.StatusInternalServerError,
-				Err:  errors.New("failed to parse created_at of oldest monitor result: " + err.Error()),
-			}
-		}
-		secondsInCurrentStatus := time.Since(createdAt).Seconds()
-		statusChangeStats = StatusChangeStats{
-			SecondsInCurrentStatus: int64(secondsInCurrentStatus),
-		}
-	}
+	latencyStats := calculateLatencyStats(monitorResults)
+	statusChangeStats := calculateStatusChangeStats(statusChanges)
+	uptimeStats := calculateUptimeStats(monitorResults)
 
 	return MonitorStats{
 		Latency:      latencyStats,
 		StatusChange: statusChangeStats,
-		Uptime:       UptimeStats{},
+		Uptime:       uptimeStats,
 	}, nil
+}
+
+func calculateLatencyStats(monitorResults []results.IMonitorResult) LatencyStats {
+	var minLatency, maxLatency, totalLatency float64
+	for _, result := range monitorResults {
+		duration := float64(result.GetDurationMs())
+		if minLatency == 0 || duration < minLatency {
+			minLatency = duration
+		}
+		if duration > maxLatency {
+			maxLatency = duration
+		}
+		totalLatency += duration
+	}
+
+	var avgLatency float64
+	if len(monitorResults) > 0 {
+		avgLatency = totalLatency / float64(len(monitorResults))
+	}
+
+	return LatencyStats{
+		Min: minLatency,
+		Max: maxLatency,
+		Avg: avgLatency,
+	}
+}
+
+func calculateStatusChangeStats(statusChanges []statuschange.MonitorStatusChange) StatusChangeStats {
+	var secondsInCurrentStatus int64
+	if len(statusChanges) > 0 {
+		latestStatusChange := statusChanges[len(statusChanges)-1]
+		secondsInCurrentStatus = int64(time.Since(latestStatusChange.CreatedAt).Seconds())
+	}
+
+	return StatusChangeStats{
+		SecondsInCurrentStatus: secondsInCurrentStatus,
+	}
+}
+
+func calculateUptimeStats(monitorResults []results.IMonitorResult) UptimeStats {
+	if len(monitorResults) == 0 {
+		return UptimeStats{}
+	}
+
+	statusToCount := make(map[kind.MonitorStatus]int)
+	for _, result := range monitorResults {
+		statusToCount[result.GetStatus()]++
+	}
+
+	total := float64(len(monitorResults))
+	statusToPercentage := make(map[kind.MonitorStatus]float64, len(statusToCount))
+	for status, count := range statusToCount {
+		statusToPercentage[status] = float64(count) / total * 100
+	}
+
+	return UptimeStats{
+		StatusToCount:      statusToCount,
+		StatusToPercentage: statusToPercentage,
+	}
 }

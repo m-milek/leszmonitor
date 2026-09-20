@@ -2,10 +2,12 @@ package workers
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/pkg/errors"
@@ -76,20 +78,21 @@ func isStatusChange(previous results.IMonitorResult, current results.IMonitorRes
 
 func handleStatusChange(
 	ctx context.Context,
-	db db.DB,
+	database db.DB,
 	monitor monitors.Monitor,
 	previous results.IMonitorResult,
 	current results.IMonitorResult,
 ) error {
 	logger := log.FromContext(ctx)
-	monitorStatusChange := monitors.MonitorStatusChange{
+	monitorStatusChange := statuschange.MonitorStatusChange{
 		ID:             uuid.New(),
 		MonitorID:      monitor.ID,
 		CausedByID:     current.GetID(),
 		PreviousStatus: string(previous.GetStatus()),
 		NextStatus:     string(current.GetStatus()),
+		CreatedAt:      time.Now().UTC(),
 	}
-	_, err := monitors.NewMonitorStatusChangeDAO(db.Querier()).InsertStatusChange(ctx, monitorStatusChange)
+	_, err := statuschange.NewMonitorStatusChangeDAO(database.Querier()).InsertStatusChange(ctx, monitorStatusChange)
 	if err != nil {
 		return errors.Wrap(err, "failed to insert monitor status change")
 	}
