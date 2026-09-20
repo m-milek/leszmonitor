@@ -2,6 +2,7 @@ package stats
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
@@ -50,14 +51,14 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 		logger.Error().Err(err).Msg("Failed to get monitor results by monitor ID in time window")
 		return MonitorStats{}, apperr.NewInternalError("failed to get monitor results: %w", err)
 	}
-	statusChanges, err := s.statusChangeDAO.GetStatusChangesByMonitorID(ctx, monitorID, from, to)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to get status changes by monitor ID in time window")
+	latestStatusChange, err := s.statusChangeDAO.GetLatestStatusChangeByMonitorID(ctx, monitorID, to)
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		logger.Error().Err(err).Msg("Failed to get latest status change by monitor ID")
 		return MonitorStats{}, apperr.NewInternalError("failed to get status changes: %w", err)
 	}
 
 	latencyStats := calculateLatencyStats(monitorResults)
-	statusChangeStats := calculateStatusChangeStats(statusChanges)
+	statusChangeStats := calculateStatusChangeStats(latestStatusChange, to)
 	uptimeStats := calculateUptimeStats(monitorResults)
 
 	return MonitorStats{
@@ -92,11 +93,10 @@ func calculateLatencyStats(monitorResults []results.IMonitorResult) LatencyStats
 	}
 }
 
-func calculateStatusChangeStats(statusChanges []statuschange.MonitorStatusChange) StatusChangeStats {
+func calculateStatusChangeStats(latestStatusChange *statuschange.MonitorStatusChange, to time.Time) StatusChangeStats {
 	var secondsInCurrentStatus int64
-	if len(statusChanges) > 0 {
-		latestStatusChange := statusChanges[len(statusChanges)-1]
-		secondsInCurrentStatus = int64(time.Since(latestStatusChange.CreatedAt).Seconds())
+	if latestStatusChange != nil {
+		secondsInCurrentStatus = int64(to.Sub(latestStatusChange.CreatedAt).Seconds())
 	}
 
 	return StatusChangeStats{

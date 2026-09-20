@@ -111,3 +111,15 @@ CREATE TABLE IF NOT EXISTS monitor_tags (
     FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_monitor_tags_tag_id ON monitor_tags (tag_id);
+
+CREATE TABLE IF NOT EXISTS heartbeat (
+    id      INTEGER PRIMARY KEY CHECK (id = 1),
+    beat_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS app_downtime_windows (
+    id         TEXT PRIMARY KEY,
+    started_at DATETIME NOT NULL,
+    ended_at   DATETIME NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_app_downtime_windows_started_ended ON app_downtime_windows (started_at, ended_at);

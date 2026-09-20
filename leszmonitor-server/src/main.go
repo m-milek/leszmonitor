@@ -19,8 +19,9 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/monitors/workers"
 	"github.com/m-milek/leszmonitor/features/tags"
-	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/downtime"
 	"github.com/m-milek/leszmonitor/platform/log"
 )
 
@@ -38,6 +39,10 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Go(func() {
 		resultsProcessor := workers.NewResultsProcessor(db.Get())
 		resultsProcessor.Run(ctx)
+	})
+	wg.Go(func() {
+		heartbeatWorker := downtime.NewHeartbeatWorker(db.Get())
+		heartbeatWorker.Run(ctx)
 	})
 }
 
@@ -124,11 +129,9 @@ func main() {
 	<-appCtx.Done()
 	logger.Info().Msg("Shutdown signal received")
 
-	// Create a timeout context for graceful shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(appCtx, 10*time.Second)
 	defer shutdownCancel()
 
-	// Shutdown API server
 	logger.Info().Msg("Shutting down API server...")
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		logger.Error().Err(err).Msg("API server shutdown error")
@@ -137,7 +140,6 @@ func main() {
 	}
 	close(done)
 
-	// Wait for all goroutines to finish
 	wg.Wait()
 	logger.Info().Msg("All processes terminated successfully")
 
