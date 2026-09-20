@@ -153,7 +153,9 @@ jobs:
           cache-dependency-path: './leszmonitor-ui/package-lock.json'
 
       - name: Initialize DB
-        run: touch leszmonitor-server/src/leszmonitor.db
+        run: |
+          touch leszmonitor-server/src/leszmonitor.db
+          chmod 666 leszmonitor-server/src/leszmonitor.db
 
       - name: Restore DB from dump
         run: task server:db:restore

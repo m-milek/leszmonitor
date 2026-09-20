@@ -42,11 +42,11 @@ RUN mkdir -p /var/log/leszmonitor
 FROM scratch
 
 COPY --from=server-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=server-builder /var/log/leszmonitor /var/log/leszmonitor
+COPY --from=server-builder --chown=65532:65532 /var/log/leszmonitor /var/log/leszmonitor
+COPY --from=server-builder --chown=65532:65532 /app/src/main /app/main
 
 WORKDIR /app
-
-COPY --from=server-builder /app/src/main .
+USER 65532:65532
 
 EXPOSE 7001
 
