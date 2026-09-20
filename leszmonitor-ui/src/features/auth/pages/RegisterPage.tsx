@@ -1,7 +1,7 @@
 import { UsersApi } from "@/features/users/users-api";
 import { type RegisterUserPayload } from "@/features/users/users-api";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import {
   Card,
   CardContent,
@@ -37,7 +37,10 @@ export function RegisterPage() {
       await navigate({ to: "/monitors", replace: true });
     } catch (error) {
       console.error("Registration failed:", error);
-      toast.error("Registration failed. Please try again.");
+      toast.add({
+        title: "Registration failed. Please try again.",
+        type: "error",
+      });
     }
   };
 

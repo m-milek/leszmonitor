@@ -2,7 +2,7 @@ import { TagsApi } from "@/features/tags/tags-api";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import {
   Dialog,
   DialogContent,
@@ -28,12 +28,15 @@ export function DeleteTagDialog({ tag }: Readonly<DeleteTagDialogProps>) {
   const deleteTagMutation = useMutation({
     mutationFn: () => TagsApi.remove(tag.id),
     onSuccess: () => {
-      toast.success(`Tag "${tag.name}" deleted`);
+      toast.add({ title: `Tag "${tag.name}" deleted`, type: "success" });
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TAGS] });
     },
     onError: (error) => {
-      toast.error("Failed to delete tag: " + error.message);
+      toast.add({
+        title: "Failed to delete tag: " + error.message,
+        type: "error",
+      });
     },
   });
 

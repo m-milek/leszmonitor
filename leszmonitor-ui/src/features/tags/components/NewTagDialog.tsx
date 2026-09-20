@@ -3,7 +3,7 @@ import { type TagPayload } from "@/features/tags/tags-api";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/toast";
 import {
   Dialog,
   DialogClose,
@@ -27,12 +27,15 @@ export function NewTagDialog() {
   const createTagMutation = useMutation({
     mutationFn: (values: TagPayload) => TagsApi.create(values),
     onSuccess: (tag) => {
-      toast.success(`Tag "${tag.name}" created`);
+      toast.add({ title: `Tag "${tag.name}" created`, type: "success" });
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TAGS] });
     },
     onError: (error) => {
-      toast.error("Failed to create tag: " + error.message);
+      toast.add({
+        title: "Failed to create tag: " + error.message,
+        type: "error",
+      });
     },
   });
 
