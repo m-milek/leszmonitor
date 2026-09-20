@@ -2,6 +2,8 @@ package statuschange
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -16,6 +18,11 @@ type IMonitorStatusChangeDAO interface {
 		from time.Time,
 		to time.Time,
 	) ([]MonitorStatusChange, error)
+	GetLatestStatusChangeByMonitorID(
+		ctx context.Context,
+		monitorID string,
+		to time.Time,
+	) (*MonitorStatusChange, error)
 }
 
 type monitorStatusChangeDAO struct {
@@ -48,6 +55,36 @@ func (r *monitorStatusChangeDAO) InsertStatusChange(ctx context.Context, statusC
 		}
 
 		return nil, nil
+	})
+}
+
+func (r *monitorStatusChangeDAO) GetLatestStatusChangeByMonitorID(
+	ctx context.Context,
+	monitorID string,
+	to time.Time,
+) (*MonitorStatusChange, error) {
+	return db.Wrap(ctx, "GetLatestStatusChangeByMonitorID", func() (*MonitorStatusChange, error) {
+		var statusChange MonitorStatusChange
+
+		err := sqlx.GetContext(ctx, r.pool, &statusChange, `
+			SELECT id, monitor_id, caused_by_id, previous_status, next_status, created_at
+			FROM monitor_status_changes
+			WHERE monitor_id = $1
+			  AND created_at < $2
+			ORDER BY created_at DESC
+			LIMIT 1`,
+			monitorID,
+			to,
+		)
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, db.ErrNotFound
+			}
+			return nil, err
+		}
+
+		return &statusChange, nil
 	})
 }
 
