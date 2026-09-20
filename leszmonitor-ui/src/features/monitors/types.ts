@@ -135,7 +135,10 @@ export interface LatencyStats {
 export interface StatusChangeStats {
   secondsInCurrentStatus: number;
 }
-export interface UptimeStats {}
+export interface UptimeStats {
+  statusToCount: Partial<Record<MonitorStatus, number>> | null;
+  statusToPercentage: Partial<Record<MonitorStatus, number>> | null;
+}
 
 export interface MonitorStats {
   latency: LatencyStats;

@@ -30,8 +30,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 				"",
 				nil,
 			)
-			// Store created_at in UTC RFC3339 so SQLite string comparisons work correctly with the DAO's UTC-formatted query bounds
-			res.CreatedAt = now.Add(-30 * time.Minute).Format(time.RFC3339)
+			res.CreatedAt = now.Add(-30 * time.Minute)
 			_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res)
 			require.NoError(t, err)
 		}
@@ -70,13 +69,13 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 
 		// Result inside the query range: latency 500
 		resIn := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 500, "", nil)
-		resIn.CreatedAt = now.Add(-30 * time.Minute).Format(time.RFC3339)
+		resIn.CreatedAt = now.Add(-30 * time.Minute)
 		_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &resIn)
 		require.NoError(t, err)
 
 		// Result outside the query range (too old): latency 9999, should be excluded
 		resOut := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 9999, "", nil)
-		resOut.CreatedAt = now.Add(-3 * time.Hour).Format(time.RFC3339)
+		resOut.CreatedAt = now.Add(-3 * time.Hour)
 		_, err = results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &resOut)
 		require.NoError(t, err)
 

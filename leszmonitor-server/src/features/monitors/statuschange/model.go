@@ -1,6 +1,10 @@
-package monitors
+package statuschange
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type MonitorStatusChange struct {
 	ID             uuid.UUID `json:"id" db:"id"`
@@ -9,5 +13,5 @@ type MonitorStatusChange struct {
 	PreviousStatus string    `json:"previousStatus" db:"previous_status"`
 	NextStatus     string    `json:"nextStatus" db:"next_status"`
 
-	CreatedAt string `json:"createdAt" db:"created_at"`
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 }

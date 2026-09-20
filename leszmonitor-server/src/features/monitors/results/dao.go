@@ -23,6 +23,12 @@ type IMonitorResultDAO interface {
 		id string,
 		pagination *util.Pagination,
 	) ([]IMonitorResult, error)
+	GetMonitorResultsByMonitorIDInTimeWindow(
+		ctx context.Context,
+		id string,
+		from time.Time,
+		to time.Time,
+	) ([]IMonitorResult, error)
 	DeleteMonitorResultsOlderThanDuration(
 		ctx context.Context,
 		monitorID uuid.UUID,
@@ -51,13 +57,50 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 			LIMIT $2 OFFSET $3`, id, pagination.PerPage, pagination.Offset())
 
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, db.ErrNotFound
-			}
 			return nil, err
 		}
 
 		var monitorResults []IMonitorResult
+		for _, r := range results {
+			err = processResultDetails(&r)
+			if err != nil {
+				return nil, err
+			}
+
+			monitorResults = append(monitorResults, &r)
+		}
+
+		return monitorResults, nil
+	})
+}
+
+func (r *monitorResultDAO) GetMonitorResultsByMonitorIDInTimeWindow(
+	ctx context.Context,
+	id string,
+	from time.Time,
+	to time.Time,
+) ([]IMonitorResult, error) {
+	return db.Wrap(ctx, "GetMonitorResultsByMonitorIDInTimeWindow", func() ([]IMonitorResult, error) {
+		var results []MonitorResult
+
+		err := sqlx.SelectContext(ctx, r.pool, &results, `
+			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+			FROM monitor_results mr
+			JOIN monitors m ON m.id = mr.monitor_id
+			WHERE mr.monitor_id = $1
+			  AND mr.created_at >= $2
+			  AND mr.created_at < $3
+			ORDER BY mr.created_at ASC`,
+			id,
+			from,
+			to,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		monitorResults := []IMonitorResult{}
 		for _, r := range results {
 			err = processResultDetails(&r)
 			if err != nil {
@@ -180,7 +223,7 @@ func (r *monitorResultDAO) DeleteMonitorResultsOlderThanDuration(
 	duration time.Duration,
 ) (int64, error) {
 	return db.Wrap(ctx, "DeleteMonitorResultsOlderThanDuration", func() (int64, error) {
-		cutoffTime := time.Now().UTC().Add(-duration).Format(time.RFC3339)
+		cutoffTime := time.Now().UTC().Add(-duration)
 		result, err := r.pool.ExecContext(ctx,
 			`DELETE FROM monitor_results WHERE monitor_id = $1 AND created_at < $2`,
 			monitorID,

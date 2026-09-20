@@ -14,7 +14,7 @@ import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonito
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatTime } from "@/features/monitors/components/charts/utils";
-import type { MonitorResult } from "@/features/monitors/types";
+import type { MonitorResult, MonitorStatus } from "@/features/monitors/types";
 import type { Pagination } from "@/lib/types";
 import { QUERY_KEYS } from "@/lib/consts";
 import { formatDuration } from "@/lib/utils.ts";
@@ -82,6 +82,11 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
     mutation.mutate();
   };
 
+  const statusCounts = stats?.uptime.statusToCount ?? {};
+  const statusPercentages = Object.entries(
+    stats?.uptime.statusToPercentage ?? {},
+  );
+
   const handleEditMonitor = () => {
     navigate({
       to: "/monitors/$monitorSlug/edit",
@@ -126,7 +131,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
       </Card>
       <Card>
         <CardContent className="min-w-0">
-          <TypographyH2>Latency (last 24h)</TypographyH2>
+          <TypographyH2>Statistics</TypographyH2>
           {stats && (
             <>
               <p>Avg: {stats.latency.avg.toFixed(2)} ms</p>
@@ -136,6 +141,12 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
                 {monitorStatus.toUpperCase()} for{"  "}
                 {formatDuration(stats.statusChange.secondsInCurrentStatus)}
               </p>
+              {statusPercentages.map(([status, percentage]) => (
+                <p key={status}>
+                  {status.toUpperCase()}: {percentage.toFixed(2)}% (
+                  {statusCounts[status as MonitorStatus] ?? 0})
+                </p>
+              ))}
             </>
           )}
         </CardContent>

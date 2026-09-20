@@ -55,7 +55,7 @@ type dbResult[T any] struct {
 
 // New creates a new DB client using the provided DSN.
 func New(ctx context.Context, dsn string) (*Client, error) {
-	pool, err := sqlx.ConnectContext(ctx, "sqlite", dsn)
+	pool, err := sqlx.ConnectContext(ctx, "sqlite", setupSQLiteConfig(dsn))
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,6 @@ func NewFromEnv(ctx context.Context) (*Client, error) {
 	if uri == "" {
 		logger.Fatal().Msg("SQLite DB path is not defined")
 	}
-	uri = setupSQLiteConfig(uri)
 	return New(ctx, uri)
 }
 
@@ -205,6 +204,11 @@ func setupSQLiteConfig(dsn string) string {
 		"_pragma=synchronous(NORMAL)",
 		"_pragma=busy_timeout(5000)",
 		"_pragma=foreign_keys(1)",
+		// time.Time values are written as 'YYYY-MM-DD HH:MM:SS' in UTC, the same
+		// text CURRENT_TIMESTAMP produces, so every writer agrees on one format
+		// and DATETIME columns sort and compare correctly.
+		"_time_format=datetime",
+		"_timezone=UTC",
 	}
 
 	for _, p := range pragmas {
