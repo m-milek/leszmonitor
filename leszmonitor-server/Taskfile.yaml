@@ -6,6 +6,7 @@ vars:
   SERVER_BIN_DIR: '{{.TASKFILE_DIR}}/bin'
   SQLITE_DB_PATH: '{{.SERVER_SRC_DIR}}/leszmonitor.db'
   DUMP_FILE_PATH: '{{.TASKFILE_DIR}}/db_dump.sql'
+  GOTESTSUM: 'gotest.tools/gotestsum@v1.13.0'
 
 env:
   LOG_LEVEL: 'TRACE'
@@ -71,15 +72,16 @@ tasks:
     desc: Run the back-end tests
     dir: src
     cmds:
-      - go run gotest.tools/gotestsum@latest --format testdox ./...
+      - go run {{.GOTESTSUM}} --format testdox ./...
 
   coverage:
     desc: Run the back-end tests with coverage
     dir: src
     cmds:
-      - go test -coverpkg=./... -coverprofile=coverage.out -v ./...
+      - go run {{.GOTESTSUM}} --format testdox --jsonfile test-output.json -- -coverpkg=./... -coverprofile=coverage.out ./...
     generates:
       - 'coverage.out'
+      - 'test-output.json'
 
   db:dump:
     desc: Dump the SQLite database to a file
