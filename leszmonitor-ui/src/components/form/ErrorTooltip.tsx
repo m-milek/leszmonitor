@@ -24,7 +24,7 @@ export function ErrorTooltip({
       {isOpen && (
         <TooltipContent
           side={side}
-          className="bg-destructive text-white border-destructive"
+          className="bg-destructive text-destructive-foreground border-destructive"
           arrowClassName="bg-destructive fill-destructive"
         >
           {message}

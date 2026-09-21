@@ -35,11 +35,11 @@ const columns: ColumnDef<AuditLogEntry>[] = [
     cell: ({ row }) =>
       row.original.isSuccess ? (
         <CheckCircle2
-          className="h-6 w-6 text-emerald-500"
+          className="size-6 text-lm-status-up"
           aria-label="Success"
         />
       ) : (
-        <XCircle className="h-6 w-6 text-destructive" aria-label="Failed" />
+        <XCircle className="size-6 text-destructive" aria-label="Failed" />
       ),
   },
   {
@@ -94,13 +94,7 @@ export const AuditLogTable = ({ entries }: AuditLogTableProps) => {
     <DataTable
       data={entries}
       columns={columns}
-      wrapperClassName="rounded-md border border-border bg-card"
-      headRowClassName="hover:bg-transparent"
-      headClassName="h-12 px-6"
-      bodyRowClassName="transition-colors hover:bg-muted/40"
-      cellClassName="px-6 py-5"
       emptyMessage="No audit log entries yet."
-      emptyClassName="h-32 px-6 text-center"
     />
   );
 };

@@ -5,7 +5,7 @@ import { Flex } from "@/components/common/Flex";
 
 export function GlobalNotFound() {
   return (
-    <PageContainer className="flex h-screen w-full bg-background color-text">
+    <PageContainer className="h-svh">
       <Center>
         <Flex direction="column" className="gap-4 items-center">
           <TypographyH1>404</TypographyH1>

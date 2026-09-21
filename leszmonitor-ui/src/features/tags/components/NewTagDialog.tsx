@@ -42,7 +42,7 @@ export function NewTagDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={<Button size="sm" />}>
-        <Plus className="mr-2 h-4 w-4" />
+        <Plus />
         Add Tag
       </DialogTrigger>
       <DialogContent>

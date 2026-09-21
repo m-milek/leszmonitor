@@ -25,10 +25,7 @@ const columns: ColumnDef<TagModel>[] = [
       row.original.description ? (
         <span>{row.original.description}</span>
       ) : (
-        <Minus
-          className="h-4 w-4 text-muted-foreground"
-          aria-label="No description"
-        />
+        <Minus className="size-4 text-muted-foreground" aria-label="No description" />
       ),
   },
   {
@@ -67,16 +64,6 @@ const columns: ColumnDef<TagModel>[] = [
 
 export const TagsTable = ({ tags }: TagsTableProps) => {
   return (
-    <DataTable
-      data={tags}
-      columns={columns}
-      wrapperClassName="rounded-md border border-border bg-card"
-      headRowClassName="hover:bg-transparent"
-      headClassName="h-12 px-6"
-      bodyRowClassName="transition-colors hover:bg-muted/40"
-      cellClassName="px-6 py-5"
-      emptyMessage="No tags yet."
-      emptyClassName="h-32 px-6 text-center"
-    />
+    <DataTable data={tags} columns={columns} emptyMessage="No tags yet." />
   );
 };

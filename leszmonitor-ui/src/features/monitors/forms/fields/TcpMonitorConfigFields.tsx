@@ -1,5 +1,5 @@
-import { Flex } from "@/components/common/Flex";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { TypographyH3 } from "@/components/common/Typography";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
 import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
@@ -16,8 +16,8 @@ export function TcpMonitorConfigFields({
   form,
 }: Readonly<{ form: MonitorFormApi }>) {
   return (
-    <Flex direction="column" className="gap-4 items-stretch">
-      <div className="text-lg font-semibold">TCP Monitor Settings</div>
+    <FieldGroup>
+      <TypographyH3>TCP Monitor Settings</TypographyH3>
 
       <form.Field name="probeConfig.host">
         {(field) => (
@@ -108,6 +108,6 @@ export function TcpMonitorConfigFields({
           </Field>
         )}
       </form.Field>
-    </Flex>
+    </FieldGroup>
   );
 }

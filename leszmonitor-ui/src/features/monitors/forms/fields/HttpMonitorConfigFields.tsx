@@ -1,5 +1,11 @@
+import { TypographyH3 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
 import { LMTextareaField } from "@/components/form/LMTextareaField";
@@ -26,8 +32,8 @@ export function HttpMonitorConfigFields({
   form,
 }: Readonly<{ form: MonitorFormApi }>) {
   return (
-    <Flex direction="column" className="gap-4 items-stretch">
-      <div className="text-lg font-semibold">HTTP Settings</div>
+    <FieldGroup>
+      <TypographyH3>HTTP Settings</TypographyH3>
 
       <form.Field name="probeConfig.url">
         {(field) => (
@@ -97,7 +103,7 @@ export function HttpMonitorConfigFields({
         )}
       </form.Field>
 
-      <div className="text-lg font-semibold">Expected Response</div>
+      <TypographyH3>Expected Response</TypographyH3>
 
       <form.Field name="probeConfig.expectedStatusCodes">
         {(field) => (
@@ -177,7 +183,7 @@ export function HttpMonitorConfigFields({
         )}
       </form.Field>
 
-      <div className="text-lg font-semibold">Capture Response</div>
+      <TypographyH3>Capture Response</TypographyH3>
 
       <form.Field name="probeConfig.saveResponseBody">
         {(field) => (
@@ -211,6 +217,6 @@ export function HttpMonitorConfigFields({
           </Field>
         )}
       </form.Field>
-    </Flex>
+    </FieldGroup>
   );
 }

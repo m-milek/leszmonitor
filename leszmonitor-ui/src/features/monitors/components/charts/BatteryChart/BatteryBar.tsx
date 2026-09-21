@@ -7,25 +7,20 @@ import {
 import { Flex } from "@/components/common/Flex";
 import { BAR_WIDTH } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data";
+import { STATUS_BG_CLASS } from "@/components/common/StatusDot";
+import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import { cn } from "cn";
 
-const STATUS_COLORS: Record<string, string> = {
-  up: "bg-green-500",
-  down: "bg-red-700",
-  paused: "bg-blue-500",
-  maintenance: "bg-yellow-500",
-  default: "bg-gray-300",
-};
-
 export const BatteryBar = ({ result }: { result?: MonitorResult }) => {
-  const colorClass = result
-    ? STATUS_COLORS[result.status] || STATUS_COLORS.default
-    : STATUS_COLORS.default;
+  const colorClass =
+    STATUS_BG_CLASS[
+      result ? monitorStatusToStatusDot(result.status) : "unknown"
+    ];
 
   return (
     <Popover>
       <PopoverTrigger
-        className={`h-full shrink-0 cursor-pointer hover:opacity-50 transition-opacity`}
+        className="h-full shrink-0 cursor-pointer transition-opacity hover:opacity-50"
         style={{ width: BAR_WIDTH }}
       >
         <div className={cn("h-full shrink-0 rounded-full m-0.5", colorClass)} />

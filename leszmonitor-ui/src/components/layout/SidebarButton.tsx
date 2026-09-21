@@ -1,5 +1,4 @@
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { cn } from "cn";
 import { Link, useLocation } from "@tanstack/react-router";
 
 interface SidebarButtonProps {
@@ -17,7 +16,7 @@ export const SidebarButton = ({ icon, href, label }: SidebarButtonProps) => {
       <SidebarMenuButton
         render={<Link to={href} draggable={false} />}
         isActive={matchesCurrentUrl}
-        className={cn("data-[active=true]:text-sidebar-primary")}
+        className="data-active:text-sidebar-primary"
       >
         {icon}
         <span>{label}</span>

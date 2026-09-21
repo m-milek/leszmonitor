@@ -30,7 +30,7 @@ export const LMColorPicker = ({
       style={tagChipStyle(value)}
       className="shrink-0 border"
     >
-      <RefreshCw className="h-4 w-4" />
+      <RefreshCw />
     </Button>
     <LMInputField
       name={name}

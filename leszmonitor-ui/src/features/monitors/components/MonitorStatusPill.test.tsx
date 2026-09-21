@@ -30,13 +30,11 @@ describe("MonitorStatusPill", () => {
     expect(pill).toBeInTheDocument();
   });
 
-  it("renders as a span with rounded pill classes", () => {
+  it("renders a Badge coloured from the status tokens", () => {
     render(<MonitorStatusPill monitor={createMonitor("active")} />);
 
     const pill = screen.getByText("Active");
-    expect(pill.tagName).toBe("SPAN");
-    expect(pill.className).toContain("inline-flex");
-    expect(pill.className).toContain("rounded-xl");
-    expect(pill.className).toContain("font-medium");
+    expect(pill).toHaveAttribute("data-slot", "badge");
+    expect(pill.className).toContain("bg-lm-status-up");
   });
 });

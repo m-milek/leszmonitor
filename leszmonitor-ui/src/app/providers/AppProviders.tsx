@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { ThemeProvider } from "@/components/ui/theme-provider";
+import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Keep the router devtools out of production bundles. `import.meta.env.PROD` is
@@ -16,14 +15,12 @@ const TanStackRouterDevtools = import.meta.env.PROD
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ThemeProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TooltipProvider>
-        <SidebarProvider>
-          {children}
-          <Suspense fallback={null}>
-            <TanStackRouterDevtools position="bottom-right" />
-          </Suspense>
-        </SidebarProvider>
+        {children}
+        <Suspense fallback={null}>
+          <TanStackRouterDevtools position="bottom-right" />
+        </Suspense>
       </TooltipProvider>
     </ThemeProvider>
   );

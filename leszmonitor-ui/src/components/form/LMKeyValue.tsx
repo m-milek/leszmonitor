@@ -71,7 +71,7 @@ const KeyValueRow = memo(function KeyValueRow({
         size="sm"
         className="px-2"
       >
-        <X className="h-4 w-4" />
+        <X />
       </Button>
     </div>
   );
@@ -134,7 +134,7 @@ export function LMKeyValueInput(props: Readonly<LMKeyValueInputProps>) {
           />
         ))}
         <Button type="button" onClick={handleAdd} variant="ghost" size="sm">
-          <Plus className="h-4 w-4" />
+          <Plus />
           {props.addButtonText ?? "Add"}
         </Button>
       </div>

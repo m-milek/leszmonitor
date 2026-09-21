@@ -1,7 +1,12 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { WebSocketProvider } from "@/app/providers/WebSocketProvider";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { getCookie } from "@/lib/cookies";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -10,14 +15,18 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   return (
     <WebSocketProvider>
-      <div className="grid min-h-svh w-full text-foreground md:grid-cols-[18rem_minmax(0,1fr)]">
+      <SidebarProvider
+        defaultOpen={getCookie("sidebar_state") !== "false"}
+        style={{ "--sidebar-width": "16rem" } as React.CSSProperties}
+      >
         <AppSidebar />
-        <main className="min-w-0 bg-background">
-          <ScrollArea className="h-svh">
-            <Outlet />
-          </ScrollArea>
-        </main>
-      </div>
+        <SidebarInset>
+          <header className="flex h-12 shrink-0 items-center px-4 md:hidden">
+            <SidebarTrigger />
+          </header>
+          <Outlet />
+        </SidebarInset>
+      </SidebarProvider>
     </WebSocketProvider>
   );
 }

@@ -11,13 +11,18 @@ import {
   defaultConfigs,
 } from "@/features/monitors/schema";
 import { buildMonitorDefaults } from "@/features/monitors/forms/monitor-form-defaults";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
 import { LMTextareaField } from "@/components/form/LMTextareaField";
 import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 import { Flex } from "@/components/common/Flex";
-import { Divider } from "@/components/common/Divider";
+import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { MonitorConfigFields } from "@/features/monitors/forms/fields/MonitorConfigFields";
 import { useMonitorForm } from "@/features/monitors/hooks/useMonitorForm";
@@ -79,7 +84,7 @@ export function MonitorForm({
       }}
     >
       <Flex direction="column">
-        <Flex direction="column" className="flex-1 gap-2">
+        <FieldGroup className="flex-1">
           <form.Field
             name={"type"}
             listeners={{
@@ -205,17 +210,17 @@ export function MonitorForm({
               </Field>
             )}
           </form.Field>
-        </Flex>
+        </FieldGroup>
         <form.Subscribe selector={(form) => form.values.type}>
           {(type) => {
             if (!type) return null;
-            return <Divider direction="row" className="my-4" />;
+            return <Separator className="my-4" />;
           }}
         </form.Subscribe>
 
-        <Flex direction="column" className="flex-1 gap-2">
+        <FieldGroup className="flex-1">
           <MonitorConfigFields form={form} />
-        </Flex>
+        </FieldGroup>
       </Flex>
     </form>
   );

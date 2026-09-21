@@ -1,5 +1,10 @@
-import { Flex } from "@/components/common/Flex";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import { TypographyH3 } from "@/components/common/Typography";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
 import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
@@ -21,8 +26,8 @@ export function DnsMonitorConfigFields({
   form,
 }: Readonly<{ form: MonitorFormApi }>) {
   return (
-    <Flex direction="column" className="gap-4 items-stretch">
-      <div className="text-lg font-semibold">DNS Settings</div>
+    <FieldGroup>
+      <TypographyH3>DNS Settings</TypographyH3>
 
       <form.Field name="probeConfig.hostname">
         {(field) => (
@@ -91,6 +96,6 @@ export function DnsMonitorConfigFields({
           </Field>
         )}
       </form.Field>
-    </Flex>
+    </FieldGroup>
   );
 }

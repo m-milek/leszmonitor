@@ -63,7 +63,7 @@ const ListRow = memo(function ListRow({
         className="px-2"
         disabled={disabled}
       >
-        <X className="h-4 w-4" />
+        <X />
       </Button>
     </div>
   );
@@ -123,7 +123,7 @@ export function LMListInput(props: Readonly<LMListInputProps>) {
           size="sm"
           disabled={props.disabled}
         >
-          <Plus className="h-4 w-4" />
+          <Plus />
           {props.addButtonText ?? "Add"}
         </Button>
       </div>

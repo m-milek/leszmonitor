@@ -13,6 +13,7 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
+import { Button } from "@/components/ui/button";
 import { Tag } from "@/features/tags/components/Tag";
 import { tagChipStyle } from "@/features/tags/lib/colors";
 import type { Tag as TagModel } from "@/features/tags/types";
@@ -75,17 +76,19 @@ export function LMTagSelect(props: Readonly<LMTagSelectProps>) {
                     showRemove={false}
                   >
                     {option.label}
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon-xs"
                       aria-label={`Remove tag ${option.label}`}
-                      className="cursor-pointer opacity-60 hover:opacity-100"
+                      className="-ml-1 opacity-50 hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         removeTag(option.value);
                       }}
                     >
-                      <XIcon className="size-3" />
-                    </button>
+                      <XIcon className="pointer-events-none" />
+                    </Button>
                   </ComboboxChip>
                 ))}
                 <ComboboxChipsInput

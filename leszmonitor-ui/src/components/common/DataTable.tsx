@@ -8,30 +8,23 @@ import {
 } from "@/components/ui/table";
 import { flexRender, useReactTable } from "@tanstack/react-table";
 import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
-import { cn } from "cn";
 
 export interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
-  wrapperClassName?: string;
-  headRowClassName?: string;
-  headClassName?: string;
-  bodyRowClassName?: string;
-  cellClassName?: string;
   emptyMessage?: string;
-  emptyClassName?: string;
 }
+
+const headRowClassName = "hover:bg-transparent";
+const headClassName = "h-12 px-6";
+const bodyRowClassName = "transition-colors hover:bg-muted/40";
+const cellClassName = "px-6 py-5";
+const emptyClassName = "h-32 px-6 text-center";
 
 export const DataTable = <T,>({
   data,
   columns,
-  wrapperClassName,
-  headRowClassName,
-  headClassName,
-  bodyRowClassName,
-  cellClassName,
   emptyMessage = "No results.",
-  emptyClassName = "h-24 text-center",
 }: DataTableProps<T>) => {
   const table = useReactTable({
     data: data || [],
@@ -39,7 +32,7 @@ export const DataTable = <T,>({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const table_ = (
+  return (
     <Table>
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
@@ -84,10 +77,4 @@ export const DataTable = <T,>({
       </TableBody>
     </Table>
   );
-
-  if (!wrapperClassName) {
-    return table_;
-  }
-
-  return <div className={cn(wrapperClassName)}>{table_}</div>;
 };

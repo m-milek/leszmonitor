@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LucideCheck, LucideCopy } from "lucide-react";
+import { cn } from "cn";
 
 export interface CopyToClipboardButtonProps {
   value: string;
@@ -36,18 +37,20 @@ export const CopyToClipboardButton = ({
       className="relative overflow-hidden"
     >
       <span
-        className={`absolute transition-all duration-200 ${
-          copied ? "scale-0 opacity-0" : "scale-100 opacity-100"
-        }`}
+        className={cn(
+          "absolute transition-all duration-200",
+          copied ? "scale-0 opacity-0" : "scale-100 opacity-100",
+        )}
       >
-        <LucideCopy className="h-4 w-4" />
+        <LucideCopy />
       </span>
       <span
-        className={`absolute transition-all duration-200 ${
-          copied ? "scale-100 opacity-100" : "scale-0 opacity-0"
-        }`}
+        className={cn(
+          "absolute transition-all duration-200",
+          copied ? "scale-100 opacity-100" : "scale-0 opacity-0",
+        )}
       >
-        <LucideCheck className="h-4 w-4 text-green-500" />
+        <LucideCheck className="text-lm-status-up" />
       </span>
     </Button>
   );

@@ -7,6 +7,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 
 import {
@@ -62,7 +63,7 @@ export const AppSidebar = () => {
   }, [userData, setUser]);
 
   return (
-    <Sidebar className="p-0" variant="inset">
+    <Sidebar variant="inset">
       <AppSidebarHeader />
 
       <SidebarContent className="p-2">
@@ -126,9 +127,9 @@ export const AppSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-0">
-        {user && <AppSidebarFooter user={user} />}
-      </SidebarFooter>
+      <SidebarFooter>{user && <AppSidebarFooter user={user} />}</SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   );
 };

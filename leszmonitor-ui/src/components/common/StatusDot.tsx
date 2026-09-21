@@ -1,10 +1,14 @@
 import { cn } from "cn";
 
-const COLOR_MAP = {
-  success: "bg-green-500",
-  failure: "bg-red-700",
-  pending: "bg-yellow-500",
-} as const;
+export type Status = "up" | "down" | "pending" | "paused" | "unknown";
+
+export const STATUS_BG_CLASS: Record<Status, string> = {
+  up: "bg-lm-status-up",
+  down: "bg-lm-status-down",
+  pending: "bg-lm-status-pending",
+  paused: "bg-lm-status-paused",
+  unknown: "bg-lm-status-unknown",
+};
 
 const SIZE_MAP = {
   sm: "size-2",
@@ -14,13 +18,22 @@ const SIZE_MAP = {
 } as const;
 
 export interface StatusDotProps {
-  status: "success" | "failure" | "pending";
+  status: Status;
   size?: "sm" | "default" | "lg" | "xl";
+  className?: string;
 }
 
-export const StatusDot = ({ status, size = "default" }: StatusDotProps) => {
-  const color = COLOR_MAP[status] ?? COLOR_MAP.pending;
-  const sizeClass = SIZE_MAP[size] ?? SIZE_MAP.default;
-
-  return <span className={cn("inline-block rounded-full", sizeClass, color)} />;
-};
+export const StatusDot = ({
+  status,
+  size = "default",
+  className,
+}: StatusDotProps) => (
+  <span
+    className={cn(
+      "inline-block rounded-full",
+      SIZE_MAP[size],
+      STATUS_BG_CLASS[status],
+      className,
+    )}
+  />
+);

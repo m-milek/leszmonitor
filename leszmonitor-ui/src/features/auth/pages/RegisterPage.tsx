@@ -2,16 +2,8 @@ import { UsersApi } from "@/features/users/users-api";
 import { type RegisterUserPayload } from "@/features/users/users-api";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "@/components/ui/toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo";
+import { AuthCardLayout } from "@/features/auth/components/AuthCardLayout";
 import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm";
 import { establishSession } from "@/features/auth/lib/session";
 import { useAppStore } from "@/app/store";
@@ -45,27 +37,15 @@ export function RegisterPage() {
   };
 
   return (
-    <main className="h-screen w-screen bg-background">
-      <div className="flex h-full w-full items-center justify-center">
-        <Card className="w-full max-w-sm">
-          <CardHeader className="text-center">
-            <CardTitle className="flex flex-col items-center">
-              <LeszmonitorLogo />
-            </CardTitle>
-            <CardDescription>
-              Register a new account on Leszmonitor
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RegisterUserForm id="login-form" onSubmit={handleSubmit} />
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full" type="submit" form="login-form">
-              Register
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    </main>
+    <AuthCardLayout
+      description="Register a new account on Leszmonitor"
+      footer={
+        <Button className="w-full" type="submit" form="register-form">
+          Register
+        </Button>
+      }
+    >
+      <RegisterUserForm id="register-form" onSubmit={handleSubmit} />
+    </AuthCardLayout>
   );
 }

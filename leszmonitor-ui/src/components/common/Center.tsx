@@ -16,8 +16,10 @@ export function Center({
   return (
     <div
       className={cn(
-        `flex w-full h-full ${centerVertically ? "items-center" : ""} ${centerHorizontally ? "justify-center" : ""}`,
-        className ?? "",
+        "flex w-full h-full",
+        centerVertically && "items-center",
+        centerHorizontally && "justify-center",
+        className,
       )}
     >
       {children}

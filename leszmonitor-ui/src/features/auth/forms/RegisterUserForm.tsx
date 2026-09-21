@@ -68,7 +68,7 @@ export function RegisterUserForm({
         form.handleSubmit();
       }}
     >
-      <FieldGroup className="gap-2">
+      <FieldGroup>
         <form.Field name="username">
           {(field) => (
             <Field id={field.name}>

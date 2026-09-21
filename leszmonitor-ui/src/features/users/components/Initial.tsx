@@ -1,5 +1,5 @@
 import { cn } from "cn";
-import { colorFromString } from "@/lib/colorFromString";
+import { avatarStyleFromString } from "@/lib/avatar-color";
 
 export interface UserInitialProps {
   text: string;
@@ -9,10 +9,10 @@ export interface UserInitialProps {
 }
 
 const sizeClasses = {
-  sm: "size-8 text-[8px]",
-  md: "size-12 text-[12px]",
-  lg: "size-16 text-[16px]",
-  xl: "size-24 text-[24px]",
+  sm: "size-8 text-base",
+  md: "size-12 text-2xl",
+  lg: "size-16 text-3xl",
+  xl: "size-24 text-5xl",
 };
 
 export const Initial = ({
@@ -23,18 +23,16 @@ export const Initial = ({
 }: UserInitialProps) => {
   const value = text?.[0]?.toUpperCase() ?? "?";
 
-  const backgroundColor = colorFromString(textForColorCalculation ?? text);
-
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-full bg-primary select-none",
+        "flex items-center justify-center rounded-full font-medium select-none",
         sizeClasses[size],
         className,
       )}
-      style={{ backgroundColor }}
+      style={avatarStyleFromString(textForColorCalculation ?? text)}
     >
-      <span className="text-[2em] leading-none text-slate-800">{value}</span>
+      <span className="leading-none">{value}</span>
     </div>
   );
 };

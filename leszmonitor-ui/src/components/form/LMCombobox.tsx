@@ -6,7 +6,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { cn } from "cn";
 import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 export interface LMComboboxProps {
@@ -37,10 +36,8 @@ export function LMCombobox(props: Readonly<LMComboboxProps>) {
           placeholder={props.placeholder ?? ""}
           id={props.id}
           name={props.name}
-          className={cn(
-            props.className,
-            props.isInvalid && "border-destructive focus:ring-destructive",
-          )}
+          className={props.className}
+          aria-invalid={props.isInvalid}
           autoComplete="off"
         />
       </ErrorTooltip>

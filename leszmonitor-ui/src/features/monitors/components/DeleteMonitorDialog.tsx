@@ -53,7 +53,7 @@ export function DeleteMonitorDialog({
         render={
           <Button
             variant="destructive"
-            className="size-10"
+            size="icon-lg"
             title={`Delete monitor ${monitor.name}`}
             aria-label={`Delete monitor ${monitor.name}`}
           />

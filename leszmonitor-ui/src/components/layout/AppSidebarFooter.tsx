@@ -13,14 +13,13 @@ import { Flex } from "@/components/common/Flex";
 import { Metadata } from "@/components/layout/Metadata";
 import { useQuery } from "@tanstack/react-query";
 import { clearToken } from "@/features/auth/lib/token";
+import { Initial } from "@/features/users/components/Initial";
 
 export interface AppSidebarFooterProps {
   user: User;
 }
 
 export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
-  const firstLetter = user.username[0].toUpperCase();
-
   const router = useRouter();
 
   const logOut = async () => {
@@ -35,10 +34,8 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
 
   return (
     <Flex direction="column">
-      <div className="flex items-center p-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
-          <span className="text-sm font-medium text-white">{firstLetter}</span>
-        </div>
+      <div className="flex items-center">
+        <Initial text={user.username} size="sm" />
         <div className="flex flex-1 items-center justify-between">
           <div className="ml-2">
             <p className="font-medium">{user.username}</p>
@@ -49,7 +46,7 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
               <LucideEllipsisVertical />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem className="text-destructive" onSelect={logOut}>
+              <DropdownMenuItem className="text-destructive" onClick={logOut}>
                 <div className="flex items-center w-full justify-between">
                   <span>Log out</span>
                   <LucideLogOut className="text-destructive" />

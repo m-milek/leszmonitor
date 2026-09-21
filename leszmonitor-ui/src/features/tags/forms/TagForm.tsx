@@ -62,7 +62,7 @@ export function TagForm({
         form.handleSubmit();
       }}
     >
-      <FieldGroup className="gap-3">
+      <FieldGroup>
         <form.Field name="name">
           {(field) => (
             <Field id={field.name}>
