@@ -69,7 +69,7 @@ export const AppSidebar = () => {
       <SidebarContent className="p-2">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               <SidebarButton
                 icon={<LucideHome />}
                 href="/monitors"
@@ -89,7 +89,7 @@ export const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Administration</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               <SidebarButton
                 icon={<LucideSettings />}
                 href={`/admin`}
@@ -106,7 +106,7 @@ export const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Help</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               <SidebarButton
                 icon={<LucideSearch />}
                 href="/search"

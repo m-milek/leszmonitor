@@ -16,7 +16,7 @@ export const SidebarButton = ({ icon, href, label }: SidebarButtonProps) => {
       <SidebarMenuButton
         render={<Link to={href} draggable={false} />}
         isActive={matchesCurrentUrl}
-        className="data-active:text-sidebar-primary"
+        className="transition-colors active:translate-y-px data-active:text-sidebar-primary"
       >
         {icon}
         <span>{label}</span>
