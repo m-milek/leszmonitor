@@ -79,9 +79,8 @@ export function LoginPage() {
               }}
             >
               <FieldGroup className="gap-2">
-                <form.Field
-                  name="username"
-                  children={(field) => (
+                <form.Field name="username">
+                  {(field) => (
                     <Field id={field.name}>
                       <FieldLabel>Username</FieldLabel>
                       <LMInputField
@@ -94,10 +93,9 @@ export function LoginPage() {
                       />
                     </Field>
                   )}
-                />
-                <form.Field
-                  name="password"
-                  children={(field) => (
+                </form.Field>
+                <form.Field name="password">
+                  {(field) => (
                     <Field id={field.name}>
                       <FieldLabel>Password</FieldLabel>
                       <LMInputField
@@ -111,7 +109,7 @@ export function LoginPage() {
                       />
                     </Field>
                   )}
-                />
+                </form.Field>
               </FieldGroup>
             </form>
           </CardContent>

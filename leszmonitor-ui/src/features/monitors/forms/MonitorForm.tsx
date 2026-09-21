@@ -89,7 +89,8 @@ export function MonitorForm({
                 }
               },
             }}
-            children={(field) => {
+          >
+            {(field) => {
               return (
                 <Field id={field.name}>
                   <FieldLabel>Type</FieldLabel>
@@ -110,7 +111,7 @@ export function MonitorForm({
                 </Field>
               );
             }}
-          />
+          </form.Field>
           <form.Field
             name="name"
             listeners={{
@@ -120,7 +121,8 @@ export function MonitorForm({
                 }
               },
             }}
-            children={(field) => (
+          >
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Name</FieldLabel>
                 <LMInputField
@@ -133,7 +135,7 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
+          </form.Field>
           <Flex direction="row" className="gap-2 items-center">
             <FieldTitle>Use Custom Slug</FieldTitle>
             <Switch
@@ -142,9 +144,8 @@ export function MonitorForm({
               name="useCustomSlug"
             />
           </Flex>
-          <form.Field
-            name="slug"
-            children={(field) => (
+          <form.Field name="slug">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Slug</FieldLabel>
                 <LMInputField
@@ -157,10 +158,9 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
-          <form.Field
-            name="description"
-            children={(field) => (
+          </form.Field>
+          <form.Field name="description">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Description</FieldLabel>
                 <LMTextareaField
@@ -172,10 +172,9 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
-          <form.Field
-            name="tagIds"
-            children={(field) => (
+          </form.Field>
+          <form.Field name="tagIds">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Tags</FieldLabel>
                 <LMTagSelect
@@ -191,10 +190,9 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
-          <form.Field
-            name="interval"
-            children={(field) => (
+          </form.Field>
+          <form.Field name="interval">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Interval (s)</FieldLabel>
                 <LMInputField
@@ -206,7 +204,7 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
+          </form.Field>
         </Flex>
         <form.Subscribe selector={(form) => form.values.type}>
           {(type) => {

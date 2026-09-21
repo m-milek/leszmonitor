@@ -24,9 +24,8 @@ export function DnsMonitorConfigFields({
     <Flex direction="column" className="gap-4 items-stretch">
       <div className="text-lg font-semibold">DNS Settings</div>
 
-      <form.Field
-        name="probeConfig.hostname"
-        children={(field) => (
+      <form.Field name="probeConfig.hostname">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Hostname</FieldLabel>
             <LMInputField
@@ -39,11 +38,10 @@ export function DnsMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.dnsServer"
-        children={(field) => (
+      <form.Field name="probeConfig.dnsServer">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>DNS Server Address</FieldLabel>
             <LMInputField
@@ -56,11 +54,10 @@ export function DnsMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.recordType"
-        children={(field) => (
+      <form.Field name="probeConfig.recordType">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Record Type</FieldLabel>
             <LMSelect
@@ -77,11 +74,10 @@ export function DnsMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.expectedRecordValues"
-        children={(field) => (
+      <form.Field name="probeConfig.expectedRecordValues">
+        {(field) => (
           <Field id={field.name}>
             <FieldTitle>Expected Record Values</FieldTitle>
             <LMListInput
@@ -94,7 +90,7 @@ export function DnsMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
     </Flex>
   );
 }

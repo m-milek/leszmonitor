@@ -19,9 +19,8 @@ export function TcpMonitorConfigFields({
     <Flex direction="column" className="gap-4 items-stretch">
       <div className="text-lg font-semibold">TCP Monitor Settings</div>
 
-      <form.Field
-        name="probeConfig.host"
-        children={(field) => (
+      <form.Field name="probeConfig.host">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Host</FieldLabel>
             <LMInputField
@@ -34,11 +33,10 @@ export function TcpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.port"
-        children={(field) => (
+      <form.Field name="probeConfig.port">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Port</FieldLabel>
             <LMInputField
@@ -53,11 +51,10 @@ export function TcpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.protocol"
-        children={(field) => (
+      <form.Field name="probeConfig.protocol">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Protocol</FieldLabel>
             <LMSelect
@@ -74,11 +71,10 @@ export function TcpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.timeout"
-        children={(field) => (
+      <form.Field name="probeConfig.timeout">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Timeout (ms)</FieldLabel>
             <LMInputField
@@ -93,11 +89,10 @@ export function TcpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.retryCount"
-        children={(field) => (
+      <form.Field name="probeConfig.retryCount">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Retry Count</FieldLabel>
             <LMInputField
@@ -112,7 +107,7 @@ export function TcpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
     </Flex>
   );
 }

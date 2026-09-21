@@ -63,9 +63,8 @@ export function TagForm({
       }}
     >
       <FieldGroup className="gap-3">
-        <form.Field
-          name="name"
-          children={(field) => (
+        <form.Field name="name">
+          {(field) => (
             <Field id={field.name}>
               <FieldLabel>Name</FieldLabel>
               <LMInputField
@@ -78,10 +77,9 @@ export function TagForm({
               />
             </Field>
           )}
-        />
-        <form.Field
-          name="description"
-          children={(field) => (
+        </form.Field>
+        <form.Field name="description">
+          {(field) => (
             <Field id={field.name}>
               <FieldLabel>Description</FieldLabel>
               <LMInputField
@@ -94,10 +92,9 @@ export function TagForm({
               />
             </Field>
           )}
-        />
-        <form.Field
-          name="colorHex"
-          children={(field) => (
+        </form.Field>
+        <form.Field name="colorHex">
+          {(field) => (
             <Field id={field.name}>
               <FieldLabel>Color</FieldLabel>
               <LMColorPicker
@@ -109,15 +106,16 @@ export function TagForm({
               />
             </Field>
           )}
-        />
+        </form.Field>
         <form.Subscribe
           selector={(state) => [state.values.name, state.values.colorHex]}
-          children={([name, colorHex]) => (
+        >
+          {([name, colorHex]) => (
             <Flex className="justify-center pt-2">
               <Tag tag={{ name: name || "leszmonitor", colorHex }} />
             </Flex>
           )}
-        />
+        </form.Subscribe>
       </FieldGroup>
     </form>
   );

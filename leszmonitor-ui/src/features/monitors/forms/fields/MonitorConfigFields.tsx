@@ -7,9 +7,8 @@ export function MonitorConfigFields({
   form,
 }: Readonly<{ form: MonitorFormApi }>) {
   return (
-    <form.Subscribe
-      selector={(state) => state.values.type}
-      children={(type) => {
+    <form.Subscribe selector={(state) => state.values.type}>
+      {(type) => {
         switch (type) {
           case "http":
             return <HttpMonitorConfigFields form={form} />;
@@ -21,6 +20,6 @@ export function MonitorConfigFields({
             return null;
         }
       }}
-    />
+    </form.Subscribe>
   );
 }
