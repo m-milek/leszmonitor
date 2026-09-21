@@ -1,7 +1,6 @@
 import { UsersApi } from "@/features/users/users-api";
 import { type RegisterUserPayload } from "@/features/users/users-api";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { AuthCardLayout } from "@/features/auth/components/AuthCardLayout";
 import { RegisterUserForm } from "@/features/auth/forms/RegisterUserForm";
@@ -29,10 +28,6 @@ export function RegisterPage() {
       await navigate({ to: "/monitors", replace: true });
     } catch (error) {
       console.error("Registration failed:", error);
-      toast.add({
-        title: "Registration failed. Please try again.",
-        type: "error",
-      });
     }
   };
 

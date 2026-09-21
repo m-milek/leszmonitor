@@ -39,12 +39,6 @@ export function DeleteMonitorDialog({
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
       onDeleted?.();
     },
-    onError: (error) => {
-      toast.add({
-        title: "Failed to delete monitor: " + error.message,
-        type: "error",
-      });
-    },
   });
 
   return (

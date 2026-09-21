@@ -42,6 +42,9 @@ src/
 - Auth token: go through `features/auth/lib/token.ts`. `readTokenSync` (router guard) and `readToken` (async) are
   intentionally separate.
 - Never edit `src/routeTree.gen.ts` — it's generated from `src/routes/`.
+- Mutations default to `throwOnError: true` (`app/main.tsx`), so a failed mutation surfaces
+  instead of being swallowed. To handle one in place, opt out per call:
+  `useMutation({ throwOnError: false, onError })`. There is no global error UI.
 
 ## Styling
 

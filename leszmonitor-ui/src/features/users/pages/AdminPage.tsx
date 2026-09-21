@@ -42,12 +42,6 @@ export function AdminPage() {
       setIsDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (error) => {
-      toast.add({
-        title: "Failed to register user: " + error.message,
-        type: "error",
-      });
-    },
   });
 
   return (

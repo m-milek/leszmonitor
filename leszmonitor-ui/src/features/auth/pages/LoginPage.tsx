@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
-import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { AuthCardLayout } from "@/features/auth/components/AuthCardLayout";
@@ -40,14 +39,7 @@ export function LoginPage() {
 
         await navigate({ to: "/monitors", replace: true });
       } catch (error) {
-        if (error instanceof Error) {
-          console.error(error);
-          toast.add({
-            title:
-              "Failed to log in. Please check your credentials and try again.",
-            type: "error",
-          });
-        }
+        console.error(error);
       }
     },
   });

@@ -5,16 +5,29 @@ interface SidebarButtonProps {
   icon: React.ReactNode;
   href: string;
   label: string;
+  /** Served by the Go backend, not the router — needs a full page load. */
+  external?: boolean;
 }
 
-export const SidebarButton = ({ icon, href, label }: SidebarButtonProps) => {
+export const SidebarButton = ({
+  icon,
+  href,
+  label,
+  external,
+}: SidebarButtonProps) => {
   const location = useLocation();
   const matchesCurrentUrl = location.pathname === href;
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<Link to={href} draggable={false} />}
+        render={
+          external ? (
+            <a href={href} draggable={false} />
+          ) : (
+            <Link to={href} draggable={false} />
+          )
+        }
         isActive={matchesCurrentUrl}
         className="transition-colors active:translate-y-px data-active:text-sidebar-primary"
       >

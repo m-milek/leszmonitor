@@ -32,12 +32,6 @@ export function DeleteTagDialog({ tag }: Readonly<DeleteTagDialogProps>) {
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TAGS] });
     },
-    onError: (error) => {
-      toast.add({
-        title: "Failed to delete tag: " + error.message,
-        type: "error",
-      });
-    },
   });
 
   return (
