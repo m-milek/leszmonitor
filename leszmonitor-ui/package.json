@@ -7,6 +7,7 @@
     "dev": "vite --port 3000",
     "build": "vite build && tsc",
     "preview": "vite preview",
+    "lint": "eslint src",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write ."

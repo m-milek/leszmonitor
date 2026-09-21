@@ -7,7 +7,7 @@ React 19 + Vite, TanStack Router (file-based) / Query / Form, zustand, shadcn/ui
 ```bash
 npx tsc --noEmit        # typecheck (`npm run build` runs tsc AFTER vite, so don't rely on it)
 npm run test            # vitest
-npx eslint src          # not `eslint .` — that also lints dist/
+npm run lint            # `eslint src` — not `eslint .`, that also lints dist/
 npm run build           # WARNING: wipes and overwrites ../leszmonitor-server/src/static
 cd e2e && npx playwright test   # needs the server already running on :7001
 ```

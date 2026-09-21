@@ -1,10 +1,8 @@
 import type { Timestamps } from "@/lib/types";
 
-const monitorStatuses = ["up", "down", "paused", "maintenance"] as const;
-export type MonitorStatus = (typeof monitorStatuses)[number];
+export type MonitorStatus = "up" | "down" | "paused" | "maintenance";
 
-const monitorRunStates = ["active", "paused"] as const;
-export type MonitorRunState = (typeof monitorRunStates)[number];
+export type MonitorRunState = "active" | "paused";
 
 const monitorTypes = ["http", "tcp", "dns"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
@@ -119,11 +117,11 @@ export const isMonitorResultMessage = (
     typeof obj === "object" &&
     obj !== null &&
     "type" in obj &&
-    typeof (obj as any).type === "string" &&
+    typeof obj.type === "string" &&
     "monitorId" in obj &&
-    typeof (obj as any).monitorId === "string" &&
+    typeof obj.monitorId === "string" &&
     "response" in obj &&
-    typeof (obj as any).response === "object"
+    typeof obj.response === "object"
   );
 };
 

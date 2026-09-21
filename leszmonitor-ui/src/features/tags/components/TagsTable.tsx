@@ -25,7 +25,10 @@ const columns: ColumnDef<TagModel>[] = [
       row.original.description ? (
         <span>{row.original.description}</span>
       ) : (
-        <Minus className="size-4 text-muted-foreground" aria-label="No description" />
+        <Minus
+          className="size-4 text-muted-foreground"
+          aria-label="No description"
+        />
       ),
   },
   {
