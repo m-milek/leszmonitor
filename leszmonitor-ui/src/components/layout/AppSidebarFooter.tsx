@@ -42,7 +42,9 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
             <p className="text-sm">Logged in</p>
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" />}>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" aria-label="User menu" />}
+            >
               <LucideEllipsisVertical />
             </DropdownMenuTrigger>
             <DropdownMenuContent>

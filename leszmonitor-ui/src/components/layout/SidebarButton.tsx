@@ -29,7 +29,7 @@ export const SidebarButton = ({
           )
         }
         isActive={matchesCurrentUrl}
-        className="transition-colors active:translate-y-px data-active:text-sidebar-primary"
+        className="transition-colors hover:text-sidebar-foreground active:translate-y-px data-active:text-sidebar-primary [&[data-active]:hover]:text-sidebar-primary"
       >
         {icon}
         <span>{label}</span>
