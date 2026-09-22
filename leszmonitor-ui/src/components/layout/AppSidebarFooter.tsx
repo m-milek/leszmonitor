@@ -6,7 +6,7 @@ import {
   LucideUserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,41 +39,45 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
 
   return (
     <Flex direction="column">
-      <div className="flex items-center">
-        <Initial text={user.username} size="sm" />
-        <div className="flex flex-1 items-center justify-between">
+      <div className="flex items-center gap-1">
+        <Link
+          to="/user/$username"
+          params={{ username: user.username }}
+          className="flex flex-1 items-center rounded-lg p-1 hover:bg-sidebar-accent"
+        >
+          <Initial text={user.username} size="sm" />
           <div className="ml-2">
             <p className="font-medium">{user.username}</p>
             <p className="text-sm">Logged in</p>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button variant="ghost" aria-label="User menu" />}
+        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={<Button variant="ghost" aria-label="User menu" />}
+          >
+            <LucideEllipsisVertical />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="rounded-[18px]">
+            <DropdownMenuItemIcon
+              icon={LucideUserCog}
+              onClick={() =>
+                navigate({
+                  to: "/user/$username/settings",
+                  params: { username: user.username },
+                })
+              }
             >
-              <LucideEllipsisVertical />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-[18px]">
-              <DropdownMenuItemIcon
-                icon={LucideUserCog}
-                onClick={() =>
-                  navigate({
-                    to: "/user/$username/settings",
-                    params: { username: user.username },
-                  })
-                }
-              >
-                Settings
-              </DropdownMenuItemIcon>
-              <DropdownMenuItemIcon
-                icon={LucideLogOut}
-                variant="destructive"
-                onClick={logOut}
-              >
-                Log out
-              </DropdownMenuItemIcon>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              Settings
+            </DropdownMenuItemIcon>
+            <DropdownMenuItemIcon
+              icon={LucideLogOut}
+              variant="destructive"
+              onClick={logOut}
+            >
+              Log out
+            </DropdownMenuItemIcon>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <Metadata data={metadata} />
     </Flex>
