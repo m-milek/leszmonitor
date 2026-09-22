@@ -9,11 +9,7 @@ export type { LineChartProps };
 
 export function LineChart<T>(props: LineChartProps<T>) {
   return (
-    <Suspense
-      fallback={
-        <div className="h-full w-full animate-pulse rounded-md bg-muted" />
-      }
-    >
+    <Suspense fallback={null}>
       <LineChartInner {...props} />
     </Suspense>
   );

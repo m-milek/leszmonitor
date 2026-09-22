@@ -1,18 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
-import { toast } from "@/components/ui/toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { LeszmonitorLogo } from "@/components/common/LeszmonitorLogo";
+import { AuthCardLayout } from "@/features/auth/components/AuthCardLayout";
 import { LMInputField } from "@/components/form/LMInputField";
 import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 import { establishSession } from "@/features/auth/lib/session";
@@ -48,83 +39,66 @@ export function LoginPage() {
 
         await navigate({ to: "/monitors", replace: true });
       } catch (error) {
-        if (error instanceof Error) {
-          console.error(error);
-          toast.add({
-            title:
-              "Failed to log in. Please check your credentials and try again.",
-            type: "error",
-          });
-        }
+        console.error(error);
       }
     },
   });
 
   return (
-    <main className="h-screen w-screen bg-background">
-      <div className="flex h-full w-full items-center justify-center">
-        <Card className="w-full max-w-sm">
-          <CardHeader className="text-center">
-            <CardTitle className="flex flex-col items-center">
-              <LeszmonitorLogo />
-            </CardTitle>
-            <CardDescription>Log in to Leszmonitor</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form
-              id="login-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-              }}
-            >
-              <FieldGroup className="gap-2">
-                <form.Field
-                  name="username"
-                  children={(field) => (
-                    <Field id={field.name}>
-                      <FieldLabel>Username</FieldLabel>
-                      <LMInputField
-                        name={field.name}
-                        type="text"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        isInvalid={isFieldInvalid(field)}
-                        errorMessage={getFirstError(field)}
-                      />
-                    </Field>
-                  )}
+    <AuthCardLayout
+      description="Log in to Leszmonitor"
+      footer={
+        <>
+          <Button className="w-full" type="submit" form="login-form">
+            Log in
+          </Button>
+          <Link to="/register" className="text-sm text-primary">
+            Don&#39;t have an account?
+          </Link>
+        </>
+      }
+    >
+      <form
+        id="login-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        <FieldGroup>
+          <form.Field name="username">
+            {(field) => (
+              <Field id={field.name}>
+                <FieldLabel>Username</FieldLabel>
+                <LMInputField
+                  name={field.name}
+                  type="text"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
                 />
-                <form.Field
-                  name="password"
-                  children={(field) => (
-                    <Field id={field.name}>
-                      <FieldLabel>Password</FieldLabel>
-                      <LMInputField
-                        name={field.name}
-                        type="password"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        autoComplete="current-password"
-                        isInvalid={isFieldInvalid(field)}
-                        errorMessage={getFirstError(field)}
-                      />
-                    </Field>
-                  )}
+              </Field>
+            )}
+          </form.Field>
+          <form.Field name="password">
+            {(field) => (
+              <Field id={field.name}>
+                <FieldLabel>Password</FieldLabel>
+                <LMInputField
+                  name={field.name}
+                  type="password"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  autoComplete="current-password"
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
                 />
-              </FieldGroup>
-            </form>
-          </CardContent>
-          <CardFooter className="flex-col items-center gap-4">
-            <Button className="w-full" type="submit" form="login-form">
-              Log in
-            </Button>
-            <Link to="/register" className="text-sm text-primary">
-              Don&#39;t have an account?
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    </main>
+              </Field>
+            )}
+          </form.Field>
+        </FieldGroup>
+      </form>
+    </AuthCardLayout>
   );
 }

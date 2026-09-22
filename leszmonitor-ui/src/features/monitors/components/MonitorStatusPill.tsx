@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import type { Monitor, MonitorRunState } from "@/features/monitors/types";
 
 export interface MonitorStatusPillProps {
@@ -9,30 +10,23 @@ const mapMonitorState = (state: MonitorRunState) => {
     case "active":
       return {
         text: "Active",
-        color: "bg-green-500 text-white",
+        className: "bg-lm-status-up text-lm-status-up-foreground",
       };
     case "paused":
       return {
         text: "Paused",
-        color: "bg-gray-500 text-white",
+        className: "bg-lm-status-paused text-lm-status-paused-foreground",
       };
     default:
       return {
         text: "Invalid",
-        color: "bg-gray-300 text-gray-700",
+        className: "bg-lm-status-unknown text-lm-status-unknown-foreground",
       };
   }
 };
 
 export const MonitorStatusPill = ({ monitor }: MonitorStatusPillProps) => {
-  const text = mapMonitorState(monitor.runState).text;
-  const color = mapMonitorState(monitor.runState).color;
+  const { text, className } = mapMonitorState(monitor.runState);
 
-  return (
-    <span
-      className={`inline-flex items-center px-4 py-1 rounded-xl ${color} font-medium`}
-    >
-      {text}
-    </span>
-  );
+  return <Badge className={className}>{text}</Badge>;
 };

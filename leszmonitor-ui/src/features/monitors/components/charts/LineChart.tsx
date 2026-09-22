@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import {
   Area,
   AreaChart,
@@ -21,7 +22,7 @@ export interface LineChartProps<T> {
   xAxisKey: Extract<keyof T, string>;
   yAxisKey: Extract<keyof T, string>;
   uniqueMatchKey: Extract<keyof T, string>;
-  xAxisTickFormatter?: (value: any) => string;
+  xAxisTickFormatter?: ComponentProps<typeof XAxis>["tickFormatter"];
   yAxisDomain?: [
     number | "auto" | "dataMin" | "dataMax",
     number | "auto" | "dataMin" | "dataMax",

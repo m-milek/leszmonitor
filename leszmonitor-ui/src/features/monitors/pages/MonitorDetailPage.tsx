@@ -120,21 +120,17 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
         <ButtonGroup>
           <Button
             variant="outline"
-            className="size-10"
+            size="icon-lg"
             onClick={handleToggleMonitorState}
           >
             {isPaused ? <PlayIcon /> : <PauseIcon />}
           </Button>
-          <Button
-            variant="outline"
-            className="size-10"
-            onClick={handleEditMonitor}
-          >
+          <Button variant="outline" size="icon-lg" onClick={handleEditMonitor}>
             <PencilIcon />
           </Button>
           <Button
             variant="outline"
-            className="size-10"
+            size="icon-lg"
             onClick={handleManuallyRunMonitor}
           >
             <LucideCirclePlay />

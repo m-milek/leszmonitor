@@ -31,7 +31,7 @@ export function MonitorListItem({
   const dotStatus = monitorStatusToStatusDot(lastResultData?.status);
 
   return (
-    <Card>
+    <Card className="transition-colors hover:bg-muted/50">
       <CardHeader>
         <Flex direction="row" className="justify-between">
           <Flex direction="row" className="items-center gap-2">

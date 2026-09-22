@@ -3,37 +3,41 @@ export interface ResourceDiffProps {
   after?: string;
 }
 
-const parseRecursively = (obj: any): any => {
-  if (typeof obj === "string") {
+const parseRecursively = (value: unknown): unknown => {
+  if (typeof value === "string") {
     try {
-      const parsed = JSON.parse(obj);
+      const parsed: unknown = JSON.parse(value);
       if (parsed !== null && typeof parsed === "object") {
         return parseRecursively(parsed);
       }
-      return obj;
+      return value;
     } catch {
-      return obj;
+      return value;
     }
-  } else if (Array.isArray(obj)) {
-    return obj.map(parseRecursively);
-  } else if (obj !== null && typeof obj === "object") {
-    const newObj: any = {};
-    for (const key in obj) {
-      newObj[key] = parseRecursively(obj[key]);
-    }
-    return newObj;
   }
-  return obj;
+
+  if (Array.isArray(value)) {
+    return value.map(parseRecursively);
+  }
+
+  if (value !== null && typeof value === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      result[key] = parseRecursively(entry);
+    }
+    return result;
+  }
+
+  return value;
 };
 
 const safeParseJSON = (jsonString?: string) => {
   if (!jsonString) return "—";
   try {
-    let parsed = JSON.parse(jsonString);
+    const parsed: unknown = JSON.parse(jsonString);
     if (parsed === null) return "—";
-    parsed = parseRecursively(parsed);
-    return JSON.stringify(parsed, null, 2);
-  } catch (e) {
+    return JSON.stringify(parseRecursively(parsed), null, 2);
+  } catch {
     return jsonString;
   }
 };

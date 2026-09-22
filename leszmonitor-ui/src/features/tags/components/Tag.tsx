@@ -13,7 +13,7 @@ export const Tag = ({ tag, className }: TagProps) => (
   <Badge
     title={tag.description}
     style={tagChipStyle(tag.colorHex)}
-    className={cn("py-2 px-3 max-w-full truncate border", className)}
+    className={cn("max-w-full truncate border", className)}
   >
     {tag.name}
   </Badge>

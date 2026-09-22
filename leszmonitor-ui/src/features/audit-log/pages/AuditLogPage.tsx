@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1 } from "@/components/common/Typography";
 import { AuditLogTable } from "@/features/audit-log/components/AuditLogTable";
+import { Card } from "@/components/ui/card";
 import type { AuditLogFilters } from "@/features/audit-log/types";
 
 export function AuditLogPage() {
@@ -17,7 +18,9 @@ export function AuditLogPage() {
   return (
     <PageContainer>
       <TypographyH1>Audit Log</TypographyH1>
-      <AuditLogTable entries={logs ?? []} />
+      <Card>
+        <AuditLogTable entries={logs ?? []} />
+      </Card>
     </PageContainer>
   );
 }

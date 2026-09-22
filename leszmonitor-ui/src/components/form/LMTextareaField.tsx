@@ -1,6 +1,5 @@
 import { Textarea } from "@/components/ui/textarea";
 import type { ComponentProps } from "react";
-import { cn } from "cn";
 import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 type TextareaProps = ComponentProps<typeof Textarea>;
@@ -28,9 +27,7 @@ export const LMTextareaField = (props: LMTextareaFieldProps) => {
         onChange={props.onChange}
         placeholder={props.placeholder}
         rows={props.rows}
-        className={cn(
-          props.isInvalid && "border-destructive focus:ring-destructive",
-        )}
+        aria-invalid={props.isInvalid}
       />
     </ErrorTooltip>
   );

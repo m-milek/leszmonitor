@@ -31,18 +31,12 @@ export function NewTagDialog() {
       setIsOpen(false);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TAGS] });
     },
-    onError: (error) => {
-      toast.add({
-        title: "Failed to create tag: " + error.message,
-        type: "error",
-      });
-    },
   });
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger render={<Button size="sm" />}>
-        <Plus className="mr-2 h-4 w-4" />
+        <Plus />
         Add Tag
       </DialogTrigger>
       <DialogContent>

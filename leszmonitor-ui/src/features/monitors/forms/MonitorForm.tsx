@@ -11,13 +11,18 @@ import {
   defaultConfigs,
 } from "@/features/monitors/schema";
 import { buildMonitorDefaults } from "@/features/monitors/forms/monitor-form-defaults";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
 import { LMTextareaField } from "@/components/form/LMTextareaField";
 import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 import { Flex } from "@/components/common/Flex";
-import { Divider } from "@/components/common/Divider";
+import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { MonitorConfigFields } from "@/features/monitors/forms/fields/MonitorConfigFields";
 import { useMonitorForm } from "@/features/monitors/hooks/useMonitorForm";
@@ -79,7 +84,7 @@ export function MonitorForm({
       }}
     >
       <Flex direction="column">
-        <Flex direction="column" className="flex-1 gap-2">
+        <FieldGroup className="flex-1">
           <form.Field
             name={"type"}
             listeners={{
@@ -89,7 +94,8 @@ export function MonitorForm({
                 }
               },
             }}
-            children={(field) => {
+          >
+            {(field) => {
               return (
                 <Field id={field.name}>
                   <FieldLabel>Type</FieldLabel>
@@ -110,7 +116,7 @@ export function MonitorForm({
                 </Field>
               );
             }}
-          />
+          </form.Field>
           <form.Field
             name="name"
             listeners={{
@@ -120,7 +126,8 @@ export function MonitorForm({
                 }
               },
             }}
-            children={(field) => (
+          >
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Name</FieldLabel>
                 <LMInputField
@@ -133,7 +140,7 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
+          </form.Field>
           <Flex direction="row" className="gap-2 items-center">
             <FieldTitle>Use Custom Slug</FieldTitle>
             <Switch
@@ -142,9 +149,8 @@ export function MonitorForm({
               name="useCustomSlug"
             />
           </Flex>
-          <form.Field
-            name="slug"
-            children={(field) => (
+          <form.Field name="slug">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Slug</FieldLabel>
                 <LMInputField
@@ -157,10 +163,9 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
-          <form.Field
-            name="description"
-            children={(field) => (
+          </form.Field>
+          <form.Field name="description">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Description</FieldLabel>
                 <LMTextareaField
@@ -172,10 +177,9 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
-          <form.Field
-            name="tagIds"
-            children={(field) => (
+          </form.Field>
+          <form.Field name="tagIds">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Tags</FieldLabel>
                 <LMTagSelect
@@ -191,10 +195,9 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
-          <form.Field
-            name="interval"
-            children={(field) => (
+          </form.Field>
+          <form.Field name="interval">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Interval (s)</FieldLabel>
                 <LMInputField
@@ -206,18 +209,18 @@ export function MonitorForm({
                 />
               </Field>
             )}
-          />
-        </Flex>
+          </form.Field>
+        </FieldGroup>
         <form.Subscribe selector={(form) => form.values.type}>
           {(type) => {
             if (!type) return null;
-            return <Divider direction="row" className="my-4" />;
+            return <Separator className="my-4" />;
           }}
         </form.Subscribe>
 
-        <Flex direction="column" className="flex-1 gap-2">
+        <FieldGroup className="flex-1">
           <MonitorConfigFields form={form} />
-        </Flex>
+        </FieldGroup>
       </Flex>
     </form>
   );

@@ -39,12 +39,6 @@ export function DeleteMonitorDialog({
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.MONITORS] });
       onDeleted?.();
     },
-    onError: (error) => {
-      toast.add({
-        title: "Failed to delete monitor: " + error.message,
-        type: "error",
-      });
-    },
   });
 
   return (
@@ -53,7 +47,8 @@ export function DeleteMonitorDialog({
         render={
           <Button
             variant="destructive"
-            className="size-10"
+            size="icon-lg"
+            className="border-destructive/30 dark:border-destructive/40"
             title={`Delete monitor ${monitor.name}`}
             aria-label={`Delete monitor ${monitor.name}`}
           />

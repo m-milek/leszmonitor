@@ -29,12 +29,6 @@ test.describe("Login", () => {
     await page.getByRole("button", { name: "Log in" }).click();
 
     await expect(page).toHaveURL("/login");
-
-    await expect(
-      page.getByText(
-        "Failed to log in. Please check your credentials and try again.",
-      ),
-    ).toBeVisible();
   });
 
   test("Empty credentials show validation errors", async ({ page }) => {

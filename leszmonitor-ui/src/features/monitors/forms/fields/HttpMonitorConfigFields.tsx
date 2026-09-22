@@ -1,5 +1,11 @@
+import { TypographyH3 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
-import { Field, FieldLabel, FieldTitle } from "@/components/ui/field";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMSelect } from "@/components/form/LMSelect";
 import { LMTextareaField } from "@/components/form/LMTextareaField";
@@ -26,12 +32,11 @@ export function HttpMonitorConfigFields({
   form,
 }: Readonly<{ form: MonitorFormApi }>) {
   return (
-    <Flex direction="column" className="gap-4 items-stretch">
-      <div className="text-lg font-semibold">HTTP Settings</div>
+    <FieldGroup>
+      <TypographyH3>HTTP Settings</TypographyH3>
 
-      <form.Field
-        name="probeConfig.url"
-        children={(field) => (
+      <form.Field name="probeConfig.url">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>URL</FieldLabel>
             <LMInputField
@@ -44,11 +49,10 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.method"
-        children={(field) => (
+      <form.Field name="probeConfig.method">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Method</FieldLabel>
             <LMSelect
@@ -63,11 +67,10 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.body"
-        children={(field) => (
+      <form.Field name="probeConfig.body">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Request Body</FieldLabel>
             <LMTextareaField
@@ -81,11 +84,10 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.headers"
-        children={(field) => (
+      <form.Field name="probeConfig.headers">
+        {(field) => (
           <Field id={field.name}>
             <FieldTitle>Request Headers</FieldTitle>
             <LMKeyValueInput
@@ -99,13 +101,12 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <div className="text-lg font-semibold">Expected Response</div>
+      <TypographyH3>Expected Response</TypographyH3>
 
-      <form.Field
-        name="probeConfig.expectedStatusCodes"
-        children={(field) => (
+      <form.Field name="probeConfig.expectedStatusCodes">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Expected Status Codes</FieldLabel>
             <LMMultiSelect
@@ -125,11 +126,10 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.expectedResponseTimeMs"
-        children={(field) => (
+      <form.Field name="probeConfig.expectedResponseTimeMs">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Expected Response Time (ms)</FieldLabel>
             <LMInputField
@@ -148,11 +148,10 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.expectedBodyRegex"
-        children={(field) => (
+      <form.Field name="probeConfig.expectedBodyRegex">
+        {(field) => (
           <Field id={field.name}>
             <FieldLabel>Expected Body Pattern (RegExp)</FieldLabel>
             <LMInputField
@@ -165,11 +164,10 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <form.Field
-        name="probeConfig.expectedHeaders"
-        children={(field) => (
+      <form.Field name="probeConfig.expectedHeaders">
+        {(field) => (
           <Field id={field.name}>
             <FieldTitle>Expected Response Headers</FieldTitle>
             <LMKeyValueInput
@@ -183,13 +181,12 @@ export function HttpMonitorConfigFields({
             />
           </Field>
         )}
-      />
+      </form.Field>
 
-      <div className="text-lg font-semibold">Capture Response</div>
+      <TypographyH3>Capture Response</TypographyH3>
 
-      <form.Field
-        name="probeConfig.saveResponseBody"
-        children={(field) => (
+      <form.Field name="probeConfig.saveResponseBody">
+        {(field) => (
           <Field id={field.name}>
             <Flex direction="row" className="justify-between">
               <FieldLabel>Save Response Body</FieldLabel>
@@ -203,10 +200,9 @@ export function HttpMonitorConfigFields({
             </Flex>
           </Field>
         )}
-      />
-      <form.Field
-        name="probeConfig.saveResponseHeaders"
-        children={(field) => (
+      </form.Field>
+      <form.Field name="probeConfig.saveResponseHeaders">
+        {(field) => (
           <Field id={field.name}>
             <Flex direction="row" className="justify-between">
               <FieldLabel>Save Response Headers</FieldLabel>
@@ -220,7 +216,7 @@ export function HttpMonitorConfigFields({
             </Flex>
           </Field>
         )}
-      />
-    </Flex>
+      </form.Field>
+    </FieldGroup>
   );
 }

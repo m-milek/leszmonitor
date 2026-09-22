@@ -1,14 +1,16 @@
 import type { MonitorStatus } from "@/features/monitors/types";
-import type { StatusDotProps } from "@/components/common/StatusDot";
+import type { Status } from "@/components/common/StatusDot";
 
 export const monitorStatusToStatusDot = (
   status: MonitorStatus | undefined,
-): StatusDotProps["status"] => {
+): Status => {
   switch (status) {
     case "up":
-      return "success";
+      return "up";
     case "down":
-      return "failure";
+      return "down";
+    case "paused":
+      return "paused";
     default:
       return "pending";
   }

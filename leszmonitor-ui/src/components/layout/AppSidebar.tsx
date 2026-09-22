@@ -7,11 +7,12 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 
 import {
+  LucideActivity,
   LucideBookText,
-  LucideHome,
   LucideLogs,
   LucideSearch,
   LucideSettings,
@@ -62,17 +63,17 @@ export const AppSidebar = () => {
   }, [userData, setUser]);
 
   return (
-    <Sidebar className="p-0" variant="inset">
+    <Sidebar variant="inset">
       <AppSidebarHeader />
 
       <SidebarContent className="p-2">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               <SidebarButton
-                icon={<LucideHome />}
+                icon={<LucideActivity />}
                 href="/monitors"
-                label="Home"
+                label="Monitors"
               />
               <SidebarButton icon={<LucideTag />} href="/tags" label="Tags" />
               {(user?.role === "owner" || user?.role === "admin") && (
@@ -88,16 +89,11 @@ export const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Administration</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               <SidebarButton
                 icon={<LucideSettings />}
                 href={`/admin`}
                 label="Administration"
-              />
-              <SidebarButton
-                icon={<LucideSettings />}
-                href={`/user/${user?.username}/settings`}
-                label="Settings"
               />
             </SidebarMenu>
           </SidebarGroupContent>
@@ -105,7 +101,7 @@ export const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Help</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               <SidebarButton
                 icon={<LucideSearch />}
                 href="/search"
@@ -120,15 +116,16 @@ export const AppSidebar = () => {
                 icon={<LucideLogs />}
                 href="/_logdy"
                 label="Logs"
+                external
               />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-0">
-        {user && <AppSidebarFooter user={user} />}
-      </SidebarFooter>
+      <SidebarFooter>{user && <AppSidebarFooter user={user} />}</SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   );
 };

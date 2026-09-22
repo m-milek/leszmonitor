@@ -1,10 +1,8 @@
 import type { Timestamps } from "@/lib/types";
 
-const monitorStatuses = ["up", "down", "paused", "maintenance"] as const;
-export type MonitorStatus = (typeof monitorStatuses)[number];
+export type MonitorStatus = "up" | "down" | "paused" | "maintenance";
 
-const monitorRunStates = ["active", "paused"] as const;
-export type MonitorRunState = (typeof monitorRunStates)[number];
+export type MonitorRunState = "active" | "paused";
 
 const monitorTypes = ["http", "tcp", "dns"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
@@ -51,6 +49,13 @@ export const recordTypes = [
 ] as const;
 export type DnsRecordType = (typeof recordTypes)[number];
 
+export interface DnsMonitorConfig {
+  hostname: string;
+  dnsServer?: string;
+  recordType: DnsRecordType;
+  expectedRecordValues: string[];
+}
+
 export interface Monitor extends Timestamps {
   id: string;
   name: string;
@@ -62,7 +67,7 @@ export interface Monitor extends Timestamps {
   // Retention seconds not configurable yet
   runState: MonitorRunState;
   type: MonitorType;
-  probeConfig?: HttpMonitorConfig | TcpMonitorConfig;
+  probeConfig?: HttpMonitorConfig | TcpMonitorConfig | DnsMonitorConfig;
 }
 
 // Runtime zod schemas and form-value helpers live in
@@ -94,6 +99,11 @@ export interface TcpResultDetails {
   latencyMs: number;
 }
 
+// results.DNSResultDetails on the server; the records are untyped `any` there.
+export interface DnsResultDetails {
+  resolvedRecords?: unknown[];
+}
+
 export interface MonitorResult {
   id: string;
   monitorId: string;
@@ -102,7 +112,7 @@ export interface MonitorResult {
   durationMs: number;
   errorDetails: MonitorErrorDetails;
   monitorType: string;
-  details: HttpResultDetails | TcpResultDetails;
+  details: HttpResultDetails | TcpResultDetails | DnsResultDetails;
   createdAt: Date;
 }
 
@@ -119,11 +129,11 @@ export const isMonitorResultMessage = (
     typeof obj === "object" &&
     obj !== null &&
     "type" in obj &&
-    typeof (obj as any).type === "string" &&
+    typeof obj.type === "string" &&
     "monitorId" in obj &&
-    typeof (obj as any).monitorId === "string" &&
+    typeof obj.monitorId === "string" &&
     "response" in obj &&
-    typeof (obj as any).response === "object"
+    typeof obj.response === "object"
   );
 };
 

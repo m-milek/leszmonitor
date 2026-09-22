@@ -6,7 +6,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ErrorTooltip } from "@/components/form/ErrorTooltip";
-import { cn } from "cn";
 
 export interface LMSelectOption {
   value: string;
@@ -37,10 +36,8 @@ export function LMSelect(props: Readonly<LMSelectProps>) {
       >
         <SelectTrigger
           id={props.id}
-          className={cn(
-            props.className,
-            props.isInvalid && "border-destructive focus:ring-destructive",
-          )}
+          className={props.className}
+          aria-invalid={props.isInvalid}
         >
           <SelectValue placeholder={props.placeholder} />
         </SelectTrigger>

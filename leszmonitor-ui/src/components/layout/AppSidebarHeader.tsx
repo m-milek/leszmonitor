@@ -6,16 +6,12 @@ import { WebSocketStatusIndicator } from "@/components/layout/WebSocketStatusInd
 
 export function AppSidebarHeader() {
   return (
-    <SidebarHeader className="p-2">
+    <SidebarHeader>
       <Flex direction="row" className="justify-between items-center">
-        <div className="p-2">
-          <Link to={"/monitors"}>
-            <LeszmonitorLogo />
-          </Link>
-        </div>
-        <div className="p-2">
-          <WebSocketStatusIndicator />
-        </div>
+        <Link to={"/monitors"}>
+          <LeszmonitorLogo />
+        </Link>
+        <WebSocketStatusIndicator />
       </Flex>
     </SidebarHeader>
   );

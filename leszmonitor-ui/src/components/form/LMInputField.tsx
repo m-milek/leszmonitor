@@ -1,6 +1,5 @@
 import { Input } from "@/components/ui/input";
 import type { ComponentProps } from "react";
-import { cn } from "cn";
 import { ErrorTooltip } from "@/components/form/ErrorTooltip";
 
 type InputProps = ComponentProps<typeof Input>;
@@ -31,9 +30,7 @@ export const LMInputField = (props: LMInputFieldProps) => {
         placeholder={props.placeholder}
         inputMode={props.inputMode}
         disabled={props.disabled}
-        className={cn(
-          props.isInvalid && "border-destructive focus:ring-destructive",
-        )}
+        aria-invalid={props.isInvalid}
       />
     </ErrorTooltip>
   );

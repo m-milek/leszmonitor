@@ -61,8 +61,6 @@ test.describe("Register", () => {
     await page.locator("#passwordConfirm").fill(password);
     await page.getByRole("button", { name: "Register" }).click();
 
-    await expect(
-      page.getByText("Registration failed. Please try again."),
-    ).toBeVisible();
+    await expect(page).toHaveURL("/register");
   });
 });

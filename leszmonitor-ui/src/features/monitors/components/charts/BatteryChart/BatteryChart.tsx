@@ -44,7 +44,6 @@ export const BatteryChart = ({
       <Flex
         direction="row"
         className="justify-start items-center absolute inset-0"
-        style={{ gap: GAP }}
       >
         {displayResults.map((res, i) => (
           <BatteryBar key={i} result={res} />

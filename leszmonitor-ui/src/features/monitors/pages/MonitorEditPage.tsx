@@ -10,6 +10,7 @@ import {
   type MonitorFormValues,
 } from "@/features/monitors/schema";
 import { QUERY_KEYS } from "@/lib/consts";
+import { useNavigate } from "@tanstack/react-router";
 
 export interface MonitorEditPageProps {
   monitorSlug: string;
@@ -17,6 +18,7 @@ export interface MonitorEditPageProps {
 
 export function MonitorEditPage({ monitorSlug }: MonitorEditPageProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: monitor } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS, monitorSlug],
@@ -34,6 +36,14 @@ export function MonitorEditPage({ monitorSlug }: MonitorEditPageProps) {
     },
   });
 
+  const onSubmit = async (value: MonitorFormValues) => {
+    await updateMonitorMutation.mutateAsync(value);
+    await navigate({
+      to: "/monitors/$monitorSlug",
+      params: { monitorSlug: value.slug },
+    });
+  };
+
   if (!monitor) {
     return null;
   }
@@ -46,7 +56,7 @@ export function MonitorEditPage({ monitorSlug }: MonitorEditPageProps) {
           <MonitorForm
             formId="edit-monitor-form"
             defaultValues={mapMonitorToFormValues(monitor)}
-            onSubmit={(value) => updateMonitorMutation.mutateAsync(value)}
+            onSubmit={onSubmit}
           />
         </CardContent>
         <CardFooter>

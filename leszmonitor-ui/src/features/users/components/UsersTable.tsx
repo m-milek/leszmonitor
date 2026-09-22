@@ -9,6 +9,7 @@ import { StyledLink } from "@/components/common/StyledLink";
 import { type ColumnDef } from "@tanstack/table-core";
 import { DataTable } from "@/components/common/DataTable";
 import { MoreVertical, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LMSelect } from "@/components/form/LMSelect";
 import {
@@ -54,12 +55,8 @@ const ActionsCell = ({ user }: { user: User }) => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button className="flex items-center justify-center p-2 outline-none rounded-md hover:bg-accent hover:text-accent-foreground" />
-        }
-      >
-        <MoreVertical className="w-4 h-4" />
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+        <MoreVertical />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItemIcon

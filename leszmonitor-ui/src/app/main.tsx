@@ -15,6 +15,12 @@ export const queryClient = new QueryClient({
       staleTime: 30_000, // 30s — tweak to taste
       refetchOnWindowFocus: false,
     },
+    mutations: {
+      // Default: an unhandled mutation error is rethrown during render instead
+      // of being swallowed. Components that want to handle it themselves opt
+      // out with `throwOnError: false` plus their own `onError`.
+      throwOnError: true,
+    },
   },
 });
 

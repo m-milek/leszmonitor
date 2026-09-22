@@ -37,12 +37,12 @@ const MetadataTable = ({ data }: { data?: MetadataResponse }) => (
 
 export const Metadata = ({ data }: MetadataProps) => {
   return (
-    <Center className="p-2 bg-background/30">
+    <Center className="p-2">
       <Flex className="gap-2 items-center">
         <span className="text-sm">{data?.version}</span>
         <Popover>
           <PopoverTrigger>
-            <LucideInfo size="16" className="cursor-pointer" />
+            <LucideInfo className="size-4 cursor-pointer" />
           </PopoverTrigger>
           <PopoverContent className="w-80">
             <MetadataTable data={data} />

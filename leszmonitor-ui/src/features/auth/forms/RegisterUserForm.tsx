@@ -68,10 +68,9 @@ export function RegisterUserForm({
         form.handleSubmit();
       }}
     >
-      <FieldGroup className="gap-2">
-        <form.Field
-          name="username"
-          children={(field) => (
+      <FieldGroup>
+        <form.Field name="username">
+          {(field) => (
             <Field id={field.name}>
               <FieldLabel>Username</FieldLabel>
               <LMInputField
@@ -84,10 +83,9 @@ export function RegisterUserForm({
               />
             </Field>
           )}
-        />
-        <form.Field
-          name="password"
-          children={(field) => (
+        </form.Field>
+        <form.Field name="password">
+          {(field) => (
             <Field id={field.name}>
               <FieldLabel>Password</FieldLabel>
               <LMInputField
@@ -101,11 +99,10 @@ export function RegisterUserForm({
               />
             </Field>
           )}
-        />
+        </form.Field>
         {requirePasswordConfirm && (
-          <form.Field
-            name="passwordConfirm"
-            children={(field) => (
+          <form.Field name="passwordConfirm">
+            {(field) => (
               <Field id={field.name}>
                 <FieldLabel>Confirm your password</FieldLabel>
                 <LMInputField
@@ -119,7 +116,7 @@ export function RegisterUserForm({
                 />
               </Field>
             )}
-          />
+          </form.Field>
         )}
       </FieldGroup>
     </form>
