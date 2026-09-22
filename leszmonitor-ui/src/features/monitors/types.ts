@@ -49,6 +49,13 @@ export const recordTypes = [
 ] as const;
 export type DnsRecordType = (typeof recordTypes)[number];
 
+export interface DnsMonitorConfig {
+  hostname: string;
+  dnsServer?: string;
+  recordType: DnsRecordType;
+  expectedRecordValues: string[];
+}
+
 export interface Monitor extends Timestamps {
   id: string;
   name: string;
@@ -60,7 +67,7 @@ export interface Monitor extends Timestamps {
   // Retention seconds not configurable yet
   runState: MonitorRunState;
   type: MonitorType;
-  probeConfig?: HttpMonitorConfig | TcpMonitorConfig;
+  probeConfig?: HttpMonitorConfig | TcpMonitorConfig | DnsMonitorConfig;
 }
 
 // Runtime zod schemas and form-value helpers live in
@@ -92,6 +99,11 @@ export interface TcpResultDetails {
   latencyMs: number;
 }
 
+// results.DNSResultDetails on the server; the records are untyped `any` there.
+export interface DnsResultDetails {
+  resolvedRecords?: unknown[];
+}
+
 export interface MonitorResult {
   id: string;
   monitorId: string;
@@ -100,7 +112,7 @@ export interface MonitorResult {
   durationMs: number;
   errorDetails: MonitorErrorDetails;
   monitorType: string;
-  details: HttpResultDetails | TcpResultDetails;
+  details: HttpResultDetails | TcpResultDetails | DnsResultDetails;
   createdAt: Date;
 }
 
