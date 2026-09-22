@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/sidebar";
 
 import {
+  LucideActivity,
   LucideBookText,
-  LucideHome,
   LucideLogs,
   LucideSearch,
   LucideSettings,
@@ -71,9 +71,9 @@ export const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               <SidebarButton
-                icon={<LucideHome />}
+                icon={<LucideActivity />}
                 href="/monitors"
-                label="Home"
+                label="Monitors"
               />
               <SidebarButton icon={<LucideTag />} href="/tags" label="Tags" />
               {(user?.role === "owner" || user?.role === "admin") && (
@@ -94,11 +94,6 @@ export const AppSidebar = () => {
                 icon={<LucideSettings />}
                 href={`/admin`}
                 label="Administration"
-              />
-              <SidebarButton
-                icon={<LucideSettings />}
-                href={`/user/${user?.username}/settings`}
-                label="Settings"
               />
             </SidebarMenu>
           </SidebarGroupContent>

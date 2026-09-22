@@ -1,12 +1,16 @@
 import { MetadataApi } from "@/features/instance/metadata-api";
 import type { User } from "@/features/users/types";
-import { LucideEllipsisVertical, LucideLogOut } from "lucide-react";
+import {
+  LucideEllipsisVertical,
+  LucideLogOut,
+  LucideUserCog,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuItemIcon,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Flex } from "@/components/common/Flex";
@@ -21,6 +25,7 @@ export interface AppSidebarFooterProps {
 
 export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
   const router = useRouter();
+  const navigate = useNavigate();
 
   const logOut = async () => {
     await clearToken();
@@ -47,13 +52,25 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
             >
               <LucideEllipsisVertical />
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem className="text-destructive" onClick={logOut}>
-                <div className="flex items-center w-full justify-between">
-                  <span>Log out</span>
-                  <LucideLogOut className="text-destructive" />
-                </div>
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" className="rounded-[18px]">
+              <DropdownMenuItemIcon
+                icon={LucideUserCog}
+                onClick={() =>
+                  navigate({
+                    to: "/user/$username/settings",
+                    params: { username: user.username },
+                  })
+                }
+              >
+                Settings
+              </DropdownMenuItemIcon>
+              <DropdownMenuItemIcon
+                icon={LucideLogOut}
+                variant="destructive"
+                onClick={logOut}
+              >
+                Log out
+              </DropdownMenuItemIcon>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
