@@ -150,8 +150,16 @@ export interface UptimeStats {
   statusToPercentage: Partial<Record<MonitorStatus, number>> | null;
 }
 
+export interface HttpProbeStats {
+  type: "http";
+  httpCodeToCount: Record<string, number>;
+}
+
+export type ProbeSpecificStats = HttpProbeStats;
+
 export interface MonitorStats {
   latency: LatencyStats;
   statusChange: StatusChangeStats;
   uptime: UptimeStats;
+  probeSpecific?: ProbeSpecificStats;
 }

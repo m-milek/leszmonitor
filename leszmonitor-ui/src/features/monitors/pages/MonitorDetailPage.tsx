@@ -169,6 +169,11 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
                   {statusCounts[status as MonitorStatus] ?? 0})
                 </p>
               ))}
+              {stats.probeSpecific && (
+                <pre className="overflow-x-auto text-xs font-mono">
+                  {JSON.stringify(stats.probeSpecific, null, 2)}
+                </pre>
+              )}
             </>
           )}
         </CardContent>

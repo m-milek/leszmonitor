@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
@@ -22,9 +23,9 @@ func NewMonitorStatsAPIController(service MonitorStatsService) MonitorStatsAPICo
 func (c *MonitorStatsAPIController) GetStatsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	monitorID := r.PathValue("monitorId")
-	if monitorID == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
+	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
+	if err != nil {
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID"))
 		return
 	}
 

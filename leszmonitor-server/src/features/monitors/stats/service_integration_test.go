@@ -38,7 +38,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		from := now.Add(-1 * time.Hour)
 		to := now.Add(1 * time.Hour)
 
-		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID, from, to)
 		require.Nil(t, svcErr)
 		assert.InDelta(t, 200.0, stats.Latency.Avg, 0.001)
 		assert.InDelta(t, 100.0, stats.Latency.Min, 0.001)
@@ -53,7 +53,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		from := time.Now().UTC().Add(-1 * time.Hour)
 		to := time.Now().UTC().Add(1 * time.Hour)
 
-		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID, from, to)
 		require.Nil(t, svcErr)
 		assert.Equal(t, 0.0, stats.Latency.Avg)
 		assert.Equal(t, 0.0, stats.Latency.Min)
@@ -82,7 +82,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		from := now.Add(-1 * time.Hour)
 		to := now.Add(1 * time.Hour)
 
-		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID, from, to)
 		require.Nil(t, svcErr)
 		assert.InDelta(t, 500.0, stats.Latency.Avg, 0.001)
 		assert.InDelta(t, 500.0, stats.Latency.Min, 0.001)

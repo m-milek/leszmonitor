@@ -7,6 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/auditlog"
 	"github.com/m-milek/leszmonitor/features/instance"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/realtime"
 	"github.com/m-milek/leszmonitor/features/users"
 
@@ -28,9 +29,9 @@ func SetupRouters(
 		protectedRouter,
 		h.Monitor,
 		h.MonitorResults,
-		h.MonitorStats,
 		requirePermission(h),
 	)
+	stats.RegisterRoutes(protectedRouter, h.MonitorStats, requirePermission(h))
 
 	// Tags
 	tags.RegisterRoutes(protectedRouter, h.Tag, requirePermission(h))

@@ -20,7 +20,13 @@ type UptimeStats struct {
 }
 
 type MonitorStats struct {
-	Latency      LatencyStats      `json:"latency"`
-	StatusChange StatusChangeStats `json:"statusChange"`
-	Uptime       UptimeStats       `json:"uptime"`
+	ProbeType     kind.ProbeType    `json:"probeType"`
+	ProbeSpecific any               `json:"probeSpecific,omitempty"`
+	Latency       LatencyStats      `json:"latency"`
+	StatusChange  StatusChangeStats `json:"statusChange"`
+	Uptime        UptimeStats       `json:"uptime"`
+}
+
+type HTTPProbeStats struct {
+	HTTPCodeToCount map[int]int `json:"httpCodeToCount"`
 }

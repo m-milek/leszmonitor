@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
@@ -15,12 +17,13 @@ import (
 )
 
 type IMonitorStatsService interface {
-	GetStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (MonitorStats, *apperr.ServiceError)
+	GetStatsByMonitorID(ctx context.Context, monitorID uuid.UUID, from time.Time, to time.Time) (MonitorStats, *apperr.ServiceError)
 }
 
 type MonitorStatsService struct {
 	db                db.DB
 	statusChangeDAO   statuschange.IMonitorStatusChangeDAO
+	monitorDAO        monitors.IMonitorDAO
 	monitorResultsDAO results.IMonitorResultDAO
 }
 
@@ -30,21 +33,29 @@ type MonitorStatsServiceDeps struct {
 
 func NewMonitorStatsService(deps MonitorStatsServiceDeps) MonitorStatsService {
 	statusChangeDAO := statuschange.NewMonitorStatusChangeDAO(deps.DB.Querier())
+	monitorDAO := monitors.NewMonitorDAO(deps.DB.Querier())
 	monitorResultsDAO := results.NewMonitorResultDAO(deps.DB.Querier())
 	return MonitorStatsService{
 		db:                deps.DB,
 		statusChangeDAO:   statusChangeDAO,
+		monitorDAO:        monitorDAO,
 		monitorResultsDAO: monitorResultsDAO,
 	}
 }
 
-func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID string, from time.Time, to time.Time) (MonitorStats, *apperr.ServiceError) {
+func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID uuid.UUID, from time.Time, to time.Time) (MonitorStats, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitorStats, "GetStatsByMonitorID")
 	logger.Trace().
-		Str("monitorID", monitorID).
+		Str("monitorID", monitorID.String()).
 		Time("from", from).
 		Time("to", to).
 		Msg("Getting stats by monitor ID")
+
+	monitor, err := s.monitorDAO.GetMonitorByID(ctx, monitorID)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get monitor by ID")
+		return MonitorStats{}, apperr.NewInternalError("failed to get monitor: %w", err)
+	}
 
 	monitorResults, err := s.monitorResultsDAO.GetMonitorResultsByMonitorIDInTimeWindow(ctx, monitorID, from, to)
 	if err != nil {
@@ -60,11 +71,18 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 	latencyStats := calculateLatencyStats(monitorResults)
 	statusChangeStats := calculateStatusChangeStats(latestStatusChange, to)
 	uptimeStats := calculateUptimeStats(monitorResults)
+	probeSpecificStats, err := getProbeSpecificStats(monitor.Type, monitorResults)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get probe specific stats")
+		return MonitorStats{}, apperr.NewInternalError("failed to get probe specific stats: %w", err)
+	}
 
 	return MonitorStats{
-		Latency:      latencyStats,
-		StatusChange: statusChangeStats,
-		Uptime:       uptimeStats,
+		ProbeType:     monitor.Type,
+		Latency:       latencyStats,
+		StatusChange:  statusChangeStats,
+		Uptime:        uptimeStats,
+		ProbeSpecific: probeSpecificStats,
 	}, nil
 }
 
@@ -124,4 +142,8 @@ func calculateUptimeStats(monitorResults []results.IMonitorResult) UptimeStats {
 		StatusToCount:      statusToCount,
 		StatusToPercentage: statusToPercentage,
 	}
+}
+
+func getProbeSpecificStats(probeType kind.ProbeType, monitorResults []results.IMonitorResult) (any, error) {
+	return mapToProbeStats(probeType, monitorResults)
 }

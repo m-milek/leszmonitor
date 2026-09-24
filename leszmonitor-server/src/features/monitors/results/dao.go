@@ -25,7 +25,7 @@ type IMonitorResultDAO interface {
 	) ([]IMonitorResult, error)
 	GetMonitorResultsByMonitorIDInTimeWindow(
 		ctx context.Context,
-		id string,
+		id uuid.UUID,
 		from time.Time,
 		to time.Time,
 	) ([]IMonitorResult, error)
@@ -76,7 +76,7 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 
 func (r *monitorResultDAO) GetMonitorResultsByMonitorIDInTimeWindow(
 	ctx context.Context,
-	id string,
+	id uuid.UUID,
 	from time.Time,
 	to time.Time,
 ) ([]IMonitorResult, error) {
