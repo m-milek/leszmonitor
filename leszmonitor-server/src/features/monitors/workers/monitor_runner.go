@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/features/monitors"
-	"github.com/m-milek/leszmonitor/features/monitors/kind"
-	"github.com/m-milek/leszmonitor/features/monitors/probe"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
@@ -53,7 +51,7 @@ func (r *monitorRunner) run(ctx context.Context) {
 		case mon := <-r.updates:
 			r.applyUpdate(mon, ticker)
 		case <-ticker.C:
-			r.runCheck(ctx)
+			r.schedule()
 		}
 	}
 }
@@ -98,46 +96,12 @@ func (r *monitorRunner) applyUpdate(update monitors.Monitor, ticker *time.Ticker
 	}
 }
 
-// runCheck executes the monitor's check and handles the result.
-func (r *monitorRunner) runCheck(ctx context.Context) {
+// schedule sends the monitor to the executor if it is active.
+func (r *monitorRunner) schedule() {
 	if r.monitor.RunState != monitors.MonitorStateActive {
 		r.logger.Trace().Str("state", string(r.monitor.RunState)).Msg("Skipping run - not active")
 		return
 	}
 
-	if err := r.monitor.Validate(); err != nil {
-		r.logger.Error().Err(err).Msg("Monitor validation failed")
-		return
-	}
-
-	probe, err := probe.UnmarshalProbeFromBytes(r.monitor.Type, []byte(r.monitor.ProbeConfig))
-	if err != nil {
-		r.logger.Error().Err(err).Msg("Failed to unmarshal probe config")
-		return
-	}
-	if err := probe.Validate(); err != nil {
-		r.logger.Error().Err(err).Msg("Probe config validation failed")
-		return
-	}
-
-	r.logger.Trace().Msg("Running monitor")
-	result, err := probe.Run(ctx, r.monitor.ID)
-	if err != nil {
-		r.logger.Error().Err(err).Msg("Probe execution failed due to an error")
-		return
-	}
-	r.logger.Info().Any("monitor_result", result).Msg("Monitor result")
-
-	if result.GetStatus() != kind.MonitorStatusUp {
-		if failures := result.GetFailures(); len(failures) > 0 {
-			r.logger.Warn().
-				Any("failures", failures).
-				Msg("Monitor check failed (service down or misconfigured)")
-		}
-	}
-
-	monitors.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
-		Result:  result,
-		Monitor: r.monitor,
-	})
+	monitors.MonitorExecuteChannel.Broadcast(monitors.MonitorExecuteMessage{Monitor: r.monitor})
 }

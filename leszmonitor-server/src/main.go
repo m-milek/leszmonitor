@@ -34,6 +34,10 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 		manager.Run(ctx)
 	})
 	wg.Go(func() {
+		executor := workers.NewMonitorExecutor(db.Get())
+		executor.Run(ctx)
+	})
+	wg.Go(func() {
 		workers.StartDataCleanupWorker(ctx)
 	})
 	wg.Go(func() {

@@ -16,8 +16,8 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 
 	_, realDB, monitor := setupFullDB(t)
 
-	runChannel := monitors.MonitorRunChannel.Subscribe()
-	defer monitors.MonitorRunChannel.Unsubscribe(runChannel)
+	runChannel := monitors.MonitorExecuteChannel.Subscribe()
+	defer monitors.MonitorExecuteChannel.Unsubscribe(runChannel)
 
 	runner := &monitorRunner{
 		monitor:    *monitor,
@@ -30,13 +30,12 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 
 	go runner.run(ctx)
 
-	// We should receive a run result since the interval is 1s
+	// We should receive an execute message since the interval is 1s
 	select {
 	case msg := <-runChannel:
 		assert.Equal(t, monitor.ID, msg.Monitor.ID)
-		assert.NotNil(t, msg.Result)
 	case <-time.After(3 * time.Second):
-		t.Fatal("Timeout waiting for monitor run result")
+		t.Fatal("Timeout waiting for monitor execute message")
 	}
 }
 
