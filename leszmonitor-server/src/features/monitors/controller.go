@@ -250,5 +250,5 @@ func (c *MonitorAPIController) RunMonitorManuallyByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	httpx.RespondMessage(ctx, w, http.StatusOK, "Monitor run manually successfully")
+	httpx.RespondMessage(ctx, w, http.StatusAccepted, "Monitor run scheduled")
 }

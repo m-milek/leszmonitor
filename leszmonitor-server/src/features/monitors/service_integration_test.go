@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
@@ -316,7 +317,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 }
 
 func TestIntegration_MonitorService_RunMonitorManuallyByID(t *testing.T) {
-	t.Run("Successfully runs a monitor and records audit log", func(t *testing.T) {
+	t.Run("Schedules a monitor run and records audit log", func(t *testing.T) {
 		ctx, monitorService, _, owner := setupMonitorIntegrationTest(t)
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -339,8 +340,18 @@ func TestIntegration_MonitorService_RunMonitorManuallyByID(t *testing.T) {
 		monitor, svcErr := monitorService.GetMonitorByID(ctx, created.MonitorID)
 		require.Nil(t, svcErr)
 
+		executeChannel := monitors.MonitorExecuteChannel.Subscribe()
+		defer monitors.MonitorExecuteChannel.Unsubscribe(executeChannel)
+
 		svcErr = monitorService.RunMonitorManuallyByID(ctx, monitor.ID)
 		require.Nil(t, svcErr)
+
+		select {
+		case msg := <-executeChannel:
+			assert.Equal(t, monitor.ID, msg.Monitor.ID)
+		case <-time.After(time.Second):
+			t.Fatal("Timeout waiting for monitor execute message")
+		}
 
 		filter := audit.AuditLogFilter{ResourceID: &monitor.ID}
 		entries, dbErr := audit.NewAuditLogDAO(db.Get().Querier()).GetAuditLogEntries(ctx, filter, util.Pagination{Page: 1, PerPage: 10})
@@ -353,7 +364,6 @@ func TestIntegration_MonitorService_RunMonitorManuallyByID(t *testing.T) {
 				assert.Equal(t, owner.Username, *entry.Username)
 				assert.Equal(t, monitor.ID.String(), entry.ResourceID.String())
 				assert.True(t, entry.IsSuccess)
-				assert.NotNil(t, entry.After)
 				break
 			}
 		}
