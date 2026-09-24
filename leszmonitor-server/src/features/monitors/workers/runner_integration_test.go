@@ -19,7 +19,7 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 	runChannel := monitors.MonitorRunChannel.Subscribe()
 	defer monitors.MonitorRunChannel.Unsubscribe(runChannel)
 
-	runner := &probeRunner{
+	runner := &monitorRunner{
 		monitor:    *monitor,
 		db:         realDB,
 		cancel:     cancel,
@@ -51,7 +51,7 @@ func TestIntegration_ProbeRunner_SelfTermination(t *testing.T) {
 
 	exitCalled := make(chan bool, 1)
 
-	runner := &probeRunner{
+	runner := &monitorRunner{
 		monitor:    *monitor,
 		db:         realDB,
 		cancel:     cancel,

@@ -12,10 +12,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// probeRunner owns the lifecycle of a single monitor. All state lives in the
+// monitorRunner owns the lifecycle of a single monitor. All state lives in the
 // run() goroutine, so no locking is required. Edits arrive via updates (pushed
 // by the worker); deletion/shutdown arrive via ctx cancellation.
-type probeRunner struct {
+type monitorRunner struct {
 	monitor monitors.Monitor
 	db      db.DB
 	cancel  context.CancelFunc
@@ -28,7 +28,7 @@ type probeRunner struct {
 
 // run handles the lifecycle of a single monitor.
 // It runs checks at intervals, applying edits, and self-terminates on invalid configuration.
-func (r *probeRunner) run(ctx context.Context) {
+func (r *monitorRunner) run(ctx context.Context) {
 	defer r.cancel()
 
 	r.refreshLogger()
@@ -59,18 +59,18 @@ func (r *probeRunner) run(ctx context.Context) {
 }
 
 // interval returns the monitor's interval as a time.Duration.
-func (r *probeRunner) interval() time.Duration {
+func (r *monitorRunner) interval() time.Duration {
 	return time.Duration(r.monitor.Interval) * time.Second
 }
 
 // refreshLogger updates the runner's logger with the current monitor name. Called on startup and on edits.
-func (r *probeRunner) refreshLogger() {
+func (r *monitorRunner) refreshLogger() {
 	r.logger = r.baseLogger.With().Str("monitor_name", r.monitor.Name).Logger()
 }
 
 // push delivers an edit to the runner. Newest-wins and non-blocking, so a
 // mid-probe runner never stalls the worker's dispatch loop.
-func (r *probeRunner) push(mon monitors.Monitor) {
+func (r *monitorRunner) push(mon monitors.Monitor) {
 	for {
 		select {
 		case r.updates <- mon:
@@ -86,7 +86,7 @@ func (r *probeRunner) push(mon monitors.Monitor) {
 
 // applyUpdate applies an incoming edit to the runner's state.
 // If the interval has changed, the ticker is reset to the new duration.
-func (r *probeRunner) applyUpdate(update monitors.Monitor, ticker *time.Ticker) {
+func (r *monitorRunner) applyUpdate(update monitors.Monitor, ticker *time.Ticker) {
 	oldInterval := r.monitor.Interval
 	r.monitor = update
 	r.refreshLogger()
@@ -99,7 +99,7 @@ func (r *probeRunner) applyUpdate(update monitors.Monitor, ticker *time.Ticker) 
 }
 
 // runCheck executes the monitor's check and handles the result.
-func (r *probeRunner) runCheck(ctx context.Context) {
+func (r *monitorRunner) runCheck(ctx context.Context) {
 	if r.monitor.RunState != monitors.MonitorStateActive {
 		r.logger.Trace().Str("state", string(r.monitor.RunState)).Msg("Skipping run - not active")
 		return

@@ -11,26 +11,26 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Manager supervises the set of live monitor runners.
-type Manager struct {
+// MonitorScheduler supervises the set of live monitor runners.
+type MonitorScheduler struct {
 	mu     sync.RWMutex
 	db     db.DB
-	probes map[uuid.UUID]*probeRunner
+	probes map[uuid.UUID]*monitorRunner
 	exited chan uuid.UUID
 	logger zerolog.Logger
 }
 
-// NewManager returns a pointer: Manager holds a sync.RWMutex and must
+// NewMonitorScheduler returns a pointer: MonitorScheduler holds a sync.RWMutex and must
 // never be copied (go vet copylocks).
-func NewManager(database db.DB) *Manager {
-	return &Manager{
+func NewMonitorScheduler(database db.DB) *MonitorScheduler {
+	return &MonitorScheduler{
 		db:     database,
-		probes: make(map[uuid.UUID]*probeRunner),
+		probes: make(map[uuid.UUID]*monitorRunner),
 		exited: make(chan uuid.UUID, 100),
 	}
 }
 
-func (w *Manager) Run(ctx context.Context) {
+func (w *MonitorScheduler) Run(ctx context.Context) {
 	w.logger = log.FromContext(ctx).With().Str("component", "probes_worker").Logger()
 
 	w.logger.Info().Msg("Starting probes worker...")
@@ -55,14 +55,14 @@ func (w *Manager) Run(ctx context.Context) {
 			w.logger.Info().Msg("Probes worker shutting down...")
 			return
 		case msg := <-monitorMsgChannel:
-			w.dispatch(ctx, msg)
+			w.dispatchLifecycleMessage(ctx, msg)
 		case exitedID := <-w.exited:
 			w.remove(exitedID)
 		}
 	}
 }
 
-func (w *Manager) dispatch(ctx context.Context, msg monitors.MonitorLifecycleMessage) {
+func (w *MonitorScheduler) dispatchLifecycleMessage(ctx context.Context, msg monitors.MonitorLifecycleMessage) {
 	switch msg.Status {
 	case monitors.Created:
 		if msg.Monitor != nil {
@@ -82,7 +82,7 @@ func (w *Manager) dispatch(ctx context.Context, msg monitors.MonitorLifecycleMes
 	}
 }
 
-func (w *Manager) start(ctx context.Context, monitor monitors.Monitor) {
+func (w *MonitorScheduler) start(ctx context.Context, monitor monitors.Monitor) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -96,7 +96,7 @@ func (w *Manager) start(ctx context.Context, monitor monitors.Monitor) {
 
 	childContext, cancel := context.WithCancel(ctx)
 
-	probe := &probeRunner{
+	probe := &monitorRunner{
 		monitor:    monitor,
 		db:         w.db,
 		cancel:     cancel,
@@ -111,7 +111,7 @@ func (w *Manager) start(ctx context.Context, monitor monitors.Monitor) {
 }
 
 // stop cancels a running probe and removes it.
-func (w *Manager) stop(id uuid.UUID) {
+func (w *MonitorScheduler) stop(id uuid.UUID) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -126,14 +126,14 @@ func (w *Manager) stop(id uuid.UUID) {
 }
 
 // remove drops a probe that has already exited on its own.
-func (w *Manager) remove(id uuid.UUID) {
+func (w *MonitorScheduler) remove(id uuid.UUID) {
 	w.mu.Lock()
 	delete(w.probes, id)
 	w.mu.Unlock()
 }
 
-// get returns a probeRunner for a given monitor uuid.UUID.
-func (w *Manager) get(id uuid.UUID) *probeRunner {
+// get returns a monitorRunner for a given monitor uuid.UUID.
+func (w *MonitorScheduler) get(id uuid.UUID) *monitorRunner {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return w.probes[id]
@@ -141,7 +141,7 @@ func (w *Manager) get(id uuid.UUID) *probeRunner {
 
 // notifyExit sends a message to the worker's main loop that a probe has exited on its own and can be removed from the map.
 // This is used for self-termination when a probe detects an invalid configuration and fails.
-func (w *Manager) notifyExit(ctx context.Context, id uuid.UUID) {
+func (w *MonitorScheduler) notifyExit(ctx context.Context, id uuid.UUID) {
 	select {
 	case w.exited <- id:
 	case <-ctx.Done():
@@ -149,7 +149,7 @@ func (w *Manager) notifyExit(ctx context.Context, id uuid.UUID) {
 }
 
 // ActiveCount returns the number of currently active probes.
-func (w *Manager) ActiveCount() int {
+func (w *MonitorScheduler) ActiveCount() int {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return len(w.probes)

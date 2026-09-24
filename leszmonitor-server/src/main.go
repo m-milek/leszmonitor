@@ -30,7 +30,7 @@ var staticFiles embed.FS
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Go(func() {
-		manager := workers.NewManager(db.Get())
+		manager := workers.NewMonitorScheduler(db.Get())
 		manager.Run(ctx)
 	})
 	wg.Go(func() {

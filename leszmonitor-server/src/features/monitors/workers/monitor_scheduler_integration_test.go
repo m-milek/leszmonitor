@@ -15,7 +15,7 @@ func TestIntegration_Manager_Lifecycle(t *testing.T) {
 
 	_, realDB, monitor := setupFullDB(t)
 
-	manager := NewManager(realDB)
+	manager := NewMonitorScheduler(realDB)
 	go manager.Run(ctx)
 
 	// Wait for DB loading to finish
