@@ -19,25 +19,22 @@ var (
 		"tcp4", // IPv4 over TCP
 		"tcp6", // IPv6 over TCP
 	}
-	retryTimeout = 1 * time.Second // Default retry timeout
 )
 
 type TCPProbe struct {
-	Host            string `json:"host"`       // Host to call
-	Port            int    `json:"port"`       // Port to call
-	Protocol        string `json:"protocol"`   // Protocol to use (tcp, udp, etc.)
-	Timeout         int    `json:"timeout"`    // Timeout in milliseconds for each connection attempt
-	RetryCount      int    `json:"retryCount"` // RetryCount is the number of retries until
+	Host            string `json:"host"`     // Host to call
+	Port            int    `json:"port"`     // Port to call
+	Protocol        string `json:"protocol"` // Protocol to use (tcp, udp, etc.)
+	Timeout         int    `json:"timeout"`  // Timeout in milliseconds for the connection attempt
 	dialAddressFunc func(protocol string, address string, timeout time.Duration) (time.Duration, error)
 }
 
-func NewTCPProbe(host string, port int, protocol string, timeout, retryCount int) (*TCPProbe, error) {
+func NewTCPProbe(host string, port int, protocol string, timeout int) (*TCPProbe, error) {
 	probe := &TCPProbe{
 		Host:            host,
 		Port:            port,
 		Protocol:        protocol,
 		Timeout:         timeout,
-		RetryCount:      retryCount,
 		dialAddressFunc: dialAddress,
 	}
 
@@ -62,27 +59,18 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 	portString := strconv.Itoa(m.Port)
 	address := net.JoinHostPort(m.Host, portString)
 
-	details.Tries++
-	var lastErr error
-	for i := range m.RetryCount {
-		duration, err := dialAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Millisecond)
-		if err == nil {
-			result.SetDuration(duration.Milliseconds())
-			details.LatencyMs = duration.Milliseconds()
-			return &result, nil
-		}
-		lastErr = err
-		if i < m.RetryCount-1 {
-			details.Tries++
-			time.Sleep(retryTimeout)
-		}
+	duration, err := dialAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Millisecond)
+	if err != nil {
+		result.AddFailure(
+			results.FailureReasonTCPConnectionFailed,
+			results.CauseFailureDetails{Cause: classifyNetError(err)},
+			err,
+		)
+		return &result, nil
 	}
 
-	result.AddFailure(
-		results.FailureReasonTCPConnectionFailed,
-		results.CauseFailureDetails{Cause: classifyNetError(lastErr)},
-		lastErr,
-	)
+	result.SetDuration(duration.Milliseconds())
+	details.LatencyMs = duration.Milliseconds()
 
 	return &result, nil
 }
@@ -90,10 +78,6 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 func (m *TCPProbe) Validate() error {
 	if m.Host == "" {
 		return fmt.Errorf("host cannot be empty")
-	}
-
-	if m.RetryCount <= 0 {
-		return fmt.Errorf("count must be greater than zero")
 	}
 
 	if m.Timeout <= 0 {

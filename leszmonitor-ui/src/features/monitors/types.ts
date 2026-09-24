@@ -35,7 +35,6 @@ export interface TcpMonitorConfig {
   port: number;
   protocol: TcpProtocol;
   timeout: number;
-  retryCount: number;
 }
 
 export const recordTypes = [
@@ -89,7 +88,6 @@ export interface HttpResultDetails {
 }
 
 export interface TcpResultDetails {
-  tries: number;
   latencyMs: number;
 }
 

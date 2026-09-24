@@ -6,8 +6,7 @@ import "net/http"
 func RegisterRoutes(publicRouter *http.ServeMux, protectedRouter *http.ServeMux, c UserAPIController) {
 	protectedRouter.HandleFunc("GET /api/v1/users", c.GetAllUsersHandler)
 	protectedRouter.HandleFunc(
-		"GET /api/v1/users/{username}",
-		RequireSelf("username")(c.GetUserHandler),
+		"GET /api/v1/users/{username}", c.GetUserHandler,
 	)
 	protectedRouter.HandleFunc(
 		"PATCH /api/v1/users/{username}/role",

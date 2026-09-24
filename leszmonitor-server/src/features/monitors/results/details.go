@@ -9,7 +9,6 @@ type HTTPResultDetails struct {
 }
 
 type TCPResultDetails struct {
-	Tries     int64 `json:"tries"`
 	LatencyMs int64 `json:"latencyMs"`
 }
 

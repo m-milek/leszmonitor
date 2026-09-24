@@ -90,24 +90,6 @@ export function TcpMonitorConfigFields({
           </Field>
         )}
       </form.Field>
-
-      <form.Field name="probeConfig.retryCount">
-        {(field) => (
-          <Field id={field.name}>
-            <FieldLabel>Retry Count</FieldLabel>
-            <LMInputField
-              name={field.name}
-              type="number"
-              inputMode="numeric"
-              value={field.state.value}
-              onChange={(e) => field.handleChange(Number(e.target.value))}
-              placeholder="3"
-              isInvalid={isFieldInvalid(field)}
-              errorMessage={getFirstError(field)}
-            />
-          </Field>
-        )}
-      </form.Field>
     </FieldGroup>
   );
 }

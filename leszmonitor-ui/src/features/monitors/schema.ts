@@ -32,7 +32,6 @@ export const tcpMonitorConfigSchema = z.object({
     .max(65535, "Port must be at most 65535"),
   protocol: z.enum(tcpProtocols),
   timeout: z.number().min(1, "Timeout must be at least 1 ms"),
-  retryCount: z.number().min(0, "Retry count cannot be negative"),
 });
 
 export const dnsMonitorConfigSchema = z.object({
@@ -116,7 +115,6 @@ export const defaultConfigs: Record<
     port: 443,
     protocol: "tcp",
     timeout: 5000,
-    retryCount: 3,
   },
   dns: {
     hostname: "",
