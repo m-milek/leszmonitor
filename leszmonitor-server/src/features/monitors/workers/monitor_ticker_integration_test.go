@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
+func TestIntegration_MonitorTicker_Schedule(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -19,7 +19,7 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 	runChannel := monitors.MonitorExecuteChannel.Subscribe()
 	defer monitors.MonitorExecuteChannel.Unsubscribe(runChannel)
 
-	runner := &monitorRunner{
+	ticker := &monitorTicker{
 		monitor:    *monitor,
 		db:         realDB,
 		cancel:     cancel,
@@ -28,7 +28,7 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 		baseLogger: log.New(),
 	}
 
-	go runner.run(ctx)
+	go ticker.run(ctx)
 
 	// We should receive an execute message since the interval is 1s
 	select {
@@ -39,7 +39,7 @@ func TestIntegration_ProbeRunner_CheckExecution(t *testing.T) {
 	}
 }
 
-func TestIntegration_ProbeRunner_SelfTermination(t *testing.T) {
+func TestIntegration_MonitorTicker_SelfTermination(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -50,7 +50,7 @@ func TestIntegration_ProbeRunner_SelfTermination(t *testing.T) {
 
 	exitCalled := make(chan bool, 1)
 
-	runner := &monitorRunner{
+	ticker := &monitorTicker{
 		monitor:    *monitor,
 		db:         realDB,
 		cancel:     cancel,
@@ -59,7 +59,7 @@ func TestIntegration_ProbeRunner_SelfTermination(t *testing.T) {
 		baseLogger: log.New(),
 	}
 
-	go runner.run(ctx)
+	go ticker.run(ctx)
 
 	select {
 	case <-exitCalled:
