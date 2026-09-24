@@ -43,7 +43,6 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMoni
 		kind.MonitorStatusUp,
 		false,
 		0,
-		"",
 		&results.HTTPResultDetails{},
 	)
 	details, castErr := result.GetDetails().(*results.HTTPResultDetails)
@@ -59,7 +58,11 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMoni
 
 	result.SetDuration(elapsed.Milliseconds())
 	if err != nil {
-		result.AddFailure(fmt.Sprintf("HTTP request failed: %s", err.Error()))
+		result.AddFailure(
+			results.FailureReasonHTTPRequestFailed,
+			results.CauseFailureDetails{Cause: classifyNetError(err)},
+			err,
+		)
 		logger.Trace().Err(err).Msg("HTTP request execution failed")
 		return &result, nil
 	}
@@ -88,9 +91,8 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMoni
 	err = m.checkResponseBody(httpResponse, &result)
 
 	if err != nil {
-		result.AddFailure(fmt.Sprintf("Error checking response body: %s", err.Error()))
+		result.AddFailure(results.FailureReasonHTTPResponseBodyReadFailed, nil, err)
 		logger.Trace().Err(err).Msg("Response body check failed")
-		return nil, err
 	}
 
 	return &result, nil
@@ -187,12 +189,10 @@ func (m *HTTPProbe) checkStatusCode(
 	}
 
 	if !util.SliceContains(m.ExpectedStatusCodes, response.StatusCode) {
-		failureMsg := fmt.Sprintf(
-			"Unexpected status code: got %d, expected one of %v",
-			response.StatusCode,
-			m.ExpectedStatusCodes,
-		)
-		result.AddFailure(failureMsg)
+		result.AddFailure(results.FailureReasonHTTPStatusCodeMismatch, results.StatusCodeMismatchDetails{
+			Got:      response.StatusCode,
+			Expected: m.ExpectedStatusCodes,
+		}, nil)
 	}
 }
 
@@ -204,12 +204,10 @@ func (m *HTTPProbe) checkResponseTime(
 		return
 	}
 	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTime) {
-		failureMsg := fmt.Sprintf(
-			"Response time exceeded: got %dms, expected <= %dms",
-			elapsed.Milliseconds(),
-			*m.ExpectedResponseTime,
-		)
-		result.AddFailure(failureMsg)
+		result.AddFailure(results.FailureReasonHTTPResponseTimeExceeded, results.ResponseTimeExceededDetails{
+			GotMs:         elapsed.Milliseconds(),
+			ExpectedMaxMs: *m.ExpectedResponseTime,
+		}, nil)
 	}
 }
 
@@ -221,12 +219,19 @@ func (m *HTTPProbe) checkResponseHeaders(
 		return
 	}
 
+	var mismatches []results.HeaderMismatch
 	for key, expectedValue := range m.ExpectedHeaders {
 		actualValue := response.Header.Get(key)
 		if actualValue != expectedValue {
-			failureMsg := fmt.Sprintf("Header mismatch for %s: got %s, expected %s", key, actualValue, expectedValue)
-			result.AddFailure(failureMsg)
+			mismatches = append(mismatches, results.HeaderMismatch{Name: key, Got: actualValue, Expected: expectedValue})
 		}
+	}
+	if len(mismatches) > 0 {
+		result.AddFailure(
+			results.FailureReasonHTTPResponseHeaderMismatch,
+			results.HeaderMismatchDetails{Headers: mismatches},
+			nil,
+		)
 	}
 }
 
@@ -250,8 +255,11 @@ func (m *HTTPProbe) checkResponseBody(
 
 	matches := regex.MatchString(responseBody)
 	if !matches {
-		failureMsg := fmt.Sprintf("Response body does not match regex: %s", m.ExpectedBodyRegex)
-		result.AddFailure(failureMsg)
+		result.AddFailure(
+			results.FailureReasonHTTPResponseBodyMismatch,
+			results.BodyMismatchDetails{Pattern: m.ExpectedBodyRegex},
+			nil,
+		)
 	}
 
 	return nil

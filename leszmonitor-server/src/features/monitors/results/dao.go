@@ -25,7 +25,7 @@ type IMonitorResultDAO interface {
 	) ([]IMonitorResult, error)
 	GetMonitorResultsByMonitorIDInTimeWindow(
 		ctx context.Context,
-		id string,
+		id uuid.UUID,
 		from time.Time,
 		to time.Time,
 	) ([]IMonitorResult, error)
@@ -49,7 +49,7 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 		var results []MonitorResult
 
 		err := sqlx.SelectContext(ctx, r.pool, &results, `
-			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.failures, mr.details, mr.created_at
 			FROM monitor_results mr
 			JOIN monitors m ON m.id = mr.monitor_id
 			WHERE mr.monitor_id = $1
@@ -76,7 +76,7 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 
 func (r *monitorResultDAO) GetMonitorResultsByMonitorIDInTimeWindow(
 	ctx context.Context,
-	id string,
+	id uuid.UUID,
 	from time.Time,
 	to time.Time,
 ) ([]IMonitorResult, error) {
@@ -84,7 +84,7 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorIDInTimeWindow(
 		var results []MonitorResult
 
 		err := sqlx.SelectContext(ctx, r.pool, &results, `
-			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.failures, mr.details, mr.created_at
 			FROM monitor_results mr
 			JOIN monitors m ON m.id = mr.monitor_id
 			WHERE mr.monitor_id = $1
@@ -130,25 +130,16 @@ func (r *monitorResultDAO) InsertMonitorResult(
 			return nil, err
 		}
 
-		var errorDetailsJSON []byte
-		if ed := result.GetErrorDetails(); ed.ErrorMessage != "" || len(ed.Errors) > 0 || len(ed.Failures) > 0 {
-			var err error
-			errorDetailsJSON, err = json.Marshal(ed)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 		_, err = r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitor_results (id, monitor_id, status, is_manually_triggered, duration_ms, error_details, details, created_at) 
+			`INSERT INTO monitor_results (id, monitor_id, status, is_manually_triggered, duration_ms, failures, details, created_at) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			result.GetID(),
 			result.GetMonitorID(),
 			result.GetStatus(),
 			result.GetIsManuallyTriggered(),
 			result.GetDurationMs(),
-			errorDetailsJSON,
+			result.GetFailures(),
 			detailsJSON,
 			result.GetCreatedAt(),
 		)
@@ -165,7 +156,7 @@ func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
 		var result MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `
-            SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+            SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.failures, mr.details, mr.created_at
             FROM monitor_results mr
             JOIN monitors m ON m.id = mr.monitor_id
             WHERE mr.monitor_id = $1
@@ -195,7 +186,7 @@ func (r *monitorResultDAO) GetOldestMonitorResultByMonitorID(
 		var result MonitorResult
 
 		err := sqlx.GetContext(ctx, r.pool, &result, `
-			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.error_details, mr.details, mr.created_at
+			SELECT mr.id, mr.monitor_id, m.kind, mr.status, mr.is_manually_triggered, mr.duration_ms, mr.failures, mr.details, mr.created_at
 			FROM monitor_results mr
 			JOIN monitors m ON m.id = mr.monitor_id
 			WHERE mr.monitor_id = $1
@@ -243,15 +234,6 @@ func processResultDetails(result *MonitorResult) error {
 		return err
 	}
 	result.Details = details
-
-	if len(result.ErrorDetailsJSON) > 0 {
-		var errorDetails ErrorDetails
-		if err := json.Unmarshal(result.ErrorDetailsJSON, &errorDetails); err == nil {
-			if errorDetails.ErrorMessage != "" || len(errorDetails.Errors) > 0 || len(errorDetails.Failures) > 0 {
-				result.ErrorDetails = &errorDetails
-			}
-		}
-	}
 
 	return nil
 }

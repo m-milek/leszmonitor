@@ -28,7 +28,7 @@ type TCPProbe struct {
 	Protocol        string `json:"protocol"`   // Protocol to use (tcp, udp, etc.)
 	Timeout         int    `json:"timeout"`    // Timeout in milliseconds for each connection attempt
 	RetryCount      int    `json:"retryCount"` // RetryCount is the number of retries until
-	dialAddressFunc func(protocol string, address string, timeout time.Duration) (bool, time.Duration)
+	dialAddressFunc func(protocol string, address string, timeout time.Duration) (time.Duration, error)
 }
 
 func NewTCPProbe(host string, port int, protocol string, timeout, retryCount int) (*TCPProbe, error) {
@@ -55,7 +55,6 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		kind.MonitorStatusUp,
 		false,
 		0,
-		"",
 		&results.TCPResultDetails{},
 	)
 	details := result.GetDetails().(*results.TCPResultDetails)
@@ -64,20 +63,26 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 	address := net.JoinHostPort(m.Host, portString)
 
 	details.Tries++
+	var lastErr error
 	for i := range m.RetryCount {
-		success, duration := dialAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Millisecond)
-		if success {
+		duration, err := dialAddressFunc(m.Protocol, address, time.Duration(m.Timeout)*time.Millisecond)
+		if err == nil {
 			result.SetDuration(duration.Milliseconds())
 			details.LatencyMs = duration.Milliseconds()
 			return &result, nil
 		}
+		lastErr = err
 		if i < m.RetryCount-1 {
 			details.Tries++
 			time.Sleep(retryTimeout)
 		}
 	}
 
-	result.AddFailure(fmt.Sprintf("Failed to connect to %s after %d tries", address, m.RetryCount))
+	result.AddFailure(
+		results.FailureReasonTCPConnectionFailed,
+		results.CauseFailureDetails{Cause: classifyNetError(lastErr)},
+		lastErr,
+	)
 
 	return &result, nil
 }
@@ -111,15 +116,15 @@ func (m *TCPProbe) Validate() error {
 var dialAddressFunc = dialAddress
 
 // // dialAddress attempts to connect to the specified address using the given protocol.
-func dialAddress(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
+func dialAddress(protocol string, address string, timeout time.Duration) (time.Duration, error) {
 	start := time.Now()
 	conn, err := net.DialTimeout(protocol, address, timeout)
 	duration := time.Since(start)
 
 	if err != nil {
-		return false, 0
+		return 0, err
 	}
 
 	defer conn.Close()
-	return true, duration
+	return duration, nil
 }

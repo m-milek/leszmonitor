@@ -27,7 +27,6 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 				kind.MonitorStatusUp,
 				false,
 				latency,
-				"",
 				nil,
 			)
 			res.CreatedAt = now.Add(-30 * time.Minute)
@@ -38,7 +37,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		from := now.Add(-1 * time.Hour)
 		to := now.Add(1 * time.Hour)
 
-		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID, from, to)
 		require.Nil(t, svcErr)
 		assert.InDelta(t, 200.0, stats.Latency.Avg, 0.001)
 		assert.InDelta(t, 100.0, stats.Latency.Min, 0.001)
@@ -53,7 +52,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		from := time.Now().UTC().Add(-1 * time.Hour)
 		to := time.Now().UTC().Add(1 * time.Hour)
 
-		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID, from, to)
 		require.Nil(t, svcErr)
 		assert.Equal(t, 0.0, stats.Latency.Avg)
 		assert.Equal(t, 0.0, stats.Latency.Min)
@@ -68,13 +67,13 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		now := time.Now().UTC()
 
 		// Result inside the query range: latency 500
-		resIn := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 500, "", nil)
+		resIn := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 500, nil)
 		resIn.CreatedAt = now.Add(-30 * time.Minute)
 		_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &resIn)
 		require.NoError(t, err)
 
 		// Result outside the query range (too old): latency 9999, should be excluded
-		resOut := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 9999, "", nil)
+		resOut := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 9999, nil)
 		resOut.CreatedAt = now.Add(-3 * time.Hour)
 		_, err = results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &resOut)
 		require.NoError(t, err)
@@ -82,7 +81,7 @@ func TestIntegration_MonitorStatsService_GetLatencyStatsByMonitorID(t *testing.T
 		from := now.Add(-1 * time.Hour)
 		to := now.Add(1 * time.Hour)
 
-		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID.String(), from, to)
+		stats, svcErr := service.GetStatsByMonitorID(ctx, monitor.ID, from, to)
 		require.Nil(t, svcErr)
 		assert.InDelta(t, 500.0, stats.Latency.Avg, 0.001)
 		assert.InDelta(t, 500.0, stats.Latency.Min, 0.001)

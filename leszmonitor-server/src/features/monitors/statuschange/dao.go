@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/platform/db"
 )
@@ -20,7 +21,7 @@ type IMonitorStatusChangeDAO interface {
 	) ([]MonitorStatusChange, error)
 	GetLatestStatusChangeByMonitorID(
 		ctx context.Context,
-		monitorID string,
+		monitorID uuid.UUID,
 		to time.Time,
 	) (*MonitorStatusChange, error)
 }
@@ -60,7 +61,7 @@ func (r *monitorStatusChangeDAO) InsertStatusChange(ctx context.Context, statusC
 
 func (r *monitorStatusChangeDAO) GetLatestStatusChangeByMonitorID(
 	ctx context.Context,
-	monitorID string,
+	monitorID uuid.UUID,
 	to time.Time,
 ) (*MonitorStatusChange, error) {
 	return db.Wrap(ctx, "GetLatestStatusChangeByMonitorID", func() (*MonitorStatusChange, error) {

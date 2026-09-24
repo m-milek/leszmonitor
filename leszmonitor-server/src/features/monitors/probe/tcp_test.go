@@ -3,11 +3,13 @@ package probe
 import (
 	"context"
 	"net"
+	"syscall"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -155,22 +157,22 @@ func TestTCPAddress(t *testing.T) {
 			t.Skip("Skipping network-dependent test in short mode")
 		}
 
-		success, duration := dialAddress("tcp", "localhost:80", 2*time.Second)
+		duration, err := dialAddress("tcp", "localhost:80", 2*time.Second)
 		// The test might fail if port 80 is not open on localhost
 		// This is more of an integration test than a unit test
-		if success {
+		if err == nil {
 			assert.Positive(t, duration)
 		}
 	})
 
 	t.Run("Failed TCPConfigType - Invalid Host", func(t *testing.T) {
-		success, _ := dialAddress("tcp", "invalid-host-that-does-not-exist:80", 1*time.Second)
-		assert.False(t, success)
+		_, err := dialAddress("tcp", "invalid-host-that-does-not-exist:80", 1*time.Second)
+		assert.Error(t, err)
 	})
 
 	t.Run("Failed TCPConfigType - Invalid Port", func(t *testing.T) {
-		success, _ := dialAddress("tcp", "localhost:99999", 1*time.Second)
-		assert.False(t, success)
+		_, err := dialAddress("tcp", "localhost:99999", 1*time.Second)
+		assert.Error(t, err)
 	})
 }
 
@@ -184,17 +186,17 @@ func TestTCPMonitor_Run(t *testing.T) {
 		probe := setupTCPProbe()
 
 		// Mock the dialAddress function
-		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
+		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (time.Duration, error) {
 			assert.Equal(t, "tcp", protocol)
 			assert.Equal(t, "example.com:80", address)
 			assert.Equal(t, 5000*time.Millisecond, timeout)
-			return true, 100 * time.Millisecond
+			return 100 * time.Millisecond, nil
 		}
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, kind.MonitorStatusUp, response.GetStatus())
 		assert.Equal(t, int64(100), response.GetDurationMs())
-		assert.Empty(t, response.GetErrorDetails().ErrorMessage)
+		assert.Empty(t, response.GetFailures())
 	})
 
 	t.Run("Failed TCPConfigType with Retries", func(t *testing.T) {
@@ -202,14 +204,19 @@ func TestTCPMonitor_Run(t *testing.T) {
 		callCount := 0
 
 		// Mock the dialAddress function to fail for all retries
-		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
+		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (time.Duration, error) {
 			callCount++
-			return false, 0
+			return 0, syscall.ECONNREFUSED
 		}
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, 3, callCount, "Should have tried 3 times")
 		assert.Equal(t, kind.MonitorStatusDown, response.GetStatus())
+		assert.Equal(t, results.Failures{{
+			Reason:  results.FailureReasonTCPConnectionFailed,
+			Details: results.CauseFailureDetails{Cause: results.FailureCauseConnectionRefused},
+			Error:   "connection refused",
+		}}, response.GetFailures())
 	})
 
 	t.Run("Successful TCPConfigType After Retry", func(t *testing.T) {
@@ -217,12 +224,12 @@ func TestTCPMonitor_Run(t *testing.T) {
 		callCount := 0
 
 		// Mock the dialAddress function to succeed on the second try
-		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (bool, time.Duration) {
+		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (time.Duration, error) {
 			callCount++
 			if callCount == 2 {
-				return true, 150 * time.Millisecond
+				return 150 * time.Millisecond, nil
 			}
-			return false, 0
+			return 0, syscall.ECONNREFUSED
 		}
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)

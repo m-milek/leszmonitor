@@ -45,7 +45,6 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		kind.MonitorStatusUp,
 		false,
 		0,
-		"",
 		&results.DNSResultDetails{},
 	)
 	details := result.GetDetails().(*results.DNSResultDetails)
@@ -64,7 +63,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 			return earlyErrorWithErr(
 				&result,
 				logger,
-				fmt.Sprintf("Failed to lookup AAAA records: %s", err.Error()),
+				results.FailureReasonDNSLookupFailed,
+				results.CauseFailureDetails{Cause: classifyDNSError(err)},
 				err,
 				"AAAA record lookup failed",
 			), nil
@@ -88,7 +88,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 			return earlyErrorWithErr(
 				&result,
 				logger,
-				fmt.Sprintf("Failed to lookup CNAME record: %s", err.Error()),
+				results.FailureReasonDNSLookupFailed,
+				results.CauseFailureDetails{Cause: classifyDNSError(err)},
 				err,
 				"CNAME record lookup failed",
 			), nil
@@ -108,7 +109,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 			return earlyErrorWithErr(
 				&result,
 				logger,
-				fmt.Sprintf("Failed to lookup MX records: %s", err.Error()),
+				results.FailureReasonDNSLookupFailed,
+				results.CauseFailureDetails{Cause: classifyDNSError(err)},
 				err,
 				"MX record lookup failed",
 			), nil
@@ -128,7 +130,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 			return earlyErrorWithErr(
 				&result,
 				logger,
-				fmt.Sprintf("Failed to lookup TXT records: %s", err.Error()),
+				results.FailureReasonDNSLookupFailed,
+				results.CauseFailureDetails{Cause: classifyDNSError(err)},
 				err,
 				"TXT record lookup failed",
 			), nil
@@ -148,7 +151,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 			return earlyErrorWithErr(
 				&result,
 				logger,
-				fmt.Sprintf("Failed to lookup NS records: %s", err.Error()),
+				results.FailureReasonDNSLookupFailed,
+				results.CauseFailureDetails{Cause: classifyDNSError(err)},
 				err,
 				"NS record lookup failed",
 			), nil
@@ -164,7 +168,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 	case DNSRecordTypeSRV:
 		service, proto, name, err := splitSRVHostname(p.Hostname)
 		if err != nil {
-			return earlyErrorWithErr(&result, logger, err.Error(), err, "SRV record name parsing failed"), nil
+			return earlyErrorWithErr(&result, logger, results.FailureReasonDNSInvalidSRVHostname, nil, err, "SRV record name parsing failed"), nil
 		}
 		_, srvRecords, err := resolver.LookupSRV(ctx, service, proto, name)
 		endTime = time.Now()
@@ -172,7 +176,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 			return earlyErrorWithErr(
 				&result,
 				logger,
-				fmt.Sprintf("Failed to lookup SRV records: %s", err.Error()),
+				results.FailureReasonDNSLookupFailed,
+				results.CauseFailureDetails{Cause: classifyDNSError(err)},
 				err,
 				"SRV record lookup failed",
 			), nil
@@ -275,11 +280,12 @@ func dnsIPNetwork(recordType DNSRecordType) string {
 func earlyErrorWithErr(
 	result results.IMonitorResult,
 	logger *zerolog.Logger,
-	userMsg string,
+	reason results.FailureReason,
+	details any,
 	err error,
 	logMsg string,
 ) results.IMonitorResult {
-	result.AddFailure(userMsg)
+	result.AddFailure(reason, details, err)
 	logger.Trace().Err(err).Msg(logMsg)
 	result.SetDuration(0)
 	return result
@@ -302,6 +308,7 @@ func checkExpected[R any](
 		details.ResolvedRecords = append(details.ResolvedRecords, recordToAny(r))
 	}
 
+	var missing []string
 	for _, expected := range expectedValues {
 		found := false
 		for _, r := range resolvedRecords {
@@ -311,9 +318,11 @@ func checkExpected[R any](
 			}
 		}
 		if !found {
-			msg := notFoundMsg(expected)
-			result.AddFailure(msg)
-			logger.Trace().Msg(msg)
+			missing = append(missing, expected)
+			logger.Trace().Msg(notFoundMsg(expected))
 		}
+	}
+	if len(missing) > 0 {
+		result.AddFailure(results.FailureReasonDNSExpectedRecordMissing, results.MissingRecordsDetails{Missing: missing}, nil)
 	}
 }

@@ -4,16 +4,14 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/features/monitors/results"
-	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/platform/auth"
 )
 
-// RegisterRoutes registers the monitor, monitor result and monitor stats API routes.
+// RegisterRoutes registers the monitor and monitor result API routes.
 func RegisterRoutes(
 	protectedRouter *http.ServeMux,
 	c MonitorAPIController,
 	results results.MonitorResultsAPIController,
-	stats stats.MonitorStatsAPIController,
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
 	protectedRouter.HandleFunc(
@@ -52,10 +50,5 @@ func RegisterRoutes(
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results",
 		requirePermission(auth.PermissionReader)(results.GetMonitorResultsByMonitorIDHandler),
-	)
-
-	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}/stats",
-		requirePermission(auth.PermissionReader)(stats.GetStatsByMonitorIDHandler),
 	)
 }
