@@ -2,10 +2,10 @@ package probe
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net/http"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/google/uuid"
@@ -130,12 +130,11 @@ func TestHttpMonitorRunSuccess(t *testing.T) {
 	response, _ := probe.Run(context.Background(), uuid.Nil)
 
 	assert.Equal(t, kind.MonitorStatusUp, response.GetStatus())
-	assert.Empty(t, response.GetErrorDetails().Errors)
 
 	details, ok := response.GetDetails().(*results.HTTPResultDetails)
 	assert.True(t, ok)
 	assert.Equal(t, 200, details.StatusCode)
-	assert.Empty(t, response.GetErrorDetails().Failures)
+	assert.Empty(t, response.GetFailures())
 
 	mockHTTPClient.AssertExpectations(t)
 }
@@ -156,7 +155,10 @@ func TestHttpMonitorRunFailure(t *testing.T) {
 
 	assert.Equal(t, kind.MonitorStatusDown, response.GetStatus())
 
-	assert.Contains(t, response.GetErrorDetails().Failures[0], "Unexpected status code")
+	assert.Equal(t, results.Failures{{
+		Reason:  results.FailureReasonHTTPStatusCodeMismatch,
+		Details: results.StatusCodeMismatchDetails{Got: 404, Expected: []int{200}},
+	}}, response.GetFailures())
 
 	mockClient.AssertExpectations(t)
 }
@@ -166,14 +168,17 @@ func TestHttpMonitorRunError(t *testing.T) {
 
 	probe := setupTestHTTPProbe()
 
-	mockClient.On("Do", mock.Anything).Return(nil, errors.New("connection refused")).Once()
+	mockClient.On("Do", mock.Anything).Return(nil, syscall.ECONNREFUSED).Once()
 	httpClientOrMock = mockClient
 
 	response, _ := probe.Run(context.Background(), uuid.Nil)
 
 	assert.Equal(t, kind.MonitorStatusDown, response.GetStatus())
-	assert.NotEmpty(t, response.GetErrorDetails().Failures)
-	assert.Contains(t, response.GetErrorDetails().Failures[0], "connection refused")
+	assert.Equal(t, results.Failures{{
+		Reason:  results.FailureReasonHTTPRequestFailed,
+		Details: results.CauseFailureDetails{Cause: results.FailureCauseConnectionRefused},
+		Error:   "connection refused",
+	}}, response.GetFailures())
 
 	mockClient.AssertExpectations(t)
 }
@@ -196,26 +201,22 @@ func TestHttpMonitorRunMultipleFailures(t *testing.T) {
 
 	assert.Equal(t, kind.MonitorStatusDown, response.GetStatus())
 
-	failures := response.GetErrorDetails().Failures
-	assert.Len(t, failures, 3)
-
-	hasStatusCode := false
-	hasBody := false
-	hasHeaders := false
-	for _, f := range failures {
-		if strings.Contains(f, "status code") {
-			hasStatusCode = true
-		}
-		if strings.Contains(f, "body") {
-			hasBody = true
-		}
-		if strings.Contains(f, "Header mismatch") {
-			hasHeaders = true
-		}
-	}
-	assert.True(t, hasStatusCode)
-	assert.True(t, hasBody)
-	assert.True(t, hasHeaders)
+	assert.ElementsMatch(t, results.Failures{
+		{
+			Reason:  results.FailureReasonHTTPStatusCodeMismatch,
+			Details: results.StatusCodeMismatchDetails{Got: 404, Expected: []int{200}},
+		},
+		{
+			Reason:  results.FailureReasonHTTPResponseBodyMismatch,
+			Details: results.BodyMismatchDetails{Pattern: "success"},
+		},
+		{
+			Reason: results.FailureReasonHTTPResponseHeaderMismatch,
+			Details: results.HeaderMismatchDetails{
+				Headers: []results.HeaderMismatch{{Name: "X-Test", Got: "", Expected: "Value"}},
+			},
+		},
+	}, response.GetFailures())
 
 	mockClient.AssertExpectations(t)
 }

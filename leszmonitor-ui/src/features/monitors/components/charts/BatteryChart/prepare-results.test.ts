@@ -10,7 +10,6 @@ describe("prepareResults", () => {
       status: "up",
       isManuallyTriggered: false,
       durationMs: 100,
-      errorDetails: { errorMessage: "", errors: [], failures: [], message: "" },
       monitorType: "http",
       details: { statusCode: 200, contentLength: 10, proto: "HTTP/1.1" },
       createdAt: new Date(dateStr),

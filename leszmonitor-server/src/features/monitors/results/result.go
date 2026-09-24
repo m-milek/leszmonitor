@@ -15,16 +15,10 @@ type IMonitorResult interface {
 	GetDurationMs() int64
 	GetDetails() IMonitorResultDetails
 	GetCreatedAt() time.Time
-	AddFailure(fail string)
+	AddFailure(reason FailureReason, details any, err error)
 	SetDuration(duration int64)
 	SetDetails(details IMonitorResultDetails)
-	GetErrorDetails() ErrorDetails
-}
-
-type ErrorDetails struct {
-	ErrorMessage string   `json:"errorMessage,omitempty"`
-	Errors       []string `json:"errors,omitempty"`
-	Failures     []string `json:"failures,omitempty"`
+	GetFailures() Failures
 }
 
 type baseMonitorResult struct {
@@ -33,8 +27,7 @@ type baseMonitorResult struct {
 	Status              kind.MonitorStatus `json:"status" db:"status"`
 	IsManuallyTriggered bool               `json:"isManuallyTriggered"    db:"is_manually_triggered"`
 	DurationMs          int64              `json:"durationMs"             db:"duration_ms"`
-	ErrorDetailsJSON    []byte             `json:"-"                      db:"error_details"`
-	ErrorDetails        *ErrorDetails      `json:"errorDetails,omitempty" db:"-"`
+	Failures            Failures           `json:"failures,omitempty"     db:"failures"`
 	CreatedAt           time.Time          `json:"createdAt"              db:"created_at"`
 }
 
@@ -52,10 +45,9 @@ func NewMonitorResult(
 	status kind.MonitorStatus,
 	isManuallyTriggered bool,
 	durationMs int64,
-	errorMessage string,
 	details IMonitorResultDetails,
 ) MonitorResult {
-	res := MonitorResult{
+	return MonitorResult{
 		baseMonitorResult: baseMonitorResult{
 			ID:                  uuid.New(),
 			MonitorID:           monitorID,
@@ -67,10 +59,6 @@ func NewMonitorResult(
 		MonitorType: string(monitorType),
 		Details:     details,
 	}
-	if errorMessage != "" {
-		res.ErrorDetails = &ErrorDetails{ErrorMessage: errorMessage}
-	}
-	return res
 }
 
 func (m *MonitorResult) GetID() uuid.UUID {
@@ -93,11 +81,8 @@ func (m *MonitorResult) GetDurationMs() int64 {
 	return m.DurationMs
 }
 
-func (m *MonitorResult) GetErrorDetails() ErrorDetails {
-	if m.ErrorDetails == nil {
-		return ErrorDetails{}
-	}
-	return *m.ErrorDetails
+func (m *MonitorResult) GetFailures() Failures {
+	return m.Failures
 }
 
 func (m *MonitorResult) GetDetails() IMonitorResultDetails {
@@ -108,11 +93,12 @@ func (m *MonitorResult) GetCreatedAt() time.Time {
 	return m.CreatedAt
 }
 
-func (m *MonitorResult) AddFailure(fail string) {
-	if m.ErrorDetails == nil {
-		m.ErrorDetails = &ErrorDetails{}
+func (m *MonitorResult) AddFailure(reason FailureReason, details any, err error) {
+	failure := Failure{Reason: reason, Details: details}
+	if err != nil {
+		failure.Error = err.Error()
 	}
-	m.ErrorDetails.Failures = append(m.ErrorDetails.Failures, fail)
+	m.Failures = append(m.Failures, failure)
 	m.Status = kind.MonitorStatusDown
 }
 

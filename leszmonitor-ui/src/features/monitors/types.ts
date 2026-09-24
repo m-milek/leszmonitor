@@ -80,12 +80,6 @@ export type {
   MonitorUpdatePayload,
 } from "@/features/monitors/schema";
 
-export interface MonitorErrorDetails {
-  errorMessage: string;
-  errors: string[];
-  failures: string[];
-}
-
 export interface HttpResultDetails {
   statusCode: number;
   headers?: Record<string, string>;
@@ -104,13 +98,19 @@ export interface DnsResultDetails {
   resolvedRecords?: unknown[];
 }
 
+export interface MonitorFailure {
+  reason: string;
+  details?: unknown;
+  error?: string;
+}
+
 export interface MonitorResult {
   id: string;
   monitorId: string;
   status: MonitorStatus;
   isManuallyTriggered: boolean;
   durationMs: number;
-  errorDetails: MonitorErrorDetails;
+  failures?: MonitorFailure[];
   monitorType: string;
   details: HttpResultDetails | TcpResultDetails | DnsResultDetails;
   createdAt: Date;

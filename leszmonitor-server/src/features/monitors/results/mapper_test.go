@@ -53,7 +53,6 @@ func TestMonitorResultJSON(t *testing.T) {
 			kind.MonitorStatusUp,
 			false,
 			100,
-			"",
 			&HTTPResultDetails{StatusCode: 200},
 		)
 

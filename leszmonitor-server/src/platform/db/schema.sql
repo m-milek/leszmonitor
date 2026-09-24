@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS monitor_results (
     is_manually_triggered BOOLEAN NOT NULL,
     duration_ms           INT     NOT NULL CHECK (duration_ms >= 0),
 
-    error_details         TEXT CHECK (error_details IS NULL OR JSON_VALID(error_details)), -- JSON string
+    failures              TEXT CHECK (failures IS NULL OR JSON_VALID(failures)), -- JSON string
 
     details               TEXT    NOT NULL,
 

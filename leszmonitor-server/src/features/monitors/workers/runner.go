@@ -124,20 +124,14 @@ func (r *probeRunner) runCheck(ctx context.Context) {
 	result, err := probe.Run(ctx, r.monitor.ID)
 	if err != nil {
 		r.logger.Error().Err(err).Msg("Probe execution failed due to an error")
+		return
 	}
 	r.logger.Info().Any("monitor_result", result).Msg("Monitor result")
 
 	if result.GetStatus() != kind.MonitorStatusUp {
-		d := result.GetErrorDetails()
-		if d.ErrorMessage != "" || len(d.Errors) > 0 {
-			r.logger.Error().
-				Str("error_message", d.ErrorMessage).
-				Strs("errors", d.Errors).
-				Msg("Monitor encountered internal error")
-		}
-		if len(d.Failures) > 0 {
+		if failures := result.GetFailures(); len(failures) > 0 {
 			r.logger.Warn().
-				Strs("failures", d.Failures).
+				Any("failures", failures).
 				Msg("Monitor check failed (service down or misconfigured)")
 		}
 	}
