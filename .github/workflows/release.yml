@@ -6,6 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_DESCRIPTION: "Release ${{ github.event.release.tag_name }}: ${{ github.event.release.html_url }}"
 
 jobs:
   build-and-push:
@@ -62,5 +63,10 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.version=${{ steps.vars.outputs.version }}
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+          annotations: |
+            index:org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            index:org.opencontainers.image.version=${{ steps.vars.outputs.version }}
+            index:org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
           tags: |
             ${{ env.REGISTRY }}/${{ steps.vars.outputs.name }}:${{ steps.vars.outputs.version }}
