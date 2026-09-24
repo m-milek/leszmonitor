@@ -73,7 +73,7 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 
 // Setup function for tests.
 func setupTCPProbe() *TCPProbe {
-	monitor, err := NewTCPProbe("example.com", 80, "tcp", 5000, 3)
+	monitor, err := NewTCPProbe("example.com", 80, "tcp", 5000)
 	monitor.dialAddressFunc = dialAddressFunc // Use the global function for testing
 
 	if err != nil {
@@ -95,14 +95,6 @@ func TestTCPMonitor_Validate(t *testing.T) {
 		err := probe.Validate()
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "host cannot be empty")
-	})
-
-	t.Run("Invalid RetryCount", func(t *testing.T) {
-		probe := setupTCPProbe()
-		probe.RetryCount = 0
-		err := probe.Validate()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "count must be greater than zero")
 	})
 
 	t.Run("Invalid Protocol", func(t *testing.T) {
@@ -199,42 +191,22 @@ func TestTCPMonitor_Run(t *testing.T) {
 		assert.Empty(t, response.GetFailures())
 	})
 
-	t.Run("Failed TCPConfigType with Retries", func(t *testing.T) {
+	t.Run("Failed TCPConfigType", func(t *testing.T) {
 		probe := setupTCPProbe()
 		callCount := 0
 
-		// Mock the dialAddress function to fail for all retries
 		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (time.Duration, error) {
 			callCount++
 			return 0, syscall.ECONNREFUSED
 		}
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
-		assert.Equal(t, 3, callCount, "Should have tried 3 times")
+		assert.Equal(t, 1, callCount)
 		assert.Equal(t, kind.MonitorStatusDown, response.GetStatus())
 		assert.Equal(t, results.Failures{{
 			Reason:  results.FailureReasonTCPConnectionFailed,
 			Details: results.CauseFailureDetails{Cause: results.FailureCauseConnectionRefused},
 			Error:   "connection refused",
 		}}, response.GetFailures())
-	})
-
-	t.Run("Successful TCPConfigType After Retry", func(t *testing.T) {
-		probe := setupTCPProbe()
-		callCount := 0
-
-		// Mock the dialAddress function to succeed on the second try
-		dialAddressFunc = func(protocol string, address string, timeout time.Duration) (time.Duration, error) {
-			callCount++
-			if callCount == 2 {
-				return 150 * time.Millisecond, nil
-			}
-			return 0, syscall.ECONNREFUSED
-		}
-
-		response, _ := probe.Run(context.Background(), uuid.Nil)
-		assert.Equal(t, 2, callCount, "Should have tried 2 times")
-		assert.Equal(t, kind.MonitorStatusUp, response.GetStatus())
-		assert.Equal(t, int64(150), response.GetDurationMs())
 	})
 }

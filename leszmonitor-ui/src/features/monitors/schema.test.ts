@@ -37,7 +37,6 @@ const serverMonitors: Record<MonitorType, Monitor> = {
       port: 8080,
       protocol: "tcp",
       timeout: 5000,
-      retryCount: 1,
     },
   }),
   dns: serverMonitor({
@@ -70,7 +69,6 @@ const tcpForm = (probe: Record<string, unknown> = {}) => ({
     port: 443,
     protocol: "tcp",
     timeout: 5000,
-    retryCount: 0,
     ...probe,
   },
 });
@@ -96,7 +94,6 @@ describe("mapMonitorToFormValues", () => {
       port: 5432,
       protocol: "tcp",
       timeout: 5000,
-      retryCount: 3,
     });
   });
 });

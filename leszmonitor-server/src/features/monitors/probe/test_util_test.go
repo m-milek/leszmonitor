@@ -60,11 +60,10 @@ package probe
 //	t.Type = kind.TCPConfigType
 //	if t.TCPConfig == nil {
 //		t.TCPConfig = &TCPProbe{
-//			Host:       "example.com",
-//			Port:       80,
-//			Protocol:   "tcp",
-//			Timeout:    5000,
-//			RetryCount: 3,
+//			Host:     "example.com",
+//			Port:     80,
+//			Protocol: "tcp",
+//			Timeout:  5000,
 //		}
 //	}
 //	t.HttpConfig = nil

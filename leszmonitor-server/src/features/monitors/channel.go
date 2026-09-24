@@ -23,3 +23,7 @@ type MonitorRunMessage struct {
 	Monitor Monitor
 	Result  results.IMonitorResult
 }
+
+type MonitorExecuteMessage struct {
+	Monitor Monitor
+}

@@ -15,7 +15,7 @@ func TestIntegration_Manager_Lifecycle(t *testing.T) {
 
 	_, realDB, monitor := setupFullDB(t)
 
-	manager := NewManager(realDB)
+	manager := NewMonitorScheduler(realDB)
 	go manager.Run(ctx)
 
 	// Wait for DB loading to finish
@@ -34,9 +34,9 @@ func TestIntegration_Manager_Lifecycle(t *testing.T) {
 	})
 	time.Sleep(200 * time.Millisecond)
 
-	runner := manager.get(monitor.ID)
-	require.NotNil(t, runner)
-	assert.Equal(t, 10, runner.monitor.Interval)
+	ticker := manager.get(monitor.ID)
+	require.NotNil(t, ticker)
+	assert.Equal(t, 10, ticker.monitor.Interval)
 
 	// Test Deleted
 	monitors.MonitorLifecycleChannel.Broadcast(monitors.MonitorLifecycleMessage{

@@ -407,27 +407,18 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 		return apperr.NewBadRequestError("probe config validation failed for manual run: %w", err)
 	}
 
-	result, err := monitorProbe.Run(ctx, monitor.ID)
-	if err != nil {
-		return apperr.NewInternalError("probe execution failed for manual run: %w", err)
-	}
-
 	auditErr := audit.NewAuditLogDAO(s.db.Querier()).Record(ctx, audit.AuditLogParams{
 		Username:   &userClaims.Username,
 		ResourceID: &monitor.ID,
 		Action:     audit.ActionRunMonitorManually,
 		IsSuccess:  true,
 		Summary:    fmt.Sprintf("Monitor with ID %s run manually", monitor.ID),
-		After:      result,
 	})
 	if auditErr != nil {
 		return apperr.NewInternalError("failed to record audit log for manual run: %w", auditErr)
 	}
 
-	MonitorRunChannel.Broadcast(MonitorRunMessage{
-		Result:  result,
-		Monitor: *monitor,
-	})
+	MonitorExecuteChannel.Broadcast(MonitorExecuteMessage{Monitor: *monitor})
 
 	return nil
 }
