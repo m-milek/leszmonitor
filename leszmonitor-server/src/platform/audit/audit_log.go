@@ -27,6 +27,7 @@ const (
 	ActionLogin              AuditLogAction = "auth.login"
 	ActionFailedLogin        AuditLogAction = "auth.failed_login"
 	ActionPasswordChange     AuditLogAction = "auth.password_change"
+	ActionUpdateGlobalParam  AuditLogAction = "global_parameter.update"
 )
 
 type AuditLogEntry struct {

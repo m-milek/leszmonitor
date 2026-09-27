@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/m-milek/leszmonitor/features/auditlog"
+	"github.com/m-milek/leszmonitor/features/globalparameters"
 	"github.com/m-milek/leszmonitor/features/instance"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/users"
@@ -65,6 +66,20 @@ func main() {
 	}
 	logger.Info().Msg("Environment variable validation OK")
 
+	configFilePath := os.Getenv(config.ConfigFilePath)
+	err = config.LoadFile(configFilePath)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to load config file")
+	}
+	if configFilePath != "" {
+		logger.Info().Str("path", configFilePath).Msg("Config file loaded")
+	}
+
+	err = globalparameters.ValidateConfigFileParameters()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Invalid global parameters in config file")
+	}
+
 	err = db.InitFromEnv(appCtx)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize SQLite connection")
@@ -90,6 +105,9 @@ func main() {
 	tagService := tags.NewTagService(tags.TagServiceDeps{
 		DB: database,
 	})
+	globalParameterService := globalparameters.NewGlobalParameterService(globalparameters.GlobalParameterServiceDeps{
+		DB: database,
+	})
 	instanceMetadataService := instance.NewInstanceMetadataService(instance.InstanceMetadataServiceDeps{})
 
 	userAPIController := users.NewUserAPIController(userService)
@@ -98,6 +116,7 @@ func main() {
 	monitorStatsAPIController := stats.NewMonitorStatsAPIController(monitorStatsService)
 	auditLogAPIController := auditlog.NewAuditLogAPIController(auditLogService)
 	tagAPIController := tags.NewTagAPIController(tagService)
+	globalParameterAPIController := globalparameters.NewGlobalParameterAPIController(globalParameterService)
 	instanceMetadataAPIController := instance.NewInstanceMetadataAPIController(instanceMetadataService)
 
 	authzMiddlewareService := users.NewAuthzMiddlewareService(database)
@@ -110,6 +129,7 @@ func main() {
 		AuditLog:               auditLogAPIController,
 		Tag:                    tagAPIController,
 		InstanceMetadata:       instanceMetadataAPIController,
+		GlobalParameter:        globalParameterAPIController,
 		AuthzMiddlewareService: authzMiddlewareService,
 	}
 

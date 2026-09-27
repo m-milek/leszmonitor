@@ -13,4 +13,5 @@ const (
 	ServiceNameUser            = "UserService"
 	ServiceNameTag             = "TagService"
 	ServiceNameAuthzMiddleware = "AuthzMiddlewareService"
+	ServiceNameGlobalParameter = "GlobalParameterService"
 )

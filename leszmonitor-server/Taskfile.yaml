@@ -42,6 +42,7 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
+      CONFIG_FILE_PATH: '{{.TASKFILE_DIR}}/config.dev.yaml'
     cmds:
       - cd {{.SERVER_SRC_DIR}} && $(go env GOPATH)/bin/air -build.stop_on_error true
 
@@ -51,6 +52,7 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
+      CONFIG_FILE_PATH: '{{.TASKFILE_DIR}}/config.dev.yaml'
     cmds:
       - cd {{.SERVER_SRC_DIR}} && $(go env GOPATH)/bin/air -c .air.toml
 
