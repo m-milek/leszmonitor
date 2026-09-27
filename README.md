@@ -11,9 +11,12 @@
 
 <div align="center">
   <br/>
-    <img src="https://sonarcloud.io/api/project_badges/measure?project=leszmonitor_leszmonitor&metric=alert_status" alt="SonarQube run result" height="20"/>
+    <img src="https://img.shields.io/github/actions/workflow/status/m-milek/leszmonitor/build.yml?branch=main" alt="Build status" height="20"/>
+<img src="https://sonarcloud.io/api/project_badges/measure?project=leszmonitor_leszmonitor&metric=alert_status" alt="SonarQube run result" height="20"/>
 <img src="https://sonarcloud.io/api/project_badges/measure?project=leszmonitor_leszmonitor&metric=coverage" alt="SonarQube run result" height="20"/>
 <img src="https://sonarcloud.io/api/project_badges/measure?project=leszmonitor_leszmonitor&metric=vulnerabilities" alt="SonarQube run result" height="20"/>
+<img src="https://img.shields.io/github/go-mod/go-version/m-milek/leszmonitor?filename=leszmonitor-server%2Fsrc%2Fgo.mod" alt="Go version" height="20"/>
+<img src="https://img.shields.io/github/last-commit/m-milek/leszmonitor" alt="Last commit" height="20"/>
   <br/>
 </div>
 

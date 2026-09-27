@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/features/auditlog"
+	"github.com/m-milek/leszmonitor/features/globalparameters"
 	"github.com/m-milek/leszmonitor/features/instance"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
@@ -38,6 +39,9 @@ func SetupRouters(
 
 	// Audit log
 	auditlog.RegisterRoutes(protectedRouter, h.AuditLog, requirePermission(h))
+
+	// Global parameters
+	globalparameters.RegisterRoutes(protectedRouter, h.GlobalParameter, requirePermission(h))
 
 	// Instance metadata
 	instance.RegisterRoutes(protectedRouter, h.InstanceMetadata)

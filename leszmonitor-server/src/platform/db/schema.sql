@@ -123,3 +123,17 @@ CREATE TABLE IF NOT EXISTS app_downtime_windows (
     ended_at   DATETIME NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_app_downtime_windows_started_ended ON app_downtime_windows (started_at, ended_at);
+
+CREATE TABLE IF NOT EXISTS global_parameters (
+    key        TEXT PRIMARY KEY,
+    value      TEXT     NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER IF NOT EXISTS update_global_parameters_updated_at
+    AFTER UPDATE
+    ON global_parameters
+    FOR EACH ROW
+BEGIN
+    UPDATE global_parameters SET updated_at = CURRENT_TIMESTAMP WHERE key = new.key;
+END;

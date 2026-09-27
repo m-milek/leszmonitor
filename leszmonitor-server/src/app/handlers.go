@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/m-milek/leszmonitor/features/auditlog"
+	"github.com/m-milek/leszmonitor/features/globalparameters"
 	"github.com/m-milek/leszmonitor/features/instance"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
@@ -18,5 +19,6 @@ type Handlers struct {
 	User                   users.UserAPIController
 	Tag                    tags.TagAPIController
 	InstanceMetadata       instance.InstanceMetadataAPIController
+	GlobalParameter        globalparameters.GlobalParameterAPIController
 	AuthzMiddlewareService users.IAuthzMiddlewareService
 }

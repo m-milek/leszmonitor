@@ -1,0 +1,3 @@
+global_parameters:
+  accounts:
+    allow_self_registration: true
