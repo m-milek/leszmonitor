@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"slices"
 	"strconv"
@@ -21,7 +22,7 @@ import (
 type IGlobalParameterService interface {
 	GetAllParameters(ctx context.Context) ([]GlobalParameter, *apperr.ServiceError)
 	GetParameter(ctx context.Context, key GlobalParameterKey) (*GlobalParameter, *apperr.ServiceError)
-	SetParameter(ctx context.Context, key GlobalParameterKey, value any) (*GlobalParameter, *apperr.ServiceError)
+	SetParameters(ctx context.Context, values map[GlobalParameterKey]any) ([]GlobalParameter, *apperr.ServiceError)
 }
 
 type GlobalParameterService struct {
@@ -82,9 +83,9 @@ func (s *GlobalParameterService) GetParameter(ctx context.Context, key GlobalPar
 	return param, nil
 }
 
-func (s *GlobalParameterService) SetParameter(ctx context.Context, key GlobalParameterKey, value any) (*GlobalParameter, *apperr.ServiceError) {
-	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameGlobalParameter, "SetParameter")
-	logger.Trace().Str("key", string(key)).Interface("value", value).Msg("Setting global parameter")
+func (s *GlobalParameterService) SetParameters(ctx context.Context, values map[GlobalParameterKey]any) ([]GlobalParameter, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameGlobalParameter, "SetParameters")
+	logger.Trace().Interface("values", values).Msg("Setting global parameters")
 
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
@@ -92,45 +93,73 @@ func (s *GlobalParameterService) SetParameter(ctx context.Context, key GlobalPar
 		return nil, apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
-	definition, ok := GlobalParameterDefinitions[key]
-	if !ok {
-		logger.Error().Str("key", string(key)).Msg("Unknown global parameter")
-		return nil, apperr.NewNotFoundError("global parameter %s not found", key)
+	if len(values) == 0 {
+		logger.Error().Msg("No global parameters to set")
+		return nil, apperr.NewBadRequestError("no global parameters to set")
 	}
 
-	if configValue, inConfig := config.LookupGlobalParameter(string(key)); inConfig && configValue != nil {
-		logger.Error().Str("key", string(key)).Msg("Global parameter is set in config file")
-		return nil, apperr.NewConflictError("global parameter %s is set in the config file and cannot be changed", key)
+	keys := slices.Sorted(maps.Keys(values))
+	definitions := make([]GlobalParameterDefinition, 0, len(keys))
+	records := make([]GlobalParameterRecord, 0, len(keys))
+	resets := make([]GlobalParameterKey, 0, len(keys))
+	for _, key := range keys {
+		definition, ok := GlobalParameterDefinitions[key]
+		if !ok {
+			logger.Error().Str("key", string(key)).Msg("Unknown global parameter")
+			return nil, apperr.NewBadRequestError("unknown global parameter %s", key)
+		}
+
+		if configValue, inConfig := config.LookupGlobalParameter(string(key)); inConfig && configValue != nil {
+			logger.Error().Str("key", string(key)).Msg("Global parameter is set in config file")
+			return nil, apperr.NewConflictError("global parameter %s is set in the config file and cannot be changed", key)
+		}
+
+		definitions = append(definitions, definition)
+
+		if values[key] == nil {
+			resets = append(resets, key)
+			continue
+		}
+
+		raw, err := serializeValue(definition, values[key])
+		if err != nil {
+			logger.Error().Err(err).Str("key", string(key)).Msg("Invalid global parameter value")
+			return nil, apperr.NewBadRequestError("invalid value for global parameter %s: %w", key, err)
+		}
+
+		records = append(records, GlobalParameterRecord{Key: key, Value: raw})
 	}
 
-	raw, err := serializeValue(definition, value)
-	if err != nil {
-		logger.Error().Err(err).Str("key", string(key)).Msg("Invalid global parameter value")
-		return nil, apperr.NewBadRequestError("invalid value for global parameter %s: %w", key, err)
-	}
-
-	param, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*GlobalParameter, *audit.AuditLogParams, error) {
+	params, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) ([]GlobalParameter, *audit.AuditLogParams, error) {
 		dao := NewGlobalParameterDAO(q)
 
-		before, resolveErr := resolveGlobalParameter(ctx, definition, dao)
+		before, resolveErr := resolveGlobalParameters(ctx, definitions, dao)
 		if resolveErr != nil {
-			return nil, nil, fmt.Errorf("failed to resolve global parameter before update: %w", resolveErr)
+			return nil, nil, fmt.Errorf("failed to resolve global parameters before update: %w", resolveErr)
 		}
 
-		if _, upsertErr := dao.UpsertParameter(ctx, GlobalParameterRecord{Key: key, Value: raw}); upsertErr != nil {
-			return nil, nil, fmt.Errorf("failed to save global parameter: %w", upsertErr)
+		for _, record := range records {
+			if _, upsertErr := dao.UpsertParameter(ctx, record); upsertErr != nil {
+				return nil, nil, fmt.Errorf("failed to save global parameter %s: %w", record.Key, upsertErr)
+			}
 		}
 
-		after, resolveErr := resolveGlobalParameter(ctx, definition, dao)
+		for _, key := range resets {
+			if _, deleteErr := dao.DeleteParameterByKey(ctx, key); deleteErr != nil && !errors.Is(deleteErr, db.ErrNotFound) {
+				return nil, nil, fmt.Errorf("failed to reset global parameter %s: %w", key, deleteErr)
+			}
+		}
+
+		after, resolveErr := resolveGlobalParameters(ctx, definitions, dao)
 		if resolveErr != nil {
-			return nil, nil, fmt.Errorf("failed to resolve global parameter after update: %w", resolveErr)
+			return nil, nil, fmt.Errorf("failed to resolve global parameters after update: %w", resolveErr)
 		}
 
 		params := &audit.AuditLogParams{
 			Username:  &userClaims.Username,
 			Action:    audit.ActionUpdateGlobalParam,
 			IsSuccess: true,
-			Summary:   fmt.Sprintf("Global parameter %s updated", key),
+			Summary:   fmt.Sprintf("Global parameters updated: %s", joinKeys(keys)),
 			Before:    before,
 			After:     after,
 		}
@@ -140,12 +169,32 @@ func (s *GlobalParameterService) SetParameter(ctx context.Context, key GlobalPar
 		if serviceErr, isServiceErr := errors.AsType[*apperr.ServiceError](txErr); isServiceErr {
 			return nil, serviceErr
 		}
-		logger.Error().Err(txErr).Str("key", string(key)).Msg("Failed to set global parameter within transaction")
-		return nil, apperr.NewInternalError("failed to set global parameter %s within transaction: %w", key, txErr)
+		logger.Error().Err(txErr).Msg("Failed to set global parameters within transaction")
+		return nil, apperr.NewInternalError("failed to set global parameters within transaction: %w", txErr)
 	}
 
-	logger.Debug().Str("key", string(key)).Msg("Global parameter set")
-	return param, nil
+	logger.Debug().Int("count", len(params)).Msg("Global parameters set")
+	return params, nil
+}
+
+func resolveGlobalParameters(ctx context.Context, definitions []GlobalParameterDefinition, dao IGlobalParameterDAO) ([]GlobalParameter, error) {
+	params := make([]GlobalParameter, 0, len(definitions))
+	for _, definition := range definitions {
+		param, err := resolveGlobalParameter(ctx, definition, dao)
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, *param)
+	}
+	return params, nil
+}
+
+func joinKeys(keys []GlobalParameterKey) string {
+	parts := make([]string, len(keys))
+	for i, key := range keys {
+		parts[i] = string(key)
+	}
+	return strings.Join(parts, ", ")
 }
 
 func serializeValue(definition GlobalParameterDefinition, value any) (string, error) {
@@ -165,6 +214,13 @@ func serializeValue(definition GlobalParameterDefinition, value any) (string, er
 		}
 	case GlobalParameterStringType:
 		if v, ok := value.(string); ok {
+			return v, nil
+		}
+	case GlobalParameterEnumType:
+		if v, ok := value.(string); ok {
+			if !slices.Contains(definition.Options, v) {
+				return "", fmt.Errorf("value %s is not one of %v", v, definition.Options)
+			}
 			return v, nil
 		}
 	default:

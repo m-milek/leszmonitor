@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/globalparameters"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/users"
@@ -42,7 +43,8 @@ func Setup(t *testing.T) (context.Context, *users.UserService, *users.User) {
 	})
 
 	userService := users.NewUserService(users.UserServiceDeps{
-		DB: realDB,
+		DB:               realDB,
+		GlobalParameters: globalparameters.NewGlobalParameterService(globalparameters.GlobalParameterServiceDeps{DB: realDB}),
 	})
 
 	// Setup Phase: Create a real user in the DB

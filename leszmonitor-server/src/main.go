@@ -87,8 +87,12 @@ func main() {
 
 	database := db.Get()
 
-	userService := users.NewUserService(users.UserServiceDeps{
+	globalParameterService := globalparameters.NewGlobalParameterService(globalparameters.GlobalParameterServiceDeps{
 		DB: database,
+	})
+	userService := users.NewUserService(users.UserServiceDeps{
+		DB:               database,
+		GlobalParameters: globalParameterService,
 	})
 	monitorService := monitors.NewMonitorService(monitors.MonitorServiceDeps{
 		DB: database,
@@ -103,9 +107,6 @@ func main() {
 		DB: database,
 	})
 	tagService := tags.NewTagService(tags.TagServiceDeps{
-		DB: database,
-	})
-	globalParameterService := globalparameters.NewGlobalParameterService(globalparameters.GlobalParameterServiceDeps{
 		DB: database,
 	})
 	instanceMetadataService := instance.NewInstanceMetadataService(instance.InstanceMetadataServiceDeps{})

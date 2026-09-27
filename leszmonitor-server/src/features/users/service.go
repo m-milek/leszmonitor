@@ -7,6 +7,7 @@ import (
 	"os"
 
 	jwt2 "github.com/golang-jwt/jwt/v5"
+	"github.com/m-milek/leszmonitor/features/globalparameters"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/auth"
@@ -30,17 +31,20 @@ type SetUserRolePayload struct {
 }
 
 type UserServiceDeps struct {
-	DB db.DB
+	DB               db.DB
+	GlobalParameters globalparameters.IGlobalParameterService
 }
 
 // UserService handles user-related operations such as registration, login, and retrieval.
 type UserService struct {
-	db db.DB
+	db               db.DB
+	globalParameters globalparameters.IGlobalParameterService
 }
 
 func NewUserService(deps UserServiceDeps) *UserService {
 	return &UserService{
-		db: deps.DB,
+		db:               deps.DB,
+		globalParameters: deps.GlobalParameters,
 	}
 }
 
@@ -175,6 +179,13 @@ func (s *UserService) RegisterUser(ctx context.Context, payload *UserRegisterPay
 		logger.Error().Err(err).Str("username", payload.Username).Msg("Invalid user data")
 		return apperr.NewBadRequestError("invalid user data for %s: %w", payload.Username, err)
 	}
+
+	defaultRole, svcErr := s.globalParameters.GetParameter(ctx, globalparameters.GlobalParameterDefaultRole)
+	if svcErr != nil {
+		logger.Error().Err(svcErr.Err).Msg("Failed to retrieve default role")
+		return svcErr
+	}
+	userModel.Role = auth.Role(defaultRole.Value.(string))
 
 	_, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*User, *audit.AuditLogParams, error) {
 		u, err := NewUserDAO(q).InsertUser(ctx, userModel)

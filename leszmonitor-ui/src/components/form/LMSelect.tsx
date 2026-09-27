@@ -22,6 +22,7 @@ export interface LMSelectProps {
   className?: string;
   isInvalid?: boolean;
   errorMessage?: string;
+  disabled?: boolean;
 }
 
 export function LMSelect(props: Readonly<LMSelectProps>) {
@@ -29,6 +30,7 @@ export function LMSelect(props: Readonly<LMSelectProps>) {
     <Select
       value={props.value}
       onValueChange={(value) => props.onValueChange?.(value ?? "")}
+      disabled={props.disabled}
     >
       <ErrorTooltip
         isOpen={props.isInvalid ?? false}

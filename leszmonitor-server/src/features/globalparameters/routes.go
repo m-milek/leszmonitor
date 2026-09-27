@@ -16,7 +16,7 @@ func RegisterRoutes(
 		requirePermission(auth.PermissionReader)(c.GetAllParametersHandler),
 	)
 	protectedRouter.HandleFunc(
-		"PUT /api/v1/global-parameters/{key}",
-		requirePermission(auth.PermissionInstanceAdmin)(c.SetParameterHandler),
+		"PATCH /api/v1/global-parameters",
+		requirePermission(auth.PermissionInstanceAdmin)(c.SetParametersHandler),
 	)
 }

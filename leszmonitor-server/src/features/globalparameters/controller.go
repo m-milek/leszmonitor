@@ -17,12 +17,6 @@ func NewGlobalParameterAPIController(service IGlobalParameterService) GlobalPara
 	}
 }
 
-const messageParameterKeyIsRequired = "Parameter key is required"
-
-type SetParameterPayload struct {
-	Value any `json:"value"`
-}
-
 func (c *GlobalParameterAPIController) GetAllParametersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -35,15 +29,10 @@ func (c *GlobalParameterAPIController) GetAllParametersHandler(w http.ResponseWr
 	httpx.RespondJSON(ctx, w, http.StatusOK, params)
 }
 
-func (c *GlobalParameterAPIController) SetParameterHandler(w http.ResponseWriter, r *http.Request) {
+func (c *GlobalParameterAPIController) SetParametersHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	key := r.PathValue("key")
-	if key == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageParameterKeyIsRequired)
-		return
-	}
 
-	payload := SetParameterPayload{}
+	payload := map[GlobalParameterKey]any{}
 	if ok := httpx.DecodeJSONOrRespond(ctx, w, r, &payload); !ok {
 		return
 	}
@@ -52,11 +41,11 @@ func (c *GlobalParameterAPIController) SetParameterHandler(w http.ResponseWriter
 		return
 	}
 
-	param, err := c.service.SetParameter(ctx, GlobalParameterKey(key), payload.Value)
+	params, err := c.service.SetParameters(ctx, payload)
 	if err != nil {
 		httpx.RespondError(ctx, w, err.Code, err.Err)
 		return
 	}
 
-	httpx.RespondJSON(ctx, w, http.StatusOK, param)
+	httpx.RespondJSON(ctx, w, http.StatusOK, params)
 }

@@ -56,11 +56,15 @@ func resolveGlobalParameter(ctx context.Context, paramDefinition GlobalParameter
 			return nil, fmt.Errorf("invalid stored value for %s: %w", paramDefinition.Key, parseErr)
 		}
 
-		return &GlobalParameter{
+		param := &GlobalParameter{
 			GlobalParameterDefinition: paramDefinition,
 			Value:                     value,
 			Source:                    GlobalParameterSourceUI,
-		}, nil
+		}
+		if err := param.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid stored value for %s: %w", paramDefinition.Key, err)
+		}
+		return param, nil
 	}
 
 	return &GlobalParameter{
@@ -76,7 +80,7 @@ func parseStoredValue(paramDefinition GlobalParameterDefinition, raw string) (an
 		return strconv.ParseBool(raw)
 	case GlobalParameterIntType:
 		return strconv.Atoi(raw)
-	case GlobalParameterStringType:
+	case GlobalParameterStringType, GlobalParameterEnumType:
 		return raw, nil
 	default:
 		return nil, fmt.Errorf("unsupported parameter type %s", paramDefinition.Type)

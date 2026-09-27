@@ -7,6 +7,7 @@ export interface LMSwitchProps {
   onCheckedChange: (checked: boolean) => void;
   isInvalid?: boolean;
   errorMessage?: string;
+  disabled?: boolean;
 }
 
 export function LMSwitch(props: Readonly<LMSwitchProps>) {
@@ -17,6 +18,7 @@ export function LMSwitch(props: Readonly<LMSwitchProps>) {
         name={props.name}
         checked={props.checked}
         onCheckedChange={props.onCheckedChange}
+        disabled={props.disabled}
       />
     </ErrorTooltip>
   );

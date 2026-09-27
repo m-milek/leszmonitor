@@ -13,6 +13,7 @@ type IGlobalParameterDAO interface {
 	GetAllParameters(ctx context.Context) ([]GlobalParameterRecord, error)
 	GetParameterByKey(ctx context.Context, key GlobalParameterKey) (*GlobalParameterRecord, error)
 	UpsertParameter(ctx context.Context, record GlobalParameterRecord) (*GlobalParameterRecord, error)
+	DeleteParameterByKey(ctx context.Context, key GlobalParameterKey) (*GlobalParameterKey, error)
 }
 
 type globalParameterDAO struct {
@@ -80,5 +81,21 @@ func (r *globalParameterDAO) UpsertParameter(ctx context.Context, record GlobalP
 		}
 
 		return &saved, nil
+	})
+}
+
+func (r *globalParameterDAO) DeleteParameterByKey(ctx context.Context, key GlobalParameterKey) (*GlobalParameterKey, error) {
+	return db.Wrap(ctx, "DeleteGlobalParameterByKey", func() (*GlobalParameterKey, error) {
+		var deletedKey GlobalParameterKey
+		err := r.pool.QueryRowxContext(ctx, `DELETE FROM global_parameters WHERE key = $1 RETURNING key`, key).
+			Scan(&deletedKey)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, db.ErrNotFound
+			}
+			return nil, err
+		}
+
+		return &deletedKey, nil
 	})
 }
