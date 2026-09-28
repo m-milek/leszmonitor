@@ -42,20 +42,17 @@ func (e *MonitorExecutor) Run(ctx context.Context) {
 			return
 		case msg := <-executeChannel:
 			wg.Go(func() {
-				e.execute(ctx, msg)
+				e.execute(ctx, msg.Monitor)
 			})
 		}
 	}
 }
 
 // execute runs the monitor's check and broadcasts the result.
-func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecuteMessage) {
-	monitor := msg.Monitor
-
+func (e *MonitorExecutor) execute(ctx context.Context, monitor monitors.Monitor) {
 	logger := e.logger.With().
 		Str("monitor_id", monitor.ID.String()).
 		Str("monitor_name", monitor.Name).
-		Str("trace_id", msg.TraceID.String()).
 		Logger()
 	ctx = log.WithContext(ctx, &logger)
 
@@ -64,18 +61,18 @@ func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecu
 		return
 	}
 
-	parsedProbe, err := probe.UnmarshalProbeFromBytes(monitor.Type, []byte(monitor.ProbeConfig))
+	probe, err := probe.UnmarshalProbeFromBytes(monitor.Type, []byte(monitor.ProbeConfig))
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to unmarshal probe config")
 		return
 	}
-	if err := parsedProbe.Validate(); err != nil {
+	if err := probe.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Probe config validation failed")
 		return
 	}
 
 	logger.Trace().Msg("Running monitor")
-	result, err := parsedProbe.Run(ctx, monitor.ID)
+	result, err := probe.Run(ctx, monitor.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Probe execution failed due to an error")
 		return

@@ -268,12 +268,6 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor Monitor) *ap
 			return nil, fmt.Errorf("failed to update monitor in database: %w", err)
 		}
 
-		updatedMonitor, err := NewMonitorDAO(q).GetMonitorByID(ctx, monitor.ID)
-		if err != nil {
-			logger.Error().Err(err).Str("id", monitor.ID.String()).Msg("Failed to retrieve updated monitor")
-			return nil, fmt.Errorf("failed to retrieve updated monitor: %w", err)
-		}
-
 		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
 			ResourceID: &monitor.ID,
@@ -281,7 +275,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor Monitor) *ap
 			IsSuccess:  true,
 			Summary:    fmt.Sprintf("Monitor with ID %s updated", monitor.ID),
 			Before:     existingMonitor,
-			After:      updatedMonitor,
+			After:      monitor,
 		}
 
 		return params, nil
@@ -424,8 +418,7 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 		return apperr.NewInternalError("failed to record audit log for manual run: %w", auditErr)
 	}
 
-	traceID, _ := log.TraceIDFromContext(ctx)
-	MonitorExecuteChannel.Broadcast(MonitorExecuteMessage{Monitor: *monitor, TraceID: traceID})
+	MonitorExecuteChannel.Broadcast(MonitorExecuteMessage{Monitor: *monitor})
 
 	return nil
 }

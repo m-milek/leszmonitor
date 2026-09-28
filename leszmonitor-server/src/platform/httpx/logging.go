@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/log"
 )
 
@@ -15,12 +14,11 @@ func Logger(ctx context.Context, next http.Handler) http.Handler {
 	baseLogger := log.FromContext(ctx)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		traceID := uuid.New()
-		w.Header().Set(constants.HTTPHeaderXTraceID, traceID.String())
+		reqID := uuid.New().String()
 
-		reqCtx := log.WithTraceID(r.Context(), traceID)
+		reqCtx := context.WithValue(r.Context(), "request_id", reqID)
 
-		logger := baseLogger.With().Str("trace_id", traceID.String()).Logger()
+		logger := baseLogger.With().Str("request_id", reqID).Logger()
 		reqCtx = log.WithContext(reqCtx, &logger)
 
 		r = r.WithContext(reqCtx)

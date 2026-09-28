@@ -25,6 +25,5 @@ type MonitorRunMessage struct {
 }
 
 type MonitorExecuteMessage struct {
-	TraceID uuid.UUID
 	Monitor Monitor
 }

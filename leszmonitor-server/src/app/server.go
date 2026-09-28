@@ -13,7 +13,6 @@ import (
 	"github.com/logdyhq/logdy-core/logdy"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	appconfig "github.com/m-milek/leszmonitor/platform/config"
-	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/platform/util"
@@ -94,14 +93,14 @@ func createServer(
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", constants.HTTPHeaderContentType},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
 	})
 
 	handler := c.Handler(combinedHandler)
 
-	handler = httpx.Recoverer(ctx, handler)
 	handler = httpx.Logger(ctx, handler)
+	handler = httpx.Recoverer(ctx, handler)
 
 	server := &http.Server{
 		Addr:         net.JoinHostPort(config.Host, config.Port),

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 type AuditLogAction string
@@ -81,11 +80,7 @@ func NewAuditLogEntry(
 		afterStr = &str
 	}
 
-	var traceIDPtr *string
-	if traceID, ok := log.TraceIDFromContext(ctx); ok {
-		traceIDStr := traceID.String()
-		traceIDPtr = &traceIDStr
-	}
+	traceID, _ := ctx.Value("X-Trace-Id").(string)
 
 	entry := AuditLogEntry{
 		Username:   params.Username,
@@ -95,7 +90,7 @@ func NewAuditLogEntry(
 		Summary:    params.Summary,
 		Before:     beforeStr,
 		After:      afterStr,
-		TraceID:    traceIDPtr,
+		TraceID:    &traceID,
 	}
 	entry.BeforeCreate()
 
@@ -164,4 +159,12 @@ func AuditLogFilterFromRequest(r *http.Request) (*AuditLogFilter, error) {
 	}
 
 	return f, nil
+}
+
+func GetTraceIDFromContext(ctx context.Context) *string {
+	traceID, ok := ctx.Value("requestId").(string)
+	if !ok {
+		return nil
+	}
+	return &traceID
 }

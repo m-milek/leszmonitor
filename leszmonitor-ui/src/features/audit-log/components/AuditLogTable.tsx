@@ -68,11 +68,11 @@ const columns: ColumnDef<AuditLogEntry>[] = [
           <DialogTrigger render={<Button variant="ghost" />}>
             <LucideDiff />
           </DialogTrigger>
-          <DialogContent className="max-h-[85svh] overflow-y-auto sm:max-w-6xl">
+          <DialogContent className="max-h-[85svh] overflow-y-auto sm:max-w-4xl">
             <DialogHeader>
               <DialogTitle>Resource Diff</DialogTitle>
             </DialogHeader>
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4">
               <ResourceDiff
                 before={row.original.before}
                 after={row.original.after}
