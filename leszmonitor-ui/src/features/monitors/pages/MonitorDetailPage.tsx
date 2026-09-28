@@ -78,11 +78,6 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
   const manuallyRunMutation = useMutation({
     mutationKey: [QUERY_KEYS.MONITORS, monitorSlug, "run"],
     mutationFn: async () => MonitorsApi.run(monitor!.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", pagination],
-      });
-    },
   });
 
   if (!monitor) {

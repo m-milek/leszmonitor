@@ -82,7 +82,7 @@ func authenticateConnection(ctx context.Context, conn *websocket.Conn) (context.
 		return ctx, err
 	}
 
-	return auth.SetUserContext(ctx, userClaims), nil
+	return auth.SetUserInContext(ctx, userClaims), nil
 }
 
 func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {

@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
@@ -31,14 +30,10 @@ func JwtAuth(next http.Handler) http.Handler {
 		// Store the user claims in the request context
 		ctx := SetUserInContext(r.Context(), userClaims)
 
+		logger := log.FromContext(ctx).With().Str("username", userClaims.Username).Logger()
+		ctx = log.WithContext(ctx, &logger)
+
 		// Call the next handler with the updated context
 		next.ServeHTTP(rw, r.WithContext(ctx))
 	})
-}
-
-// SetUserContext stores user claims in the request context.
-func SetUserContext(ctx context.Context, claims *UserClaims) context.Context {
-	logger := log.FromContext(ctx)
-	logger.Debug().Msg("Setting user claims in context: " + claims.Username)
-	return context.WithValue(ctx, "userClaims", claims)
 }
