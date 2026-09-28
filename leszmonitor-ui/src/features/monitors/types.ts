@@ -70,6 +70,10 @@ export interface Monitor extends Timestamps {
   probeConfig?: HttpMonitorConfig | TcpMonitorConfig | DnsMonitorConfig;
 }
 
+export interface MonitorWithStatus extends Monitor {
+  status: MonitorStatus;
+}
+
 // Runtime zod schemas and form-value helpers live in
 // "@/features/monitors/schema.ts" so that zod is only pulled into the
 // route chunks that actually validate monitor forms, keeping it out of the

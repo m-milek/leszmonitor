@@ -29,6 +29,19 @@ export function MonitorsPage() {
     queryFn: () => TagsApi.getAll(),
   });
 
+  const { data: monitorLatestStatuses = [] } = useQuery({
+    enabled: !!monitors.length,
+    queryKey: [QUERY_KEYS.MONITOR_RESULTS],
+    queryFn: () =>
+      Promise.all(
+        monitors.map((monitor) => MonitorsApi.results.getLatest(monitor.id)),
+      ),
+  });
+
+  if (!monitors || !tags || !monitorLatestStatuses) {
+    return null;
+  }
+
   const { mutateAsync: deleteMutation } = useMutation({
     mutationFn: (monitorId: string) => MonitorsApi.remove(monitorId),
   });
@@ -49,6 +62,16 @@ export function MonitorsPage() {
     });
   };
 
+  const monitorsWithStatuses = monitors.map((monitor) => {
+    const latestResult = monitorLatestStatuses.find(
+      (result) => result?.monitorId === monitor.id,
+    );
+    return {
+      ...monitor,
+      status: latestResult?.status ?? "unknown1",
+    };
+  });
+
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const onTagFilterChange = (selectedTags: string[]) => {
     setFilterTags(selectedTags);
@@ -64,7 +87,7 @@ export function MonitorsPage() {
     setStatusFilter(selectedStatuses);
   };
 
-  const filteredMonitors = monitors.filter((monitor) => {
+  const filteredMonitors = monitorsWithStatuses.filter((monitor) => {
     const matchesName = monitor.name
       .toLowerCase()
       .includes(filterName.toLowerCase());
@@ -72,7 +95,7 @@ export function MonitorsPage() {
       filterTags.length === 0 ||
       filterTags.every((tagId) => monitor.tagIds?.some((id) => id === tagId));
     const matchesStatus =
-      statusFilter.length === 0 || statusFilter.includes("");
+      statusFilter.length === 0 || statusFilter.includes(monitor.status);
 
     return matchesName && matchesTags && matchesStatus;
   });
