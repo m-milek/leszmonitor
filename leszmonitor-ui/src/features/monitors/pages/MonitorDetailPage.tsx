@@ -19,10 +19,13 @@ import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonito
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatTime } from "@/features/monitors/components/charts/utils";
-import type { MonitorResult, MonitorStatus } from "@/features/monitors/types";
+import type { MonitorResult } from "@/features/monitors/types";
 import type { Pagination } from "@/lib/types";
 import { QUERY_KEYS } from "@/lib/consts";
 import { formatDuration } from "@/lib/utils.ts";
+import { MonitorStatsCard } from "@/features/monitors/components/DetailsPage/MonitorStatsCard.tsx";
+import { HttpStatusCodeChart } from "@/features/monitors/components/DetailsPage/HttpStatusCodeChart.tsx";
+import { Center } from "@/components/common/Center.tsx";
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;
@@ -96,11 +99,6 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
     manuallyRunMutation.mutate();
   };
 
-  const statusCounts = stats?.uptime.statusToCount ?? {};
-  const statusPercentages = Object.entries(
-    stats?.uptime.statusToPercentage ?? {},
-  );
-
   const handleEditMonitor = () => {
     navigate({
       to: "/monitors/$monitorSlug/edit",
@@ -115,20 +113,32 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
         <ButtonGroup>
           <Button
             variant="outline"
-            size="icon-lg"
+            size="lg"
             onClick={handleToggleMonitorState}
           >
-            {isPaused ? <PlayIcon /> : <PauseIcon />}
+            {isPaused ? (
+              <>
+                <PlayIcon /> Resume
+              </>
+            ) : (
+              <>
+                <PauseIcon /> Pause
+              </>
+            )}
           </Button>
-          <Button variant="outline" size="icon-lg" onClick={handleEditMonitor}>
+          <Button variant="outline" size="lg" onClick={handleEditMonitor}>
             <PencilIcon />
+            <span>Edit</span>
           </Button>
           <Button
             variant="outline"
-            size="icon-lg"
+            size="lg"
             onClick={handleManuallyRunMonitor}
           >
-            <LucideCirclePlay />
+            <>
+              <LucideCirclePlay />
+              <span>Run Now</span>
+            </>
           </Button>
           <DeleteMonitorDialog
             monitor={monitor}
@@ -140,30 +150,24 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
       <Card className="min-w-0">
         <CardContent className="min-w-0">
-          <pre className="overflow-x-auto text-xs pb-4">
-            {JSON.stringify(monitor, null, 2)}
-          </pre>
-          <BatteryChart monitorResults={monitorResults ?? []} />
+          <Flex direction="column" className="gap-2">
+            <BatteryChart monitorResults={monitorResults ?? []} />
+            <pre className="overflow-x-auto text-xs pb-4">
+              {JSON.stringify(monitor, null, 2)}
+            </pre>
+          </Flex>
         </CardContent>
       </Card>
+      {stats && <MonitorStatsCard stats={stats} />}
       <Card>
         <CardContent className="min-w-0">
           <TypographyH2>Statistics</TypographyH2>
           {stats && (
             <>
-              <p>Avg: {stats.latency.avg.toFixed(2)} ms</p>
-              <p>Min: {stats.latency.min.toFixed(2)} ms</p>
-              <p>Max: {stats.latency.max.toFixed(2)} ms</p>
               <p>
                 {monitorStatus.toUpperCase()} for{"  "}
                 {formatDuration(stats.statusChange.secondsInCurrentStatus)}
               </p>
-              {statusPercentages.map(([status, percentage]) => (
-                <p key={status}>
-                  {status.toUpperCase()}: {percentage.toFixed(2)}% (
-                  {statusCounts[status as MonitorStatus] ?? 0})
-                </p>
-              ))}
               {stats.probeSpecific && (
                 <pre className="overflow-x-auto text-xs font-mono">
                   {JSON.stringify(stats.probeSpecific, null, 2)}
@@ -191,13 +195,26 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
             />
           </CardContent>
         </Card>
-
-        <Card className="flex-1 flex flex-col min-h-0 min-w-0">
+        <Card>
+          <CardHeader>
+            <TypographyH2>HTTP Status Codes</TypographyH2>
+          </CardHeader>
           <CardContent className="flex-1 min-h-0">
-            <MonitorResultsList monitor={monitor} pagination={pagination} />
+            {stats?.probeType === "http" && (
+              <Center>
+                <HttpStatusCodeChart
+                  data={stats.probeSpecific!.httpCodeToCount}
+                />
+              </Center>
+            )}
           </CardContent>
         </Card>
       </Flex>
+      <Card className="flex-1 flex flex-col min-h-0 min-w-0">
+        <CardContent className="flex-1 min-h-0">
+          <MonitorResultsList monitor={monitor} pagination={pagination} />
+        </CardContent>
+      </Card>
     </PageContainer>
   );
 }

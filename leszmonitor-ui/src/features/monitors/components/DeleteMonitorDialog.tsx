@@ -47,11 +47,14 @@ export function DeleteMonitorDialog({
         render={
           <Button
             variant="destructive"
-            size="icon-lg"
+            size="lg"
             className="border-destructive/30 dark:border-destructive/40"
             title={`Delete monitor ${monitor.name}`}
             aria-label={`Delete monitor ${monitor.name}`}
-          />
+          >
+            <TrashIcon />
+            <span>Delete</span>
+          </Button>
         }
       >
         <TrashIcon />

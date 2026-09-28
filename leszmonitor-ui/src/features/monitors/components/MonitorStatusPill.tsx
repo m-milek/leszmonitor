@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import type { Monitor, MonitorRunState } from "@/features/monitors/types";
+import { cn } from "cn";
 
 export interface MonitorStatusPillProps {
   monitor: Monitor;
@@ -28,5 +29,5 @@ const mapMonitorState = (state: MonitorRunState) => {
 export const MonitorStatusPill = ({ monitor }: MonitorStatusPillProps) => {
   const { text, className } = mapMonitorState(monitor.runState);
 
-  return <Badge className={className}>{text}</Badge>;
+  return <Badge className={cn("h-full", className)}>{text}</Badge>;
 };

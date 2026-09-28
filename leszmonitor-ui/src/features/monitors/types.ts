@@ -154,7 +154,6 @@ export interface UptimeStats {
 }
 
 export interface HttpProbeStats {
-  type: "http";
   httpCodeToCount: Record<string, number>;
 }
 
@@ -165,4 +164,5 @@ export interface MonitorStats {
   statusChange: StatusChangeStats;
   uptime: UptimeStats;
   probeSpecific?: ProbeSpecificStats;
+  probeType: MonitorType;
 }
