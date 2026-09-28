@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { MonitorResult } from "@/features/monitors/types";
 import {
   Popover,
@@ -11,7 +12,14 @@ import { STATUS_BG_CLASS } from "@/components/common/StatusDot";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import { cn } from "cn";
 
-export const BatteryBar = ({ result }: { result?: MonitorResult }) => {
+export const BatteryBar = ({
+  result,
+  animate,
+}: {
+  result?: MonitorResult;
+  animate?: boolean;
+}) => {
+  const [animateOnMount] = useState(animate);
   const colorClass =
     STATUS_BG_CLASS[
       result ? monitorStatusToStatusDot(result.status) : "unknown"
@@ -23,7 +31,14 @@ export const BatteryBar = ({ result }: { result?: MonitorResult }) => {
         className="h-full shrink-0 cursor-pointer transition-opacity hover:opacity-50"
         style={{ width: BAR_WIDTH }}
       >
-        <div className={cn("h-full shrink-0 rounded-full m-0.5", colorClass)} />
+        <div
+          className={cn(
+            "h-full shrink-0 rounded-full m-0.5",
+            colorClass,
+            animateOnMount &&
+              "animate-in zoom-in-0 fade-in slide-in-from-right-2 duration-200 ease-out",
+          )}
+        />
       </PopoverTrigger>
       <PopoverContent className="w-auto text-sm">
         <Flex direction="column" className="gap-2">

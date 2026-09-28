@@ -19,6 +19,7 @@ export const BatteryChart = ({
 }: BatteryChartProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [length, setLength] = useState(defaultLength ?? 50);
+  const lastSeenAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -39,6 +40,12 @@ export const BatteryChart = ({
     return prepareResults(monitorResults, length);
   }, [monitorResults, length]);
 
+  const newestAt = displayResults.at(-1)?.createdAt.getTime() ?? null;
+
+  useEffect(() => {
+    lastSeenAtRef.current = newestAt;
+  }, [newestAt]);
+
   return (
     <div className="w-full h-8 relative" ref={containerRef}>
       <Flex
@@ -46,7 +53,15 @@ export const BatteryChart = ({
         className="justify-start items-center absolute inset-0"
       >
         {displayResults.map((res, i) => (
-          <BatteryBar key={i} result={res} />
+          <BatteryBar
+            key={res?.id ?? `empty-${i}`}
+            result={res}
+            animate={
+              res !== undefined &&
+              lastSeenAtRef.current !== null &&
+              res.createdAt.getTime() > lastSeenAtRef.current
+            }
+          />
         ))}
       </Flex>
     </div>

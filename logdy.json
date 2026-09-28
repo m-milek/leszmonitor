@@ -19,8 +19,8 @@
     },
     {
       "id": "268396",
-      "name": "request_id",
-      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content[\"request_id\"] }\n}",
+      "name": "trace_id",
+      "handlerTsCode": "(line: Message): CellHandler => {\n    return { text: line.json_content[\"trace_id\"] }\n}",
       "faceted": false,
       "idx": 6,
       "width": 150
@@ -81,6 +81,6 @@
     "maxMessages": 1000,
     "middlewares": [],
     "entriesOrder": "desc",
-    "correlationIdField": "request_id"
+    "correlationIdField": "trace_id"
   }
 }

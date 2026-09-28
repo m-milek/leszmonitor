@@ -2,6 +2,7 @@ package constants
 
 const HTTPHeaderContentType = "Content-Type"
 const HTTPHeaderCacheControl = "Cache-Control"
+const HTTPHeaderXTraceID = "X-Trace-ID"
 
 const HTTPContentTypeJSON = "application/json"
 
