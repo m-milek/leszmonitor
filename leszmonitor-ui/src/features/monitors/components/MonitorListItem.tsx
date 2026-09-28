@@ -1,6 +1,5 @@
-import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
-import type { Monitor } from "@/features/monitors/types";
+import type { MonitorWithStatus } from "@/features/monitors/types";
 import { TypographyH3 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { StyledLink } from "@/components/common/StyledLink";
@@ -11,9 +10,11 @@ import { StatusDot } from "@/components/common/StatusDot";
 import { QUERY_KEYS } from "@/lib/consts";
 import { useQuery } from "@tanstack/react-query";
 import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
+import { Tag } from "@/features/tags/components/Tag.tsx";
+import { TagsApi } from "@/features/tags/tags-api.ts";
 
 export interface MonitorListItemProps {
-  monitor: Monitor;
+  monitor: MonitorWithStatus;
   onDeleteMonitor?: (monitorId: string) => Promise<void>;
   navigateToEditMonitor?: (monitorId: string) => void;
 }
@@ -23,12 +24,16 @@ export function MonitorListItem({
   onDeleteMonitor,
   navigateToEditMonitor,
 }: Readonly<MonitorListItemProps>) {
-  const { data: lastResultData } = useQuery({
-    queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id],
-    queryFn: () => MonitorsApi.results.getLatest(monitor.id),
+  const { data: tags } = useQuery({
+    queryKey: [QUERY_KEYS.TAGS],
+    queryFn: () => TagsApi.getAll(),
   });
 
-  const dotStatus = monitorStatusToStatusDot(lastResultData?.status);
+  if (!tags) {
+    return null;
+  }
+
+  const dotStatus = monitorStatusToStatusDot(monitor.status);
 
   return (
     <Card className="transition-colors hover:bg-muted/50">
@@ -69,7 +74,14 @@ export function MonitorListItem({
         </Flex>
       </CardHeader>
       <CardContent>
-        <Flex direction="column">
+        <Flex direction="column" className="gap-2">
+          <Flex direction="row" className="gap-2">
+            {tags
+              .filter((tag) => monitor.tagIds?.includes(tag.id))
+              .map((tag) => (
+                <Tag key={tag.id} tag={tag} />
+              ))}
+          </Flex>
           <span>{monitor.id}</span>
           <span>{monitor.type}</span>
           <span>{monitor.description}</span>

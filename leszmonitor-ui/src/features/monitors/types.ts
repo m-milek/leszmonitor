@@ -1,6 +1,7 @@
 import type { Timestamps } from "@/lib/types";
 
-export type MonitorStatus = "up" | "down" | "paused" | "maintenance";
+export const monitorStatuses = ["up", "down", "paused", "maintenance"] as const;
+export type MonitorStatus = (typeof monitorStatuses)[number];
 
 export type MonitorRunState = "active" | "paused";
 
@@ -67,6 +68,10 @@ export interface Monitor extends Timestamps {
   runState: MonitorRunState;
   type: MonitorType;
   probeConfig?: HttpMonitorConfig | TcpMonitorConfig | DnsMonitorConfig;
+}
+
+export interface MonitorWithStatus extends Monitor {
+  status: MonitorStatus;
 }
 
 // Runtime zod schemas and form-value helpers live in
