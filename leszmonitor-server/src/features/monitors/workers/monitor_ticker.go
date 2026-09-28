@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
@@ -103,5 +104,5 @@ func (t *monitorTicker) schedule() {
 		return
 	}
 
-	monitors.MonitorExecuteChannel.Broadcast(monitors.MonitorExecuteMessage{Monitor: t.monitor})
+	monitors.MonitorExecuteChannel.Broadcast(monitors.MonitorExecuteMessage{Monitor: t.monitor, TraceID: uuid.New()})
 }

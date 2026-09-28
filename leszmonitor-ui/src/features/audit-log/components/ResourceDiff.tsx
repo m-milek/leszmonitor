@@ -1,3 +1,6 @@
+import ReactDiffViewer from "react-diff-viewer-continued";
+import { useTheme } from "next-themes";
+
 export interface ResourceDiffProps {
   before?: string;
   after?: string;
@@ -46,20 +49,15 @@ export const ResourceDiff = ({ before, after }: ResourceDiffProps) => {
   const beforePrettyJSON = safeParseJSON(before);
   const afterPrettyJSON = safeParseJSON(after);
 
+  const { resolvedTheme } = useTheme();
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-      <div className="flex flex-col min-w-0">
-        <h3 className="text-sm font-medium mb-1">Before</h3>
-        <pre className="p-4 bg-muted/50 rounded-lg text-sm overflow-auto flex-1 border border-border">
-          {beforePrettyJSON}
-        </pre>
-      </div>
-      <div className="flex flex-col min-w-0">
-        <h3 className="text-sm font-medium mb-1">After</h3>
-        <pre className="p-4 bg-muted/50 rounded-lg text-sm overflow-auto flex-1 border border-border">
-          {afterPrettyJSON}
-        </pre>
-      </div>
-    </div>
+    <ReactDiffViewer
+      hideSummary
+      useDarkTheme={resolvedTheme === "dark"}
+      oldValue={beforePrettyJSON}
+      newValue={afterPrettyJSON}
+      splitView={true}
+    />
   );
 };
