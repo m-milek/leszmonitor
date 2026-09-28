@@ -11,6 +11,8 @@ import { StatusDot } from "@/components/common/StatusDot";
 import { QUERY_KEYS } from "@/lib/consts";
 import { useQuery } from "@tanstack/react-query";
 import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
+import { Tag } from "@/features/tags/components/Tag.tsx";
+import { TagsApi } from "@/features/tags/tags-api.ts";
 
 export interface MonitorListItemProps {
   monitor: Monitor;
@@ -27,6 +29,15 @@ export function MonitorListItem({
     queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id],
     queryFn: () => MonitorsApi.results.getLatest(monitor.id),
   });
+
+  const { data: tags } = useQuery({
+    queryKey: [QUERY_KEYS.TAGS],
+    queryFn: () => TagsApi.getAll(),
+  });
+
+  if (!tags) {
+    return null;
+  }
 
   const dotStatus = monitorStatusToStatusDot(lastResultData?.status);
 
@@ -69,7 +80,12 @@ export function MonitorListItem({
         </Flex>
       </CardHeader>
       <CardContent>
-        <Flex direction="column">
+        <Flex direction="column" className="gap-2">
+          {tags
+            .filter((tag) => monitor.tagIds?.includes(tag.id))
+            .map((tag) => (
+              <Tag key={tag.id} tag={tag} />
+            ))}
           <span>{monitor.id}</span>
           <span>{monitor.type}</span>
           <span>{monitor.description}</span>

@@ -1,6 +1,7 @@
 import type { Timestamps } from "@/lib/types";
 
-export type MonitorStatus = "up" | "down" | "paused" | "maintenance";
+export const monitorStatuses = ["up", "down", "paused", "maintenance"] as const;
+export type MonitorStatus = (typeof monitorStatuses)[number];
 
 export type MonitorRunState = "active" | "paused";
 
