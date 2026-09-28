@@ -8,12 +8,13 @@ import { SERVER_API_URL } from "@/lib/consts";
 const filterIntoParams = (filter: AuditLogFilters): URLSearchParams => {
   const params = new URLSearchParams();
   Object.entries(filter).forEach(([key, value]) => {
-    if (value) {
-      if (value instanceof Date) {
-        params.append(key, value.toISOString());
-      } else {
-        params.append(key, value);
-      }
+    if (value === undefined) {
+      return;
+    }
+    if (value instanceof Date) {
+      params.append(key, value.toISOString());
+    } else {
+      params.append(key, String(value));
     }
   });
   return params;

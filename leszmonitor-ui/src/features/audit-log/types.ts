@@ -19,3 +19,20 @@ export interface AuditLogFilters {
   startDate?: Date;
   endDate?: Date;
 }
+
+export const auditLogActions = [
+  "monitor.create",
+  "monitor.update",
+  "monitor.delete",
+  "monitor.run_manual",
+  "user.create",
+  "user.update",
+  "user.delete",
+  "tag.create",
+  "tag.update",
+  "tag.delete",
+  "auth.login",
+  "auth.failed_login",
+  "auth.password_change",
+  "global_parameter.update",
+] as const;
