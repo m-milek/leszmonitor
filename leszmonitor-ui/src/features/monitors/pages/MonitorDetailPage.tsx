@@ -199,6 +199,9 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
                 <Center>
                   <HttpStatusCodeChart
                     data={stats.probeSpecific!.httpCodeToCount}
+                    expectedStatusCodes={
+                      monitor.probeConfig?.expectedStatusCodes ?? []
+                    }
                   />
                 </Center>
               )}

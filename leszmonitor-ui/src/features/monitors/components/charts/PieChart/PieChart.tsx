@@ -2,6 +2,8 @@ import { Cell, Pie, PieChart as RechartsPieChart } from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -26,6 +28,17 @@ export function PieChart<T>({
         <ChartTooltip
           cursor={false}
           content={<ChartTooltipContent hideLabel />}
+        />
+        <ChartLegend
+          layout="vertical"
+          align="right"
+          verticalAlign="middle"
+          content={
+            <ChartLegendContent
+              nameKey={nameKey}
+              className="flex-col items-start gap-1 pt-0 pl-4"
+            />
+          }
         />
         <Pie
           data={data}
