@@ -17,6 +17,7 @@ type IMonitorResult interface {
 	GetCreatedAt() time.Time
 	AddFailure(reason FailureReason, details any, err error)
 	SetDuration(duration int64)
+	SetIsManuallyTriggered(isManuallyTriggered bool)
 	SetDetails(details IMonitorResultDetails)
 	GetFailures() Failures
 }
@@ -104,6 +105,10 @@ func (m *MonitorResult) AddFailure(reason FailureReason, details any, err error)
 
 func (m *MonitorResult) SetDuration(duration int64) {
 	m.DurationMs = duration
+}
+
+func (m *MonitorResult) SetIsManuallyTriggered(isManuallyTriggered bool) {
+	m.IsManuallyTriggered = isManuallyTriggered
 }
 
 func (m *MonitorResult) SetDetails(details IMonitorResultDetails) {

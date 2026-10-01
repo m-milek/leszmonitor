@@ -26,6 +26,7 @@ export interface DataTableProps<T> {
   emptyMessage?: string;
   compact?: boolean;
   pageSize?: number;
+  getRowId?: (row: T) => string;
 }
 
 const headRowClassName = "hover:bg-transparent";
@@ -44,10 +45,12 @@ export const DataTable = <T,>({
   emptyMessage = "No results.",
   compact = false,
   pageSize,
+  getRowId,
 }: DataTableProps<T>) => {
   const table = useReactTable({
     data: data || [],
     columns,
+    getRowId,
     getCoreRowModel: getCoreRowModel(),
     ...(pageSize && {
       getPaginationRowModel: getPaginationRowModel(),

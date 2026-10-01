@@ -425,7 +425,7 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 	}
 
 	traceID, _ := log.TraceIDFromContext(ctx)
-	MonitorExecuteChannel.Broadcast(MonitorExecuteMessage{Monitor: *monitor, TraceID: traceID})
+	MonitorExecuteChannel.Broadcast(MonitorExecuteMessage{Monitor: *monitor, TraceID: traceID, IsManuallyTriggered: true})
 
 	return nil
 }

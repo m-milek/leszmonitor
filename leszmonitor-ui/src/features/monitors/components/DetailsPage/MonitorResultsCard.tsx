@@ -7,7 +7,15 @@ import { StatusDot } from "@/components/common/StatusDot";
 import { ShortId } from "@/components/common/ShortId";
 import { DataTable } from "@/components/common/DataTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Minus } from "lucide-react";
+import { EyeIcon, Minus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useMemo, useState } from "react";
 
 export interface MonitorResultsCardProps {
   results: MonitorResult[];
@@ -24,7 +32,30 @@ const formatDetails = (result: MonitorResult) => {
   }
 };
 
-const columns: ColumnDef<MonitorResult>[] = [
+interface RawResultDialogProps {
+  result: MonitorResult | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const RawResultDialog = ({
+  result,
+  open,
+  onOpenChange,
+}: RawResultDialogProps) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className="sm:max-w-2xl">
+      <DialogHeader>
+        <DialogTitle>Result {result?.id}</DialogTitle>
+      </DialogHeader>
+      <pre className="max-h-[70vh] overflow-auto font-mono text-xs">
+        {JSON.stringify(result, null, 2)}
+      </pre>
+    </DialogContent>
+  </Dialog>
+);
+
+const baseColumns: ColumnDef<MonitorResult>[] = [
   {
     accessorKey: "status",
     header: "Status",
@@ -77,13 +108,53 @@ const columns: ColumnDef<MonitorResult>[] = [
 ];
 
 export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
+  const [selectedResult, setSelectedResult] = useState<MonitorResult | null>(
+    null,
+  );
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const columns = useMemo<ColumnDef<MonitorResult>[]>(
+    () => [
+      ...baseColumns,
+      {
+        id: "raw",
+        header: "",
+        cell: ({ row }) => (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Show raw JSON"
+            onClick={() => {
+              setSelectedResult(row.original);
+              setIsDialogOpen(true);
+            }}
+          >
+            <EyeIcon />
+          </Button>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
     <Card className="min-w-0">
       <CardHeader>
         <CardTitle>Results</CardTitle>
       </CardHeader>
       <CardContent>
-        <DataTable data={results} columns={columns} compact pageSize={10} />
+        <DataTable
+          data={results}
+          columns={columns}
+          compact
+          pageSize={10}
+          getRowId={(result) => result.id}
+        />
+        <RawResultDialog
+          result={selectedResult}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+        />
       </CardContent>
     </Card>
   );
