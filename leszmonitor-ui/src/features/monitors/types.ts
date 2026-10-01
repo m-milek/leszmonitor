@@ -56,23 +56,38 @@ export interface DnsMonitorConfig {
   expectedRecordValues: string[];
 }
 
-export interface Monitor extends Timestamps {
+interface BaseMonitor extends Timestamps {
   id: string;
   name: string;
   slug: string;
   description?: string;
-  tagIds?: string[];
+  tagIds: string[];
   ownerId: string;
   interval: number;
   // Retention seconds not configurable yet
   runState: MonitorRunState;
-  type: MonitorType;
-  probeConfig?: HttpMonitorConfig | TcpMonitorConfig | DnsMonitorConfig;
 }
 
-export interface MonitorWithStatus extends Monitor {
-  status: MonitorStatus;
+export interface HttpMonitor extends BaseMonitor {
+  type: "http";
+  probeConfig?: HttpMonitorConfig;
 }
+
+export interface TcpMonitor extends BaseMonitor {
+  type: "tcp";
+  probeConfig?: TcpMonitorConfig;
+}
+
+export interface DnsMonitor extends BaseMonitor {
+  type: "dns";
+  probeConfig?: DnsMonitorConfig;
+}
+
+export type Monitor = HttpMonitor | TcpMonitor | DnsMonitor;
+
+export type MonitorWithStatus = Monitor & {
+  status: MonitorStatus;
+};
 
 // Runtime zod schemas and form-value helpers live in
 // "@/features/monitors/schema.ts" so that zod is only pulled into the

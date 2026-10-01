@@ -1,21 +1,11 @@
 import { MonitorsApi } from "@/features/monitors/monitors-api";
-import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  LucideCirclePlay,
-  PauseIcon,
-  PencilIcon,
-  PlayIcon,
-} from "lucide-react";
 import { PageContainer } from "@/components/common/PageContainer";
-import { TypographyH1, TypographyH2 } from "@/components/common/Typography";
+import { TypographyH1 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonitorResultsList } from "@/features/monitors/components/MonitorResultsList";
 import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
-import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog";
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatTime } from "@/features/monitors/components/charts/utils";
@@ -26,6 +16,11 @@ import { formatDuration } from "@/lib/utils.ts";
 import { MonitorStatsCard } from "@/features/monitors/components/DetailsPage/MonitorStatsCard.tsx";
 import { HttpStatusCodeChart } from "@/features/monitors/components/DetailsPage/HttpStatusCodeChart.tsx";
 import { Center } from "@/components/common/Center.tsx";
+import { TagsApi } from "@/features/tags/tags-api.ts";
+import { Tag } from "@/features/tags/components/Tag.tsx";
+import { MonitorConfigCard } from "@/features/monitors/components/DetailsPage/MonitorConfigCard.tsx";
+import MonitorActionsGroup from "@/features/monitors/components/DetailsPage/MonitorActionsGroup.tsx";
+import { useNavigate } from "@tanstack/react-router";
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;
@@ -67,6 +62,11 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
       }),
   });
 
+  const { data: tags } = useQuery({
+    queryKey: [QUERY_KEYS.TAGS],
+    queryFn: () => TagsApi.getAll(),
+  });
+
   const mutation = useMutation({
     mutationKey: [QUERY_KEYS.MONITORS, monitorSlug],
     mutationFn: async () =>
@@ -82,6 +82,8 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
     mutationKey: [QUERY_KEYS.MONITORS, monitorSlug, "run"],
     mutationFn: async () => MonitorsApi.run(monitor!.id),
   });
+
+  const getTagById = (id: string) => tags?.find((tag) => tag.id === id);
 
   if (!monitor) {
     return null;
@@ -108,50 +110,39 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
   return (
     <PageContainer>
-      <TypographyH1>{monitor.name}</TypographyH1>
+      <Flex direction="row" className="justify-between">
+        <TypographyH1>{monitor.name}</TypographyH1>
+        <MonitorActionsGroup
+          monitor={monitor}
+          handleToggleMonitorState={handleToggleMonitorState}
+          handleEditMonitor={handleEditMonitor}
+          handleManuallyRunMonitor={handleManuallyRunMonitor}
+          isPaused={isPaused}
+        />
+      </Flex>
+
+      <Flex direction="row" className="gap-2">
+        {monitor.tagIds.map((id) => {
+          const tag = getTagById(id);
+          return tag && <Tag tag={tag} key={id} size="lg" />;
+        })}
+      </Flex>
+
       <Flex direction="row" className="gap-4">
-        <ButtonGroup>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleToggleMonitorState}
-          >
-            {isPaused ? (
-              <>
-                <PlayIcon /> Resume
-              </>
-            ) : (
-              <>
-                <PauseIcon /> Pause
-              </>
-            )}
-          </Button>
-          <Button variant="outline" size="lg" onClick={handleEditMonitor}>
-            <PencilIcon />
-            <span>Edit</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleManuallyRunMonitor}
-          >
-            <>
-              <LucideCirclePlay />
-              <span>Run Now</span>
-            </>
-          </Button>
-          <DeleteMonitorDialog
-            monitor={monitor}
-            onDeleted={() => navigate({ to: "/monitors" })}
-          />
-        </ButtonGroup>
         <MonitorStatusPill monitor={monitor} />
       </Flex>
+
+      <Card>
+        <CardContent>
+          <BatteryChart monitorResults={monitorResults ?? []} />
+        </CardContent>
+      </Card>
+
+      <MonitorConfigCard monitor={monitor} />
 
       <Card className="min-w-0">
         <CardContent className="min-w-0">
           <Flex direction="column" className="gap-2">
-            <BatteryChart monitorResults={monitorResults ?? []} />
             <pre className="overflow-x-auto text-xs pb-4">
               {JSON.stringify(monitor, null, 2)}
             </pre>
@@ -160,8 +151,10 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
       </Card>
       {stats && <MonitorStatsCard stats={stats} />}
       <Card>
+        <CardHeader>
+          <CardTitle>Statistics</CardTitle>
+        </CardHeader>
         <CardContent className="min-w-0">
-          <TypographyH2>Statistics</TypographyH2>
           {stats && (
             <>
               <p>
@@ -180,7 +173,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
       <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
         <Card className="flex-1 flex flex-col min-h-0 min-w-0">
           <CardHeader>
-            <TypographyH2>Latency (ms)</TypographyH2>
+            <CardTitle>Latency</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 min-h-0">
             <LineChart<MonitorResult>
@@ -195,20 +188,22 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
             />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <TypographyH2>HTTP Status Codes</TypographyH2>
-          </CardHeader>
-          <CardContent className="flex-1 min-h-0">
-            {stats?.probeType === "http" && (
-              <Center>
-                <HttpStatusCodeChart
-                  data={stats.probeSpecific!.httpCodeToCount}
-                />
-              </Center>
-            )}
-          </CardContent>
-        </Card>
+        {monitor.type === "http" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>HTTP Status Codes</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 min-h-0">
+              {stats?.probeType === "http" && (
+                <Center>
+                  <HttpStatusCodeChart
+                    data={stats.probeSpecific!.httpCodeToCount}
+                  />
+                </Center>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </Flex>
       <Card className="flex-1 flex flex-col min-h-0 min-w-0">
         <CardContent className="flex-1 min-h-0">

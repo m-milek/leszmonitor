@@ -109,7 +109,7 @@ export function LMTagSelect(props: Readonly<LMTagSelectProps>) {
           <ComboboxList>
             {(option: TagOption) => (
               <ComboboxItem key={option.value} value={option}>
-                <Tag tag={option.tag} className="px-2 py-0.5 text-xs" />
+                <Tag tag={option.tag} />
               </ComboboxItem>
             )}
           </ComboboxList>
