@@ -69,7 +69,7 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 	}
 
 	latencyStats := calculateLatencyStats(monitorResults)
-	statusChangeStats := calculateStatusChangeStats(latestStatusChange, to)
+	statusChangeStats := calculateStatusChangeStats(latestStatusChange, to, monitor.CreatedAt)
 	uptimeStats := calculateUptimeStats(monitorResults)
 	probeSpecificStats, err := getProbeSpecificStats(monitor.Type, monitorResults)
 	if err != nil {
@@ -111,10 +111,12 @@ func calculateLatencyStats(monitorResults []results.IMonitorResult) LatencyStats
 	}
 }
 
-func calculateStatusChangeStats(latestStatusChange *statuschange.MonitorStatusChange, to time.Time) StatusChangeStats {
+func calculateStatusChangeStats(latestStatusChange *statuschange.MonitorStatusChange, to time.Time, monitorCreatedAt time.Time) StatusChangeStats {
 	var secondsInCurrentStatus int64
 	if latestStatusChange != nil {
 		secondsInCurrentStatus = int64(to.Sub(latestStatusChange.CreatedAt).Seconds())
+	} else {
+		secondsInCurrentStatus = int64(to.Sub(monitorCreatedAt).Seconds())
 	}
 
 	return StatusChangeStats{
