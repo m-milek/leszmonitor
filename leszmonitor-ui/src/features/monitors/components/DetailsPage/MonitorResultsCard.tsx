@@ -6,7 +6,6 @@ import { formatDate } from "@/lib/utils";
 import { StatusDot } from "@/components/common/StatusDot";
 import { ShortId } from "@/components/common/ShortId";
 import { DataTable } from "@/components/common/DataTable";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus } from "lucide-react";
 
@@ -84,9 +83,7 @@ export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
         <CardTitle>Results</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-96">
-          <DataTable data={results} columns={columns} compact />
-        </ScrollArea>
+        <DataTable data={results} columns={columns} compact pageSize={10} />
       </CardContent>
     </Card>
   );

@@ -7,13 +7,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { flexRender, useReactTable } from "@tanstack/react-table";
-import { type ColumnDef, getCoreRowModel } from "@tanstack/table-core";
+import {
+  type ColumnDef,
+  getCoreRowModel,
+  getPaginationRowModel,
+} from "@tanstack/table-core";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
   emptyMessage?: string;
   compact?: boolean;
+  pageSize?: number;
 }
 
 const headRowClassName = "hover:bg-transparent";
@@ -24,19 +36,27 @@ const cellClassName = "px-6 py-5";
 const compactCellClassName = "px-3 py-1";
 const emptyClassName = "h-32 px-6 text-center";
 
+const disabledLinkClassName = "pointer-events-none opacity-50";
+
 export const DataTable = <T,>({
   data,
   columns,
   emptyMessage = "No results.",
   compact = false,
+  pageSize,
 }: DataTableProps<T>) => {
   const table = useReactTable({
     data: data || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    ...(pageSize && {
+      getPaginationRowModel: getPaginationRowModel(),
+      autoResetPageIndex: false,
+      initialState: { pagination: { pageIndex: 0, pageSize } },
+    }),
   });
 
-  return (
+  const tableElement = (
     <Table>
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
@@ -86,5 +106,39 @@ export const DataTable = <T,>({
         )}
       </TableBody>
     </Table>
+  );
+
+  if (!pageSize) {
+    return tableElement;
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {tableElement}
+      <Pagination className="justify-end">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => table.previousPage()}
+              className={
+                table.getCanPreviousPage() ? undefined : disabledLinkClassName
+              }
+            />
+          </PaginationItem>
+          <PaginationItem className="px-2 text-sm text-muted-foreground">
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {Math.max(table.getPageCount(), 1)}
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => table.nextPage()}
+              className={
+                table.getCanNextPage() ? undefined : disabledLinkClassName
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
   );
 };

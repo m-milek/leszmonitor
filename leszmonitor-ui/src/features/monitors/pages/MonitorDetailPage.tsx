@@ -206,7 +206,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
           </Card>
         )}
       </Flex>
-      <MonitorResultsCard results={monitorResults ?? []} />
+      <MonitorResultsCard key={range} results={monitorResults ?? []} />
     </PageContainer>
   );
 }
