@@ -5,7 +5,6 @@ import { TypographyH1 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonitorResultsList } from "@/features/monitors/components/MonitorResultsList";
-import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatTime } from "@/features/monitors/components/charts/utils";
@@ -21,6 +20,8 @@ import { Tag } from "@/features/tags/components/Tag.tsx";
 import { MonitorConfigCard } from "@/features/monitors/components/DetailsPage/MonitorConfigCard.tsx";
 import MonitorActionsGroup from "@/features/monitors/components/DetailsPage/MonitorActionsGroup.tsx";
 import { useNavigate } from "@tanstack/react-router";
+import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge";
+import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill.tsx";
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;
@@ -28,7 +29,7 @@ export interface MonitorDetailPageProps {
 
 const latencyChartConfig = {
   durationMs: {
-    label: "Latency (ms)",
+    label: "Latency",
   },
 };
 
@@ -111,7 +112,9 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
   return (
     <PageContainer>
       <Flex direction="row" className="justify-between">
-        <TypographyH1>{monitor.name}</TypographyH1>
+        <Flex direction="row" className="gap-4 items-center">
+          <TypographyH1>{monitor.name}</TypographyH1>
+        </Flex>
         <MonitorActionsGroup
           monitor={monitor}
           handleToggleMonitorState={handleToggleMonitorState}
@@ -121,16 +124,31 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
         />
       </Flex>
 
-      <Flex direction="row" className="gap-2">
-        {monitor.tagIds.map((id) => {
-          const tag = getTagById(id);
-          return tag && <Tag tag={tag} key={id} size="lg" />;
-        })}
+      <Flex direction="row" className="justify-between">
+        <Flex direction="row" className="gap-2">
+          <Flex direction="row" className="gap-2">
+            <MonitorStatusBadge status={monitorResults?.[0]?.status} size="lg">
+              {monitorStatus.toUpperCase()} for{" "}
+              {formatDuration(stats?.statusChange.secondsInCurrentStatus ?? 0)}
+            </MonitorStatusBadge>
+            {monitor.runState === "paused" && (
+              <MonitorStatePill monitor={monitor} size="lg" />
+            )}
+          </Flex>
+          <Flex direction="row" className="gap-2">
+            {monitor.tagIds.map((id) => {
+              const tag = getTagById(id);
+              return tag && <Tag tag={tag} key={id} size="lg" />;
+            })}
+          </Flex>
+        </Flex>
+
+        <span>Runs every {formatDuration(monitor.interval)}</span>
       </Flex>
 
-      <Flex direction="row" className="gap-4">
-        <MonitorStatusPill monitor={monitor} />
-      </Flex>
+      {monitor.description?.length !== 0 && (
+        <span className="text-muted-foreground">{monitor.description}</span>
+      )}
 
       <Card>
         <CardContent>
@@ -150,26 +168,6 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
         </CardContent>
       </Card>
       {stats && <MonitorStatsCard stats={stats} />}
-      <Card>
-        <CardHeader>
-          <CardTitle>Statistics</CardTitle>
-        </CardHeader>
-        <CardContent className="min-w-0">
-          {stats && (
-            <>
-              <p>
-                {monitorStatus.toUpperCase()} for{"  "}
-                {formatDuration(stats.statusChange.secondsInCurrentStatus)}
-              </p>
-              {stats.probeSpecific && (
-                <pre className="overflow-x-auto text-xs font-mono">
-                  {JSON.stringify(stats.probeSpecific, null, 2)}
-                </pre>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
       <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
         <Card className="flex-1 flex flex-col min-h-0 min-w-0">
           <CardHeader>

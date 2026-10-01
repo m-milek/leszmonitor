@@ -1,9 +1,14 @@
-import { Badge } from "@/components/ui/badge";
-import type { Monitor, MonitorRunState } from "@/features/monitors/types";
 import { cn } from "cn";
+import { Badge } from "@/components/ui/badge";
+import {
+  BADGE_SIZE_CLASS,
+  type BadgeSize,
+} from "@/components/common/badge-size";
+import type { Monitor, MonitorRunState } from "@/features/monitors/types";
 
 export interface MonitorStatusPillProps {
   monitor: Monitor;
+  size?: BadgeSize;
 }
 
 const mapMonitorState = (state: MonitorRunState) => {
@@ -26,8 +31,13 @@ const mapMonitorState = (state: MonitorRunState) => {
   }
 };
 
-export const MonitorStatusPill = ({ monitor }: MonitorStatusPillProps) => {
+export const MonitorStatePill = ({
+  monitor,
+  size = "default",
+}: MonitorStatusPillProps) => {
   const { text, className } = mapMonitorState(monitor.runState);
 
-  return <Badge className={cn("h-full", className)}>{text}</Badge>;
+  return (
+    <Badge className={cn(className, BADGE_SIZE_CLASS[size])}>{text}</Badge>
+  );
 };
