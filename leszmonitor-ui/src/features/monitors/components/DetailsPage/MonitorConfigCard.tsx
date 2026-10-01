@@ -13,6 +13,11 @@ import { TcpConfigContent } from "@/features/monitors/components/DetailsPage/Tcp
 import { DnsConfigContent } from "@/features/monitors/components/DetailsPage/DnsConfigContent";
 import { LucideDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/consts";
+import { UsersApi } from "@/features/users/users-api";
+import { Initial } from "@/features/users/components/Initial";
+import { StyledLink } from "@/components/common/StyledLink";
 
 export interface MonitorConfigCardProps {
   monitor: Monitor;
@@ -36,6 +41,12 @@ const monitorTypeLabelMap: Record<MonitorType, string> = {
 };
 
 export const MonitorConfigCard = ({ monitor }: MonitorConfigCardProps) => {
+  const { data: users } = useQuery({
+    queryKey: [QUERY_KEYS.USERS],
+    queryFn: () => UsersApi.getAll(),
+  });
+  const owner = users?.find((user) => user.id === monitor.ownerId);
+
   return (
     <Card>
       <CardHeader>
@@ -49,9 +60,23 @@ export const MonitorConfigCard = ({ monitor }: MonitorConfigCardProps) => {
       <CardContent>
         <ConfigContent monitor={monitor} />
       </CardContent>
-      <CardFooter className="text-muted-foreground">
-        Created {formatDate(new Date(monitor.createdAt))} <LucideDot /> Updated{" "}
-        {formatDate(new Date(monitor.updatedAt))}
+      <CardFooter className="justify-between text-muted-foreground">
+        <span className="flex items-center">
+          Created {formatDate(new Date(monitor.createdAt))} <LucideDot />{" "}
+          Updated {formatDate(new Date(monitor.updatedAt))}
+        </span>
+        {owner && (
+          <span className="flex items-center gap-2">
+            Owned by
+            <Initial text={owner.username} size="xs" />
+            <StyledLink
+              to="/user/$username"
+              params={{ username: owner.username }}
+            >
+              {owner.username}
+            </StyledLink>
+          </span>
+        )}
       </CardFooter>
     </Card>
   );
