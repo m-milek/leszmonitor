@@ -13,18 +13,22 @@ export interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
   emptyMessage?: string;
+  compact?: boolean;
 }
 
 const headRowClassName = "hover:bg-transparent";
 const headClassName = "h-12 px-6";
+const compactHeadClassName = "h-9 px-3";
 const bodyRowClassName = "transition-colors hover:bg-muted/40";
 const cellClassName = "px-6 py-5";
+const compactCellClassName = "px-3 py-1";
 const emptyClassName = "h-32 px-6 text-center";
 
 export const DataTable = <T,>({
   data,
   columns,
   emptyMessage = "No results.",
+  compact = false,
 }: DataTableProps<T>) => {
   const table = useReactTable({
     data: data || [],
@@ -39,7 +43,10 @@ export const DataTable = <T,>({
           <TableRow key={headerGroup.id} className={headRowClassName}>
             {headerGroup.headers.map((header) => {
               return (
-                <TableHead key={header.id} className={headClassName}>
+                <TableHead
+                  key={header.id}
+                  className={compact ? compactHeadClassName : headClassName}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -61,7 +68,10 @@ export const DataTable = <T,>({
               className={bodyRowClassName}
             >
               {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id} className={cellClassName}>
+                <TableCell
+                  key={cell.id}
+                  className={compact ? compactCellClassName : cellClassName}
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}

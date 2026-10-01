@@ -116,23 +116,51 @@ export interface DnsResultDetails {
   resolvedRecords?: unknown[];
 }
 
+export type FailureReason =
+  | "HTTP_REQUEST_FAILED"
+  | "HTTP_RESPONSE_BODY_READ_FAILED"
+  | "HTTP_STATUS_CODE_MISMATCH"
+  | "HTTP_RESPONSE_BODY_MISMATCH"
+  | "HTTP_RESPONSE_HEADER_MISMATCH"
+  | "HTTP_RESPONSE_TIME_EXCEEDED"
+  | "DNS_LOOKUP_FAILED"
+  | "DNS_INVALID_SRV_HOSTNAME"
+  | "DNS_EXPECTED_RECORD_MISSING"
+  | "TCP_CONNECTION_FAILED";
+
 export interface MonitorFailure {
-  reason: string;
+  reason: FailureReason;
   details?: unknown;
   error?: string;
 }
 
-export interface MonitorResult {
+interface BaseMonitorResult {
   id: string;
   monitorId: string;
   status: MonitorStatus;
   isManuallyTriggered: boolean;
   durationMs: number;
   failures?: MonitorFailure[];
-  monitorType: string;
-  details: HttpResultDetails | TcpResultDetails | DnsResultDetails;
   createdAt: Date;
 }
+
+export interface HttpMonitorResult extends BaseMonitorResult {
+  monitorType: "http";
+  details: HttpResultDetails;
+}
+
+export interface TcpMonitorResult extends BaseMonitorResult {
+  monitorType: "tcp";
+  details: TcpResultDetails;
+}
+
+export interface DnsMonitorResult extends BaseMonitorResult {
+  monitorType: "dns";
+  details: DnsResultDetails;
+}
+
+export type MonitorResult =
+  HttpMonitorResult | TcpMonitorResult | DnsMonitorResult;
 
 export interface MonitorResultMessage {
   type: string;

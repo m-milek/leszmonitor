@@ -4,7 +4,7 @@ import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MonitorResultsList } from "@/features/monitors/components/MonitorResultsList";
+import { MonitorResultsCard } from "@/features/monitors/components/DetailsPage/MonitorResultsCard";
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatTime } from "@/features/monitors/components/charts/utils";
@@ -158,16 +158,8 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
       <MonitorConfigCard monitor={monitor} />
 
-      <Card className="min-w-0">
-        <CardContent className="min-w-0">
-          <Flex direction="column" className="gap-2">
-            <pre className="overflow-x-auto text-xs pb-4">
-              {JSON.stringify(monitor, null, 2)}
-            </pre>
-          </Flex>
-        </CardContent>
-      </Card>
       {stats && <MonitorStatsCard stats={stats} />}
+
       <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
         <Card className="flex-1 flex flex-col min-h-0 min-w-0">
           <CardHeader>
@@ -203,11 +195,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
           </Card>
         )}
       </Flex>
-      <Card className="flex-1 flex flex-col min-h-0 min-w-0">
-        <CardContent className="flex-1 min-h-0">
-          <MonitorResultsList monitor={monitor} pagination={pagination} />
-        </CardContent>
-      </Card>
+      <MonitorResultsCard monitor={monitor} pagination={pagination} />
     </PageContainer>
   );
 }
