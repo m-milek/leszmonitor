@@ -3,6 +3,7 @@ package results
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/constants"
@@ -20,6 +21,7 @@ type IMonitorResultsService interface {
 		ctx context.Context,
 		id string,
 		pagination *util.Pagination,
+		from *time.Time,
 	) ([]IMonitorResult, *apperr.ServiceError)
 }
 
@@ -62,14 +64,16 @@ func (s *MonitorResultsService) GetMonitorResultsByMonitorID(
 	ctx context.Context,
 	id string,
 	pagination *util.Pagination,
+	from *time.Time,
 ) ([]IMonitorResult, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitorResults, "GetMonitorResultsByMonitorID")
 	logger.Trace().
 		Str("monitorID", id).
 		Interface("pagination", pagination).
+		Interface("from", from).
 		Msg("Retrieving monitor results by monitor ID")
 
-	results, err := NewMonitorResultDAO(s.db.Querier()).GetMonitorResultsByMonitorID(ctx, id, pagination)
+	results, err := NewMonitorResultDAO(s.db.Querier()).GetMonitorResultsByMonitorID(ctx, id, pagination, from)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			logger.Error().Str("monitorID", id).Msg("No monitor results found for given monitor ID")

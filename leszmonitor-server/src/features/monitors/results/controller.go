@@ -3,6 +3,7 @@ package results
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
@@ -51,7 +52,22 @@ func (c *MonitorResultsAPIController) GetMonitorResultsByMonitorIDHandler(w http
 		return
 	}
 
-	results, svcErr := c.service.GetMonitorResultsByMonitorID(ctx, monitorID, pagination)
+	var from *time.Time
+	if fromParam := r.URL.Query().Get("from"); fromParam != "" {
+		parsed, err := time.Parse(time.RFC3339, fromParam)
+		if err != nil {
+			httpx.RespondError(
+				ctx,
+				w,
+				http.StatusBadRequest,
+				errors.New("invalid 'from' parameter format, expected RFC3339"),
+			)
+			return
+		}
+		from = &parsed
+	}
+
+	results, svcErr := c.service.GetMonitorResultsByMonitorID(ctx, monitorID, pagination, from)
 	if svcErr != nil {
 		httpx.RespondError(ctx, w, svcErr.Code, svcErr.Err)
 		return

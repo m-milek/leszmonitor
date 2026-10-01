@@ -9,7 +9,6 @@ import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatTime } from "@/features/monitors/components/charts/utils";
 import type { MonitorResult } from "@/features/monitors/types";
-import type { Pagination } from "@/lib/types";
 import { QUERY_KEYS } from "@/lib/consts";
 import { formatDuration } from "@/lib/utils.ts";
 import { MonitorStatsCard } from "@/features/monitors/components/DetailsPage/MonitorStatsCard.tsx";
@@ -22,6 +21,13 @@ import MonitorActionsGroup from "@/features/monitors/components/DetailsPage/Moni
 import { useNavigate } from "@tanstack/react-router";
 import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge";
 import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill.tsx";
+import {
+  type ResultsRange,
+  ResultsRangeSelect,
+  resultsRangePerPage,
+  resultsRangeStart,
+} from "@/features/monitors/components/DetailsPage/ResultsRangeSelect";
+import { useState } from "react";
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;
@@ -34,10 +40,7 @@ const latencyChartConfig = {
 };
 
 export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
-  const pagination: Pagination = {
-    page: 1,
-    perPage: 100,
-  };
+  const [range, setRange] = useState<ResultsRange>("24h");
 
   const navigate = useNavigate();
 
@@ -50,8 +53,13 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
   const { data: monitorResults } = useQuery({
     enabled: !!monitor,
-    queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", pagination],
-    queryFn: () => MonitorsApi.results.getPage(monitor!.id, pagination),
+    queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor?.id ?? "", range],
+    queryFn: () =>
+      MonitorsApi.results.getPage(
+        monitor!.id,
+        { page: 1, perPage: resultsRangePerPage(range, monitor!.interval) },
+        resultsRangeStart(range),
+      ),
   });
 
   const { data: stats } = useQuery({
@@ -143,7 +151,10 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
           </Flex>
         </Flex>
 
-        <span>Runs every {formatDuration(monitor.interval)}</span>
+        <Flex direction="row" className="gap-4 items-center">
+          <span>Runs every {formatDuration(monitor.interval)}</span>
+          <ResultsRangeSelect value={range} onChange={setRange} />
+        </Flex>
       </Flex>
 
       {monitor.description?.length !== 0 && (
@@ -195,7 +206,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
           </Card>
         )}
       </Flex>
-      <MonitorResultsCard monitor={monitor} pagination={pagination} />
+      <MonitorResultsCard results={monitorResults ?? []} />
     </PageContainer>
   );
 }

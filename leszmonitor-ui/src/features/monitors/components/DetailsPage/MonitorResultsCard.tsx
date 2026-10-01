@@ -1,11 +1,7 @@
-import { MonitorsApi } from "@/features/monitors/monitors-api";
+import type { MonitorResult } from "@/features/monitors/types";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import { failureReasonToLabel } from "@/features/monitors/failure-reason";
-import type { Monitor, MonitorResult } from "@/features/monitors/types";
-import type { Pagination } from "@/lib/types";
-import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef } from "@tanstack/table-core";
-import { QUERY_KEYS } from "@/lib/consts";
 import { formatDate } from "@/lib/utils";
 import { StatusDot } from "@/components/common/StatusDot";
 import { ShortId } from "@/components/common/ShortId";
@@ -15,8 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus } from "lucide-react";
 
 export interface MonitorResultsCardProps {
-  monitor: Monitor;
-  pagination: Pagination;
+  results: MonitorResult[];
 }
 
 const formatDetails = (result: MonitorResult) => {
@@ -82,15 +77,7 @@ const columns: ColumnDef<MonitorResult>[] = [
   },
 ];
 
-export const MonitorResultsCard = ({
-  monitor,
-  pagination,
-}: MonitorResultsCardProps) => {
-  const { data: results } = useQuery({
-    queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id, pagination],
-    queryFn: () => MonitorsApi.results.getPage(monitor.id, pagination),
-  });
-
+export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
   return (
     <Card className="min-w-0">
       <CardHeader>
@@ -98,7 +85,7 @@ export const MonitorResultsCard = ({
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-96">
-          <DataTable data={results ?? []} columns={columns} compact />
+          <DataTable data={results} columns={columns} compact />
         </ScrollArea>
       </CardContent>
     </Card>

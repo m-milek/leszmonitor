@@ -77,7 +77,7 @@ func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 		}
 
 		pag := &util.Pagination{Page: 1, PerPage: 10}
-		results, svcErr := service.GetMonitorResultsByMonitorID(ctx, monitor.ID.String(), pag)
+		results, svcErr := service.GetMonitorResultsByMonitorID(ctx, monitor.ID.String(), pag, nil)
 		require.Nil(t, svcErr)
 		require.Len(t, results, 3)
 	})
