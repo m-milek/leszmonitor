@@ -2,11 +2,12 @@ import type { MonitorStats } from "@/features/monitors/types.ts";
 import { Card } from "@/components/ui/card.tsx";
 import { Flex } from "@/components/common/Flex.tsx";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MS_SUFFIX = " ms";
 
 export interface MonitorStatsCardProps {
-  stats: MonitorStats;
+  stats?: MonitorStats;
 }
 
 export function MonitorStatsCard({ stats }: MonitorStatsCardProps) {
@@ -15,22 +16,22 @@ export function MonitorStatsCard({ stats }: MonitorStatsCardProps) {
       <Flex direction="row" className="gap-2">
         <MonitorStatsCardItemWrapper title="Uptime">
           <MonitorStatsNumber
-            value={stats.uptime?.statusToPercentage?.["up"] ?? 0}
+            value={stats && (stats.uptime?.statusToPercentage?.["up"] ?? 0)}
             decimalPlaces={2}
             suffix={"%"}
           />
         </MonitorStatsCardItemWrapper>
         <Separator orientation="vertical" />
         <MonitorStatsCardItemWrapper title="Average Latency">
-          <MonitorStatsNumber value={stats.latency?.avg} suffix={MS_SUFFIX} />
+          <MonitorStatsNumber value={stats?.latency?.avg} suffix={MS_SUFFIX} />
         </MonitorStatsCardItemWrapper>
         <Separator orientation="vertical" />
         <MonitorStatsCardItemWrapper title="Minimum Latency">
-          <MonitorStatsNumber value={stats.latency?.min} suffix={MS_SUFFIX} />
+          <MonitorStatsNumber value={stats?.latency?.min} suffix={MS_SUFFIX} />
         </MonitorStatsCardItemWrapper>
         <Separator orientation="vertical" />
         <MonitorStatsCardItemWrapper title="Maximum Latency">
-          <MonitorStatsNumber value={stats.latency?.max} suffix={MS_SUFFIX} />
+          <MonitorStatsNumber value={stats?.latency?.max} suffix={MS_SUFFIX} />
         </MonitorStatsCardItemWrapper>
       </Flex>
     </Card>
@@ -56,7 +57,7 @@ const MonitorStatsCardItemWrapper = ({
 };
 
 interface MonitorStatsNumberProps {
-  value: number;
+  value?: number;
   decimalPlaces?: number;
   suffix?: string;
 }
@@ -66,6 +67,10 @@ const MonitorStatsNumber = ({
   decimalPlaces = 0,
   suffix,
 }: MonitorStatsNumberProps) => {
+  if (value === undefined) {
+    return <Skeleton className="h-8 w-24" />;
+  }
+
   const formattedValue = value.toLocaleString(undefined, {
     minimumFractionDigits: decimalPlaces,
     maximumFractionDigits: decimalPlaces,

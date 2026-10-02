@@ -22,10 +22,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useMemo, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LMFacetedFilter } from "@/components/form/LMFacetedFilter";
 
 export interface MonitorResultsCardProps {
-  results: MonitorResult[];
+  results?: MonitorResult[];
 }
 
 const formatDetails = (result: MonitorResult) => {
@@ -127,7 +128,7 @@ export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
 
   const filteredResults = statusFilter.length
-    ? results.filter((result) => statusFilter.includes(result.status))
+    ? results?.filter((result) => statusFilter.includes(result.status))
     : results;
 
   const columns = useMemo<ColumnDef<MonitorResult>[]>(
@@ -171,13 +172,21 @@ export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <DataTable
-          data={filteredResults}
-          columns={columns}
-          compact
-          pageSize={10}
-          getRowId={(result) => result.id}
-        />
+        {filteredResults ? (
+          <DataTable
+            data={filteredResults}
+            columns={columns}
+            compact
+            pageSize={10}
+            getRowId={(result) => result.id}
+          />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 10 }, (_, i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
+          </div>
+        )}
         <RawResultDialog
           result={selectedResult}
           open={isDialogOpen}

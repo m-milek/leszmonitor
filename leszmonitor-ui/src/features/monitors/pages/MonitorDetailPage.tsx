@@ -6,6 +6,7 @@ import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonitorResultsCard } from "@/features/monitors/components/DetailsPage/MonitorResultsCard";
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatTime } from "@/features/monitors/components/charts/utils";
 import type { MonitorResult } from "@/features/monitors/types";
@@ -133,10 +134,14 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
       <Flex direction="row" className="justify-between">
         <Flex direction="row" className="gap-2">
           <Flex direction="row" className="gap-2">
-            <MonitorStatusBadge status={monitorResults?.[0]?.status} size="lg">
-              {monitorStatus.toUpperCase()} for{" "}
-              {formatDuration(stats?.statusChange.secondsInCurrentStatus ?? 0)}
-            </MonitorStatusBadge>
+            {monitorResults && stats ? (
+              <MonitorStatusBadge status={monitorResults[0]?.status} size="lg">
+                {monitorStatus.toUpperCase()} for{" "}
+                {formatDuration(stats.statusChange.secondsInCurrentStatus)}
+              </MonitorStatusBadge>
+            ) : (
+              <Skeleton className="h-(--text-3xl) w-40 rounded-4xl" />
+            )}
             {monitor.runState === "paused" && (
               <MonitorStatePill monitor={monitor} size="lg" />
             )}
@@ -161,13 +166,17 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
       <Card>
         <CardContent>
-          <BatteryChart monitorResults={monitorResults ?? []} />
+          {monitorResults ? (
+            <BatteryChart monitorResults={monitorResults} />
+          ) : (
+            <Skeleton className="h-8 w-full" />
+          )}
         </CardContent>
       </Card>
 
       <MonitorConfigCard monitor={monitor} />
 
-      {stats && <MonitorStatsCard stats={stats} />}
+      <MonitorStatsCard stats={stats} />
 
       <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
         <Card className="flex-1 flex flex-col min-h-0 min-w-0">
@@ -175,16 +184,20 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
             <CardTitle>Latency</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 min-h-0">
-            <LineChart<MonitorResult>
-              data={monitorResults ?? []}
-              config={latencyChartConfig}
-              timestampExtractor={(r) => new Date(r.createdAt).getTime()}
-              xAxisKey="createdAt"
-              yAxisKey="durationMs"
-              uniqueMatchKey="id"
-              xAxisTickFormatter={formatTime}
-              yAxisDomain={[0, "auto"]}
-            />
+            {monitorResults ? (
+              <LineChart<MonitorResult>
+                data={monitorResults}
+                config={latencyChartConfig}
+                timestampExtractor={(r) => new Date(r.createdAt).getTime()}
+                xAxisKey="createdAt"
+                yAxisKey="durationMs"
+                uniqueMatchKey="id"
+                xAxisTickFormatter={formatTime}
+                yAxisDomain={[0, "auto"]}
+              />
+            ) : (
+              <Skeleton className="h-full w-full" />
+            )}
           </CardContent>
         </Card>
         {monitor.type === "http" && (
@@ -193,21 +206,28 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
               <CardTitle>HTTP Status Codes</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 min-h-0">
-              {stats?.probeType === "http" && (
-                <Center>
-                  <HttpStatusCodeChart
-                    data={stats.probeSpecific!.httpCodeToCount}
-                    expectedStatusCodes={
-                      monitor.probeConfig?.expectedStatusCodes ?? []
-                    }
-                  />
-                </Center>
+              {!stats ? (
+                <Skeleton className="aspect-video h-64" />
+              ) : (
+                stats.probeType === "http" && (
+                  <Center>
+                    <HttpStatusCodeChart
+                      data={stats.probeSpecific!.httpCodeToCount}
+                      expectedStatusCodes={
+                        monitor.probeConfig?.expectedStatusCodes ?? []
+                      }
+                    />
+                  </Center>
+                )
               )}
             </CardContent>
           </Card>
         )}
       </Flex>
-      <MonitorResultsCard key={range} results={monitorResults ?? []} />
+      <MonitorResultsCard
+        key={range}
+        results={monitorResults === null ? [] : monitorResults}
+      />
     </PageContainer>
   );
 }
