@@ -9,7 +9,7 @@ export interface UserInitialProps {
 }
 
 const sizeClasses = {
-  xs: "size-6 text-xs",
+  xs: "size-5 text-xs",
   sm: "size-8 text-base",
   md: "size-12 text-2xl",
   lg: "size-16 text-3xl",
