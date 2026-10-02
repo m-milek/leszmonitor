@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { StatusDot } from "@/components/common/StatusDot";
 import { QUERY_KEYS } from "@/lib/consts";
 import { useQuery } from "@tanstack/react-query";
-import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill.tsx";
 import { Tag } from "@/features/tags/components/Tag.tsx";
 import { TagsApi } from "@/features/tags/tags-api.ts";
+import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge.tsx";
 
 export interface MonitorListItemProps {
   monitor: MonitorWithStatus;
@@ -49,7 +49,9 @@ export function MonitorListItem({
                 {monitor.name}
               </StyledLink>
             </TypographyH3>
-            <MonitorStatePill monitor={monitor} />
+            <MonitorStatusBadge status={monitor.status}>
+              {monitor.status}
+            </MonitorStatusBadge>
           </Flex>
           <Flex direction="row">
             {navigateToEditMonitor && onDeleteMonitor && (
@@ -82,8 +84,6 @@ export function MonitorListItem({
                 <Tag key={tag.id} tag={tag} />
               ))}
           </Flex>
-          <span>{monitor.id}</span>
-          <span>{monitor.type}</span>
           <span>{monitor.description}</span>
         </Flex>
       </CardContent>
