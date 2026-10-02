@@ -64,11 +64,9 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
   const { data: stats } = useQuery({
     enabled: !!monitor,
-    queryKey: [QUERY_KEYS.MONITOR_LATENCY_STATS, monitor?.id ?? ""],
+    queryKey: [QUERY_KEYS.MONITOR_LATENCY_STATS, monitor?.id ?? "", range],
     queryFn: () =>
-      MonitorsApi.stats.get(monitor!.id, {
-        from: new Date(Date.now() - 24 * 60 * 60 * 1000), // last 24 hours
-      }),
+      MonitorsApi.stats.get(monitor!.id, { from: resultsRangeStart(range) }),
   });
 
   const { data: tags } = useQuery({
