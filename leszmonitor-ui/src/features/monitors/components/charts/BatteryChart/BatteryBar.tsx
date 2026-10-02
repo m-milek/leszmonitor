@@ -28,12 +28,12 @@ export const BatteryBar = ({
   return (
     <Popover>
       <PopoverTrigger
-        className="h-full shrink-0 cursor-pointer transition-opacity hover:opacity-50"
+        className="h-full shrink-0 cursor-pointer p-0.5 transition-opacity hover:opacity-50"
         style={{ width: BAR_WIDTH }}
       >
         <div
           className={cn(
-            "h-full shrink-0 rounded-full m-0.5",
+            "h-full rounded-full",
             colorClass,
             animateOnMount &&
               "animate-in zoom-in-0 fade-in slide-in-from-right-2 duration-200 ease-out",

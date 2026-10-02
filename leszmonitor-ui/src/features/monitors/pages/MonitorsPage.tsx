@@ -126,7 +126,7 @@ export function MonitorsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <div className="w-64">
                 <LMInputField
-                  placeholder={"Filter by name..."}
+                  placeholder={"Search..."}
                   name="monitor-name-filter"
                   value={filterName}
                   onChange={onNameFilterChange}
@@ -137,7 +137,7 @@ export function MonitorsPage() {
                 options={tags.map((tag) => ({
                   value: tag.id,
                   label: tag.name,
-                  render: <Tag tag={tag} className="px-2 py-0.5 text-xs" />,
+                  render: <Tag tag={tag} />,
                 }))}
                 value={filterTags}
                 onChange={onTagFilterChange}

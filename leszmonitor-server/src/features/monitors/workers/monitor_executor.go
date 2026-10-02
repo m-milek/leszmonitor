@@ -80,6 +80,7 @@ func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecu
 		logger.Error().Err(err).Msg("Probe execution failed due to an error")
 		return
 	}
+	result.SetIsManuallyTriggered(msg.IsManuallyTriggered)
 	logger.Info().Any("monitor_result", result).Msg("Monitor result")
 
 	if result.GetStatus() != kind.MonitorStatusUp {

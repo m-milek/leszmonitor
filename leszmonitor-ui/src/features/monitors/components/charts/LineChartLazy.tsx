@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { LineChart as LineChartImpl, LineChartProps } from "./LineChart";
 
 const LineChartInner = lazy(() =>
@@ -9,7 +10,7 @@ export type { LineChartProps };
 
 export function LineChart<T>(props: LineChartProps<T>) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<Skeleton className="h-full w-full" />}>
       <LineChartInner {...props} />
     </Suspense>
   );

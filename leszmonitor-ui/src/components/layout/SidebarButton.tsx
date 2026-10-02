@@ -1,4 +1,8 @@
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import {
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { Link, useLocation } from "@tanstack/react-router";
 
 interface SidebarButtonProps {
@@ -16,6 +20,7 @@ export const SidebarButton = ({
   external,
 }: SidebarButtonProps) => {
   const location = useLocation();
+  const { setOpenMobile } = useSidebar();
   const matchesCurrentUrl = location.pathname === href;
 
   return (
@@ -29,6 +34,7 @@ export const SidebarButton = ({
           )
         }
         isActive={matchesCurrentUrl}
+        onClick={() => setOpenMobile(false)}
         className="transition-colors hover:text-sidebar-foreground active:translate-y-px data-active:text-sidebar-primary [&[data-active]:hover]:text-sidebar-primary"
       >
         {icon}

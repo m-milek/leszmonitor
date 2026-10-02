@@ -7,7 +7,12 @@ export interface MainPanelContainerProps {
 
 export const PageContainer = (props: MainPanelContainerProps) => {
   return (
-    <div className={cn("flex flex-col gap-4 w-full p-6", props.className)}>
+    <div
+      className={cn(
+        "flex flex-col gap-4 w-full p-6 max-md:p-4 max-md:pt-0",
+        props.className,
+      )}
+    >
       {props.children}
     </div>
   );

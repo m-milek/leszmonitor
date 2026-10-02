@@ -56,23 +56,38 @@ export interface DnsMonitorConfig {
   expectedRecordValues: string[];
 }
 
-export interface Monitor extends Timestamps {
+interface BaseMonitor extends Timestamps {
   id: string;
   name: string;
   slug: string;
   description?: string;
-  tagIds?: string[];
+  tagIds: string[];
   ownerId: string;
   interval: number;
   // Retention seconds not configurable yet
   runState: MonitorRunState;
-  type: MonitorType;
-  probeConfig?: HttpMonitorConfig | TcpMonitorConfig | DnsMonitorConfig;
 }
 
-export interface MonitorWithStatus extends Monitor {
-  status: MonitorStatus;
+export interface HttpMonitor extends BaseMonitor {
+  type: "http";
+  probeConfig?: HttpMonitorConfig;
 }
+
+export interface TcpMonitor extends BaseMonitor {
+  type: "tcp";
+  probeConfig?: TcpMonitorConfig;
+}
+
+export interface DnsMonitor extends BaseMonitor {
+  type: "dns";
+  probeConfig?: DnsMonitorConfig;
+}
+
+export type Monitor = HttpMonitor | TcpMonitor | DnsMonitor;
+
+export type MonitorWithStatus = Monitor & {
+  status: MonitorStatus;
+};
 
 // Runtime zod schemas and form-value helpers live in
 // "@/features/monitors/schema.ts" so that zod is only pulled into the
@@ -101,23 +116,51 @@ export interface DnsResultDetails {
   resolvedRecords?: unknown[];
 }
 
+export type FailureReason =
+  | "HTTP_REQUEST_FAILED"
+  | "HTTP_RESPONSE_BODY_READ_FAILED"
+  | "HTTP_STATUS_CODE_MISMATCH"
+  | "HTTP_RESPONSE_BODY_MISMATCH"
+  | "HTTP_RESPONSE_HEADER_MISMATCH"
+  | "HTTP_RESPONSE_TIME_EXCEEDED"
+  | "DNS_LOOKUP_FAILED"
+  | "DNS_INVALID_SRV_HOSTNAME"
+  | "DNS_EXPECTED_RECORD_MISSING"
+  | "TCP_CONNECTION_FAILED";
+
 export interface MonitorFailure {
-  reason: string;
+  reason: FailureReason;
   details?: unknown;
   error?: string;
 }
 
-export interface MonitorResult {
+interface BaseMonitorResult {
   id: string;
   monitorId: string;
   status: MonitorStatus;
   isManuallyTriggered: boolean;
-  durationMs: number;
+  durationMs?: number;
   failures?: MonitorFailure[];
-  monitorType: string;
-  details: HttpResultDetails | TcpResultDetails | DnsResultDetails;
   createdAt: Date;
 }
+
+export interface HttpMonitorResult extends BaseMonitorResult {
+  monitorType: "http";
+  details: HttpResultDetails;
+}
+
+export interface TcpMonitorResult extends BaseMonitorResult {
+  monitorType: "tcp";
+  details: TcpResultDetails;
+}
+
+export interface DnsMonitorResult extends BaseMonitorResult {
+  monitorType: "dns";
+  details: DnsResultDetails;
+}
+
+export type MonitorResult =
+  HttpMonitorResult | TcpMonitorResult | DnsMonitorResult;
 
 export interface MonitorResultMessage {
   type: string;
@@ -154,7 +197,6 @@ export interface UptimeStats {
 }
 
 export interface HttpProbeStats {
-  type: "http";
   httpCodeToCount: Record<string, number>;
 }
 
@@ -165,4 +207,5 @@ export interface MonitorStats {
   statusChange: StatusChangeStats;
   uptime: UptimeStats;
   probeSpecific?: ProbeSpecificStats;
+  probeType: MonitorType;
 }

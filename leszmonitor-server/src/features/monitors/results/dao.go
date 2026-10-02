@@ -22,6 +22,7 @@ type IMonitorResultDAO interface {
 		ctx context.Context,
 		id string,
 		pagination *util.Pagination,
+		from *time.Time,
 	) ([]IMonitorResult, error)
 	GetMonitorResultsByMonitorIDInTimeWindow(
 		ctx context.Context,
@@ -44,6 +45,7 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 	ctx context.Context,
 	id string,
 	pagination *util.Pagination,
+	from *time.Time,
 ) ([]IMonitorResult, error) {
 	return db.Wrap(ctx, "GetMonitorResultsByMonitorID", func() ([]IMonitorResult, error) {
 		var results []MonitorResult
@@ -53,8 +55,9 @@ func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 			FROM monitor_results mr
 			JOIN monitors m ON m.id = mr.monitor_id
 			WHERE mr.monitor_id = $1
+			  AND (CAST($4 AS timestamptz) IS NULL OR mr.created_at >= $4)
 			ORDER BY mr.created_at DESC
-			LIMIT $2 OFFSET $3`, id, pagination.PerPage, pagination.Offset())
+			LIMIT $2 OFFSET $3`, id, pagination.PerPage, pagination.Offset(), from)
 
 		if err != nil {
 			return nil, err

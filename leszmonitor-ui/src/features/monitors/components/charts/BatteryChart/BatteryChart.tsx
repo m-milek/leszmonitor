@@ -1,36 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MonitorResult } from "@/features/monitors/types";
-import { Flex } from "@/components/common/Flex";
 import { BatteryBar } from "@/features/monitors/components/charts/BatteryChart/BatteryBar";
 import { prepareResults } from "@/features/monitors/components/charts/BatteryChart/prepare-results";
-
-export interface BatteryChartProps {
-  length?: number;
-  monitorResults: MonitorResult[];
-}
+import { Flex } from "@/components/common/Flex.tsx";
+import { formatDuration } from "@/lib/utils.ts";
+import { differenceInSeconds } from "date-fns";
 
 export const BAR_WIDTH = 16;
-const GAP = 0;
-const TOTAL_WIDTH = BAR_WIDTH + GAP;
 
 export const BatteryChart = ({
-  length: defaultLength,
   monitorResults,
-}: BatteryChartProps) => {
+}: {
+  monitorResults: MonitorResult[];
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [length, setLength] = useState(defaultLength ?? 50);
+  const [length, setLength] = useState(0);
   const lastSeenAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const observer = new ResizeObserver(([entry]) => {
-      const width = entry?.contentRect.width ?? el.clientWidth;
-      if (width > 0) {
-        setLength(Math.max(1, Math.floor((width + GAP) / TOTAL_WIDTH)));
-      }
-    });
+    const observer = new ResizeObserver(() =>
+      setLength(Math.floor(el.clientWidth / BAR_WIDTH)),
+    );
 
     observer.observe(el);
     return () => observer.disconnect();
@@ -46,12 +39,14 @@ export const BatteryChart = ({
     lastSeenAtRef.current = newestAt;
   }, [newestAt]);
 
+  const oldestResultUntilNowSeconds = differenceInSeconds(
+    new Date(),
+    displayResults.at(0)?.createdAt ?? new Date(),
+  );
+
   return (
-    <div className="w-full h-8 relative" ref={containerRef}>
-      <Flex
-        direction="row"
-        className="justify-start items-center absolute inset-0"
-      >
+    <Flex direction="column">
+      <div className="flex h-10 w-full overflow-hidden" ref={containerRef}>
         {displayResults.map((res, i) => (
           <BatteryBar
             key={res?.id ?? `empty-${i}`}
@@ -63,7 +58,15 @@ export const BatteryChart = ({
             }
           />
         ))}
+      </div>
+      <Flex
+        direction="row"
+        className="justify-between text-muted-foreground"
+        style={{ width: displayResults.length * BAR_WIDTH }}
+      >
+        <span>{formatDuration(oldestResultUntilNowSeconds)} ago</span>
+        <span>now</span>
       </Flex>
-    </div>
+    </Flex>
   );
 };

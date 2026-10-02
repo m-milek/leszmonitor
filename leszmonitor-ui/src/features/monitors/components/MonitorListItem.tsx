@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { StatusDot } from "@/components/common/StatusDot";
 import { QUERY_KEYS } from "@/lib/consts";
 import { useQuery } from "@tanstack/react-query";
-import { MonitorStatusPill } from "@/features/monitors/components/MonitorStatusPill";
+import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill.tsx";
 import { Tag } from "@/features/tags/components/Tag.tsx";
 import { TagsApi } from "@/features/tags/tags-api.ts";
 
@@ -49,7 +49,7 @@ export function MonitorListItem({
                 {monitor.name}
               </StyledLink>
             </TypographyH3>
-            <MonitorStatusPill monitor={monitor} />
+            <MonitorStatePill monitor={monitor} />
           </Flex>
           <Flex direction="row">
             {navigateToEditMonitor && onDeleteMonitor && (

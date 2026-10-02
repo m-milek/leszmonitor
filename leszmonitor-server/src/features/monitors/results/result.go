@@ -12,11 +12,12 @@ type IMonitorResult interface {
 	GetMonitorID() uuid.UUID
 	GetStatus() kind.MonitorStatus
 	GetIsManuallyTriggered() bool
-	GetDurationMs() int64
+	GetDurationMs() *int64
 	GetDetails() IMonitorResultDetails
 	GetCreatedAt() time.Time
 	AddFailure(reason FailureReason, details any, err error)
-	SetDuration(duration int64)
+	SetDuration(duration *int64)
+	SetIsManuallyTriggered(isManuallyTriggered bool)
 	SetDetails(details IMonitorResultDetails)
 	GetFailures() Failures
 }
@@ -26,7 +27,7 @@ type baseMonitorResult struct {
 	MonitorID           uuid.UUID          `json:"monitorId"              db:"monitor_id"`
 	Status              kind.MonitorStatus `json:"status" db:"status"`
 	IsManuallyTriggered bool               `json:"isManuallyTriggered"    db:"is_manually_triggered"`
-	DurationMs          int64              `json:"durationMs"             db:"duration_ms"`
+	DurationMs          *int64             `json:"durationMs,omitempty"             db:"duration_ms"`
 	Failures            Failures           `json:"failures,omitempty"     db:"failures"`
 	CreatedAt           time.Time          `json:"createdAt"              db:"created_at"`
 }
@@ -44,7 +45,7 @@ func NewMonitorResult(
 	monitorType kind.ProbeType,
 	status kind.MonitorStatus,
 	isManuallyTriggered bool,
-	durationMs int64,
+	durationMs *int64,
 	details IMonitorResultDetails,
 ) MonitorResult {
 	return MonitorResult{
@@ -77,7 +78,7 @@ func (m *MonitorResult) GetIsManuallyTriggered() bool {
 	return m.IsManuallyTriggered
 }
 
-func (m *MonitorResult) GetDurationMs() int64 {
+func (m *MonitorResult) GetDurationMs() *int64 {
 	return m.DurationMs
 }
 
@@ -102,8 +103,12 @@ func (m *MonitorResult) AddFailure(reason FailureReason, details any, err error)
 	m.Status = kind.MonitorStatusDown
 }
 
-func (m *MonitorResult) SetDuration(duration int64) {
+func (m *MonitorResult) SetDuration(duration *int64) {
 	m.DurationMs = duration
+}
+
+func (m *MonitorResult) SetIsManuallyTriggered(isManuallyTriggered bool) {
+	m.IsManuallyTriggered = isManuallyTriggered
 }
 
 func (m *MonitorResult) SetDetails(details IMonitorResultDetails) {

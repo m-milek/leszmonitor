@@ -2,6 +2,7 @@ package probe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -44,7 +45,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		kind.DNSConfigType,
 		kind.MonitorStatusUp,
 		false,
-		0,
+		nil,
 		&results.DNSResultDetails{},
 	)
 	details := result.GetDetails().(*results.DNSResultDetails)
@@ -65,8 +66,8 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 				logger,
 				results.FailureReasonDNSLookupFailed,
 				results.CauseFailureDetails{Cause: classifyDNSError(err)},
-				err,
-				"AAAA record lookup failed",
+				p.withServer(err),
+				rt+" record lookup failed",
 			), nil
 		}
 		expectedRecordType := "A"
@@ -90,7 +91,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 				logger,
 				results.FailureReasonDNSLookupFailed,
 				results.CauseFailureDetails{Cause: classifyDNSError(err)},
-				err,
+				p.withServer(err),
 				"CNAME record lookup failed",
 			), nil
 		}
@@ -111,7 +112,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 				logger,
 				results.FailureReasonDNSLookupFailed,
 				results.CauseFailureDetails{Cause: classifyDNSError(err)},
-				err,
+				p.withServer(err),
 				"MX record lookup failed",
 			), nil
 		}
@@ -132,7 +133,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 				logger,
 				results.FailureReasonDNSLookupFailed,
 				results.CauseFailureDetails{Cause: classifyDNSError(err)},
-				err,
+				p.withServer(err),
 				"TXT record lookup failed",
 			), nil
 		}
@@ -153,7 +154,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 				logger,
 				results.FailureReasonDNSLookupFailed,
 				results.CauseFailureDetails{Cause: classifyDNSError(err)},
-				err,
+				p.withServer(err),
 				"NS record lookup failed",
 			), nil
 		}
@@ -178,7 +179,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 				logger,
 				results.FailureReasonDNSLookupFailed,
 				results.CauseFailureDetails{Cause: classifyDNSError(err)},
-				err,
+				p.withServer(err),
 				"SRV record lookup failed",
 			), nil
 		}
@@ -197,7 +198,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		return nil, err
 	}
 
-	result.SetDuration(endTime.Sub(startTime).Milliseconds())
+	result.SetDuration(new(endTime.Sub(startTime).Milliseconds()))
 
 	return &result, nil
 }
@@ -232,14 +233,7 @@ func makeResolver(dnsServer string) *net.Resolver {
 		return net.DefaultResolver
 	}
 
-	// Handle case where port is already included
-	host, port, err := net.SplitHostPort(dnsServer)
-	if err != nil {
-		// No port present, default to 53
-		host = dnsServer
-		port = "53"
-	}
-	addr := net.JoinHostPort(host, port)
+	addr := dnsServerAddr(dnsServer)
 
 	return &net.Resolver{
 		PreferGo: true,
@@ -250,6 +244,25 @@ func makeResolver(dnsServer string) *net.Resolver {
 			return d.DialContext(ctx, network, addr)
 		},
 	}
+}
+
+func dnsServerAddr(dnsServer string) string {
+	// Handle case where port is already included
+	host, port, err := net.SplitHostPort(dnsServer)
+	if err != nil {
+		// No port present, default to 53
+		host = dnsServer
+		port = "53"
+	}
+	return net.JoinHostPort(host, port)
+}
+
+func (p *DNSProbe) withServer(err error) error {
+	var dnsErr *net.DNSError
+	if p.DNSServer != "" && errors.As(err, &dnsErr) {
+		dnsErr.Server = dnsServerAddr(p.DNSServer)
+	}
+	return err
 }
 
 func splitSRVHostname(hostname string) (string, string, string, error) {
@@ -287,7 +300,7 @@ func earlyErrorWithErr(
 ) results.IMonitorResult {
 	result.AddFailure(reason, details, err)
 	logger.Trace().Err(err).Msg(logMsg)
-	result.SetDuration(0)
+	result.SetDuration(nil)
 	return result
 }
 

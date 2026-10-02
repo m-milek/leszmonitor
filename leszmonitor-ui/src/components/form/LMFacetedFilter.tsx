@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PlusCircleIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import {
   Combobox,
   ComboboxContent,
@@ -43,7 +43,7 @@ export function LMFacetedFilter(props: Readonly<LMFacetedFilterProps>) {
       <ComboboxTrigger
         render={<Button variant="outline" className="font-normal" />}
       >
-        <PlusCircleIcon />
+        <SearchIcon />
         {props.title}
         {selectedOptions.length > 0 && (
           <>

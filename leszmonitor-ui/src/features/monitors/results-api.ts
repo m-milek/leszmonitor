@@ -18,6 +18,7 @@ const getLatest = async (monitorId: string): Promise<MonitorResult | null> => {
 const getPage = async (
   monitorId: string,
   pagination: Pagination,
+  from?: Date,
 ): Promise<MonitorResult[] | null> => {
   console.log(
     `Fetching results for monitor ${monitorId} with pagination:`,
@@ -27,6 +28,7 @@ const getPage = async (
     page: pagination.page.toString(),
     per_page: pagination.perPage.toString(),
   });
+  if (from) queryParams.set("from", from.toISOString());
   const res = await authFetch(
     `${SERVER_API_URL}/monitors/${monitorId}/results?${queryParams.toString()}`,
   );

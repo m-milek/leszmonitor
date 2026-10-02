@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MonitorStatusPill } from "./MonitorStatusPill";
+import { MonitorStatePill } from "./MonitorStatePill.tsx";
 import type { Monitor } from "@/features/monitors/types";
 
 const createMonitor = (state: string): Monitor =>
@@ -10,28 +10,28 @@ const createMonitor = (state: string): Monitor =>
 
 describe("MonitorStatusPill", () => {
   it("renders 'Active' with green styling when monitor state is active", () => {
-    render(<MonitorStatusPill monitor={createMonitor("active")} />);
+    render(<MonitorStatePill monitor={createMonitor("active")} />);
 
     const pill = screen.getByText("Active");
     expect(pill).toBeInTheDocument();
   });
 
   it("renders 'Paused' with gray styling when monitor state is paused", () => {
-    render(<MonitorStatusPill monitor={createMonitor("paused")} />);
+    render(<MonitorStatePill monitor={createMonitor("paused")} />);
 
     const pill = screen.getByText("Paused");
     expect(pill).toBeInTheDocument();
   });
 
   it("renders 'Invalid' with muted styling for an unknown monitor state", () => {
-    render(<MonitorStatusPill monitor={createMonitor("unknown")} />);
+    render(<MonitorStatePill monitor={createMonitor("unknown")} />);
 
     const pill = screen.getByText("Invalid");
     expect(pill).toBeInTheDocument();
   });
 
   it("renders a Badge coloured from the status tokens", () => {
-    render(<MonitorStatusPill monitor={createMonitor("active")} />);
+    render(<MonitorStatePill monitor={createMonitor("active")} />);
 
     const pill = screen.getByText("Active");
     expect(pill).toHaveAttribute("data-slot", "badge");
