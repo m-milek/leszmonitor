@@ -1,4 +1,4 @@
-import type { MonitorResult } from "@/features/monitors/types";
+import { type MonitorResult, monitorStatuses } from "@/features/monitors/types";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import { failureReasonToLabel } from "@/features/monitors/failure-reason";
 import { type ColumnDef } from "@tanstack/table-core";
@@ -6,7 +6,13 @@ import { formatDate } from "@/lib/utils";
 import { StatusDot } from "@/components/common/StatusDot";
 import { ShortId } from "@/components/common/ShortId";
 import { DataTable } from "@/components/common/DataTable";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { EyeIcon, LucideMinus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useMemo, useState } from "react";
+import { LMFacetedFilter } from "@/components/form/LMFacetedFilter";
 
 export interface MonitorResultsCardProps {
   results: MonitorResult[];
@@ -117,6 +124,11 @@ export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
     null,
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+
+  const filteredResults = statusFilter.length
+    ? results.filter((result) => statusFilter.includes(result.status))
+    : results;
 
   const columns = useMemo<ColumnDef<MonitorResult>[]>(
     () => [
@@ -146,10 +158,21 @@ export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
     <Card className="min-w-0">
       <CardHeader>
         <CardTitle>Results</CardTitle>
+        <CardAction>
+          <LMFacetedFilter
+            title="Status"
+            options={monitorStatuses.map((status) => ({
+              value: status,
+              label: status.toUpperCase(),
+            }))}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+        </CardAction>
       </CardHeader>
       <CardContent>
         <DataTable
-          data={results}
+          data={filteredResults}
           columns={columns}
           compact
           pageSize={10}

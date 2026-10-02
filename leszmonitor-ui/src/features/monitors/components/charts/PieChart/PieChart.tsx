@@ -3,7 +3,6 @@ import {
   type ChartConfig,
   ChartContainer,
   ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -33,12 +32,25 @@ export function PieChart<T>({
           layout="vertical"
           align="right"
           verticalAlign="middle"
-          content={
-            <ChartLegendContent
-              nameKey={nameKey}
-              className="flex-col items-start gap-1 pt-0 pl-4"
-            />
-          }
+          content={() => (
+            <div className="flex flex-col items-start gap-1 pl-4">
+              {data.map((item) => {
+                const name = String(item[nameKey]);
+                return (
+                  <div key={name} className="flex items-center gap-1.5">
+                    <div
+                      className="size-2 shrink-0 rounded-[2px]"
+                      style={{ backgroundColor: `var(--color-${name})` }}
+                    />
+                    {config[name]?.label ?? name}
+                    <span className="text-muted-foreground tabular-nums">
+                      {String(item[valueKey])}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         />
         <Pie
           data={data}
