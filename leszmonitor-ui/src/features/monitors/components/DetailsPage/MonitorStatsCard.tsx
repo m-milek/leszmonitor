@@ -13,7 +13,7 @@ export interface MonitorStatsCardProps {
 export function MonitorStatsCard({ stats }: MonitorStatsCardProps) {
   return (
     <Card>
-      <Flex direction="row" className="gap-2">
+      <Flex direction="row" directionMobile="column" className="gap-2">
         <MonitorStatsCardItemWrapper title="Uptime">
           <MonitorStatsNumber
             value={stats && (stats.uptime?.statusToPercentage?.["up"] ?? 0)}

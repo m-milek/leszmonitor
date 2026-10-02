@@ -11,13 +11,13 @@ import { formatDate } from "@/lib/utils";
 import { HttpConfigContent } from "@/features/monitors/components/DetailsPage/HttpConfigContent";
 import { TcpConfigContent } from "@/features/monitors/components/DetailsPage/TcpConfigContent";
 import { DnsConfigContent } from "@/features/monitors/components/DetailsPage/DnsConfigContent";
-import { LucideDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/consts";
 import { UsersApi } from "@/features/users/users-api";
 import { Initial } from "@/features/users/components/Initial";
 import { StyledLink } from "@/components/common/StyledLink";
+import { Flex } from "@/components/common/Flex.tsx";
 
 export interface MonitorConfigCardProps {
   monitor: Monitor;
@@ -61,22 +61,28 @@ export const MonitorConfigCard = ({ monitor }: MonitorConfigCardProps) => {
         <ConfigContent monitor={monitor} />
       </CardContent>
       <CardFooter className="justify-between text-muted-foreground">
-        <span className="flex items-center">
-          Created {formatDate(new Date(monitor.createdAt))} <LucideDot />{" "}
-          Updated {formatDate(new Date(monitor.updatedAt))}
-        </span>
-        {owner && (
-          <span className="flex items-center gap-2">
-            Owned by
-            <Initial text={owner.username} size="xs" />
-            <StyledLink
-              to="/user/$username"
-              params={{ username: owner.username }}
-            >
-              {owner.username}
-            </StyledLink>
-          </span>
-        )}
+        <Flex
+          direction="row"
+          directionMobile="column"
+          className="justify-between w-full"
+        >
+          <Flex direction="column" directionMobile="column">
+            <span>Created {formatDate(new Date(monitor.createdAt))}</span>
+            <span>Updated {formatDate(new Date(monitor.updatedAt))}</span>
+          </Flex>
+          {owner && (
+            <span className="flex items-center gap-2">
+              Owned by
+              <Initial text={owner.username} size="xs" />
+              <StyledLink
+                to="/user/$username"
+                params={{ username: owner.username }}
+              >
+                {owner.username}
+              </StyledLink>
+            </span>
+          )}
+        </Flex>
       </CardFooter>
     </Card>
   );

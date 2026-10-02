@@ -23,8 +23,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge";
 import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill.tsx";
 import {
-  ResultsRangeSelect,
   resultsRangePerPage,
+  ResultsRangeSelect,
   resultsRangeStart,
 } from "@/features/monitors/components/DetailsPage/ResultsRangeSelect";
 
@@ -120,10 +120,12 @@ export function MonitorDetailPage({
 
   return (
     <PageContainer>
-      <Flex direction="row" className="justify-between">
-        <Flex direction="row" className="gap-4 items-center">
-          <TypographyH1>{monitor.name}</TypographyH1>
-        </Flex>
+      <Flex
+        direction="row"
+        directionMobile="column"
+        className="justify-between max-md:gap-2"
+      >
+        <TypographyH1>{monitor.name}</TypographyH1>
         <MonitorActionsGroup
           monitor={monitor}
           handleToggleMonitorState={handleToggleMonitorState}
@@ -133,7 +135,11 @@ export function MonitorDetailPage({
         />
       </Flex>
 
-      <Flex direction="row" className="justify-between">
+      <Flex
+        direction="row"
+        directionMobile="column"
+        className="justify-between max-md:gap-2"
+      >
         <Flex direction="row" className="gap-2">
           <Flex direction="row" className="gap-2">
             {monitorResults && stats ? (
@@ -156,7 +162,10 @@ export function MonitorDetailPage({
           </Flex>
         </Flex>
 
-        <Flex direction="row" className="gap-4 items-center">
+        <Flex
+          direction="row"
+          className="gap-4 items-center max-md:justify-between"
+        >
           <span>Runs every {formatDuration(monitor.interval)}</span>
           <ResultsRangeSelect value={range} onChange={onRangeChange} />
         </Flex>
@@ -180,8 +189,12 @@ export function MonitorDetailPage({
 
       <MonitorStatsCard stats={stats} />
 
-      <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
-        <Card className="flex-2 flex flex-col min-h-0 min-w-0">
+      <Flex
+        direction="row"
+        directionMobile="column"
+        className="gap-4 h-96 max-md:h-auto min-h-0 min-w-0 w-full"
+      >
+        <Card className="flex-2 flex flex-col min-h-0 min-w-0 max-md:flex-none max-md:h-80">
           <CardHeader>
             <CardTitle>Latency</CardTitle>
           </CardHeader>
@@ -203,7 +216,7 @@ export function MonitorDetailPage({
           </CardContent>
         </Card>
         {monitor.type === "http" && (
-          <Card className="flex-1 min-w-0">
+          <Card className="flex-1 min-w-0 max-md:flex-none">
             <CardHeader>
               <CardTitle>HTTP Status Codes</CardTitle>
             </CardHeader>
