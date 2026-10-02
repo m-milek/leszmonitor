@@ -23,15 +23,15 @@ import { useNavigate } from "@tanstack/react-router";
 import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge";
 import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill.tsx";
 import {
-  type ResultsRange,
   ResultsRangeSelect,
   resultsRangePerPage,
   resultsRangeStart,
 } from "@/features/monitors/components/DetailsPage/ResultsRangeSelect";
-import { useState } from "react";
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;
+  range: number;
+  onRangeChange: (range: number) => void;
 }
 
 const latencyChartConfig = {
@@ -40,9 +40,11 @@ const latencyChartConfig = {
   },
 };
 
-export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
-  const [range, setRange] = useState<ResultsRange>("24h");
-
+export function MonitorDetailPage({
+  monitorSlug,
+  range,
+  onRangeChange,
+}: MonitorDetailPageProps) {
   const navigate = useNavigate();
 
   const queryClient = useQueryClient();
@@ -156,7 +158,7 @@ export function MonitorDetailPage({ monitorSlug }: MonitorDetailPageProps) {
 
         <Flex direction="row" className="gap-4 items-center">
           <span>Runs every {formatDuration(monitor.interval)}</span>
-          <ResultsRangeSelect value={range} onChange={setRange} />
+          <ResultsRangeSelect value={range} onChange={onRangeChange} />
         </Flex>
       </Flex>
 
