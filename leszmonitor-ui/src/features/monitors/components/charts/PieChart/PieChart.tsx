@@ -29,11 +29,11 @@ export function PieChart<T>({
           content={<ChartTooltipContent hideLabel />}
         />
         <ChartLegend
-          layout="vertical"
-          align="right"
-          verticalAlign="middle"
+          layout="horizontal"
+          align="center"
+          verticalAlign="bottom"
           content={() => (
-            <div className="flex flex-col items-start gap-1 pl-4">
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 pt-3">
               {data.map((item) => {
                 const name = String(item[nameKey]);
                 return (

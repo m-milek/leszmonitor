@@ -181,7 +181,7 @@ export function MonitorDetailPage({
       <MonitorStatsCard stats={stats} />
 
       <Flex direction="row" className="gap-4 h-96 min-h-0 min-w-0 w-full">
-        <Card className="flex-1 flex flex-col min-h-0 min-w-0">
+        <Card className="flex-2 flex flex-col min-h-0 min-w-0">
           <CardHeader>
             <CardTitle>Latency</CardTitle>
           </CardHeader>
@@ -203,7 +203,7 @@ export function MonitorDetailPage({
           </CardContent>
         </Card>
         {monitor.type === "http" && (
-          <Card>
+          <Card className="flex-1 min-w-0">
             <CardHeader>
               <CardTitle>HTTP Status Codes</CardTitle>
             </CardHeader>
