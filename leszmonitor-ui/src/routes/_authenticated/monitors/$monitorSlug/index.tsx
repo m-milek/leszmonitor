@@ -1,5 +1,5 @@
 import { MonitorsApi } from "@/features/monitors/monitors-api";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { MonitorDetailPage } from "@/features/monitors/pages/MonitorDetailPage";
 import { QUERY_KEYS } from "@/lib/consts";
 import {
@@ -11,6 +11,16 @@ export const Route = createFileRoute("/_authenticated/monitors/$monitorSlug/")({
   validateSearch: (search): { range?: number } => ({
     range: parseResultsRange(search.range),
   }),
+  beforeLoad: ({ params, search }) => {
+    if (search.range === undefined) {
+      throw redirect({
+        to: "/monitors/$monitorSlug",
+        params,
+        search: { range: DEFAULT_RESULTS_RANGE },
+        replace: true,
+      });
+    }
+  },
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData({
       queryKey: [QUERY_KEYS.MONITORS, params.monitorSlug],
