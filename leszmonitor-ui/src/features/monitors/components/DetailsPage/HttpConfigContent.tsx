@@ -25,8 +25,9 @@ const httpFields: FieldConfig<HttpMonitorConfig> = {
   url: {
     label: "Endpoint",
     render: (url, config) => (
-      <pre>
-        {config.method} {url}
+      <pre className="flex gap-2">
+        <span>{config.method}</span>
+        <span>{url}</span>
       </pre>
     ),
   },
