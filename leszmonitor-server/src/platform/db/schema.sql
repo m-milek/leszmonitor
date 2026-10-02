@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS monitor_results (
     monitor_id            TEXT    NOT NULL,
     status                TEXT    NOT NULL,
     is_manually_triggered BOOLEAN NOT NULL,
-    duration_ms           INT     NOT NULL CHECK (duration_ms >= 0),
+    duration_ms           INTEGER,
 
     failures              TEXT CHECK (failures IS NULL OR JSON_VALID(failures)), -- JSON string
 

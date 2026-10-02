@@ -7,7 +7,7 @@ import { StatusDot } from "@/components/common/StatusDot";
 import { ShortId } from "@/components/common/ShortId";
 import { DataTable } from "@/components/common/DataTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EyeIcon, Minus } from "lucide-react";
+import { EyeIcon, LucideMinus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -78,7 +78,12 @@ const baseColumns: ColumnDef<MonitorResult>[] = [
   {
     accessorKey: "durationMs",
     header: "Duration",
-    cell: ({ row }) => `${row.original.durationMs} ms`,
+    cell: ({ row }) =>
+      row.original.durationMs ? (
+        `${row.original.durationMs} ms`
+      ) : (
+        <LucideMinus />
+      ),
   },
   {
     id: "details",

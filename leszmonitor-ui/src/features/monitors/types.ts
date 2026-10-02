@@ -139,7 +139,7 @@ interface BaseMonitorResult {
   monitorId: string;
   status: MonitorStatus;
   isManuallyTriggered: boolean;
-  durationMs: number;
+  durationMs?: number;
   failures?: MonitorFailure[];
   createdAt: Date;
 }

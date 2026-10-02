@@ -45,7 +45,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		kind.DNSConfigType,
 		kind.MonitorStatusUp,
 		false,
-		0,
+		nil,
 		&results.DNSResultDetails{},
 	)
 	details := result.GetDetails().(*results.DNSResultDetails)
@@ -198,7 +198,7 @@ func (p *DNSProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		return nil, err
 	}
 
-	result.SetDuration(endTime.Sub(startTime).Milliseconds())
+	result.SetDuration(new(endTime.Sub(startTime).Milliseconds()))
 
 	return &result, nil
 }
@@ -300,7 +300,7 @@ func earlyErrorWithErr(
 ) results.IMonitorResult {
 	result.AddFailure(reason, details, err)
 	logger.Trace().Err(err).Msg(logMsg)
-	result.SetDuration(0)
+	result.SetDuration(nil)
 	return result
 }
 

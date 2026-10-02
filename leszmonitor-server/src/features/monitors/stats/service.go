@@ -89,14 +89,17 @@ func (s *MonitorStatsService) GetStatsByMonitorID(ctx context.Context, monitorID
 func calculateLatencyStats(monitorResults []results.IMonitorResult) LatencyStats {
 	var minLatency, maxLatency, totalLatency float64
 	for _, result := range monitorResults {
-		duration := float64(result.GetDurationMs())
-		if minLatency == 0 || duration < minLatency {
-			minLatency = duration
+		if result.GetDurationMs() != nil {
+			duration := float64(*result.GetDurationMs())
+			if minLatency == 0 || duration < minLatency {
+				minLatency = duration
+			}
+			if duration > maxLatency {
+				maxLatency = duration
+			}
+			totalLatency += duration
 		}
-		if duration > maxLatency {
-			maxLatency = duration
-		}
-		totalLatency += duration
+
 	}
 
 	var avgLatency float64

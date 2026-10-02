@@ -51,7 +51,7 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		kind.TCPConfigType,
 		kind.MonitorStatusUp,
 		false,
-		0,
+		nil,
 		&results.TCPResultDetails{},
 	)
 	details := result.GetDetails().(*results.TCPResultDetails)
@@ -69,7 +69,7 @@ func (m *TCPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMonit
 		return &result, nil
 	}
 
-	result.SetDuration(duration.Milliseconds())
+	result.SetDuration(new(duration.Milliseconds()))
 	details.LatencyMs = duration.Milliseconds()
 
 	return &result, nil

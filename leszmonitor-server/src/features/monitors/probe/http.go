@@ -42,7 +42,7 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMoni
 		kind.HTTPConfigType,
 		kind.MonitorStatusUp,
 		false,
-		0,
+		nil,
 		&results.HTTPResultDetails{},
 	)
 	details, castErr := result.GetDetails().(*results.HTTPResultDetails)
@@ -56,7 +56,7 @@ func (m *HTTPProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMoni
 		defer httpResponse.Body.Close()
 	}
 
-	result.SetDuration(elapsed.Milliseconds())
+	result.SetDuration(new(elapsed.Milliseconds()))
 	if err != nil {
 		result.AddFailure(
 			results.FailureReasonHTTPRequestFailed,
