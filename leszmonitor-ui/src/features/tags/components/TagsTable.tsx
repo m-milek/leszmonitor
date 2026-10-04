@@ -1,5 +1,5 @@
 import { type ColumnDef } from "@tanstack/table-core";
-import { Minus } from "lucide-react";
+import { NoData } from "@/components/common/NoData";
 import type { Tag as TagModel } from "@/features/tags/types";
 import { DataTable } from "@/components/common/DataTable";
 import { Tag } from "@/features/tags/components/Tag";
@@ -25,10 +25,7 @@ const columns: ColumnDef<TagModel>[] = [
       row.original.description ? (
         <span>{row.original.description}</span>
       ) : (
-        <Minus
-          className="size-4 text-muted-foreground"
-          aria-label="No description"
-        />
+        <NoData label="No description" />
       ),
   },
   {

@@ -13,7 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { EyeIcon, LucideMinus, Minus } from "lucide-react";
+import { EyeIcon } from "lucide-react";
+import { NoData } from "@/components/common/NoData";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,16 +30,20 @@ export interface MonitorResultsCardProps {
   results?: MonitorResult[];
 }
 
-const formatDetails = (result: MonitorResult) => {
+const ResultDetails = ({ result }: { result: MonitorResult }) => {
   switch (result.monitorType) {
     case "http":
-      return `HTTP ${result.details.statusCode}`;
+      return <span>HTTP {result.details.statusCode}</span>;
     case "tcp":
-      return `${result.details.latencyMs} ms latency`;
+      return <span>{result.details.latencyMs} ms latency</span>;
     case "dns":
-      return `${result.details.resolvedRecords?.length ?? 0} records`;
+      return <span>{result.details.resolvedRecords?.length ?? 0} records</span>;
     case "push":
-      return `Message: ${result.details.rawMessage?.length ?? 0} bytes`;
+      return result.details.rawMessage ? (
+        <span>Message: {result.details.rawMessage.length} bytes</span>
+      ) : (
+        <NoData label="No message" />
+      );
   }
 };
 
@@ -92,13 +97,13 @@ const baseColumns: ColumnDef<MonitorResult>[] = [
       row.original.durationMs ? (
         `${row.original.durationMs} ms`
       ) : (
-        <LucideMinus />
+        <NoData label="No duration" />
       ),
   },
   {
     id: "details",
     header: "Details",
-    cell: ({ row }) => formatDetails(row.original),
+    cell: ({ row }) => <ResultDetails result={row.original} />,
   },
   {
     accessorKey: "failures",
@@ -109,10 +114,7 @@ const baseColumns: ColumnDef<MonitorResult>[] = [
           .map((failure) => failureReasonToLabel(failure.reason))
           .join(", ")
       ) : (
-        <Minus
-          className="size-4 text-muted-foreground"
-          aria-label="No failures"
-        />
+        <NoData label="No failures" />
       ),
   },
   {
