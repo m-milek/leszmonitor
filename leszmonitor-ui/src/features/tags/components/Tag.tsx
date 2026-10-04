@@ -7,8 +7,11 @@ import {
 } from "@/components/common/badge-size";
 import { tagChipStyle } from "@/features/tags/lib/colors";
 
+type TagDisplay = Pick<TagModel, "name" | "colorHex"> &
+  Partial<Pick<TagModel, "description">>;
+
 export interface TagProps {
-  tag: TagModel;
+  tag: TagDisplay;
   size?: BadgeSize;
 }
 
