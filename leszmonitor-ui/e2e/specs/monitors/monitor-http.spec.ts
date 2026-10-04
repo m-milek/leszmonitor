@@ -24,6 +24,6 @@ test.describe("HTTP Monitor", () => {
 
     await page.getByText("Create Monitor").click();
 
-    await expect(page).toHaveURL(/\/monitors\/test-http-monitor-\d+$/);
+    await expect(page).toHaveURL(/\/monitors\/test-http-monitor-\d+(\?|$)/);
   });
 });

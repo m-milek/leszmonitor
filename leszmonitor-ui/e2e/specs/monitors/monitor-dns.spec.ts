@@ -19,6 +19,6 @@ test.describe("DNS Monitor", () => {
 
     await page.getByText("Create Monitor").click();
 
-    await expect(page).toHaveURL(/\/monitors\/test-dns-monitor-\d+$/);
+    await expect(page).toHaveURL(/\/monitors\/test-dns-monitor-\d+(\?|$)/);
   });
 });

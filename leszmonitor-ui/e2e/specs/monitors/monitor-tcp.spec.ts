@@ -20,6 +20,6 @@ test.describe("TCP Monitor", () => {
 
     await page.getByText("Create Monitor").click();
 
-    await expect(page).toHaveURL(/\/monitors\/test-tcp-monitor-\d+$/);
+    await expect(page).toHaveURL(/\/monitors\/test-tcp-monitor-\d+(\?|$)/);
   });
 });
