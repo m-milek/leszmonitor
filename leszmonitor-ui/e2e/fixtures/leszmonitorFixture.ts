@@ -1,17 +1,22 @@
 import { test as base } from "@playwright/test";
 
-interface AuthConfig {
+export interface AuthConfig {
   username: string;
   password: string;
 }
 
 type LeszmonitorFixture = {
   auth: AuthConfig;
+  adminAuth: AuthConfig;
 };
 
 export const test = base.extend<LeszmonitorFixture>({
   auth: {
     username: "leszmak",
+    password: "123123",
+  },
+  adminAuth: {
+    username: "admin",
     password: "123123",
   },
   page: async ({ page }, use) => {
