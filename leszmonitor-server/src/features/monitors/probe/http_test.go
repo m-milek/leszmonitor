@@ -23,20 +23,16 @@ func TestHttpProbeFromReader(t *testing.T) {
 		"expectedStatusCodes": [200]
 	}`
 
-	probe, err := ProbeFromJSON(jsonInput, kind.HTTPConfigType)
+	httpProbe, err := Parse[*HTTPProbe](kind.HTTPConfigType, jsonInput)
 
 	require.NoError(t, err)
-	assert.NotNil(t, probe)
-
-	httpMonitor, ok := probe.(*HTTPProbe)
-	assert.True(t, ok)
-	assert.Equal(t, "http://example.com", httpMonitor.URL)
+	assert.Equal(t, "http://example.com", httpProbe.URL)
 }
 
 func TestHttpMonitorFromReaderInvalidJSON(t *testing.T) {
 	jsonInput := `invalid json`
 
-	monitor, err := ProbeFromJSON(jsonInput, kind.HTTPConfigType)
+	monitor, err := Parse[Probe](kind.HTTPConfigType, jsonInput)
 
 	require.Error(t, err)
 	assert.Nil(t, monitor)
@@ -47,7 +43,7 @@ func TestHttpMonitorFromReaderMissingType(t *testing.T) {
 		"url": "http://example.com"
 	}`
 
-	monitor, err := ProbeFromJSON(jsonInput, "")
+	monitor, err := Parse[Probe]("", jsonInput)
 
 	require.Error(t, err)
 	assert.Nil(t, monitor)

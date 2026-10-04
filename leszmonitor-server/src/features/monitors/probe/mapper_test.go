@@ -9,31 +9,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUnmarshalConfigFromBytes(t *testing.T) {
+func TestParse(t *testing.T) {
 	t.Run("HTTP Config", func(t *testing.T) {
 		config := HTTPProbe{
-			Method: "GET",
-			URL:    "http://example.com",
+			Method:              "GET",
+			URL:                 "http://example.com",
+			ExpectedStatusCodes: []int{200},
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalProbeFromBytes(kind.HTTPConfigType, bytes)
+		parsed, err := Parse[*HTTPProbe](kind.HTTPConfigType, string(bytes))
 		require.NoError(t, err)
-		assert.IsType(t, &HTTPProbe{}, parsed)
-		assert.Equal(t, config.URL, parsed.(*HTTPProbe).URL)
+		assert.Equal(t, config.URL, parsed.URL)
 	})
 
 	t.Run("TCP Config", func(t *testing.T) {
 		config := TCPProbe{
-			Host: "example.com",
-			Port: 80,
+			Host:     "example.com",
+			Port:     80,
+			Protocol: "tcp",
+			Timeout:  1000,
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalProbeFromBytes(kind.TCPConfigType, bytes)
+		parsed, err := Parse[*TCPProbe](kind.TCPConfigType, string(bytes))
 		require.NoError(t, err)
-		assert.IsType(t, &TCPProbe{}, parsed)
-		assert.Equal(t, config.Host, parsed.(*TCPProbe).Host)
+		assert.Equal(t, config.Host, parsed.Host)
 	})
 
 	t.Run("Push Config", func(t *testing.T) {
@@ -42,14 +43,30 @@ func TestUnmarshalConfigFromBytes(t *testing.T) {
 		}
 		bytes, _ := json.Marshal(config)
 
-		parsed, err := UnmarshalProbeFromBytes(kind.PushConfigType, bytes)
+		parsed, err := Parse[*PushProbe](kind.PushConfigType, string(bytes))
+		require.NoError(t, err)
+		assert.Equal(t, config.GracePeriodSeconds, parsed.GracePeriodSeconds)
+	})
+
+	t.Run("Interface Type", func(t *testing.T) {
+		parsed, err := Parse[Probe](kind.PushConfigType, `{"gracePeriodSeconds":30}`)
 		require.NoError(t, err)
 		assert.IsType(t, &PushProbe{}, parsed)
-		assert.Equal(t, config.GracePeriodSeconds, parsed.(*PushProbe).GracePeriodSeconds)
 	})
 
 	t.Run("Unknown Config", func(t *testing.T) {
-		_, err := UnmarshalProbeFromBytes("unknown", []byte("{}"))
+		_, err := Parse[Probe]("unknown", "{}")
 		require.Error(t, err)
+	})
+
+	t.Run("Mismatched Type", func(t *testing.T) {
+		_, err := Parse[*PushProbe](kind.HTTPConfigType, `{"method":"GET","url":"http://example.com","expectedStatusCodes":[200]}`)
+		require.Error(t, err)
+		assert.NotErrorIs(t, err, ErrInvalidProbeConfig)
+	})
+
+	t.Run("Invalid Config", func(t *testing.T) {
+		_, err := Parse[*PushProbe](kind.PushConfigType, `{"gracePeriodSeconds":-1}`)
+		require.ErrorIs(t, err, ErrInvalidProbeConfig)
 	})
 }

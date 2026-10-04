@@ -43,7 +43,7 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, err = probe.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
+	_, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
 		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
 		return
@@ -133,7 +133,7 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, err = probe.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
+	_, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
 		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return

@@ -74,14 +74,9 @@ func (w *PushWatcher) checkMonitor(ctx context.Context, monitor monitors.Monitor
 
 	baseline := w.baseline(monitor, latestResult)
 
-	monitorProbe, err := probe.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
+	probeConfig, err := probe.Parse[*probe.PushProbe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
 		w.logger.Error().Err(err).Str("monitor_id", monitor.ID.String()).Msg("Failed to parse push probe config")
-		return
-	}
-	probeConfig, ok := monitorProbe.(*probe.PushProbe)
-	if !ok {
-		w.logger.Error().Str("monitor_id", monitor.ID.String()).Msg("Probe config is not a push probe")
 		return
 	}
 	failThreshold := time.Duration(monitor.Interval+probeConfig.GracePeriodSeconds) * time.Second

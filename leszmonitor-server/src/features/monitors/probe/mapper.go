@@ -3,6 +3,7 @@ package probe
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -15,6 +16,8 @@ type Probe interface {
 	Run(ctx context.Context, monitorID uuid.UUID) (results.IMonitorResult, error)
 	Validate() error
 }
+
+var ErrInvalidProbeConfig = errors.New("invalid probe config")
 
 func mapProbeType(probeType kind.ProbeType) Probe {
 	switch probeType {
@@ -31,28 +34,21 @@ func mapProbeType(probeType kind.ProbeType) Probe {
 	}
 }
 
-func ProbeFromJSON(probeConfig string, probeType kind.ProbeType) (Probe, error) {
-	// Map the monitor type to the appropriate config type
-	probe := mapProbeType(probeType)
-	if probe == nil {
-		return nil, fmt.Errorf("unknown monitor type: %s", probeType)
+func Parse[T Probe](probeType kind.ProbeType, config string) (T, error) {
+	var zero T
+	p := mapProbeType(probeType)
+	if p == nil {
+		return zero, fmt.Errorf("unknown probe type: %s", probeType)
 	}
-
-	// unmarshal the raw data into a probe instance
-	if err := json.Unmarshal([]byte(probeConfig), &probe); err != nil {
-		return nil, fmt.Errorf("failed to parse monitor config: %w: %s", err, probeConfig)
+	if err := json.Unmarshal([]byte(config), p); err != nil {
+		return zero, fmt.Errorf("failed to parse probe config: %w", err)
 	}
-
-	return probe, nil
-}
-
-func UnmarshalProbeFromBytes(probeType kind.ProbeType, data []byte) (Probe, error) {
-	config := mapProbeType(probeType)
-	if config == nil {
-		return nil, fmt.Errorf("unknown monitor config type: %s", probeType)
+	typed, ok := p.(T)
+	if !ok {
+		return zero, fmt.Errorf("probe type %s is %T, expected %T", probeType, p, zero)
 	}
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal monitor config: %w", err)
+	if err := typed.Validate(); err != nil {
+		return zero, fmt.Errorf("%w: %w", ErrInvalidProbeConfig, err)
 	}
-	return config, nil
+	return typed, nil
 }

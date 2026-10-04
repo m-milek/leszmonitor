@@ -415,13 +415,11 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 		return apperr.NewBadRequestError("monitor validation failed: %w", err)
 	}
 
-	monitorProbe, err := probe.UnmarshalProbeFromBytes(monitor.Type, []byte(monitor.ProbeConfig))
-	if err != nil {
+	if _, err := probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig); err != nil {
+		if errors.Is(err, probe.ErrInvalidProbeConfig) {
+			return apperr.NewBadRequestError("probe config validation failed for manual run: %w", err)
+		}
 		return apperr.NewInternalError("failed to unmarshal probe config for manual run: %w", err)
-	}
-
-	if err := monitorProbe.Validate(); err != nil {
-		return apperr.NewBadRequestError("probe config validation failed for manual run: %w", err)
 	}
 
 	auditErr := audit.NewAuditLogDAO(s.db.Querier()).Record(ctx, audit.AuditLogParams{
@@ -460,13 +458,11 @@ func (s *MonitorService) ReceivePush(ctx context.Context, monitorID uuid.UUID, p
 		return apperr.NewBadRequestError("monitor validation failed: %w", err)
 	}
 
-	monitorProbe, err := probe.UnmarshalProbeFromBytes(monitor.Type, []byte(monitor.ProbeConfig))
-	if err != nil {
+	if _, err := probe.Parse[*probe.PushProbe](monitor.Type, monitor.ProbeConfig); err != nil {
+		if errors.Is(err, probe.ErrInvalidProbeConfig) {
+			return apperr.NewBadRequestError("probe config validation failed: %w", err)
+		}
 		return apperr.NewInternalError("failed to unmarshal probe config: %w", err)
-	}
-
-	if err := monitorProbe.Validate(); err != nil {
-		return apperr.NewBadRequestError("probe config validation failed: %w", err)
 	}
 
 	if monitor.RunState != MonitorStateActive {

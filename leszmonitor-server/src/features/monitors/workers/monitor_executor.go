@@ -64,13 +64,9 @@ func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecu
 		return
 	}
 
-	parsedProbe, err := probe.UnmarshalProbeFromBytes(monitor.Type, []byte(monitor.ProbeConfig))
+	parsedProbe, err := probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
-		logger.Error().Err(err).Msg("Failed to unmarshal probe config")
-		return
-	}
-	if err := parsedProbe.Validate(); err != nil {
-		logger.Error().Err(err).Msg("Probe config validation failed")
+		logger.Error().Err(err).Msg("Failed to parse probe config")
 		return
 	}
 
