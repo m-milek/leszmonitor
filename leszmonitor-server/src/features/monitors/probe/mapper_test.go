@@ -36,6 +36,18 @@ func TestUnmarshalConfigFromBytes(t *testing.T) {
 		assert.Equal(t, config.Host, parsed.(*TCPProbe).Host)
 	})
 
+	t.Run("Push Config", func(t *testing.T) {
+		config := PushProbe{
+			GracePeriodSeconds: 30,
+		}
+		bytes, _ := json.Marshal(config)
+
+		parsed, err := UnmarshalProbeFromBytes(kind.PushConfigType, bytes)
+		require.NoError(t, err)
+		assert.IsType(t, &PushProbe{}, parsed)
+		assert.Equal(t, config.GracePeriodSeconds, parsed.(*PushProbe).GracePeriodSeconds)
+	})
+
 	t.Run("Unknown Config", func(t *testing.T) {
 		_, err := UnmarshalProbeFromBytes("unknown", []byte("{}"))
 		require.Error(t, err)
