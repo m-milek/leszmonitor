@@ -5,7 +5,7 @@ export type MonitorStatus = (typeof monitorStatuses)[number];
 
 export type MonitorRunState = "active" | "paused";
 
-const monitorTypes = ["http", "tcp", "dns"] as const;
+const monitorTypes = ["http", "tcp", "dns", "push"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
 
 export const isValidMonitorType = (value: string): value is MonitorType => {
@@ -56,6 +56,10 @@ export interface DnsMonitorConfig {
   expectedRecordValues: string[];
 }
 
+export interface PushMonitorConfig {
+  gracePeriodSeconds: number;
+}
+
 interface BaseMonitor extends Timestamps {
   id: string;
   name: string;
@@ -83,16 +87,17 @@ export interface DnsMonitor extends BaseMonitor {
   probeConfig?: DnsMonitorConfig;
 }
 
-export type Monitor = HttpMonitor | TcpMonitor | DnsMonitor;
+export interface PushMonitor extends BaseMonitor {
+  type: "push";
+  probeConfig?: PushMonitorConfig;
+}
+
+export type Monitor = HttpMonitor | TcpMonitor | DnsMonitor | PushMonitor;
 
 export type MonitorWithStatus = Monitor & {
   status: MonitorStatus;
 };
 
-// Runtime zod schemas and form-value helpers live in
-// "@/features/monitors/schema.ts" so that zod is only pulled into the
-// route chunks that actually validate monitor forms, keeping it out of the
-// initial bundle.
 export type {
   MonitorFormValues,
   MonitorCreatePayload,
@@ -116,6 +121,10 @@ export interface DnsResultDetails {
   resolvedRecords?: unknown[];
 }
 
+export interface PushResultDetails {
+  rawMessage?: string;
+}
+
 export type FailureReason =
   | "HTTP_REQUEST_FAILED"
   | "HTTP_RESPONSE_BODY_READ_FAILED"
@@ -126,7 +135,9 @@ export type FailureReason =
   | "DNS_LOOKUP_FAILED"
   | "DNS_INVALID_SRV_HOSTNAME"
   | "DNS_EXPECTED_RECORD_MISSING"
-  | "TCP_CONNECTION_FAILED";
+  | "TCP_CONNECTION_FAILED"
+  | "PUSH_REPORTED_DOWN"
+  | "PUSH_MISSED_HEARTBEAT";
 
 export interface MonitorFailure {
   reason: FailureReason;
@@ -159,8 +170,13 @@ export interface DnsMonitorResult extends BaseMonitorResult {
   details: DnsResultDetails;
 }
 
+export interface PushMonitorResult extends BaseMonitorResult {
+  monitorType: "push";
+  details: PushResultDetails;
+}
+
 export type MonitorResult =
-  HttpMonitorResult | TcpMonitorResult | DnsMonitorResult;
+  HttpMonitorResult | TcpMonitorResult | DnsMonitorResult | PushMonitorResult;
 
 export interface MonitorResultMessage {
   type: string;

@@ -57,6 +57,7 @@ export function MonitorEditPage({ monitorSlug }: MonitorEditPageProps) {
             formId="edit-monitor-form"
             defaultValues={mapMonitorToFormValues(monitor)}
             onSubmit={onSubmit}
+            isEdit
           />
         </CardContent>
         <CardFooter>

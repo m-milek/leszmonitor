@@ -5,10 +5,12 @@ import { cn } from "cn";
 
 export interface CopyToClipboardButtonProps {
   value: string;
+  size?: "default" | "lg";
 }
 
 export const CopyToClipboardButton = ({
   value,
+  size = "default",
 }: CopyToClipboardButtonProps) => {
   const feedbackDuration = 750;
   const [copied, setCopied] = useState(false);
@@ -30,9 +32,12 @@ export const CopyToClipboardButton = ({
       });
   };
 
+  const isLarge = size === "lg";
+
   return (
     <Button
       variant="ghost"
+      size={isLarge ? "icon-lg" : "default"}
       onClick={handleClick}
       className="relative overflow-hidden"
     >
@@ -42,7 +47,7 @@ export const CopyToClipboardButton = ({
           copied ? "scale-0 opacity-0" : "scale-100 opacity-100",
         )}
       >
-        <LucideCopy />
+        <LucideCopy className={cn(isLarge && "size-5")} />
       </span>
       <span
         className={cn(
@@ -50,7 +55,7 @@ export const CopyToClipboardButton = ({
           copied ? "scale-100 opacity-100" : "scale-0 opacity-0",
         )}
       >
-        <LucideCheck className="text-lm-status-up" />
+        <LucideCheck className={cn("text-lm-status-up", isLarge && "size-5")} />
       </span>
     </Button>
   );

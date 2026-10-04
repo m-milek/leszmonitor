@@ -27,6 +27,7 @@ func SetupRouters(
 
 	// Monitors
 	monitors.RegisterRoutes(
+		publicRouter,
 		protectedRouter,
 		h.Monitor,
 		h.MonitorResults,

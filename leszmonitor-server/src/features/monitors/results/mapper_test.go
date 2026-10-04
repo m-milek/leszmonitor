@@ -52,7 +52,7 @@ func TestMonitorResultJSON(t *testing.T) {
 			kind.HTTPConfigType,
 			kind.MonitorStatusUp,
 			false,
-			100,
+			new(int64(100)),
 			&HTTPResultDetails{StatusCode: 200},
 		)
 

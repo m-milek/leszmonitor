@@ -24,6 +24,8 @@ func mapProbeType(probeType kind.ProbeType) Probe {
 		return &TCPProbe{}
 	case kind.DNSConfigType:
 		return &DNSProbe{}
+	case kind.PushConfigType:
+		return &PushProbe{}
 	default:
 		return nil
 	}

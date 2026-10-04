@@ -47,7 +47,7 @@ func (p *ResultsProcessor) Run(ctx context.Context) {
 
 func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.MonitorRunMessage) error {
 	previousResult, err := results.NewMonitorResultDAO(database.Querier()).
-		GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID.String())
+		GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
 			previousResult = nil

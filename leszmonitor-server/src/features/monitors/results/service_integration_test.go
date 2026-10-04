@@ -20,7 +20,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 		monitor := insertTestMonitor(ctx, t)
 
 		// Insert 2 results
-		res1 := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, 100, nil)
+		res1 := results.NewMonitorResult(monitor.ID, kind.HTTPConfigType, kind.MonitorStatusUp, false, new(int64(100)), nil)
 		res1.CreatedAt = time.Now().UTC().Add(-10 * time.Minute)
 		_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res1)
 		require.NoError(t, err)
@@ -30,14 +30,14 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 			kind.HTTPConfigType,
 			kind.MonitorStatusDown,
 			false,
-			200,
+			new(int64(200)),
 			nil,
 		)
 		res2.CreatedAt = time.Now().UTC().Add(-5 * time.Minute)
 		_, err = results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res2)
 		require.NoError(t, err)
 
-		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
+		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID)
 		require.Nil(t, svcErr)
 		require.NotNil(t, latest)
 		assert.Equal(t, res2.ID, latest.GetID())
@@ -49,7 +49,7 @@ func TestIntegration_MonitorResultsService_GetLatest(t *testing.T) {
 
 		monitor := insertTestMonitor(ctx, t)
 
-		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID.String())
+		latest, svcErr := service.GetLatestMonitorResultByMonitorID(ctx, monitor.ID)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 		assert.Nil(t, latest)
@@ -69,7 +69,7 @@ func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 				kind.HTTPConfigType,
 				kind.MonitorStatusUp,
 				false,
-				int64(100+i),
+				new(int64(100+i)),
 				nil,
 			)
 			_, err := results.NewMonitorResultDAO(db.Get().Querier()).InsertMonitorResult(ctx, &res)
@@ -77,7 +77,7 @@ func TestIntegration_MonitorResultsService_GetAll(t *testing.T) {
 		}
 
 		pag := &util.Pagination{Page: 1, PerPage: 10}
-		results, svcErr := service.GetMonitorResultsByMonitorID(ctx, monitor.ID.String(), pag, nil)
+		results, svcErr := service.GetMonitorResultsByMonitorID(ctx, monitor.ID, pag, nil)
 		require.Nil(t, svcErr)
 		require.Len(t, results, 3)
 	})

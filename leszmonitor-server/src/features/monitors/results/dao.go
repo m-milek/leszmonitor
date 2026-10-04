@@ -16,11 +16,11 @@ import (
 
 type IMonitorResultDAO interface {
 	InsertMonitorResult(ctx context.Context, result IMonitorResult) (any, error)
-	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID string) (IMonitorResult, error)
+	GetLatestMonitorResultByMonitorID(ctx context.Context, monitorID uuid.UUID) (IMonitorResult, error)
 	GetOldestMonitorResultByMonitorID(ctx context.Context, monitorID string) (IMonitorResult, error)
 	GetMonitorResultsByMonitorID(
 		ctx context.Context,
-		id string,
+		id uuid.UUID,
 		pagination *util.Pagination,
 		from *time.Time,
 	) ([]IMonitorResult, error)
@@ -43,7 +43,7 @@ type monitorResultDAO struct {
 
 func (r *monitorResultDAO) GetMonitorResultsByMonitorID(
 	ctx context.Context,
-	id string,
+	id uuid.UUID,
 	pagination *util.Pagination,
 	from *time.Time,
 ) ([]IMonitorResult, error) {
@@ -153,7 +153,7 @@ func (r *monitorResultDAO) InsertMonitorResult(
 
 func (r *monitorResultDAO) GetLatestMonitorResultByMonitorID(
 	ctx context.Context,
-	monitorID string,
+	monitorID uuid.UUID,
 ) (IMonitorResult, error) {
 	return db.Wrap(ctx, "GetLatestMonitorResultByMonitorID", func() (IMonitorResult, error) {
 		var result MonitorResult

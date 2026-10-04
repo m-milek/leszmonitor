@@ -18,6 +18,7 @@ import { UsersApi } from "@/features/users/users-api";
 import { Initial } from "@/features/users/components/Initial";
 import { StyledLink } from "@/components/common/StyledLink";
 import { Flex } from "@/components/common/Flex.tsx";
+import { PushConfigContent } from "@/features/monitors/components/DetailsPage/PushConfigContent.tsx";
 
 export interface MonitorConfigCardProps {
   monitor: Monitor;
@@ -31,6 +32,8 @@ const ConfigContent = ({ monitor }: MonitorConfigCardProps) => {
       return <TcpConfigContent monitor={monitor} />;
     case "dns":
       return <DnsConfigContent monitor={monitor} />;
+    case "push":
+      return <PushConfigContent monitor={monitor} />;
   }
 };
 
@@ -38,6 +41,7 @@ const monitorTypeLabelMap: Record<MonitorType, string> = {
   http: "HTTP",
   tcp: "TCP",
   dns: "DNS",
+  push: "Push",
 };
 
 export const MonitorConfigCard = ({ monitor }: MonitorConfigCardProps) => {

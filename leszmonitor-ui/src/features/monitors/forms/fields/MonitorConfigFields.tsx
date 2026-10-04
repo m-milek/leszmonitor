@@ -2,6 +2,7 @@ import { HttpMonitorConfigFields } from "@/features/monitors/forms/fields/HttpMo
 import { TcpMonitorConfigFields } from "@/features/monitors/forms/fields/TcpMonitorConfigFields";
 import type { MonitorFormApi } from "@/features/monitors/hooks/useMonitorForm";
 import { DnsMonitorConfigFields } from "@/features/monitors/forms/fields/DnsMonitorConfigFields";
+import { PushMonitorConfigFields } from "@/features/monitors/forms/fields/PushMonitorConfigFields";
 
 export function MonitorConfigFields({
   form,
@@ -16,6 +17,8 @@ export function MonitorConfigFields({
             return <TcpMonitorConfigFields form={form} />;
           case "dns":
             return <DnsMonitorConfigFields form={form} />;
+          case "push":
+            return <PushMonitorConfigFields form={form} />;
           default:
             return null;
         }

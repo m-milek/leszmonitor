@@ -37,6 +37,8 @@ const formatDetails = (result: MonitorResult) => {
       return `${result.details.latencyMs} ms latency`;
     case "dns":
       return `${result.details.resolvedRecords?.length ?? 0} records`;
+    case "push":
+      return `Message: ${result.details.rawMessage?.length ?? 0} bytes`;
   }
 };
 

@@ -8,4 +8,5 @@ export const QUERY_KEYS = {
   MONITOR_RESULTS: "monitorResults",
   MONITOR_LATENCY_STATS: "monitorLatencyStats",
   TAGS: "tags",
+  GLOBAL_PARAMETERS: "globalParameters"
 };

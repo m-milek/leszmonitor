@@ -46,6 +46,10 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 		resultsProcessor.Run(ctx)
 	})
 	wg.Go(func() {
+		pushWatcher := workers.NewPushWatcher(db.Get())
+		pushWatcher.Run(ctx)
+	})
+	wg.Go(func() {
 		heartbeatWorker := downtime.NewHeartbeatWorker(db.Get())
 		heartbeatWorker.Run(ctx)
 	})

@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/google/uuid"
@@ -32,6 +34,7 @@ type IMonitorService interface {
 		state MonitorRunState,
 	) *apperr.ServiceError
 	RunMonitorManuallyByID(ctx context.Context, monitorUUID uuid.UUID) *apperr.ServiceError
+	ReceivePush(ctx context.Context, monitorID uuid.UUID, payload probe.PushProbePayload) *apperr.ServiceError
 }
 
 // MonitorService handles monitor-related CRUD operations.
@@ -250,6 +253,10 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor Monitor) *ap
 			return nil, fmt.Errorf("failed to retrieve existing monitor for update: %w", err)
 		}
 
+		if monitor.Type != existingMonitor.Type {
+			return nil, apperr.NewBadRequestError("cannot edit monitor type")
+		}
+
 		monitor.RunState = existingMonitor.RunState
 		monitor.OwnerID = existingMonitor.OwnerID
 
@@ -400,6 +407,10 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 		return apperr.NewInternalError("failed to retrieve monitor for manual run: %w", err)
 	}
 
+	if monitor.Type == kind.PushConfigType {
+		return apperr.NewBadRequestError("cannot manually run a push monitor")
+	}
+
 	if err := monitor.Validate(); err != nil {
 		return apperr.NewBadRequestError("monitor validation failed: %w", err)
 	}
@@ -426,6 +437,51 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 
 	traceID, _ := log.TraceIDFromContext(ctx)
 	MonitorExecuteChannel.Broadcast(MonitorExecuteMessage{Monitor: *monitor, TraceID: traceID, IsManuallyTriggered: true})
+
+	return nil
+}
+
+func (s *MonitorService) ReceivePush(ctx context.Context, monitorID uuid.UUID, payload probe.PushProbePayload) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "ReceivePush")
+	logger.Trace().Str("id", monitorID.String()).Any("payload", payload).Msg("Received push payload")
+
+	monitor, err := NewMonitorDAO(s.db.Querier()).GetMonitorByID(ctx, monitorID)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return apperr.NewNotFoundError("monitor with ID %s not found", monitorID.String())
+		}
+		return apperr.NewInternalError("failed to retrieve monitor for push: %w", err)
+	}
+	if monitor.Type != kind.PushConfigType {
+		return apperr.NewNotFoundError("push monitor with ID %s not found", monitorID.String())
+	}
+
+	if err := monitor.Validate(); err != nil {
+		return apperr.NewBadRequestError("monitor validation failed: %w", err)
+	}
+
+	monitorProbe, err := probe.UnmarshalProbeFromBytes(monitor.Type, []byte(monitor.ProbeConfig))
+	if err != nil {
+		return apperr.NewInternalError("failed to unmarshal probe config: %w", err)
+	}
+
+	if err := monitorProbe.Validate(); err != nil {
+		return apperr.NewBadRequestError("probe config validation failed: %w", err)
+	}
+
+	if monitor.RunState != MonitorStateActive {
+		return apperr.NewConflictError("push to a paused monitor")
+	}
+
+	result := results.NewMonitorResult(monitor.ID, monitor.Type, kind.MonitorStatusUp, false, payload.Latency, &results.PushResultDetails{RawMessage: payload.Body})
+	if payload.Status == kind.MonitorStatusDown {
+		result.AddFailure(results.FailureReasonPushReportedDown, nil, nil)
+	}
+
+	MonitorRunChannel.Broadcast(MonitorRunMessage{
+		Monitor: *monitor,
+		Result:  &result,
+	})
 
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 // RegisterRoutes registers the monitor and monitor result API routes.
 func RegisterRoutes(
+	publicRouter *http.ServeMux,
 	protectedRouter *http.ServeMux,
 	c MonitorAPIController,
 	results results.MonitorResultsAPIController,
@@ -51,4 +52,7 @@ func RegisterRoutes(
 		"GET /api/v1/monitors/{monitorId}/results",
 		requirePermission(auth.PermissionReader)(results.GetMonitorResultsByMonitorIDHandler),
 	)
+
+	publicRouter.HandleFunc("GET /api/v1/push/{monitorId}", c.ReceivePushHandler)
+	publicRouter.HandleFunc("POST /api/v1/push/{monitorId}", c.ReceivePushHandler)
 }

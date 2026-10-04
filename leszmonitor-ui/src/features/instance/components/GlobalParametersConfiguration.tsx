@@ -14,13 +14,14 @@ import {
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GlobalParametersForm } from "@/features/instance/forms/GlobalParametersForm";
+import { QUERY_KEYS } from "@/lib/consts.ts";
 
 const FORM_ID = "global-parameters-form";
 
 export const GlobalParametersConfiguration = () => {
   const queryClient = useQueryClient();
   const { data: globalParameters, dataUpdatedAt } = useQuery({
-    queryKey: ["globalParameters"],
+    queryKey: [QUERY_KEYS.GLOBAL_PARAMETERS],
     queryFn: () => GlobalParametersApi.getAll(),
   });
 

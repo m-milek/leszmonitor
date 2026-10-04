@@ -17,3 +17,7 @@ type IMonitorResultDetails any
 type DNSResultDetails struct {
 	ResolvedRecords []any `json:"resolvedRecords,omitempty"`
 }
+
+type PushResultDetails struct {
+	RawMessage string `json:"rawMessage,omitempty"`
+}
