@@ -1,24 +1,12 @@
-import { expect } from "@playwright/test";
 import test from "../../fixtures/leszmonitorFixture";
+import { createMonitor, uniqueName } from "../../helpers/monitors";
 
 test.describe("DNS Monitor", () => {
   test("Creates a valid DNS monitor", async ({ page }) => {
-    await page.goto("/monitors/new");
-
-    const randomMonitorNumber = Math.floor(Math.random() * 10000);
-
-    await page
-      .getByRole("combobox")
-      .filter({ hasText: "Select Monitor Type" })
-      .click();
-    await page.getByRole("option", { name: "DNS" }).click();
-    await page
-      .getByLabel("Name", { exact: true })
-      .fill(`Test DNS Monitor ${randomMonitorNumber}`);
-    await page.getByLabel("Hostname").fill("example.com");
-
-    await page.getByText("Create Monitor").click();
-
-    await expect(page).toHaveURL(/\/monitors\/test-dns-monitor-\d+$/);
+    await createMonitor(page, {
+      type: "DNS",
+      name: uniqueName("Test DNS Monitor"),
+      fillFields: () => page.getByLabel("Hostname").fill("example.com"),
+    });
   });
 });

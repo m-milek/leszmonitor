@@ -21,6 +21,9 @@ const (
 	FailureReasonDNSExpectedRecordMissing FailureReason = "DNS_EXPECTED_RECORD_MISSING"
 
 	FailureReasonTCPConnectionFailed FailureReason = "TCP_CONNECTION_FAILED"
+
+	FailureReasonPushReportedDown    FailureReason = "PUSH_REPORTED_DOWN"
+	FailureReasonPushMissedHeartbeat FailureReason = "PUSH_MISSED_HEARTBEAT"
 )
 
 type FailureCause string

@@ -2,10 +2,10 @@ import z from "zod";
 import { isSlugValid } from "@/lib/slugFromString";
 import {
   httpMethods,
-  tcpProtocols,
-  recordTypes,
   type Monitor,
   type MonitorType,
+  recordTypes,
+  tcpProtocols,
 } from "@/features/monitors/types";
 
 export const httpMonitorConfigSchema = z.object({
@@ -39,6 +39,12 @@ export const dnsMonitorConfigSchema = z.object({
   dnsServer: z.string().min(1, "DNS server address is required"),
   recordType: z.enum(recordTypes),
   expectedRecordValues: z.array(z.string()).default([]),
+});
+
+export const pushMonitorConfigSchema = z.object({
+  gracePeriodSeconds: z
+    .number({ message: "Grace period must be a number" })
+    .min(0, "Grace period must be at least 0 seconds"),
 });
 
 const baseMonitorFields = {
@@ -79,10 +85,17 @@ const dnsMonitorSchema = z.object({
   probeConfig: dnsMonitorConfigSchema.optional(),
 });
 
+const pushMonitorSchema = z.object({
+  ...baseMonitorFields,
+  type: z.literal("push"),
+  probeConfig: pushMonitorConfigSchema.optional(),
+});
+
 export const newMonitorSchema = z.discriminatedUnion("type", [
   httpMonitorSchema,
   tcpMonitorSchema,
   dnsMonitorSchema,
+  pushMonitorSchema,
 ]);
 
 export type MonitorFormValues = z.infer<typeof newMonitorSchema>;
@@ -121,6 +134,9 @@ export const defaultConfigs: Record<
     recordType: "A",
     dnsServer: "1.1.1.1",
     expectedRecordValues: [],
+  },
+  push: {
+    gracePeriodSeconds: 30,
   },
 };
 

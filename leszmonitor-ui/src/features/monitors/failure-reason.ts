@@ -11,6 +11,8 @@ const FAILURE_REASON_LABELS: Record<FailureReason, string> = {
   DNS_INVALID_SRV_HOSTNAME: "Invalid SRV hostname",
   DNS_EXPECTED_RECORD_MISSING: "Expected record missing",
   TCP_CONNECTION_FAILED: "Connection failed",
+  PUSH_MISSED_HEARTBEAT: "Missed heartbeat",
+  PUSH_REPORTED_DOWN: "Self-reported failure",
 };
 
 export const failureReasonToLabel = (reason: FailureReason): string =>

@@ -44,12 +44,12 @@ export const MonitorActionsGroup = ({
         <PencilIcon />
         <span>Edit</span>
       </Button>
-      <Button variant="outline" size="lg" onClick={handleManuallyRunMonitor}>
-        <>
+      {monitor.type !== "push" && (
+        <Button variant="outline" size="lg" onClick={handleManuallyRunMonitor}>
           <LucideCirclePlay />
           <span>Run Now</span>
-        </>
-      </Button>
+        </Button>
+      )}
       <DeleteMonitorDialog
         monitor={monitor}
         onDeleted={() => navigate({ to: "/monitors" })}

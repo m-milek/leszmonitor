@@ -43,6 +43,23 @@ func TestParseResultDetails(t *testing.T) {
 			t.Errorf("expected 42, got %d", tcpDetails.LatencyMs)
 		}
 	})
+
+	t.Run("Push details parsing", func(t *testing.T) {
+		rawJSON := []byte(`{"rawMessage": "backup done"}`)
+		details, err := ParseResultDetails(kind.PushConfigType, rawJSON)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		pushDetails, ok := details.(*PushResultDetails)
+		if !ok {
+			t.Fatalf("expected PushResultDetails, got %T", details)
+		}
+
+		if pushDetails.RawMessage != "backup done" {
+			t.Errorf("expected 'backup done', got %q", pushDetails.RawMessage)
+		}
+	})
 }
 
 func TestMonitorResultJSON(t *testing.T) {
@@ -52,7 +69,7 @@ func TestMonitorResultJSON(t *testing.T) {
 			kind.HTTPConfigType,
 			kind.MonitorStatusUp,
 			false,
-			100,
+			new(int64(100)),
 			&HTTPResultDetails{StatusCode: 200},
 		)
 

@@ -35,6 +35,12 @@ func ParseResultDetails(monitorType kind.ProbeType, rawDetails []byte) (IMonitor
 			return nil, fmt.Errorf("failed to parse DNS result details: %w", err)
 		}
 		return &details, nil
+	case kind.PushConfigType:
+		var details PushResultDetails
+		if err := json.Unmarshal(rawDetails, &details); err != nil {
+			return nil, fmt.Errorf("failed to parse push result details: %w", err)
+		}
+		return &details, nil
 	default:
 		return nil, fmt.Errorf("unknown monitor type for result details: %s", monitorType)
 	}

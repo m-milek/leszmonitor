@@ -115,8 +115,8 @@ func RunWebSocketWorker(ctx context.Context, conn *websocket.Conn) {
 	conn.SetReadDeadline(time.Time{})
 	conn.SetWriteDeadline(time.Time{})
 
-	monitorRunChannel := monitors.MonitorRunChannel.Subscribe()
-	defer monitors.MonitorRunChannel.Unsubscribe(monitorRunChannel)
+	monitorRunChannel := monitors.MonitorResultSavedChannel.Subscribe()
+	defer monitors.MonitorResultSavedChannel.Unsubscribe(monitorRunChannel)
 
 	var writeMu sync.Mutex
 

@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
+	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
@@ -23,6 +26,8 @@ func NewMonitorAPIController(service IMonitorService) MonitorAPIController {
 
 const messageMonitorIDIsRequired = "Monitor ID is required"
 
+const maxPushBodyBytes = 5000
+
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
 func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +43,7 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, err = probe.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
+	_, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
 		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
 		return
@@ -128,7 +133,7 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, err = probe.ProbeFromJSON(monitor.ProbeConfig, monitor.Type)
+	_, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
 		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
 		return
@@ -251,4 +256,54 @@ func (c *MonitorAPIController) RunMonitorManuallyByIDHandler(w http.ResponseWrit
 	}
 
 	httpx.RespondMessage(ctx, w, http.StatusAccepted, "Monitor run scheduled")
+}
+
+func (c *MonitorAPIController) ReceivePushHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	monitorUUID, err := uuid.Parse(r.PathValue("monitorId"))
+	if err != nil {
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		return
+	}
+
+	status := r.URL.Query().Get("status")
+	if !slices.Contains([]string{"up", "down", ""}, status) {
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid status reported")
+		return
+	}
+
+	var latency *int64
+	if latencyStr := r.URL.Query().Get("latency"); latencyStr != "" {
+		parsed, err := strconv.ParseInt(latencyStr, 10, 64)
+		if err != nil || parsed < 0 {
+			httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid latency reported")
+			return
+		}
+		latency = &parsed
+	}
+
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxPushBodyBytes+1))
+	if err != nil {
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Failed to read body")
+		return
+	}
+	if len(body) > maxPushBodyBytes {
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Body too large")
+		return
+	}
+
+	payload := probe.PushProbePayload{
+		Status:  kind.MonitorStatus(status),
+		Latency: latency,
+		Body:    string(body),
+	}
+
+	svcErr := c.service.ReceivePush(ctx, monitorUUID, payload)
+	if svcErr != nil {
+		httpx.RespondError(ctx, w, svcErr.Code, svcErr.Err)
+		return
+	}
+
+	httpx.RespondMessage(ctx, w, http.StatusAccepted, "")
 }

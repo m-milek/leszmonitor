@@ -1,6 +1,7 @@
 package monitors_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/monitors/probe"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/util"
@@ -267,6 +270,21 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
+
+	t.Run("Fails with 400 when changing monitor type", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+
+		monitor := insertTestMonitor(ctx, t)
+		monitor.Type = kind.PushConfigType
+		monitor.ProbeConfig = `{"gracePeriodSeconds":30}`
+
+		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
+
+		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
+		assert.Equal(t, kind.HTTPConfigType, retrieved.Type)
+	})
 }
 
 func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
@@ -368,5 +386,113 @@ func TestIntegration_MonitorService_RunMonitorManuallyByID(t *testing.T) {
 			}
 		}
 		assert.True(t, found, "Audit log for manual monitor run not found")
+	})
+
+	t.Run("Fails with 400 for a push monitor", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+		monitor := createPushMonitor(ctx, t, monitorService)
+
+		svcErr := monitorService.RunMonitorManuallyByID(ctx, monitor.ID)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
+	})
+}
+
+func createPushMonitor(ctx context.Context, t *testing.T, monitorService *monitors.MonitorService) *monitors.Monitor {
+	t.Helper()
+	payload := monitors.Monitor{
+		Name:        "Push Target " + uuid.New().String(),
+		Description: "Push monitor in tests",
+		Interval:    60,
+		Type:        kind.PushConfigType,
+		ProbeConfig: `{"gracePeriodSeconds":30}`,
+	}
+	payload.GenerateSlug()
+
+	created, svcErr := monitorService.CreateMonitor(ctx, payload)
+	require.Nil(t, svcErr)
+
+	monitor, svcErr := monitorService.GetMonitorByID(ctx, created.MonitorID)
+	require.Nil(t, svcErr)
+	return monitor
+}
+
+func TestIntegration_MonitorService_ReceivePush(t *testing.T) {
+	for _, status := range []kind.MonitorStatus{"", kind.MonitorStatusUp} {
+		t.Run(fmt.Sprintf("Broadcasts an up result for status %q", status), func(t *testing.T) {
+			ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+			monitor := createPushMonitor(ctx, t, monitorService)
+
+			runChannel := monitors.MonitorRunChannel.Subscribe()
+			defer monitors.MonitorRunChannel.Unsubscribe(runChannel)
+
+			svcErr := monitorService.ReceivePush(ctx, monitor.ID, probe.PushProbePayload{
+				Status:  status,
+				Latency: new(int64(42)),
+				Body:    "backup done",
+			})
+			require.Nil(t, svcErr)
+
+			select {
+			case msg := <-runChannel:
+				assert.Equal(t, monitor.ID, msg.Monitor.ID)
+				assert.Equal(t, kind.MonitorStatusUp, msg.Result.GetStatus())
+				require.NotNil(t, msg.Result.GetDurationMs())
+				assert.Equal(t, int64(42), *msg.Result.GetDurationMs())
+				assert.Equal(t, &results.PushResultDetails{RawMessage: "backup done"}, msg.Result.GetDetails())
+				assert.Empty(t, msg.Result.GetFailures())
+			case <-time.After(time.Second):
+				t.Fatal("Timeout waiting for monitor run message")
+			}
+		})
+	}
+
+	t.Run("Broadcasts a down result for status down", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+		monitor := createPushMonitor(ctx, t, monitorService)
+
+		runChannel := monitors.MonitorRunChannel.Subscribe()
+		defer monitors.MonitorRunChannel.Unsubscribe(runChannel)
+
+		svcErr := monitorService.ReceivePush(ctx, monitor.ID, probe.PushProbePayload{Status: kind.MonitorStatusDown})
+		require.Nil(t, svcErr)
+
+		select {
+		case msg := <-runChannel:
+			assert.Equal(t, kind.MonitorStatusDown, msg.Result.GetStatus())
+			require.Len(t, msg.Result.GetFailures(), 1)
+			assert.Equal(t, results.FailureReasonPushReportedDown, msg.Result.GetFailures()[0].Reason)
+		case <-time.After(time.Second):
+			t.Fatal("Timeout waiting for monitor run message")
+		}
+	})
+
+	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+
+		svcErr := monitorService.ReceivePush(ctx, uuid.New(), probe.PushProbePayload{})
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusNotFound, svcErr.Code)
+	})
+
+	t.Run("Fails with 404 for a non-push monitor", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+		monitor := insertTestMonitor(ctx, t)
+
+		svcErr := monitorService.ReceivePush(ctx, monitor.ID, probe.PushProbePayload{})
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusNotFound, svcErr.Code)
+	})
+
+	t.Run("Fails with 409 for a paused monitor", func(t *testing.T) {
+		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
+		monitor := createPushMonitor(ctx, t, monitorService)
+
+		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorStateStopped)
+		require.Nil(t, svcErr)
+
+		svcErr = monitorService.ReceivePush(ctx, monitor.ID, probe.PushProbePayload{})
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusConflict, svcErr.Code)
 	})
 }

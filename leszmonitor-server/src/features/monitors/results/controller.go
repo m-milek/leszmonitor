@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -22,9 +23,9 @@ func NewMonitorResultsAPIController(service IMonitorResultsService) MonitorResul
 func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	monitorID := r.PathValue("monitorId")
-	if monitorID == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
+	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
+	if err != nil {
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 
@@ -40,9 +41,9 @@ func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w
 func (c *MonitorResultsAPIController) GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	monitorID := r.PathValue("monitorId")
-	if monitorID == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("monitor ID is required"))
+	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
+	if err != nil {
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 

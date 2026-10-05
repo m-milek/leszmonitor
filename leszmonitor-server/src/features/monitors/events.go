@@ -8,6 +8,9 @@ var MonitorLifecycleChannel = events.NewEventBus[MonitorLifecycleMessage]("monit
 // MonitorRunChannel distributes monitor run events (e.g., tcp results) to subscribers.
 var MonitorRunChannel = events.NewEventBus[MonitorRunMessage]("monitor_run")
 
+// MonitorResultSavedChannel distributes monitor run events after their result has been persisted.
+var MonitorResultSavedChannel = events.NewEventBus[MonitorRunMessage]("monitor_result_saved")
+
 // MonitorExecuteChannel carries scheduled monitor checks from the scheduler to the executor.
 var MonitorExecuteChannel = events.NewEventBus[MonitorExecuteMessage]("monitor_execute")
 

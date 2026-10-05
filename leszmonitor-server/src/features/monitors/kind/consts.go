@@ -8,4 +8,5 @@ var (
 	HTTPConfigType ProbeType = "http"
 	TCPConfigType  ProbeType = "tcp"
 	DNSConfigType  ProbeType = "dns"
+	PushConfigType ProbeType = "push"
 )

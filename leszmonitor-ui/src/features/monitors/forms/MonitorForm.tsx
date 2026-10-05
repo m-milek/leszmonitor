@@ -7,8 +7,8 @@ import {
   type MonitorType,
 } from "@/features/monitors/types";
 import {
-  type MonitorFormValues,
   defaultConfigs,
+  type MonitorFormValues,
 } from "@/features/monitors/schema";
 import { buildMonitorDefaults } from "@/features/monitors/forms/monitor-form-defaults";
 import {
@@ -34,6 +34,7 @@ export interface MonitorFormProps {
   defaultValues?: Partial<MonitorFormValues>;
   onSubmit: (value: MonitorFormValues) => Promise<void>;
   resetOnSuccess?: boolean;
+  isEdit?: boolean;
 }
 
 export function MonitorForm({
@@ -41,6 +42,7 @@ export function MonitorForm({
   defaultValues,
   onSubmit,
   resetOnSuccess = false,
+  isEdit = false,
 }: Readonly<MonitorFormProps>) {
   const mergedDefaults = buildMonitorDefaults(defaultValues);
 
@@ -73,6 +75,7 @@ export function MonitorForm({
     { value: "http", label: "HTTP" },
     { value: "tcp", label: "TCP" },
     { value: "dns", label: "DNS" },
+    { value: "push", label: "Push" },
   ];
 
   return (
@@ -110,6 +113,7 @@ export function MonitorForm({
                     }}
                     placeholder="Select Monitor Type"
                     items={monitorTypeSelectItems}
+                    disabled={isEdit}
                     isInvalid={isFieldInvalid(field)}
                     errorMessage={getFirstError(field)}
                   />

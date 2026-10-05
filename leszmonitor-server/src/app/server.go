@@ -82,7 +82,7 @@ func createServer(
 			"/api/v1/auth/login",
 			"/api/ws",
 		}
-		if util.SliceContains(publicAPIPaths, path) {
+		if util.SliceContains(publicAPIPaths, path) || strings.HasPrefix(path, "/api/v1/push/") {
 			publicRouter.ServeHTTP(w, r)
 			return
 		}

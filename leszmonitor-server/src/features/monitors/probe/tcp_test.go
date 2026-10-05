@@ -187,7 +187,8 @@ func TestTCPMonitor_Run(t *testing.T) {
 
 		response, _ := probe.Run(context.Background(), uuid.Nil)
 		assert.Equal(t, kind.MonitorStatusUp, response.GetStatus())
-		assert.Equal(t, int64(100), response.GetDurationMs())
+		require.NotNil(t, response.GetDurationMs())
+		assert.Equal(t, int64(100), *response.GetDurationMs())
 		assert.Empty(t, response.GetFailures())
 	})
 

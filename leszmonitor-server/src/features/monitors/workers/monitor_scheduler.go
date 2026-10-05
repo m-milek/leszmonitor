@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
@@ -83,6 +84,10 @@ func (w *MonitorScheduler) dispatchLifecycleMessage(ctx context.Context, msg mon
 }
 
 func (w *MonitorScheduler) start(ctx context.Context, monitor monitors.Monitor) {
+	if monitor.Type == kind.PushConfigType {
+		return
+	}
+
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
