@@ -31,6 +31,9 @@ export interface MonitorResultsCardProps {
 }
 
 const ResultDetails = ({ result }: { result: MonitorResult }) => {
+  if (!result.details) {
+    return <NoData label="No details" />;
+  }
   switch (result.monitorType) {
     case "http":
       return <span>HTTP {result.details.statusCode}</span>;

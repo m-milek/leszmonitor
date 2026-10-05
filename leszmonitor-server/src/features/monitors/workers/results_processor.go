@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -62,8 +63,13 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 	}
 	monitors.MonitorResultSavedChannel.Broadcast(msg)
 
-	if isStatusChange(previousResult, msg.Result) {
-		err = handleStatusChange(ctx, database, msg.Monitor, previousResult, msg.Result)
+	previousStatus := kind.MonitorStatusUnknown
+	if previousResult != nil {
+		previousStatus = previousResult.GetStatus()
+	}
+
+	if previousStatus != msg.Result.GetStatus() {
+		err = handleStatusChange(ctx, database, msg.Monitor, previousStatus, msg.Result)
 		if err != nil {
 			return errors.Wrap(err, "failed to handle status change")
 		}
@@ -71,18 +77,11 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 	return nil
 }
 
-func isStatusChange(previous results.IMonitorResult, current results.IMonitorResult) bool {
-	if previous == nil {
-		return false
-	}
-	return previous.GetStatus() != current.GetStatus()
-}
-
 func handleStatusChange(
 	ctx context.Context,
 	database db.DB,
 	monitor monitors.Monitor,
-	previous results.IMonitorResult,
+	previousStatus kind.MonitorStatus,
 	current results.IMonitorResult,
 ) error {
 	logger := log.FromContext(ctx)
@@ -90,7 +89,7 @@ func handleStatusChange(
 		ID:             uuid.New(),
 		MonitorID:      monitor.ID,
 		CausedByID:     current.GetID(),
-		PreviousStatus: string(previous.GetStatus()),
+		PreviousStatus: string(previousStatus),
 		NextStatus:     string(current.GetStatus()),
 		CreatedAt:      time.Now().UTC(),
 	}
@@ -100,7 +99,7 @@ func handleStatusChange(
 	}
 	logger.Debug().
 		Str("monitor_id", monitor.ID.String()).
-		Str("previous_status", string(previous.GetStatus())).
+		Str("previous_status", string(previousStatus)).
 		Str("next_status", string(current.GetStatus())).
 		Msg("Monitor status change recorded")
 	return nil

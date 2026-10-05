@@ -71,7 +71,7 @@ export function MonitorsPage() {
     );
     return {
       ...monitor,
-      status: latestResult?.status ?? "down", // TODO add unknown
+      status: latestResult?.status ?? "unknown",
     };
   });
 

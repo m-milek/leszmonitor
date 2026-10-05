@@ -100,7 +100,9 @@ func (m *MonitorResult) AddFailure(reason FailureReason, details any, err error)
 		failure.Error = err.Error()
 	}
 	m.Failures = append(m.Failures, failure)
-	m.Status = kind.MonitorStatusDown
+	if m.Status != kind.MonitorStatusUnknown {
+		m.Status = kind.MonitorStatusDown
+	}
 }
 
 func (m *MonitorResult) SetDuration(duration *int64) {

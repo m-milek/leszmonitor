@@ -11,6 +11,8 @@ export const monitorStatusToStatusDot = (
       return "down";
     case "paused":
       return "paused";
+    case "unknown":
+      return "unknown";
     default:
       return "pending";
   }

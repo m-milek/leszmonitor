@@ -1,6 +1,12 @@
 import type { Timestamps } from "@/lib/types";
 
-export const monitorStatuses = ["up", "down", "paused", "maintenance"] as const;
+export const monitorStatuses = [
+  "up",
+  "down",
+  "paused",
+  "maintenance",
+  "unknown",
+] as const;
 export type MonitorStatus = (typeof monitorStatuses)[number];
 
 export type MonitorRunState = "active" | "paused";
@@ -137,7 +143,8 @@ export type FailureReason =
   | "DNS_EXPECTED_RECORD_MISSING"
   | "TCP_CONNECTION_FAILED"
   | "PUSH_REPORTED_DOWN"
-  | "PUSH_MISSED_HEARTBEAT";
+  | "PUSH_MISSED_HEARTBEAT"
+  | "PROBE_ERROR";
 
 export interface MonitorFailure {
   reason: FailureReason;
