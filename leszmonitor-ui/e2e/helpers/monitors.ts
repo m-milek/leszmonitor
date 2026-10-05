@@ -8,7 +8,8 @@ export interface CreateMonitorOptions {
   fillFields?: () => Promise<void>;
 }
 
-export const uniqueName = (prefix: string) => `${prefix} ${Date.now()}`;
+export const uniqueName = (prefix: string) =>
+  `${prefix} ${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
 const slugFromName = (name: string) => name.toLowerCase().replaceAll(" ", "-");
 
