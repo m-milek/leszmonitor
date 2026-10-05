@@ -60,6 +60,8 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 	if err != nil {
 		return errors.Wrap(err, "failed to insert monitor result")
 	}
+	monitors.MonitorResultSavedChannel.Broadcast(msg)
+
 	if isStatusChange(previousResult, msg.Result) {
 		err = handleStatusChange(ctx, database, msg.Monitor, previousResult, msg.Result)
 		if err != nil {
