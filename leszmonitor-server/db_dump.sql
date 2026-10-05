@@ -35,9 +35,9 @@ CREATE TABLE monitor_results (
     monitor_id            TEXT    NOT NULL,
     status                TEXT    NOT NULL,
     is_manually_triggered BOOLEAN NOT NULL,
-    duration_ms           INT     NOT NULL CHECK (duration_ms >= 0),
+    duration_ms           INTEGER,
 
-    error_details         TEXT CHECK (error_details IS NULL OR JSON_VALID(error_details)), -- JSON string
+    failures              TEXT CHECK (failures IS NULL OR JSON_VALID(failures)), -- JSON string
 
     details               TEXT    NOT NULL,
 
@@ -102,6 +102,37 @@ CREATE TABLE monitor_status_changes (
     FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE,
     FOREIGN KEY (caused_by_id) REFERENCES monitor_results (id) ON DELETE SET NULL
 );
+CREATE TABLE tags (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT,
+    color_hex   TEXT NOT NULL,
+
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE monitor_tags (
+    monitor_id TEXT NOT NULL,
+    tag_id     TEXT NOT NULL,
+
+    PRIMARY KEY (monitor_id, tag_id),
+    FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+);
+CREATE TABLE heartbeat (
+    id      INTEGER PRIMARY KEY CHECK (id = 1),
+    beat_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE app_downtime_windows (
+    id         TEXT PRIMARY KEY,
+    started_at DATETIME NOT NULL,
+    ended_at   DATETIME NOT NULL
+);
+CREATE TABLE global_parameters (
+    key        TEXT PRIMARY KEY,
+    value      TEXT     NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TRIGGER update_users_updated_at
     AFTER UPDATE
     ON users
@@ -116,5 +147,21 @@ CREATE TRIGGER update_monitors_updated_at
 BEGIN
     UPDATE monitors SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
 END;
+CREATE TRIGGER update_tags_updated_at
+    AFTER UPDATE
+    ON tags
+    FOR EACH ROW
+BEGIN
+    UPDATE tags SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+CREATE TRIGGER update_global_parameters_updated_at
+    AFTER UPDATE
+    ON global_parameters
+    FOR EACH ROW
+BEGIN
+    UPDATE global_parameters SET updated_at = CURRENT_TIMESTAMP WHERE key = new.key;
+END;
 CREATE INDEX idx_monitor_results_monitor_id_created ON monitor_results (monitor_id, created_at DESC);
+CREATE INDEX idx_monitor_tags_tag_id ON monitor_tags (tag_id);
+CREATE INDEX idx_app_downtime_windows_started_ended ON app_downtime_windows (started_at, ended_at);
 COMMIT;
