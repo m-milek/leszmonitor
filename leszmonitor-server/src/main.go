@@ -18,6 +18,7 @@ import (
 	"github.com/m-milek/leszmonitor/app"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
+	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/features/monitors/workers"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/config"
@@ -111,6 +112,9 @@ func main() {
 	monitorStatsService := stats.NewMonitorStatsService(stats.MonitorStatsServiceDeps{
 		DB: database,
 	})
+	monitorStatusChangeService := statuschange.NewMonitorStatusChangeService(statuschange.MonitorStatusChangeServiceDeps{
+		DB: database,
+	})
 	auditLogService := auditlog.NewAuditLogService(auditlog.AuditLogServiceDeps{
 		DB: database,
 	})
@@ -123,6 +127,7 @@ func main() {
 	monitorAPIController := monitors.NewMonitorAPIController(monitorService)
 	monitorResultsAPIController := results.NewMonitorResultsAPIController(monitorResultService)
 	monitorStatsAPIController := stats.NewMonitorStatsAPIController(monitorStatsService)
+	monitorStatusChangeAPIController := statuschange.NewMonitorStatusChangeAPIController(monitorStatusChangeService)
 	auditLogAPIController := auditlog.NewAuditLogAPIController(auditLogService)
 	tagAPIController := tags.NewTagAPIController(tagService)
 	globalParameterAPIController := globalparameters.NewGlobalParameterAPIController(globalParameterService)
@@ -135,6 +140,7 @@ func main() {
 		Monitor:                monitorAPIController,
 		MonitorResults:         monitorResultsAPIController,
 		MonitorStats:           monitorStatsAPIController,
+		MonitorStatusChange:    monitorStatusChangeAPIController,
 		AuditLog:               auditLogAPIController,
 		Tag:                    tagAPIController,
 		InstanceMetadata:       instanceMetadataAPIController,

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 )
 
 type MonitorStatusChange struct {
@@ -14,4 +15,12 @@ type MonitorStatusChange struct {
 	NextStatus     string     `json:"nextStatus" db:"next_status"`
 
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+}
+
+// MonitorStatusPeriod is a span of time during which a monitor had one status. EndedAt is nil while it is ongoing.
+type MonitorStatusPeriod struct {
+	Status          kind.MonitorStatus `json:"status"`
+	StartedAt       time.Time          `json:"startedAt"`
+	EndedAt         *time.Time         `json:"endedAt"`
+	DurationSeconds int64              `json:"durationSeconds"`
 }

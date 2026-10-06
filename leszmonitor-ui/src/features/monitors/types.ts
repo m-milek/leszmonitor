@@ -232,3 +232,10 @@ export interface MonitorStats {
   probeSpecific?: ProbeSpecificStats;
   probeType: MonitorType;
 }
+
+export interface MonitorStatusPeriod {
+  status: MonitorStatus;
+  startedAt: Date;
+  endedAt: Date | null;
+  durationSeconds: number;
+}
