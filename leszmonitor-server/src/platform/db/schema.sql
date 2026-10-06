@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE TABLE IF NOT EXISTS monitor_status_changes (
     id              TEXT PRIMARY KEY,
     monitor_id      TEXT NOT NULL,
-    caused_by_id    TEXT NOT NULL, -- UUID of the monitor result that caused the status change
+    caused_by_id    TEXT, -- UUID of the monitor result that caused the status change, NULL if caused by app downtime
     previous_status TEXT NOT NULL,
     next_status     TEXT NOT NULL,
 

@@ -30,6 +30,11 @@ import (
 var staticFiles embed.FS
 
 func runComponents(ctx context.Context, wg *sync.WaitGroup) {
+	heartbeatWorker := downtime.NewHeartbeatWorker(db.Get(), workers.RecordDowntimeStatusChanges)
+	if err := heartbeatWorker.Beat(ctx); err != nil {
+		log.FromContext(ctx).Error().Err(err).Msg("Failed to record initial heartbeat")
+	}
+
 	wg.Go(func() {
 		manager := workers.NewMonitorScheduler(db.Get())
 		manager.Run(ctx)
@@ -50,7 +55,6 @@ func runComponents(ctx context.Context, wg *sync.WaitGroup) {
 		pushWatcher.Run(ctx)
 	})
 	wg.Go(func() {
-		heartbeatWorker := downtime.NewHeartbeatWorker(db.Get())
 		heartbeatWorker.Run(ctx)
 	})
 }

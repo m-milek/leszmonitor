@@ -71,7 +71,7 @@ func (r *monitorStatusChangeDAO) GetLatestStatusChangeByMonitorID(
 			SELECT id, monitor_id, caused_by_id, previous_status, next_status, created_at
 			FROM monitor_status_changes
 			WHERE monitor_id = $1
-			  AND created_at < $2
+			  AND created_at <= $2
 			ORDER BY created_at DESC
 			LIMIT 1`,
 			monitorID,

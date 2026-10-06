@@ -47,25 +47,21 @@ func (p *ResultsProcessor) Run(ctx context.Context) {
 }
 
 func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.MonitorRunMessage) error {
-	previousResult, err := results.NewMonitorResultDAO(database.Querier()).
-		GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID)
-	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			previousResult = nil
-		} else {
-			return errors.Wrap(err, "failed to retrieve previous monitor result")
-		}
-	}
-
-	_, err = results.NewMonitorResultDAO(database.Querier()).InsertMonitorResult(ctx, msg.Result)
+	_, err := results.NewMonitorResultDAO(database.Querier()).InsertMonitorResult(ctx, msg.Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to insert monitor result")
 	}
 	monitors.MonitorResultSavedChannel.Broadcast(msg)
 
+	latestStatusChange, err := statuschange.NewMonitorStatusChangeDAO(database.Querier()).
+		GetLatestStatusChangeByMonitorID(ctx, msg.Monitor.ID, time.Now().UTC())
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		return errors.Wrap(err, "failed to retrieve latest status change")
+	}
+
 	previousStatus := kind.MonitorStatusUnknown
-	if previousResult != nil {
-		previousStatus = previousResult.GetStatus()
+	if latestStatusChange != nil {
+		previousStatus = kind.MonitorStatus(latestStatusChange.NextStatus)
 	}
 
 	if previousStatus != msg.Result.GetStatus() {
@@ -88,7 +84,7 @@ func handleStatusChange(
 	monitorStatusChange := statuschange.MonitorStatusChange{
 		ID:             uuid.New(),
 		MonitorID:      monitor.ID,
-		CausedByID:     current.GetID(),
+		CausedByID:     new(current.GetID()),
 		PreviousStatus: string(previousStatus),
 		NextStatus:     string(current.GetStatus()),
 		CreatedAt:      time.Now().UTC(),

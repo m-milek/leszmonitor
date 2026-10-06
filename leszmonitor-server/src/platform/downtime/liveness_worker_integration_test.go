@@ -12,9 +12,9 @@ import (
 func TestIntegration_HeartbeatWorker_Beat(t *testing.T) {
 	t.Run("Records the first heartbeat without reporting downtime", func(t *testing.T) {
 		ctx, dao := setupDowntimeIntegrationTest(t)
-		worker := NewHeartbeatWorker(db.Get())
+		worker := NewHeartbeatWorker(db.Get(), nil)
 
-		require.NoError(t, worker.beat(ctx))
+		require.NoError(t, worker.Beat(ctx))
 
 		beat, err := dao.GetHeartbeat(ctx)
 		require.NoError(t, err)
@@ -27,13 +27,13 @@ func TestIntegration_HeartbeatWorker_Beat(t *testing.T) {
 
 	t.Run("Does not report downtime when the previous beat is within the threshold", func(t *testing.T) {
 		ctx, dao := setupDowntimeIntegrationTest(t)
-		worker := NewHeartbeatWorker(db.Get())
+		worker := NewHeartbeatWorker(db.Get(), nil)
 
 		recent := time.Now().UTC().Add(-durationBetweenBeats)
 		_, err := dao.InsertHeartbeat(ctx, &HeartbeatRecord{BeatAt: recent})
 		require.NoError(t, err)
 
-		require.NoError(t, worker.beat(ctx))
+		require.NoError(t, worker.Beat(ctx))
 
 		downtimes, err := dao.GetAllDowntimes(ctx, time.Now().UTC().Add(-time.Hour), time.Now().UTC().Add(time.Hour))
 		require.NoError(t, err)
@@ -42,14 +42,14 @@ func TestIntegration_HeartbeatWorker_Beat(t *testing.T) {
 
 	t.Run("Records a downtime window when the previous beat is older than the threshold", func(t *testing.T) {
 		ctx, dao := setupDowntimeIntegrationTest(t)
-		worker := NewHeartbeatWorker(db.Get())
+		worker := NewHeartbeatWorker(db.Get(), nil)
 
 		stale := time.Now().UTC().Add(-time.Hour)
 		_, err := dao.InsertHeartbeat(ctx, &HeartbeatRecord{BeatAt: stale})
 		require.NoError(t, err)
 
 		beatAt := time.Now().UTC()
-		require.NoError(t, worker.beat(ctx))
+		require.NoError(t, worker.Beat(ctx))
 
 		downtimes, err := dao.GetAllDowntimes(ctx, stale.Add(-time.Hour), beatAt.Add(time.Hour))
 		require.NoError(t, err)
@@ -64,14 +64,14 @@ func TestIntegration_HeartbeatWorker_Beat(t *testing.T) {
 
 	t.Run("Does not record the same gap twice on a subsequent beat", func(t *testing.T) {
 		ctx, dao := setupDowntimeIntegrationTest(t)
-		worker := NewHeartbeatWorker(db.Get())
+		worker := NewHeartbeatWorker(db.Get(), nil)
 
 		stale := time.Now().UTC().Add(-time.Hour)
 		_, err := dao.InsertHeartbeat(ctx, &HeartbeatRecord{BeatAt: stale})
 		require.NoError(t, err)
 
-		require.NoError(t, worker.beat(ctx))
-		require.NoError(t, worker.beat(ctx))
+		require.NoError(t, worker.Beat(ctx))
+		require.NoError(t, worker.Beat(ctx))
 
 		downtimes, err := dao.GetAllDowntimes(ctx, stale.Add(-time.Hour), time.Now().UTC().Add(time.Hour))
 		require.NoError(t, err)

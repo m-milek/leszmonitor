@@ -1,6 +1,11 @@
 import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { LucidePlusCircle, LucideX } from "lucide-react";
 import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1 } from "@/components/common/Typography";
@@ -32,16 +37,14 @@ export function MonitorsPage() {
     queryFn: () => TagsApi.getAll(),
   });
 
-  const { data: monitorLatestStatuses = [] } = useQuery({
-    enabled: !!monitors.length,
-    queryKey: [QUERY_KEYS.MONITOR_RESULTS],
-    queryFn: () =>
-      Promise.all(
-        monitors.map((monitor) => MonitorsApi.results.getLatest(monitor.id)),
-      ),
+  const latestResultQueries = useQueries({
+    queries: monitors.map((monitor) => ({
+      queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id, "latest"],
+      queryFn: () => MonitorsApi.results.getLatest(monitor.id),
+    })),
   });
 
-  if (!monitors || !tags || !monitorLatestStatuses) {
+  if (!monitors || !tags) {
     return null;
   }
 
@@ -65,15 +68,12 @@ export function MonitorsPage() {
     });
   };
 
-  const monitorsWithStatuses: MonitorWithStatus[] = monitors.map((monitor) => {
-    const latestResult = monitorLatestStatuses.find(
-      (result) => result?.monitorId === monitor.id,
-    );
-    return {
+  const monitorsWithStatuses: MonitorWithStatus[] = monitors.map(
+    (monitor, index) => ({
       ...monitor,
-      status: latestResult?.status ?? "unknown",
-    };
-  });
+      status: latestResultQueries[index]?.data?.status ?? "unknown",
+    }),
+  );
 
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const onTagFilterChange = (selectedTags: string[]) => {

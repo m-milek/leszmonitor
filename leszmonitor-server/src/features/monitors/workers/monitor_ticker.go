@@ -44,6 +44,8 @@ func (t *monitorTicker) run(ctx context.Context) {
 	ticker := time.NewTicker(t.interval())
 	defer ticker.Stop()
 
+	t.schedule()
+
 	for {
 		select {
 		case <-ctx.Done():
