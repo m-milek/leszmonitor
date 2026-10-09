@@ -9,7 +9,7 @@ COPY leszmonitor-ui/ .
 
 RUN npm run build
 
-FROM golang:1.27.1-alpine AS server-builder
+FROM golang:1.27.2-alpine AS server-builder
 
 ARG VERSION
 ARG GIT_COMMIT
