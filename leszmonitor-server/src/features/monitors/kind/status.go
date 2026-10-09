@@ -7,4 +7,5 @@ const (
 	MonitorStatusDown        MonitorStatus = "down"
 	MonitorStatusPaused      MonitorStatus = "paused"
 	MonitorStatusMaintenance MonitorStatus = "maintenance"
+	MonitorStatusUnknown     MonitorStatus = "unknown"
 )

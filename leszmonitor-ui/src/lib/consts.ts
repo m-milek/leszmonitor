@@ -7,6 +7,7 @@ export const QUERY_KEYS = {
   MONITORS: "monitors",
   MONITOR_RESULTS: "monitorResults",
   MONITOR_LATENCY_STATS: "monitorLatencyStats",
+  MONITOR_STATUS_HISTORY: "monitorStatusHistory",
   TAGS: "tags",
-  GLOBAL_PARAMETERS: "globalParameters"
+  GLOBAL_PARAMETERS: "globalParameters",
 };

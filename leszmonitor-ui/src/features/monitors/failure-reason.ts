@@ -12,6 +12,7 @@ const FAILURE_REASON_LABELS: Record<FailureReason, string> = {
   DNS_EXPECTED_RECORD_MISSING: "Expected record missing",
   TCP_CONNECTION_FAILED: "Connection failed",
   PUSH_MISSED_HEARTBEAT: "Missed heartbeat",
+  PROBE_ERROR: "Check could not run",
   PUSH_REPORTED_DOWN: "Self-reported failure",
 };
 

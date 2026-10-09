@@ -1,5 +1,6 @@
 import { resultsApi } from "@/features/monitors/results-api";
 import { statsApi } from "@/features/monitors/stats-api";
+import { statusHistoryApi } from "@/features/monitors/status-history-api";
 import { SERVER_API_URL } from "@/lib/consts";
 import { authFetch } from "@/lib/api-client";
 import type {
@@ -107,4 +108,5 @@ export const MonitorsApi = {
   run,
   results: resultsApi,
   stats: statsApi,
+  statusHistory: statusHistoryApi,
 };

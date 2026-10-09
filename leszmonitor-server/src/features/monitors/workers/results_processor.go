@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -46,24 +47,25 @@ func (p *ResultsProcessor) Run(ctx context.Context) {
 }
 
 func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.MonitorRunMessage) error {
-	previousResult, err := results.NewMonitorResultDAO(database.Querier()).
-		GetLatestMonitorResultByMonitorID(ctx, msg.Monitor.ID)
-	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
-			previousResult = nil
-		} else {
-			return errors.Wrap(err, "failed to retrieve previous monitor result")
-		}
-	}
-
-	_, err = results.NewMonitorResultDAO(database.Querier()).InsertMonitorResult(ctx, msg.Result)
+	_, err := results.NewMonitorResultDAO(database.Querier()).InsertMonitorResult(ctx, msg.Result)
 	if err != nil {
 		return errors.Wrap(err, "failed to insert monitor result")
 	}
 	monitors.MonitorResultSavedChannel.Broadcast(msg)
 
-	if isStatusChange(previousResult, msg.Result) {
-		err = handleStatusChange(ctx, database, msg.Monitor, previousResult, msg.Result)
+	latestStatusChange, err := statuschange.NewMonitorStatusChangeDAO(database.Querier()).
+		GetLatestStatusChangeByMonitorID(ctx, msg.Monitor.ID, time.Now().UTC())
+	if err != nil && !errors.Is(err, db.ErrNotFound) {
+		return errors.Wrap(err, "failed to retrieve latest status change")
+	}
+
+	previousStatus := kind.MonitorStatusUnknown
+	if latestStatusChange != nil {
+		previousStatus = kind.MonitorStatus(latestStatusChange.NextStatus)
+	}
+
+	if previousStatus != msg.Result.GetStatus() {
+		err = handleStatusChange(ctx, database, msg.Monitor, previousStatus, msg.Result)
 		if err != nil {
 			return errors.Wrap(err, "failed to handle status change")
 		}
@@ -71,26 +73,19 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 	return nil
 }
 
-func isStatusChange(previous results.IMonitorResult, current results.IMonitorResult) bool {
-	if previous == nil {
-		return false
-	}
-	return previous.GetStatus() != current.GetStatus()
-}
-
 func handleStatusChange(
 	ctx context.Context,
 	database db.DB,
 	monitor monitors.Monitor,
-	previous results.IMonitorResult,
+	previousStatus kind.MonitorStatus,
 	current results.IMonitorResult,
 ) error {
 	logger := log.FromContext(ctx)
 	monitorStatusChange := statuschange.MonitorStatusChange{
 		ID:             uuid.New(),
 		MonitorID:      monitor.ID,
-		CausedByID:     current.GetID(),
-		PreviousStatus: string(previous.GetStatus()),
+		CausedByID:     new(current.GetID()),
+		PreviousStatus: string(previousStatus),
 		NextStatus:     string(current.GetStatus()),
 		CreatedAt:      time.Now().UTC(),
 	}
@@ -100,7 +95,7 @@ func handleStatusChange(
 	}
 	logger.Debug().
 		Str("monitor_id", monitor.ID.String()).
-		Str("previous_status", string(previous.GetStatus())).
+		Str("previous_status", string(previousStatus)).
 		Str("next_status", string(current.GetStatus())).
 		Msg("Monitor status change recorded")
 	return nil

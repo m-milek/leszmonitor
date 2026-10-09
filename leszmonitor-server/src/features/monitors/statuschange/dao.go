@@ -13,12 +13,7 @@ import (
 
 type IMonitorStatusChangeDAO interface {
 	InsertStatusChange(ctx context.Context, statusChange MonitorStatusChange) (any, error)
-	GetStatusChangesByMonitorID(
-		ctx context.Context,
-		monitorID string,
-		from time.Time,
-		to time.Time,
-	) ([]MonitorStatusChange, error)
+	GetStatusChangesByMonitorID(ctx context.Context, monitorID uuid.UUID, from time.Time, to time.Time) ([]MonitorStatusChange, error)
 	GetLatestStatusChangeByMonitorID(
 		ctx context.Context,
 		monitorID uuid.UUID,
@@ -71,8 +66,8 @@ func (r *monitorStatusChangeDAO) GetLatestStatusChangeByMonitorID(
 			SELECT id, monitor_id, caused_by_id, previous_status, next_status, created_at
 			FROM monitor_status_changes
 			WHERE monitor_id = $1
-			  AND created_at < $2
-			ORDER BY created_at DESC
+			  AND created_at <= $2
+			ORDER BY created_at DESC, rowid DESC
 			LIMIT 1`,
 			monitorID,
 			to,
@@ -89,12 +84,7 @@ func (r *monitorStatusChangeDAO) GetLatestStatusChangeByMonitorID(
 	})
 }
 
-func (r *monitorStatusChangeDAO) GetStatusChangesByMonitorID(
-	ctx context.Context,
-	monitorID string,
-	from time.Time,
-	to time.Time,
-) ([]MonitorStatusChange, error) {
+func (r *monitorStatusChangeDAO) GetStatusChangesByMonitorID(ctx context.Context, monitorID uuid.UUID, from time.Time, to time.Time) ([]MonitorStatusChange, error) {
 	return db.Wrap(ctx, "GetStatusChangesByMonitorID", func() ([]MonitorStatusChange, error) {
 		statusChanges := []MonitorStatusChange{}
 
@@ -104,7 +94,7 @@ func (r *monitorStatusChangeDAO) GetStatusChangesByMonitorID(
 			WHERE monitor_id = $1
 			  AND created_at >= $2
 			  AND created_at < $3
-			ORDER BY created_at ASC`,
+			ORDER BY created_at ASC, rowid ASC`,
 			monitorID,
 			from,
 			to,

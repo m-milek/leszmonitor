@@ -27,6 +27,9 @@ import {
   ResultsRangeSelect,
   resultsRangeStart,
 } from "@/features/monitors/components/DetailsPage/ResultsRangeSelect";
+import { MonitorStatusHistoryCard } from "@/features/monitors/components/DetailsPage/MonitorStatusHistoryCard";
+
+const STATUS_HISTORY_PER_PAGE = 100;
 
 export interface MonitorDetailPageProps {
   monitorSlug: string;
@@ -70,6 +73,17 @@ export function MonitorDetailPage({
     queryKey: [QUERY_KEYS.MONITOR_LATENCY_STATS, monitor?.id ?? "", range],
     queryFn: () =>
       MonitorsApi.stats.get(monitor!.id, { from: resultsRangeStart(range) }),
+  });
+
+  const { data: statusHistory } = useQuery({
+    enabled: !!monitor,
+    queryKey: [QUERY_KEYS.MONITOR_STATUS_HISTORY, monitor?.id ?? "", range],
+    queryFn: () =>
+      MonitorsApi.statusHistory.getPage(
+        monitor!.id,
+        { page: 1, perPage: STATUS_HISTORY_PER_PAGE },
+        resultsRangeStart(range),
+      ),
   });
 
   const { data: tags } = useQuery({
@@ -134,7 +148,6 @@ export function MonitorDetailPage({
           isPaused={isPaused}
         />
       </Flex>
-
       <Flex
         direction="row"
         directionMobile="column"
@@ -170,11 +183,9 @@ export function MonitorDetailPage({
           <ResultsRangeSelect value={range} onChange={onRangeChange} />
         </Flex>
       </Flex>
-
       {monitor.description?.length !== 0 && (
         <span className="text-muted-foreground">{monitor.description}</span>
       )}
-
       <Card>
         <CardContent>
           {monitorResults ? (
@@ -184,11 +195,8 @@ export function MonitorDetailPage({
           )}
         </CardContent>
       </Card>
-
       <MonitorConfigCard monitor={monitor} />
-
       <MonitorStatsCard stats={stats} />
-
       <Flex
         direction="row"
         directionMobile="column"
@@ -243,6 +251,7 @@ export function MonitorDetailPage({
         key={range}
         results={monitorResults === null ? [] : monitorResults}
       />
+      <MonitorStatusHistoryCard key={range} statusHistory={statusHistory} />
     </PageContainer>
   );
 }

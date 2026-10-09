@@ -15,25 +15,28 @@ const durationBetweenBeats = time.Duration(5) * time.Second
 
 const downtimeThreshold = 3 * durationBetweenBeats
 
+// DowntimeHandler is called in the same transaction that records a detected downtime.
+type DowntimeHandler func(ctx context.Context, q db.Querier, downtime AppDowntime) error
+
 type HeartbeatWorker struct {
-	db     db.DB
-	logger zerolog.Logger
+	db         db.DB
+	onDowntime DowntimeHandler
+	logger     zerolog.Logger
 }
 
-func NewHeartbeatWorker(database db.DB) *HeartbeatWorker {
+func NewHeartbeatWorker(database db.DB, onDowntime DowntimeHandler) *HeartbeatWorker {
 	return &HeartbeatWorker{
-		db: database,
+		db:         database,
+		onDowntime: onDowntime,
 	}
 }
 
 func (w *HeartbeatWorker) Run(ctx context.Context) {
 	w.logger = log.FromContext(ctx).With().Str("component", "liveness_worker").Logger()
 
-	w.logger.Info().Msg("Starting liveness worker...")
+	ctx = log.WithContext(ctx, &w.logger)
 
-	if err := w.beat(ctx); err != nil {
-		w.logger.Error().Err(err).Msg("Failed to record heartbeat")
-	}
+	w.logger.Info().Msg("Starting liveness worker...")
 
 	ticker := time.NewTicker(durationBetweenBeats)
 	defer ticker.Stop()
@@ -44,14 +47,15 @@ func (w *HeartbeatWorker) Run(ctx context.Context) {
 			w.logger.Info().Msg("Liveness worker shutting down...")
 			return
 		case <-ticker.C:
-			if err := w.beat(ctx); err != nil {
+			if err := w.Beat(ctx); err != nil {
 				w.logger.Error().Err(err).Msg("Failed to record heartbeat")
 			}
 		}
 	}
 }
 
-func (w *HeartbeatWorker) beat(ctx context.Context) error {
+// Beat records a heartbeat and, if the previous one is too old, the downtime window between them.
+func (w *HeartbeatWorker) Beat(ctx context.Context) error {
 	now := time.Now().UTC()
 
 	return w.db.WithTx(ctx, func(q db.Querier) error {
@@ -73,7 +77,13 @@ func (w *HeartbeatWorker) beat(ctx context.Context) error {
 				return err
 			}
 
-			w.logger.Warn().
+			if w.onDowntime != nil {
+				if err := w.onDowntime(ctx, q, *downtime); err != nil {
+					return err
+				}
+			}
+
+			log.FromContext(ctx).Warn().
 				Time("started_at", downtime.StartedAt).
 				Time("ended_at", downtime.EndedAt).
 				Msg("Detected application downtime")

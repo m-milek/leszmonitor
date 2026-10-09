@@ -7,6 +7,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
+	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/rs/zerolog"
@@ -48,6 +49,16 @@ func (e *MonitorExecutor) Run(ctx context.Context) {
 	}
 }
 
+// publishProbeError broadcasts an unknown result when the check could not be performed.
+func publishProbeError(msg monitors.MonitorExecuteMessage, err error) {
+	result := results.NewMonitorResult(msg.Monitor.ID, msg.Monitor.Type, kind.MonitorStatusUnknown, msg.IsManuallyTriggered, nil, nil)
+	result.AddFailure(results.FailureReasonProbeError, nil, err)
+	monitors.MonitorRunChannel.Broadcast(monitors.MonitorRunMessage{
+		Result:  &result,
+		Monitor: msg.Monitor,
+	})
+}
+
 // execute runs the monitor's check and broadcasts the result.
 func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecuteMessage) {
 	monitor := msg.Monitor
@@ -61,12 +72,14 @@ func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecu
 
 	if err := monitor.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Monitor validation failed")
+		publishProbeError(msg, err)
 		return
 	}
 
 	parsedProbe, err := probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to parse probe config")
+		publishProbeError(msg, err)
 		return
 	}
 
@@ -74,6 +87,7 @@ func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecu
 	result, err := parsedProbe.Run(ctx, monitor.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Probe execution failed due to an error")
+		publishProbeError(msg, err)
 		return
 	}
 	result.SetIsManuallyTriggered(msg.IsManuallyTriggered)

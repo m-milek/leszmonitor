@@ -24,6 +24,8 @@ const (
 
 	FailureReasonPushReportedDown    FailureReason = "PUSH_REPORTED_DOWN"
 	FailureReasonPushMissedHeartbeat FailureReason = "PUSH_MISSED_HEARTBEAT"
+
+	FailureReasonProbeError FailureReason = "PROBE_ERROR"
 )
 
 type FailureCause string

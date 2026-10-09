@@ -3,7 +3,7 @@ import type { MonitorResult } from "@/features/monitors/types";
 export const formatResultData = (
   result: MonitorResult,
 ): Record<string, string> => {
-  const isError = result.status === "down" && result.failures;
+  const isError = result.status !== "up" && result.failures;
   return {
     ID: result.id,
     Status: result.status,
