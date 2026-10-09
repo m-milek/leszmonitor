@@ -2,11 +2,11 @@ import {
   type MonitorStatusPeriod,
   monitorStatuses,
 } from "@/features/monitors/types";
-import { type ColumnDef } from "@tanstack/table-core";
+import { type ColumnDef } from "@tanstack/react-table";
 import { formatDate, formatDuration } from "@/lib/utils";
 import { StatusDot } from "@/components/common/StatusDot";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
-import { DataTable } from "@/components/common/DataTable";
+import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
 import {
   Card,
   CardAction,
@@ -22,53 +22,53 @@ export interface MonitorStatusHistoryCardProps {
   statusHistory?: MonitorStatusPeriod[];
 }
 
-const baseColumns: ColumnDef<MonitorStatusPeriod>[] = [
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <span className="flex items-center gap-2 font-mono">
-        <StatusDot status={monitorStatusToStatusDot(row.original.status)} />
-        {row.original.status.toUpperCase()}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "startedAt",
-    header: "Started",
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap">
-        {formatDate(row.original.startedAt)}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "endedAt",
-    header: "Ended",
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap">
-        {row.original.endedAt ? formatDate(row.original.endedAt) : "Current"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "durationSeconds",
-    header: "Duration",
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap">
-        {formatDuration(row.original.durationSeconds)}
-      </span>
-    ),
-  },
-];
+const baseColumns: ColumnDef<typeof dataTableFeatures, MonitorStatusPeriod>[] =
+  [
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => (
+        <span className="flex items-center gap-2 font-mono">
+          <StatusDot status={monitorStatusToStatusDot(row.original.status)} />
+          {row.original.status.toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "startedAt",
+      header: "Started",
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatDate(row.original.startedAt)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "endedAt",
+      header: "Ended",
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {row.original.endedAt ? formatDate(row.original.endedAt) : "Current"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "durationSeconds",
+      header: "Duration",
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap">
+          {formatDuration(row.original.durationSeconds)}
+        </span>
+      ),
+    },
+  ];
 
 export const MonitorStatusHistoryCard = ({
   statusHistory,
 }: MonitorStatusHistoryCardProps) => {
-  const columns = useMemo<ColumnDef<MonitorStatusPeriod>[]>(
-    () => baseColumns,
-    [],
-  );
+  const columns = useMemo<
+    ColumnDef<typeof dataTableFeatures, MonitorStatusPeriod>[]
+  >(() => baseColumns, []);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
 
   const filteredStatusHistory = statusFilter.length

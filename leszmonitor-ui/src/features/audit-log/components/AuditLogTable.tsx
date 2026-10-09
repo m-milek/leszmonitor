@@ -1,6 +1,6 @@
-import { type ColumnDef } from "@tanstack/table-core";
+import { type ColumnDef } from "@tanstack/react-table";
 import type { AuditLogEntry } from "@/features/audit-log/types";
-import { DataTable } from "@/components/common/DataTable";
+import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { CheckCircle2, LucideDiff, XCircle } from "lucide-react";
@@ -19,7 +19,7 @@ export interface AuditLogTableProps {
   entries: AuditLogEntry[];
 }
 
-const columns: ColumnDef<AuditLogEntry>[] = [
+const columns: ColumnDef<typeof dataTableFeatures, AuditLogEntry>[] = [
   {
     accessorKey: "createdAt",
     header: "Timestamp",

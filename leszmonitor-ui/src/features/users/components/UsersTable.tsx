@@ -6,8 +6,8 @@ import {
 } from "@/features/users/types";
 import { formatDate } from "@/lib/utils";
 import { StyledLink } from "@/components/common/StyledLink";
-import { type ColumnDef } from "@tanstack/table-core";
-import { DataTable } from "@/components/common/DataTable";
+import { type ColumnDef } from "@tanstack/react-table";
+import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
 import { MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -76,7 +76,7 @@ export interface UsersTableProps {
 }
 
 export const UsersTable = ({ users }: UsersTableProps) => {
-  const columns: ColumnDef<User>[] = [
+  const columns: ColumnDef<typeof dataTableFeatures, User>[] = [
     {
       accessorKey: "username",
       header: "Username",

@@ -1,7 +1,7 @@
-import { type ColumnDef } from "@tanstack/table-core";
+import { type ColumnDef } from "@tanstack/react-table";
 import { NoData } from "@/components/common/NoData";
 import type { Tag as TagModel } from "@/features/tags/types";
-import { DataTable } from "@/components/common/DataTable";
+import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
 import { Tag } from "@/features/tags/components/Tag";
 import { ShortId } from "@/components/common/ShortId";
 import { formatDate } from "@/lib/utils";
@@ -20,7 +20,7 @@ export interface TagsTableProps {
   tags: TagModel[];
 }
 
-const columns: ColumnDef<TagModel>[] = [
+const columns: ColumnDef<typeof dataTableFeatures, TagModel>[] = [
   {
     accessorKey: "name",
     header: "Tag",

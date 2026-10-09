@@ -1,11 +1,11 @@
 import { type MonitorResult, monitorStatuses } from "@/features/monitors/types";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import { failureReasonToLabel } from "@/features/monitors/failure-reason";
-import { type ColumnDef } from "@tanstack/table-core";
+import { type ColumnDef } from "@tanstack/react-table";
 import { formatDate } from "@/lib/utils";
 import { StatusDot } from "@/components/common/StatusDot";
 import { ShortId } from "@/components/common/ShortId";
-import { DataTable } from "@/components/common/DataTable";
+import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
 import {
   Card,
   CardAction,
@@ -73,7 +73,7 @@ const RawResultDialog = ({
   </Dialog>
 );
 
-const baseColumns: ColumnDef<MonitorResult>[] = [
+const baseColumns: ColumnDef<typeof dataTableFeatures, MonitorResult>[] = [
   {
     accessorKey: "status",
     header: "Status",
@@ -138,7 +138,7 @@ export const MonitorResultsCard = ({ results }: MonitorResultsCardProps) => {
     ? results?.filter((result) => statusFilter.includes(result.status))
     : results;
 
-  const columns = useMemo<ColumnDef<MonitorResult>[]>(
+  const columns = useMemo<ColumnDef<typeof dataTableFeatures, MonitorResult>[]>(
     () => [
       ...baseColumns,
       {
