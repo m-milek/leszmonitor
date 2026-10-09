@@ -53,6 +53,7 @@ func (s *TagService) CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 		Name:        tag.Name,
 		Description: tag.Description,
 		ColorHex:    tag.ColorHex,
+		Source:      TagSourceUI,
 	}
 	newTag.Normalize()
 
@@ -78,6 +79,9 @@ func (s *TagService) CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 		return t, params, nil
 	})
 	if txErr != nil {
+		if errors.Is(txErr, db.ErrAlreadyExists) {
+			return nil, apperr.NewConflictError("tag with name %s already exists", newTag.Name)
+		}
 		logger.Error().Err(txErr).Msg("Failed to create tag within transaction")
 		return nil, apperr.NewInternalError("failed to create tag within transaction: %w", txErr)
 	}
@@ -154,6 +158,10 @@ func (s *TagService) UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 			return nil, nil, fmt.Errorf("failed to retrieve existing tag for update: %w", err)
 		}
 
+		if existingTag.Source == TagSourceConfig {
+			return nil, nil, apperr.NewConflictError("tag %s is managed by config file", tag.ID)
+		}
+
 		t, updateErr := NewTagDAO(q).UpdateTag(ctx, tag)
 		if updateErr != nil {
 			logger.Error().Err(updateErr).Str("id", tag.ID.String()).Msg("Failed to update tag in database")
@@ -174,6 +182,9 @@ func (s *TagService) UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 	if txErr != nil {
 		if serviceErr, ok2 := errors.AsType[*apperr.ServiceError](txErr); ok2 {
 			return nil, serviceErr
+		}
+		if errors.Is(txErr, db.ErrAlreadyExists) {
+			return nil, apperr.NewConflictError("tag with name %s already exists", tag.Name)
 		}
 		logger.Error().Err(txErr).Str("id", tag.ID.String()).Msg("Failed to update tag within transaction")
 		return nil, apperr.NewInternalError("failed to update tag within transaction: %w", txErr)
@@ -209,6 +220,10 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceEr
 			}
 			logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve tag before deletion")
 			return nil, fmt.Errorf("failed to retrieve tag before deletion: %w", err)
+		}
+
+		if tagBeforeDelete.Source == TagSourceConfig {
+			return nil, apperr.NewConflictError("tag %s is managed by config file", id)
 		}
 
 		if _, delErr := NewTagDAO(q).DeleteTagByID(ctx, tagUUID); delErr != nil {

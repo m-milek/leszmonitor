@@ -27,7 +27,8 @@ func setupMonitorTagsTest(t *testing.T) (context.Context, *db.Client) {
 
 func insertTestTag(ctx context.Context, t *testing.T, client *db.Client, name string) uuid.UUID {
 	t.Helper()
-	tag, err := tags.NewTagDAO(client.Querier()).InsertTag(ctx, tags.Tag{Name: name, ColorHex: "#aabbcc"})
+	tag, err := tags.NewTagDAO(client.Querier()).
+		InsertTag(ctx, tags.Tag{Name: name, ColorHex: "#aabbcc", Source: tags.TagSourceUI})
 	require.NoError(t, err)
 	return tag.ID
 }

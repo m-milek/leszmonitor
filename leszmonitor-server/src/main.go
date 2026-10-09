@@ -159,6 +159,11 @@ func main() {
 			logger.Fatal().Err(svcErr.Err).Msg("Failed to find admin user in DB")
 			return
 		}
+		err = tags.SynchronizeConfigBasedTags(appCtx, database, config.File().Tags)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to synchronize config-based tags")
+			return
+		}
 		err = monitors.SynchronizeConfigBasedMonitors(appCtx, database, config.File().Monitors, admin.ID)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("Failed to synchronize config-based monitors")

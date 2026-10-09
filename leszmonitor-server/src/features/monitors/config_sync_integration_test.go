@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/features/users"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/stretchr/testify/assert"
@@ -184,6 +186,39 @@ func TestIntegration_SynchronizeConfigBasedMonitors(t *testing.T) {
 		assert.Equal(t, uiMonitor.ID, all[0].ID)
 	})
 
+	t.Run("Assigns config and UI tags by name", func(t *testing.T) {
+		ctx, _, _, owner := setupMonitorIntegrationTest(t)
+		uiTagID := insertTestTag(ctx, t, db.Get(), "staging")
+		require.NoError(t, tags.SynchronizeConfigBasedTags(ctx, db.Get(), map[string]map[string]any{
+			"production": {"colorHex": "#aabbcc"},
+		}))
+		configTag := uuid.NewSHA1(uuid.MustParse("abadcafe-deaf-dead-beef-cafebabefeed"), []byte("production"))
+
+		entry := httpConfigEntry("API health")
+		entry["tags"] = []any{"production", "staging"}
+		require.NoError(t, syncConfigMonitors(ctx, owner, map[string]map[string]any{"api-health": entry}))
+
+		assert.ElementsMatch(t, []uuid.UUID{configTag, uiTagID}, getMonitorBySlug(ctx, t, "api-health").TagIDs)
+	})
+
+	t.Run("Replaces tags on every run", func(t *testing.T) {
+		ctx, _, _, owner := setupMonitorIntegrationTest(t)
+		stagingID := insertTestTag(ctx, t, db.Get(), "staging")
+		insertTestTag(ctx, t, db.Get(), "critical")
+
+		entry := httpConfigEntry("API health")
+		entry["tags"] = []any{"critical"}
+		require.NoError(t, syncConfigMonitors(ctx, owner, map[string]map[string]any{"api-health": entry}))
+
+		entry["tags"] = []any{"staging"}
+		require.NoError(t, syncConfigMonitors(ctx, owner, map[string]map[string]any{"api-health": entry}))
+		assert.Equal(t, []uuid.UUID{stagingID}, getMonitorBySlug(ctx, t, "api-health").TagIDs)
+
+		delete(entry, "tags")
+		require.NoError(t, syncConfigMonitors(ctx, owner, map[string]map[string]any{"api-health": entry}))
+		assert.Empty(t, getMonitorBySlug(ctx, t, "api-health").TagIDs)
+	})
+
 	t.Run("Rejects invalid entries without writing anything", func(t *testing.T) {
 		withForbiddenKey := httpConfigEntry("API health")
 		withForbiddenKey["runState"] = "paused"
@@ -199,6 +234,15 @@ func TestIntegration_SynchronizeConfigBasedMonitors(t *testing.T) {
 
 		withoutType := httpConfigEntry("API health")
 		delete(withoutType, "type")
+
+		withUnknownTag := httpConfigEntry("API health")
+		withUnknownTag["tags"] = []any{"missing"}
+
+		withInvalidTags := httpConfigEntry("API health")
+		withInvalidTags["tags"] = "production"
+
+		withForbiddenTagIDs := httpConfigEntry("API health")
+		withForbiddenTagIDs["tagIds"] = []any{}
 
 		tests := []struct {
 			name        string
@@ -227,6 +271,9 @@ func TestIntegration_SynchronizeConfigBasedMonitors(t *testing.T) {
 				errContains: "URL cannot be empty",
 			},
 			{name: "Missing type", slug: "api-health", entry: withoutType, errContains: "type cannot be empty"},
+			{name: "Unknown tag", slug: "api-health", entry: withUnknownTag, errContains: "unknown tag"},
+			{name: "Tags not a list", slug: "api-health", entry: withInvalidTags, errContains: "tags must be a list"},
+			{name: "Forbidden tagIds", slug: "api-health", entry: withForbiddenTagIDs, errContains: "tagIds"},
 		}
 
 		for _, tt := range tests {

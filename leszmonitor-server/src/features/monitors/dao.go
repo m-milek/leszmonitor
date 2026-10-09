@@ -310,6 +310,10 @@ func (r *monitorDAO) UpsertConfigBasedMonitor(ctx context.Context, monitor *Moni
 			return nil, err
 		}
 
+		if err = r.replaceMonitorTags(ctx, monitor.ID, monitor.TagIDs); err != nil {
+			return nil, err
+		}
+
 		return nil, nil
 	})
 	return err

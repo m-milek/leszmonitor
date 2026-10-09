@@ -7,6 +7,14 @@ import { ShortId } from "@/components/common/ShortId";
 import { formatDate } from "@/lib/utils";
 import { normalizeHexColor } from "@/features/tags/lib/colors";
 import { DeleteTagDialog } from "@/features/tags/components/DeleteTagDialog";
+import { Flex } from "@/components/common/Flex";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { LucideLock } from "lucide-react";
 
 export interface TagsTableProps {
   tags: TagModel[];
@@ -16,7 +24,21 @@ const columns: ColumnDef<TagModel>[] = [
   {
     accessorKey: "name",
     header: "Tag",
-    cell: ({ row }) => <Tag tag={row.original} />,
+    cell: ({ row }) => (
+      <Flex direction="row" className="items-center gap-2">
+        <Tag tag={row.original} />
+        {row.original.source === "config" && (
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge variant="ghost" className="h-7 px-2 [&>svg]:size-5!">
+                <LucideLock />
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>Tag defined in config file</TooltipContent>
+          </Tooltip>
+        )}
+      </Flex>
+    ),
   },
   {
     accessorKey: "description",

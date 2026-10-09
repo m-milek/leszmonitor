@@ -29,7 +29,7 @@ CREATE TABLE monitors (
 
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
-    source                   TEXT NOT NULL DEFAULT 'ui',
+    source                   TEXT NOT NULL,
 
     UNIQUE (slug)
 );
@@ -150,18 +150,21 @@ CREATE TABLE tags (
     color_hex   TEXT NOT NULL,
 
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    source      TEXT NOT NULL,
+
+    UNIQUE (name)
 );
-INSERT INTO tags VALUES('cef14cba-c0ea-4d46-ae87-c80a2d3163be','production','Customer-facing production services','#dc2626','2026-06-18 22:54:28','2026-06-18 22:54:28');
-INSERT INTO tags VALUES('43949154-f2f9-46e0-b141-e58eaaa15e72','staging','Pre-production environments','#d97706','2026-06-18 22:56:28','2026-06-18 22:56:28');
-INSERT INTO tags VALUES('26386d3d-2584-4440-bd02-1c2cf4d10c75','external','Third-party services we depend on but do not run','#7c3aed','2026-06-18 22:58:28','2026-06-18 22:58:28');
-INSERT INTO tags VALUES('802d837d-6491-4955-9a06-ce2f89fae715','internal','Services hosted on our own infrastructure','#2563eb','2026-06-18 23:00:28','2026-06-18 23:00:28');
-INSERT INTO tags VALUES('d3bc7e8e-d7df-46b4-ac0c-e5adf908f6d8','critical','Pages the on-call engineer when down','#be123c','2026-06-18 23:02:28','2026-06-18 23:02:28');
-INSERT INTO tags VALUES('de473ab5-f24b-4cf4-a562-fd18e39df0bc','dns','Name resolution and DNS records','#0891b2','2026-06-18 23:04:28','2026-06-18 23:04:28');
-INSERT INTO tags VALUES('7aa55464-9cf1-4f17-b5e1-94235637fc30','database','Databases and caches','#16a34a','2026-06-18 23:06:28','2026-06-18 23:06:28');
-INSERT INTO tags VALUES('d31d0f1b-eef4-463a-834d-480b938d6ed8','email','Mail delivery and inbound mail','#db2777','2026-06-18 23:08:28','2026-06-18 23:08:28');
-INSERT INTO tags VALUES('5bb63c83-c224-4b79-8004-306d127b613b','cron','Scheduled jobs reporting via push','#4b5563','2026-06-18 23:10:28','2026-06-18 23:10:28');
-INSERT INTO tags VALUES('f5f223b5-48c2-4d20-955a-6cc6688bae44','demo','Monitors that fail on purpose to show failure handling','#ca8a04','2026-06-18 23:12:28','2026-06-18 23:12:28');
+INSERT INTO tags VALUES('cef14cba-c0ea-4d46-ae87-c80a2d3163be','production','Customer-facing production services','#dc2626','2026-06-18 22:54:28','2026-06-18 22:54:28','ui');
+INSERT INTO tags VALUES('43949154-f2f9-46e0-b141-e58eaaa15e72','staging','Pre-production environments','#d97706','2026-06-18 22:56:28','2026-06-18 22:56:28','ui');
+INSERT INTO tags VALUES('26386d3d-2584-4440-bd02-1c2cf4d10c75','external','Third-party services we depend on but do not run','#7c3aed','2026-06-18 22:58:28','2026-06-18 22:58:28','ui');
+INSERT INTO tags VALUES('802d837d-6491-4955-9a06-ce2f89fae715','internal','Services hosted on our own infrastructure','#2563eb','2026-06-18 23:00:28','2026-06-18 23:00:28','ui');
+INSERT INTO tags VALUES('d3bc7e8e-d7df-46b4-ac0c-e5adf908f6d8','critical','Pages the on-call engineer when down','#be123c','2026-06-18 23:02:28','2026-06-18 23:02:28','ui');
+INSERT INTO tags VALUES('de473ab5-f24b-4cf4-a562-fd18e39df0bc','dns','Name resolution and DNS records','#0891b2','2026-06-18 23:04:28','2026-06-18 23:04:28','ui');
+INSERT INTO tags VALUES('7aa55464-9cf1-4f17-b5e1-94235637fc30','database','Databases and caches','#16a34a','2026-06-18 23:06:28','2026-06-18 23:06:28','ui');
+INSERT INTO tags VALUES('d31d0f1b-eef4-463a-834d-480b938d6ed8','email','Mail delivery and inbound mail','#db2777','2026-06-18 23:08:28','2026-06-18 23:08:28','ui');
+INSERT INTO tags VALUES('5bb63c83-c224-4b79-8004-306d127b613b','cron','Scheduled jobs reporting via push','#4b5563','2026-06-18 23:10:28','2026-06-18 23:10:28','ui');
+INSERT INTO tags VALUES('f5f223b5-48c2-4d20-955a-6cc6688bae44','demo','Monitors that fail on purpose to show failure handling','#ca8a04','2026-06-18 23:12:28','2026-06-18 23:12:28','ui');
 CREATE TABLE monitor_tags (
     monitor_id TEXT NOT NULL,
     tag_id     TEXT NOT NULL,

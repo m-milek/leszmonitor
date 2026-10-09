@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
     run_state                TEXT NOT NULL,
     config                   TEXT NOT NULL CHECK (JSON_VALID(config)), -- JSON string
-    source                   TEXT NOT NULL DEFAULT 'ui',
+    source                   TEXT NOT NULL,
 
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -90,9 +90,12 @@ CREATE TABLE IF NOT EXISTS tags (
     name        TEXT NOT NULL,
     description TEXT,
     color_hex   TEXT NOT NULL,
+    source      TEXT NOT NULL,
 
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (name)
 );
 
 CREATE TRIGGER IF NOT EXISTS update_tags_updated_at
