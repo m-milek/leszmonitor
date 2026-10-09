@@ -248,10 +248,13 @@ export function MonitorDetailPage({
         )}
       </Flex>
       <MonitorResultsCard
-        key={range}
+        key={`results-${range}`}
         results={monitorResults === null ? [] : monitorResults}
       />
-      <MonitorStatusHistoryCard key={range} statusHistory={statusHistory} />
+      <MonitorStatusHistoryCard
+        key={`status-history-${range}`}
+        statusHistory={statusHistory}
+      />
     </PageContainer>
   );
 }

@@ -6,6 +6,9 @@ on:
   pull_request:
     types: [ opened, synchronize, reopened ]
 
+permissions:
+  contents: read
+
 jobs:
   leszmonitor-server:
     name: Server
@@ -14,17 +17,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
-          go-version: '1.27.1'
+          go-version: '1.27.2'
           cache: true
           cache-dependency-path: leszmonitor-server/src/go.sum
 
       - name: Install Task
-        uses: arduino/setup-task@v2
+        uses: arduino/setup-task@v3
         with:
           version: 3.x
 
@@ -46,7 +49,7 @@ jobs:
           fromJSONFile: leszmonitor-server/src/test-output.json
 
       - name: Upload Go Coverage Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: go-coverage-report
           path: leszmonitor-server/src/coverage.out
@@ -62,10 +65,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.x'
           cache: 'npm'
@@ -81,7 +84,7 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload TS Coverage Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ts-coverage-report
           path: leszmonitor-ui/coverage
@@ -97,24 +100,24 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Download Go Coverage Report
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: go-coverage-report
           path: leszmonitor-server/src
 
       - name: Download TS Coverage Report
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ts-coverage-report
           path: leszmonitor-ui/coverage
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v8
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -132,13 +135,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Install Task
-        uses: arduino/setup-task@v2
+        uses: arduino/setup-task@v3
 
       - name: Build the app image
         env:
@@ -149,7 +152,7 @@ jobs:
         run: task docker:build
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.x'
           cache: 'npm'

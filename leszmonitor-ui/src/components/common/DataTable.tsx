@@ -6,12 +6,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { flexRender, useReactTable } from "@tanstack/react-table";
 import {
   type ColumnDef,
-  getCoreRowModel,
-  getPaginationRowModel,
-} from "@tanstack/table-core";
+  createPaginatedRowModel,
+  flexRender,
+  type RowData,
+  rowPaginationFeature,
+  tableFeatures,
+  useTable,
+} from "@tanstack/react-table";
 import {
   Pagination,
   PaginationContent,
@@ -20,9 +23,14 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-export interface DataTableProps<T> {
+export const dataTableFeatures = tableFeatures({
+  rowPaginationFeature,
+  paginatedRowModel: createPaginatedRowModel(),
+});
+
+export interface DataTableProps<T extends RowData> {
   data: T[];
-  columns: ColumnDef<T>[];
+  columns: ColumnDef<typeof dataTableFeatures, T>[];
   emptyMessage?: string;
   compact?: boolean;
   pageSize?: number;
@@ -39,7 +47,7 @@ const emptyClassName = "h-32 px-6 text-center";
 
 const disabledLinkClassName = "pointer-events-none opacity-50";
 
-export const DataTable = <T,>({
+export const DataTable = <T extends RowData>({
   data,
   columns,
   emptyMessage = "No results.",
@@ -47,13 +55,13 @@ export const DataTable = <T,>({
   pageSize,
   getRowId,
 }: DataTableProps<T>) => {
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     data: data || [],
     columns,
     getRowId,
-    getCoreRowModel: getCoreRowModel(),
+    manualPagination: !pageSize,
     ...(pageSize && {
-      getPaginationRowModel: getPaginationRowModel(),
       autoResetPageIndex: false,
       initialState: { pagination: { pageIndex: 0, pageSize } },
     }),
@@ -85,12 +93,8 @@ export const DataTable = <T,>({
       <TableBody>
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              data-state={row.getIsSelected() && "selected"}
-              className={bodyRowClassName}
-            >
-              {row.getVisibleCells().map((cell) => (
+            <TableRow key={row.id} className={bodyRowClassName}>
+              {row.getAllCells().map((cell) => (
                 <TableCell
                   key={cell.id}
                   className={compact ? compactCellClassName : cellClassName}
@@ -129,7 +133,7 @@ export const DataTable = <T,>({
             />
           </PaginationItem>
           <PaginationItem className="px-2 text-sm text-muted-foreground">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            Page {table.state.pagination.pageIndex + 1} of{" "}
             {Math.max(table.getPageCount(), 1)}
           </PaginationItem>
           <PaginationItem>
