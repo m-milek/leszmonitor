@@ -27,7 +27,8 @@ func setupMonitorTagsTest(t *testing.T) (context.Context, *db.Client) {
 
 func insertTestTag(ctx context.Context, t *testing.T, client *db.Client, name string) uuid.UUID {
 	t.Helper()
-	tag, err := tags.NewTagDAO(client.Querier()).InsertTag(ctx, tags.Tag{Name: name, ColorHex: "#aabbcc"})
+	tag, err := tags.NewTagDAO(client.Querier()).
+		InsertTag(ctx, tags.Tag{Name: name, ColorHex: "#aabbcc", Source: tags.TagSourceUI})
 	require.NoError(t, err)
 	return tag.ID
 }
@@ -41,9 +42,10 @@ func testMonitor(tagIDs []uuid.UUID) monitors.Monitor {
 		Type:                   kind.HTTPConfigType,
 		ProbeConfig:            `{"method":"GET","url":"http://example.com"}`,
 		ResultRetentionSeconds: 3600,
-		RunState:               monitors.MonitorStateActive,
+		RunState:               monitors.MonitorRunStateActive,
 		OwnerID:                uuid.New(),
 		TagIDs:                 tagIDs,
+		Source:                 monitors.MonitorSourceUI,
 	}
 }
 

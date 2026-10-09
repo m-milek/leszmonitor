@@ -101,7 +101,7 @@ func (t *monitorTicker) applyUpdate(update monitors.Monitor, ticker *time.Ticker
 
 // schedule sends the monitor to the executor if it is active.
 func (t *monitorTicker) schedule() {
-	if t.monitor.RunState != monitors.MonitorStateActive {
+	if t.monitor.RunState != monitors.MonitorRunStateActive {
 		t.logger.Trace().Str("state", string(t.monitor.RunState)).Msg("Skipping run - not active")
 		return
 	}

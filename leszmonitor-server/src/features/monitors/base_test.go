@@ -18,7 +18,7 @@ func createTestBaseMonitor() Monitor {
 		Interval:               60,
 		Type:                   kind.HTTPConfigType,
 		ResultRetentionSeconds: 60,
-		RunState:               MonitorStateActive,
+		RunState:               MonitorRunStateActive,
 	}
 }
 

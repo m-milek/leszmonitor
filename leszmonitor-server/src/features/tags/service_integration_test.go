@@ -72,16 +72,24 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
 
-	t.Run("Allows duplicate names", func(t *testing.T) {
+	t.Run("Rejects a duplicate name", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
 		payload := tags.Tag{Name: "Production", ColorHex: "#aabbcc"}
-		first, svcErr := tagService.CreateTag(ctx, payload)
+		_, svcErr := tagService.CreateTag(ctx, payload)
 		require.Nil(t, svcErr)
 
-		second, svcErr := tagService.CreateTag(ctx, payload)
+		_, svcErr = tagService.CreateTag(ctx, payload)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusConflict, svcErr.Code)
+	})
+
+	t.Run("Creates a tag with ui source", func(t *testing.T) {
+		ctx, tagService, _, _ := setupTagIntegrationTest(t)
+
+		tag, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
-		assert.NotEqual(t, first.ID, second.ID)
+		assert.Equal(t, tags.TagSourceUI, tag.Source)
 	})
 }
 
@@ -223,7 +231,7 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
 
-	t.Run("Allows renaming onto an existing name", func(t *testing.T) {
+	t.Run("Rejects renaming onto an existing name", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
 		_, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
@@ -231,13 +239,13 @@ func TestIntegration_TagService_UpdateTag(t *testing.T) {
 		staging, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Staging", ColorHex: "#001122"})
 		require.Nil(t, svcErr)
 
-		updated, svcErr := tagService.UpdateTag(ctx, tags.Tag{
+		_, svcErr = tagService.UpdateTag(ctx, tags.Tag{
 			ID:       staging.ID,
 			Name:     "Production",
 			ColorHex: "#001122",
 		})
-		require.Nil(t, svcErr)
-		assert.Equal(t, "Production", updated.Name)
+		require.NotNil(t, svcErr)
+		assert.Equal(t, http.StatusConflict, svcErr.Code)
 	})
 }
 

@@ -1,3 +1,58 @@
 global_parameters:
   accounts:
     allow_self_registration: true
+
+tags:
+  example:
+    description: Monitors defined in the config file
+    colorHex: "#0d9488"
+
+monitors:
+  example-http:
+    name: Example HTTP
+    description: Homepage returns 200
+    type: http
+    interval: 60
+    resultRetentionSeconds: 172800
+    tags: [example]
+    probeConfig:
+      method: GET
+      url: https://example.com
+      headers: {}
+      body: ""
+      saveResponseBody: false
+      saveResponseHeaders: false
+      expectedStatusCodes: [200]
+      expectedBodyRegex: "Example Domain"
+      expectedHeaders: {}
+      expectedResponseTimeMs: 2000
+
+  example-tcp:
+    name: Example TCP
+    description: Port 443 is open
+    type: tcp
+    interval: 30
+    probeConfig:
+      host: example.com
+      port: 443
+      protocol: tcp
+      timeout: 5000
+
+  example-dns:
+    name: Example DNS
+    description: A record resolves
+    type: dns
+    interval: 300
+    probeConfig:
+      hostname: example.com
+      dnsServer: 1.1.1.1
+      recordType: A
+      expectedRecordValues: []
+
+  example-push:
+    name: Example push
+    description: Nightly backup job pings this monitor
+    type: push
+    interval: 86400
+    probeConfig:
+      gracePeriodSeconds: 600

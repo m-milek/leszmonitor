@@ -43,6 +43,7 @@ export function DeleteTagDialog({ tag }: Readonly<DeleteTagDialogProps>) {
             size="icon"
             title={`Delete tag ${tag.name}`}
             aria-label={`Delete tag ${tag.name}`}
+            disabled={tag.source === "config"}
           />
         }
       >

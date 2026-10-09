@@ -11,6 +11,8 @@ export type MonitorStatus = (typeof monitorStatuses)[number];
 
 export type MonitorRunState = "active" | "paused";
 
+export type MonitorSource = "ui" | "config";
+
 const monitorTypes = ["http", "tcp", "dns", "push"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
 
@@ -76,6 +78,7 @@ interface BaseMonitor extends Timestamps {
   interval: number;
   // Retention seconds not configurable yet
   runState: MonitorRunState;
+  source: MonitorSource;
 }
 
 export interface HttpMonitor extends BaseMonitor {

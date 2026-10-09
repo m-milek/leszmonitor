@@ -59,8 +59,17 @@ func TestParse(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("Unknown Field", func(t *testing.T) {
+		_, err := Parse[Probe](kind.PushConfigType, `{"gracePeriodSeconds":30,"gracePeriod":30}`)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `unknown field "gracePeriod"`)
+	})
+
 	t.Run("Mismatched Type", func(t *testing.T) {
-		_, err := Parse[*PushProbe](kind.HTTPConfigType, `{"method":"GET","url":"http://example.com","expectedStatusCodes":[200]}`)
+		_, err := Parse[*PushProbe](
+			kind.HTTPConfigType,
+			`{"method":"GET","url":"http://example.com","expectedStatusCodes":[200]}`,
+		)
 		require.Error(t, err)
 		assert.NotErrorIs(t, err, ErrInvalidProbeConfig)
 	})

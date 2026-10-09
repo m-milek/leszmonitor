@@ -4,7 +4,7 @@ import { TypographyH3 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { StyledLink } from "@/components/common/StyledLink";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { LucideEdit, LucideTrash2 } from "lucide-react";
+import { LucideEdit, LucideLock, LucideTrash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusDot } from "@/components/common/StatusDot";
 import { QUERY_KEYS } from "@/lib/consts";
@@ -12,6 +12,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Tag } from "@/features/tags/components/Tag.tsx";
 import { TagsApi } from "@/features/tags/tags-api.ts";
 import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge.tsx";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface MonitorListItemProps {
   monitor: MonitorWithStatus;
@@ -34,6 +40,7 @@ export function MonitorListItem({
   }
 
   const dotStatus = monitorStatusToStatusDot(monitor.status);
+  const isConfigBased = monitor.source === "config";
 
   return (
     <Card className="transition-colors hover:bg-muted/50">
@@ -52,6 +59,16 @@ export function MonitorListItem({
             <MonitorStatusBadge status={monitor.status}>
               {monitor.status}
             </MonitorStatusBadge>
+            {isConfigBased && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <Badge variant="ghost" className="h-7 px-2 [&>svg]:size-5!">
+                    <LucideLock />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>Monitor defined in config file</TooltipContent>
+              </Tooltip>
+            )}
           </Flex>
           <Flex direction="row">
             {navigateToEditMonitor && onDeleteMonitor && (
@@ -60,6 +77,7 @@ export function MonitorListItem({
                   variant="ghost"
                   size="icon-lg"
                   onClick={() => navigateToEditMonitor(monitor.slug)}
+                  disabled={isConfigBased}
                 >
                   <LucideEdit className="size-5" />
                 </Button>
@@ -67,6 +85,7 @@ export function MonitorListItem({
                   variant="ghost"
                   size="icon-lg"
                   onClick={() => onDeleteMonitor(monitor.id)}
+                  disabled={isConfigBased}
                 >
                   <LucideTrash2 className="size-5 text-destructive" />
                 </Button>

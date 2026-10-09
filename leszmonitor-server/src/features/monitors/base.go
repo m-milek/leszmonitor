@@ -19,23 +19,33 @@ type Monitor struct {
 	Type                   kind.ProbeType  `json:"type"                   db:"kind"`                     // Type of the monitor (http, tcp, etc.)
 	ProbeConfig            string          `json:"probeConfig"            db:"config"`                   // JSON string containing the specific configuration for the monitor type
 	ResultRetentionSeconds int             `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
-	RunState               MonitorRunState `json:"runState" db:"run_state"`                              // RunState indicates whether the monitor is currently running or stopped
+	RunState               MonitorRunState `json:"runState"               db:"run_state"`                // RunState indicates whether the monitor is currently running or stopped
 	OwnerID                uuid.UUID       `json:"ownerId"                db:"owner_id"`                 // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
 	TagIDs                 []uuid.UUID     `json:"tagIds"                 db:"-"`
+	Source                 MonitorSource   `json:"source"                 db:"source"`
 }
 
 type MonitorRunState string
 
 const (
-	MonitorStateActive  MonitorRunState = "active"
-	MonitorStateStopped MonitorRunState = "paused"
+	MonitorRunStateActive  MonitorRunState = "active"
+	MonitorRunStateStopped MonitorRunState = "paused"
 )
 
+type MonitorSource string
+
+const (
+	MonitorSourceUI     MonitorSource = "ui"
+	MonitorSourceConfig MonitorSource = "config"
+)
+
+var defaultResultRetentionSeconds = int(48 * time.Hour.Seconds())
+
 func IsValidMonitorState(state string) bool {
-	return state == string(MonitorStateActive) || state == string(MonitorStateStopped)
+	return state == string(MonitorRunStateActive) || state == string(MonitorRunStateStopped)
 }
 
-func InitializeFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
+func NewMonitorFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
 	return &Monitor{
 		ID:                     uuid.New(),
 		OwnerID:                ownerID,
@@ -45,9 +55,10 @@ func InitializeFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
 		Interval:               payload.Interval,
 		Type:                   payload.Type,
 		ProbeConfig:            payload.ProbeConfig,
-		ResultRetentionSeconds: int((48 * time.Hour).Seconds()), // TODO: Make this configurable later
-		RunState:               MonitorStateActive,
+		ResultRetentionSeconds: defaultResultRetentionSeconds,
+		RunState:               MonitorRunStateActive,
 		TagIDs:                 payload.TagIDs,
+		Source:                 MonitorSourceUI,
 	}
 }
 

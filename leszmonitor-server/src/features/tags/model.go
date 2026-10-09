@@ -15,7 +15,15 @@ type Tag struct {
 	Name        string    `json:"name"        db:"name"`
 	Description string    `json:"description" db:"description"`
 	ColorHex    string    `json:"colorHex"    db:"color_hex"`
+	Source      TagSource `json:"source"      db:"source"`
 }
+
+type TagSource string
+
+const (
+	TagSourceUI     TagSource = "ui"
+	TagSourceConfig TagSource = "config"
+)
 
 func (t *Tag) Validate() error {
 	if t.Name == "" {

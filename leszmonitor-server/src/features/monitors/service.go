@@ -82,7 +82,7 @@ func (s *MonitorService) CreateMonitor(
 		return nil, apperr.NewInternalError("failed to find creating user: %w", err)
 	}
 
-	initializedMonitor := InitializeFromPayload(monitor, owner.ID)
+	initializedMonitor := NewMonitorFromPayload(monitor, owner.ID)
 
 	if err := initializedMonitor.Validate(); err != nil {
 		logger.Error().Err(err).Msg("Invalid monitor configuration")
@@ -145,6 +145,10 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.S
 		}
 		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor before deletion")
 		return apperr.NewInternalError("failed to retrieve monitor before deletion: %w", err)
+	}
+
+	if monitorBeforeDelete.Source == MonitorSourceConfig {
+		return apperr.NewConflictError("monitor %s is managed by config file", id)
 	}
 
 	deletedID, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*uuid.UUID, *audit.AuditLogParams, error) {
@@ -253,6 +257,10 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor Monitor) *ap
 			return nil, fmt.Errorf("failed to retrieve existing monitor for update: %w", err)
 		}
 
+		if existingMonitor.Source == MonitorSourceConfig {
+			return nil, apperr.NewConflictError("monitor %s is managed by config file", monitor.ID)
+		}
+
 		if monitor.Type != existingMonitor.Type {
 			return nil, apperr.NewBadRequestError("cannot edit monitor type")
 		}
@@ -339,6 +347,10 @@ func (s *MonitorService) UpdateMonitorStateByID(
 			}
 			logger.Error().Err(err).Str("id", monitorID.String()).Msg("Failed to retrieve monitor for state update")
 			return nil, apperr.NewInternalError("failed to retrieve monitor for state update: %w", err)
+		}
+
+		if monitor.Source == MonitorSourceConfig {
+			return nil, apperr.NewConflictError("monitor %s is managed by config file", monitorID)
 		}
 
 		if monitor.RunState == state {
@@ -465,7 +477,7 @@ func (s *MonitorService) ReceivePush(ctx context.Context, monitorID uuid.UUID, p
 		return apperr.NewInternalError("failed to unmarshal probe config: %w", err)
 	}
 
-	if monitor.RunState != MonitorStateActive {
+	if monitor.RunState != MonitorRunStateActive {
 		return apperr.NewConflictError("push to a paused monitor")
 	}
 

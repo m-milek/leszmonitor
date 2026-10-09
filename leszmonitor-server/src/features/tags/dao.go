@@ -16,6 +16,7 @@ type ITagDAO interface {
 	GetAllTags(ctx context.Context) ([]Tag, error)
 	UpdateTag(ctx context.Context, newTag Tag) (*Tag, error)
 	DeleteTagByID(ctx context.Context, tagID uuid.UUID) (*uuid.UUID, error)
+	UpsertConfigBasedTag(ctx context.Context, tag *Tag) error
 }
 
 type tagDAO struct {
@@ -39,13 +40,14 @@ func (r *tagDAO) InsertTag(ctx context.Context, tag Tag) (*Tag, error) {
 		var createdTag Tag
 		err := r.pool.QueryRowxContext(
 			ctx,
-			`INSERT INTO tags (id, name, description, color_hex)
-			VALUES ($1, $2, $3, $4)
-			RETURNING id, name, description, color_hex, created_at, updated_at`,
+			`INSERT INTO tags (id, name, description, color_hex, source)
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING id, name, description, color_hex, source, created_at, updated_at`,
 			id,
 			tag.Name,
 			tag.Description,
 			tag.ColorHex,
+			tag.Source,
 		).StructScan(&createdTag)
 		if err != nil {
 			if db.IsUniqueViolation(err) {
@@ -65,7 +67,7 @@ func (r *tagDAO) GetTagByID(ctx context.Context, id uuid.UUID) (*Tag, error) {
 			ctx,
 			r.pool,
 			&tag,
-			`SELECT t.id, t.name, t.description, t.color_hex, t.created_at, t.updated_at
+			`SELECT t.id, t.name, t.description, t.color_hex, t.source, t.created_at, t.updated_at
 			 FROM tags t
 			 WHERE t.id = $1`,
 			id,
@@ -87,7 +89,7 @@ func (r *tagDAO) GetAllTags(ctx context.Context) ([]Tag, error) {
 			ctx,
 			r.pool,
 			&tags,
-			`SELECT t.id, t.name, t.description, t.color_hex, t.created_at, t.updated_at
+			`SELECT t.id, t.name, t.description, t.color_hex, t.source, t.created_at, t.updated_at
 			 FROM tags t
 			 ORDER BY t.name`,
 		)
@@ -111,7 +113,7 @@ func (r *tagDAO) UpdateTag(ctx context.Context, newTag Tag) (*Tag, error) {
 			`UPDATE tags
 			SET name=$1, description=$2, color_hex=$3, updated_at=CURRENT_TIMESTAMP
 			WHERE id=$4
-			RETURNING id, name, description, color_hex, created_at, updated_at`,
+			RETURNING id, name, description, color_hex, source, created_at, updated_at`,
 			newTag.Name,
 			newTag.Description,
 			newTag.ColorHex,
@@ -120,6 +122,9 @@ func (r *tagDAO) UpdateTag(ctx context.Context, newTag Tag) (*Tag, error) {
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, db.ErrNotFound
+			}
+			if db.IsUniqueViolation(err) {
+				return nil, db.ErrAlreadyExists
 			}
 			return nil, err
 		}
@@ -142,4 +147,31 @@ func (r *tagDAO) DeleteTagByID(ctx context.Context, tagID uuid.UUID) (*uuid.UUID
 
 		return &id, nil
 	})
+}
+
+func (r *tagDAO) UpsertConfigBasedTag(ctx context.Context, tag *Tag) error {
+	_, err := db.Wrap(ctx, "UpsertConfigBasedTag", func() (any, error) {
+		_, err := r.pool.ExecContext(
+			ctx,
+			`INSERT INTO tags (id, name, description, color_hex, source)
+			VALUES ($1, $2, $3, $4, $5)
+			ON CONFLICT (id) DO UPDATE SET
+				description = excluded.description,
+				color_hex = excluded.color_hex`,
+			tag.ID,
+			tag.Name,
+			tag.Description,
+			tag.ColorHex,
+			TagSourceConfig,
+		)
+		if err != nil {
+			if db.IsUniqueViolation(err) {
+				return nil, db.ErrAlreadyExists
+			}
+			return nil, err
+		}
+
+		return nil, nil
+	})
+	return err
 }

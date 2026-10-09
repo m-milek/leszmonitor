@@ -26,10 +26,15 @@ export const MonitorActionsGroup = ({
   isPaused,
 }: MonitorActionsGroupProps) => {
   const navigate = useNavigate();
-
+  const isConfigBased = monitor.source === "config";
   return (
     <ButtonGroup>
-      <Button variant="outline" size="lg" onClick={handleToggleMonitorState}>
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleToggleMonitorState}
+        disabled={isConfigBased}
+      >
         {isPaused ? (
           <>
             <PlayIcon /> Resume
@@ -40,7 +45,12 @@ export const MonitorActionsGroup = ({
           </>
         )}
       </Button>
-      <Button variant="outline" size="lg" onClick={handleEditMonitor}>
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleEditMonitor}
+        disabled={isConfigBased}
+      >
         <PencilIcon />
         <span>Edit</span>
       </Button>
