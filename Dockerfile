@@ -1,4 +1,4 @@
-FROM node:24-alpine AS ui-builder
+FROM node:25-alpine AS ui-builder
 
 WORKDIR /app
 
