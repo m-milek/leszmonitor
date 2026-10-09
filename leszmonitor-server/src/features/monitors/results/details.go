@@ -21,3 +21,9 @@ type DNSResultDetails struct {
 type PushResultDetails struct {
 	RawMessage string `json:"rawMessage,omitempty"`
 }
+
+type PingResultDetails struct {
+	LatencyMs       int64 `json:"latencyMs"`
+	PacketsSent     int   `json:"packetsSent"`
+	PacketsReceived int   `json:"packetsReceived"`
+}

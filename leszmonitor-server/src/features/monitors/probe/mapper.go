@@ -30,6 +30,8 @@ func mapProbeType(probeType kind.ProbeType) Probe {
 		return &DNSProbe{}
 	case kind.PushConfigType:
 		return &PushProbe{}
+	case kind.PingConfigType:
+		return &PingProbe{}
 	default:
 		return nil
 	}

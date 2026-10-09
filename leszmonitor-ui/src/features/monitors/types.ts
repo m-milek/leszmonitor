@@ -13,7 +13,7 @@ export type MonitorRunState = "active" | "paused";
 
 export type MonitorSource = "ui" | "config";
 
-const monitorTypes = ["http", "tcp", "dns", "push"] as const;
+const monitorTypes = ["http", "tcp", "dns", "push", "ping"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
 
 export const isValidMonitorType = (value: string): value is MonitorType => {
@@ -68,6 +68,12 @@ export interface PushMonitorConfig {
   gracePeriodSeconds: number;
 }
 
+export interface PingMonitorConfig {
+  host: string;
+  count: number;
+  timeoutMs: number;
+}
+
 interface BaseMonitor extends Timestamps {
   id: string;
   name: string;
@@ -101,7 +107,17 @@ export interface PushMonitor extends BaseMonitor {
   probeConfig?: PushMonitorConfig;
 }
 
-export type Monitor = HttpMonitor | TcpMonitor | DnsMonitor | PushMonitor;
+export interface PingMonitor extends BaseMonitor {
+  type: "ping";
+  probeConfig?: PingMonitorConfig;
+}
+
+export type Monitor =
+  | HttpMonitor
+  | TcpMonitor
+  | DnsMonitor
+  | PushMonitor
+  | PingMonitor;
 
 export type MonitorWithStatus = Monitor & {
   status: MonitorStatus;
@@ -132,6 +148,12 @@ export interface DnsResultDetails {
 
 export interface PushResultDetails {
   rawMessage?: string;
+}
+
+export interface PingResultDetails {
+  latencyMs: number;
+  packetsSent: number;
+  packetsReceived: number;
 }
 
 export type FailureReason =
@@ -185,8 +207,17 @@ export interface PushMonitorResult extends BaseMonitorResult {
   details: PushResultDetails;
 }
 
+export interface PingMonitorResult extends BaseMonitorResult {
+  monitorType: "ping";
+  details: PingResultDetails;
+}
+
 export type MonitorResult =
-  HttpMonitorResult | TcpMonitorResult | DnsMonitorResult | PushMonitorResult;
+  | HttpMonitorResult
+  | TcpMonitorResult
+  | DnsMonitorResult
+  | PushMonitorResult
+  | PingMonitorResult;
 
 export interface MonitorResultMessage {
   type: string;

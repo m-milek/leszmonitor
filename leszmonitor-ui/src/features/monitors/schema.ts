@@ -47,6 +47,12 @@ export const pushMonitorConfigSchema = z.object({
     .min(0, "Grace period must be at least 0 seconds"),
 });
 
+export const pingMonitorConfigSchema = z.object({
+  host: z.string().min(1, "Host is required"),
+  count: z.number().min(1, "Count must be at least 1"),
+  timeoutMs: z.number().min(1, "Timeout must be at least 1 ms"),
+});
+
 const baseMonitorFields = {
   name: z.string({ message: "Name is required" }).min(1, "Name is required"),
   slug: z
@@ -91,11 +97,18 @@ const pushMonitorSchema = z.object({
   probeConfig: pushMonitorConfigSchema.optional(),
 });
 
+const pingMonitorSchema = z.object({
+  ...baseMonitorFields,
+  type: z.literal("ping"),
+  probeConfig: pingMonitorConfigSchema.optional(),
+});
+
 export const newMonitorSchema = z.discriminatedUnion("type", [
   httpMonitorSchema,
   tcpMonitorSchema,
   dnsMonitorSchema,
   pushMonitorSchema,
+  pingMonitorSchema,
 ]);
 
 export type MonitorFormValues = z.infer<typeof newMonitorSchema>;
@@ -137,6 +150,11 @@ export const defaultConfigs: Record<
   },
   push: {
     gracePeriodSeconds: 30,
+  },
+  ping: {
+    host: "",
+    count: 3,
+    timeoutMs: 5000,
   },
 };
 

@@ -54,6 +54,14 @@ const serverMonitors: Record<MonitorType, Monitor> = {
       gracePeriodSeconds: 30,
     },
   }),
+  ping: serverMonitor({
+    type: "ping",
+    probeConfig: {
+      host: "example.com",
+      count: 3,
+      timeoutMs: 5000,
+    },
+  }),
 };
 
 const issues = (input: unknown) => {
@@ -80,7 +88,7 @@ const tcpForm = (probe: Record<string, unknown> = {}) => ({
 });
 
 describe("mapMonitorToFormValues", () => {
-  it.each(["http", "tcp", "dns", "push"] as const)(
+  it.each(["http", "tcp", "dns", "push", "ping"] as const)(
     "maps a %s monitor from the server into values the schema accepts",
     (type) => {
       const values = mapMonitorToFormValues(serverMonitors[type]);

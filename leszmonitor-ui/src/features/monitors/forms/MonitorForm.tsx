@@ -76,6 +76,7 @@ export function MonitorForm({
     { value: "tcp", label: "TCP" },
     { value: "dns", label: "DNS" },
     { value: "push", label: "Push" },
+    { value: "ping", label: "Ping (ICMP)" },
   ];
 
   return (
