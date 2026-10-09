@@ -21,7 +21,7 @@ func TestIntegration_PushWatcher_CheckMonitor(t *testing.T) {
 		Interval:    60,
 		Type:        kind.PushConfigType,
 		ProbeConfig: `{"gracePeriodSeconds":30}`,
-		RunState:    monitors.MonitorStateActive,
+		RunState:    monitors.MonitorRunStateActive,
 	}
 
 	t.Run("Broadcasts a missed heartbeat after interval and grace period", func(t *testing.T) {

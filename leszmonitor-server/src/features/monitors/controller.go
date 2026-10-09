@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -153,36 +154,6 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 	httpx.RespondMessage(ctx, w, http.StatusOK, "monitor updated successfully")
 }
 
-// decodeMonitorPayload decodes the request body into Monitor, and probeConfig separately as string.
-// FE sends probeConfig as JSON object, but we want to store it as string in the database, so we need to handle it separately.
-func decodeMonitorPayload(r *http.Request) (Monitor, error) {
-	bodyBytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		return Monitor{}, err
-	}
-
-	var rawPayload map[string]json.RawMessage
-	if err := json.Unmarshal(bodyBytes, &rawPayload); err != nil {
-		return Monitor{}, err
-	}
-
-	probeConfigRaw := rawPayload["probeConfig"]
-	delete(rawPayload, "probeConfig")
-
-	payloadBytes, err := json.Marshal(rawPayload)
-	if err != nil {
-		return Monitor{}, err
-	}
-
-	var monitor Monitor
-	if err := json.Unmarshal(payloadBytes, &monitor); err != nil {
-		return Monitor{}, err
-	}
-
-	monitor.ProbeConfig = string(probeConfigRaw)
-	return monitor, nil
-}
-
 type UpdateMonitorStatePayload struct {
 	NewState string `json:"newState"`
 }
@@ -306,4 +277,40 @@ func (c *MonitorAPIController) ReceivePushHandler(w http.ResponseWriter, r *http
 	}
 
 	httpx.RespondMessage(ctx, w, http.StatusAccepted, "")
+}
+
+// decodeMonitorPayload decodes the request body into Monitor, and probeConfig separately as string.
+// FE sends probeConfig as JSON object, but we want to store it as string in the database, so we need to handle it separately.
+func decodeMonitorPayload(r *http.Request) (Monitor, error) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return Monitor{}, err
+	}
+
+	return decodeMonitorJSON(bodyBytes)
+}
+
+func decodeMonitorJSON(data []byte) (Monitor, error) {
+	var rawPayload map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawPayload); err != nil {
+		return Monitor{}, err
+	}
+
+	probeConfigRaw := rawPayload["probeConfig"]
+	delete(rawPayload, "probeConfig")
+
+	payloadBytes, err := json.Marshal(rawPayload)
+	if err != nil {
+		return Monitor{}, err
+	}
+
+	var monitor Monitor
+	dec := json.NewDecoder(bytes.NewReader(payloadBytes))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&monitor); err != nil {
+		return Monitor{}, err
+	}
+
+	monitor.ProbeConfig = string(probeConfigRaw)
+	return monitor, nil
 }

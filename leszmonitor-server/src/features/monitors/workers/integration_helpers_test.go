@@ -45,10 +45,10 @@ func setupFullDB(t *testing.T) (context.Context, db.DB, *monitors.Monitor) {
 		Interval:    1,
 		Type:        kind.HTTPConfigType,
 		ProbeConfig: `{"method": "GET", "url": "http://localhost:8080", "expectedStatusCodes": [200]}`,
-		RunState:    monitors.MonitorStateActive,
+		RunState:    monitors.MonitorRunStateActive,
 	}
 	payload.GenerateSlug()
-	monitor := monitors.InitializeFromPayload(payload, insertedUser.ID)
+	monitor := monitors.NewMonitorFromPayload(payload, insertedUser.ID)
 
 	insertedMonitor, err := monitors.NewMonitorDAO(realDB.Querier()).InsertMonitor(ctx, *monitor)
 	require.NoError(t, err)

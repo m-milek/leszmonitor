@@ -84,7 +84,7 @@ func InsertTestMonitor(ctx context.Context, t *testing.T) *monitors.Monitor {
 
 	owner, err := users.NewUserDAO(db.Get().Querier()).GetUserByUsername(ctx, "integration_user")
 	require.NoError(t, err)
-	monitor := monitors.InitializeFromPayload(payload, owner.ID)
+	monitor := monitors.NewMonitorFromPayload(payload, owner.ID)
 
 	inserted, dbErr := monitors.NewMonitorDAO(db.Get().Querier()).InsertMonitor(ctx, *monitor)
 	require.NoError(t, dbErr)

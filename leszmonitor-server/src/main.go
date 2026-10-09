@@ -153,7 +153,19 @@ func main() {
 		logger.Fatal().Err(svcErr).Msg("Failed to ensure admin user exists")
 	}
 
-	// Start the server
+	if configFilePath != "" {
+		admin, svcErr := userService.GetUserByUsername(appCtx, os.Getenv(config.InstanceAdminUsername))
+		if svcErr != nil {
+			logger.Fatal().Err(svcErr.Err).Msg("Failed to find admin user in DB")
+			return
+		}
+		err = monitors.SynchronizeConfigBasedMonitors(appCtx, database, config.File().Monitors, admin.ID)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to synchronize config-based monitors")
+			return
+		}
+	}
+
 	serverConfig := app.DefaultServerConfig()
 	logger.Info().Msg("Starting API server...")
 	server, done, err := app.StartServer(appCtx, serverConfig, staticFiles, handlers)

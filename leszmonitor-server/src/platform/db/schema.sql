@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS monitors (
     result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
     run_state                TEXT NOT NULL,
     config                   TEXT NOT NULL CHECK (JSON_VALID(config)), -- JSON string
+    source                   TEXT NOT NULL DEFAULT 'ui',
 
     created_at               DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at               DATETIME DEFAULT CURRENT_TIMESTAMP,

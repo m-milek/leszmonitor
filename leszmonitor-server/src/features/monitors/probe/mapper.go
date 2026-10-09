@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
@@ -36,17 +37,23 @@ func mapProbeType(probeType kind.ProbeType) Probe {
 
 func Parse[T Probe](probeType kind.ProbeType, config string) (T, error) {
 	var zero T
+	decoder := json.NewDecoder(strings.NewReader(config))
+	decoder.DisallowUnknownFields()
+
 	p := mapProbeType(probeType)
 	if p == nil {
 		return zero, fmt.Errorf("unknown probe type: %s", probeType)
 	}
-	if err := json.Unmarshal([]byte(config), p); err != nil {
+
+	if err := decoder.Decode(p); err != nil {
 		return zero, fmt.Errorf("failed to parse probe config: %w", err)
 	}
+
 	typed, ok := p.(T)
 	if !ok {
 		return zero, fmt.Errorf("probe type %s is %T, expected %T", probeType, p, zero)
 	}
+
 	if err := typed.Validate(); err != nil {
 		return zero, fmt.Errorf("%w: %w", ErrInvalidProbeConfig, err)
 	}

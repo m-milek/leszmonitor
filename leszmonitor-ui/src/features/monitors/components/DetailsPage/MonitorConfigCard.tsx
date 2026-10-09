@@ -19,6 +19,12 @@ import { Initial } from "@/features/users/components/Initial";
 import { StyledLink } from "@/components/common/StyledLink";
 import { Flex } from "@/components/common/Flex.tsx";
 import { PushConfigContent } from "@/features/monitors/components/DetailsPage/PushConfigContent.tsx";
+import { LucideLock } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
 export interface MonitorConfigCardProps {
   monitor: Monitor;
@@ -56,9 +62,21 @@ export const MonitorConfigCard = ({ monitor }: MonitorConfigCardProps) => {
       <CardHeader>
         <CardTitle>Configuration</CardTitle>
         <CardAction>
-          <Badge variant="secondary" className="text-sm">
-            {monitorTypeLabelMap[monitor.type]}
-          </Badge>
+          <Flex className="items-center">
+            <Badge variant="secondary" className="text-sm">
+              {monitorTypeLabelMap[monitor.type]}
+            </Badge>
+            {monitor.source === "config" && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <Badge variant="ghost" className="h-7 px-2 [&>svg]:size-5!">
+                    <LucideLock />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>Monitor defined in config file</TooltipContent>
+              </Tooltip>
+            )}
+          </Flex>
         </CardAction>
       </CardHeader>
       <CardContent>

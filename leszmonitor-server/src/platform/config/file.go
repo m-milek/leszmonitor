@@ -11,7 +11,8 @@ import (
 )
 
 type LeszmonitorConfigFile struct {
-	GlobalParameters map[string]any `yaml:"global_parameters"`
+	GlobalParameters map[string]any            `yaml:"global_parameters"`
+	Monitors         map[string]map[string]any `yaml:"monitors"`
 }
 
 var (

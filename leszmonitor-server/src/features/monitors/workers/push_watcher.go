@@ -57,7 +57,7 @@ func (w *PushWatcher) check(ctx context.Context, now time.Time) {
 		return
 	}
 	activePushMonitors := slices.DeleteFunc(allMonitors, func(monitor monitors.Monitor) bool {
-		return monitor.Type != kind.PushConfigType || monitor.RunState != monitors.MonitorStateActive
+		return monitor.Type != kind.PushConfigType || monitor.RunState != monitors.MonitorRunStateActive
 	})
 
 	for _, monitor := range activePushMonitors {

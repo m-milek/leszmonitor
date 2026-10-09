@@ -33,6 +33,7 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
+      CONFIG_FILE_PATH: '{{.TASKFILE_DIR}}/config.dev.yaml'
     cmds:
       - "{{.SERVER_BIN_DIR}}/{{.APP_NAME}}"
 
@@ -62,6 +63,7 @@ tasks:
       API_PORT: '7001'
       JWT_SECRET: 'your_jwt_secret'
       JWT_EXPIRY_HOURS: '24'
+      CONFIG_FILE_PATH: '{{.TASKFILE_DIR}}/config.dev.yaml'
     cmds:
       - "{{.SERVER_BIN_DIR}}/{{.APP_NAME}}"
 

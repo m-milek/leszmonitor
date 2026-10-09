@@ -17,6 +17,7 @@ type IMonitorDAO interface {
 	DeleteMonitorByID(ctx context.Context, monitorID uuid.UUID) (*uuid.UUID, error)
 	InsertMonitor(ctx context.Context, monitor Monitor) (*Monitor, error)
 	UpdateMonitor(ctx context.Context, newMonitor Monitor) (any, error)
+	UpsertConfigBasedMonitor(ctx context.Context, monitor *Monitor) error
 }
 
 type monitorDAO struct {
@@ -39,7 +40,7 @@ func (r *monitorDAO) GetMonitorBySlug(
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.source, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1`,
 			slug,
@@ -66,7 +67,7 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*Monitor
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.source,  m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.id = $1`,
 			id,
@@ -93,7 +94,7 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]Monitor, error) {
 			ctx,
 			r.pool,
 			&allMonitors,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.source, m.created_at, m.updated_at
 			 FROM monitors m`,
 		)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -210,8 +211,8 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor Monitor) (*Monit
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config, owner_id)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config, owner_id, source)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
 			id,
 			monitor.Slug,
 			monitor.Name,
@@ -222,6 +223,7 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor Monitor) (*Monit
 			monitor.RunState,
 			monitor.ProbeConfig,
 			monitor.OwnerID,
+			monitor.Source,
 		)
 		if err != nil {
 			if db.IsUniqueViolation(err) {
@@ -274,4 +276,41 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor Monitor) (any
 
 		return nil, nil
 	})
+}
+
+func (r *monitorDAO) UpsertConfigBasedMonitor(ctx context.Context, monitor *Monitor) error {
+	_, err := db.Wrap(ctx, "UpsertConfigBasedMonitor", func() (any, error) {
+		_, err := r.pool.ExecContext(
+			ctx,
+			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config, owner_id, source)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			ON CONFLICT (id) DO UPDATE SET
+				slug = excluded.slug,
+				name = excluded.name,
+				description = excluded.description,
+				interval = excluded.interval,
+				result_retention_seconds = excluded.result_retention_seconds,
+				config = excluded.config`,
+			monitor.ID,
+			monitor.Slug,
+			monitor.Name,
+			monitor.Description,
+			monitor.Interval,
+			monitor.Type,
+			monitor.ResultRetentionSeconds,
+			monitor.RunState,
+			monitor.ProbeConfig,
+			monitor.OwnerID,
+			MonitorSourceConfig,
+		)
+		if err != nil {
+			if db.IsUniqueViolation(err) {
+				return nil, db.ErrAlreadyExists
+			}
+			return nil, err
+		}
+
+		return nil, nil
+	})
+	return err
 }

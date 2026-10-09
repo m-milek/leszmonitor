@@ -21,16 +21,16 @@ import (
 )
 
 type HTTPProbe struct {
-	Method               string            `json:"method"`
-	URL                  string            `json:"url"`
-	Headers              map[string]string `json:"headers"`
-	Body                 string            `json:"body"`
-	SaveResponseBody     bool              `json:"saveResponseBody"`    // Whether to save the response body in the monitor response
-	SaveResponseHeaders  bool              `json:"saveResponseHeaders"` // Whether to save the response headers in the monitor response
-	ExpectedStatusCodes  []int             `json:"expectedStatusCodes"`
-	ExpectedBodyRegex    string            `json:"expectedBodyRegex"`
-	ExpectedHeaders      map[string]string `json:"expectedHeaders"`
-	ExpectedResponseTime *int              `json:"expectedResponseTime"` // in milliseconds
+	Method                 string            `json:"method"`
+	URL                    string            `json:"url"`
+	Headers                map[string]string `json:"headers"`
+	Body                   string            `json:"body"`
+	SaveResponseBody       bool              `json:"saveResponseBody"`    // Whether to save the response body in the monitor response
+	SaveResponseHeaders    bool              `json:"saveResponseHeaders"` // Whether to save the response headers in the monitor response
+	ExpectedStatusCodes    []int             `json:"expectedStatusCodes"`
+	ExpectedBodyRegex      string            `json:"expectedBodyRegex"`
+	ExpectedHeaders        map[string]string `json:"expectedHeaders"`
+	ExpectedResponseTimeMs *int              `json:"expectedResponseTimeMs"`
 }
 
 const httpTimeout = 10 * time.Second
@@ -133,7 +133,7 @@ func (m *HTTPProbe) Validate() error {
 		return fmt.Errorf("URL scheme must be either http or https: %s", m.URL)
 	}
 
-	if m.ExpectedResponseTime != nil && *m.ExpectedResponseTime < 0 {
+	if m.ExpectedResponseTimeMs != nil && *m.ExpectedResponseTimeMs < 0 {
 		return fmt.Errorf("expected response time cannot be negative")
 	}
 
@@ -200,13 +200,13 @@ func (m *HTTPProbe) checkResponseTime(
 	elapsed time.Duration,
 	result results.IMonitorResult,
 ) {
-	if m.ExpectedResponseTime == nil {
+	if m.ExpectedResponseTimeMs == nil {
 		return
 	}
-	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTime) {
+	if elapsed.Milliseconds() > int64(*m.ExpectedResponseTimeMs) {
 		result.AddFailure(results.FailureReasonHTTPResponseTimeExceeded, results.ResponseTimeExceededDetails{
 			GotMs:         elapsed.Milliseconds(),
-			ExpectedMaxMs: *m.ExpectedResponseTime,
+			ExpectedMaxMs: *m.ExpectedResponseTimeMs,
 		}, nil)
 	}
 }
