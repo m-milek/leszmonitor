@@ -333,7 +333,7 @@ func (s *MonitorService) UpdateMonitorStateByID(
 		return apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
-	if !IsValidMonitorState(string(state)) {
+	if !isValidMonitorState(string(state)) {
 		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Invalid monitor state provided")
 		return apperr.NewBadRequestError("invalid monitor state: %s", state)
 	}

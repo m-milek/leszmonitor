@@ -41,7 +41,7 @@ const (
 
 var defaultResultRetentionSeconds = int(48 * time.Hour.Seconds())
 
-func IsValidMonitorState(state string) bool {
+func isValidMonitorState(state string) bool {
 	return state == string(MonitorRunStateActive) || state == string(MonitorRunStateStopped)
 }
 
@@ -81,7 +81,7 @@ func (m *Monitor) Validate() error {
 	if m.ResultRetentionSeconds <= 0 {
 		return fmt.Errorf("monitor result retention period must be greater than zero")
 	}
-	if !IsValidMonitorState(string(m.RunState)) {
+	if !isValidMonitorState(string(m.RunState)) {
 		return fmt.Errorf("monitor state must be either 'running' or 'stopped'")
 	}
 
