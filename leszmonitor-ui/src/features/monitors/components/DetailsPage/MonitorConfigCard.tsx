@@ -19,6 +19,7 @@ import { Initial } from "@/features/users/components/Initial";
 import { StyledLink } from "@/components/common/StyledLink";
 import { Flex } from "@/components/common/Flex.tsx";
 import { PushConfigContent } from "@/features/monitors/components/DetailsPage/PushConfigContent.tsx";
+import { PingConfigContent } from "@/features/monitors/components/DetailsPage/PingConfigContent";
 import { LucideLock } from "lucide-react";
 import {
   Tooltip,
@@ -40,6 +41,8 @@ const ConfigContent = ({ monitor }: MonitorConfigCardProps) => {
       return <DnsConfigContent monitor={monitor} />;
     case "push":
       return <PushConfigContent monitor={monitor} />;
+    case "ping":
+      return <PingConfigContent monitor={monitor} />;
   }
 };
 
@@ -48,6 +51,7 @@ const monitorTypeLabelMap: Record<MonitorType, string> = {
   tcp: "TCP",
   dns: "DNS",
   push: "Push",
+  ping: "Ping",
 };
 
 export const MonitorConfigCard = ({ monitor }: MonitorConfigCardProps) => {

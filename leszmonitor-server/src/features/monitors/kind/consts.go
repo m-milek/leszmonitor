@@ -9,4 +9,5 @@ var (
 	TCPConfigType  ProbeType = "tcp"
 	DNSConfigType  ProbeType = "dns"
 	PushConfigType ProbeType = "push"
+	PingConfigType ProbeType = "ping"
 )

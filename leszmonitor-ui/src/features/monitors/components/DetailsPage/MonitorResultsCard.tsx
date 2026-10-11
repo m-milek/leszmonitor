@@ -47,6 +47,13 @@ const ResultDetails = ({ result }: { result: MonitorResult }) => {
       ) : (
         <NoData label="No message" />
       );
+    case "ping":
+      return (
+        <span>
+          {result.details.packetsReceived}/{result.details.packetsSent} packets,{" "}
+          {result.details.latencyMs} ms latency
+        </span>
+      );
   }
 };
 

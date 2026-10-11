@@ -38,6 +38,16 @@ monitors:
       protocol: tcp
       timeout: 5000
 
+  example-ping:
+    name: Example ping
+    description: Host answers ICMP echo
+    type: ping
+    interval: 30
+    probeConfig:
+      host: example.com
+      count: 3
+      timeoutMs: 2000
+
   example-dns:
     name: Example DNS
     description: A record resolves
