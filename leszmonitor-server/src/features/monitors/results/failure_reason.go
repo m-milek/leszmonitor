@@ -25,6 +25,8 @@ const (
 	FailureReasonPushReportedDown    FailureReason = "PUSH_REPORTED_DOWN"
 	FailureReasonPushMissedHeartbeat FailureReason = "PUSH_MISSED_HEARTBEAT"
 
+	FailureReasonPingNoReply FailureReason = "PING_NO_REPLY"
+
 	FailureReasonProbeError FailureReason = "PROBE_ERROR"
 )
 

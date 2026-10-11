@@ -169,6 +169,7 @@ export type FailureReason =
   | "TCP_CONNECTION_FAILED"
   | "PUSH_REPORTED_DOWN"
   | "PUSH_MISSED_HEARTBEAT"
+  | "PING_NO_REPLY"
   | "PROBE_ERROR";
 
 export interface MonitorFailure {

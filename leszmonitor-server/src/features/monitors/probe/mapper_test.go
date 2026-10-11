@@ -37,6 +37,19 @@ func TestParse(t *testing.T) {
 		assert.Equal(t, config.Host, parsed.Host)
 	})
 
+	t.Run("Ping Config", func(t *testing.T) {
+		config := PingProbe{
+			Host:      "192.168.1.1",
+			Count:     3,
+			TimeoutMs: 1000,
+		}
+		bytes, _ := json.Marshal(config)
+
+		parsed, err := Parse[*PingProbe](kind.PingConfigType, string(bytes))
+		require.NoError(t, err)
+		assert.Equal(t, config, *parsed)
+	})
+
 	t.Run("Push Config", func(t *testing.T) {
 		config := PushProbe{
 			GracePeriodSeconds: 30,

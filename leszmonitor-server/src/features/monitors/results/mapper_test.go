@@ -7,6 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseResultDetails(t *testing.T) {
@@ -59,6 +61,13 @@ func TestParseResultDetails(t *testing.T) {
 		if pushDetails.RawMessage != "backup done" {
 			t.Errorf("expected 'backup done', got %q", pushDetails.RawMessage)
 		}
+	})
+
+	t.Run("Ping details parsing", func(t *testing.T) {
+		rawJSON := []byte(`{"latencyMs": 12, "packetsSent": 3, "packetsReceived": 2}`)
+		details, err := ParseResultDetails(kind.PingConfigType, rawJSON)
+		require.NoError(t, err)
+		assert.Equal(t, &PingResultDetails{LatencyMs: 12, PacketsSent: 3, PacketsReceived: 2}, details)
 	})
 }
 

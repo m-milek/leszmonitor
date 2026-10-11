@@ -14,6 +14,7 @@ const FAILURE_REASON_LABELS: Record<FailureReason, string> = {
   PUSH_MISSED_HEARTBEAT: "Missed heartbeat",
   PROBE_ERROR: "Check could not run",
   PUSH_REPORTED_DOWN: "Self-reported failure",
+  PING_NO_REPLY: "No reply",
 };
 
 export const failureReasonToLabel = (reason: FailureReason): string =>
