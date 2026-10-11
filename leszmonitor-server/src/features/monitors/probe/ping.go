@@ -50,7 +50,7 @@ func (p *PingProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMoni
 		return &result, nil
 	}
 
-	replies, err := pingAddressFunc(ips[0], p.Count, time.Duration(p.TimeoutMs)*time.Millisecond)
+	replies, err := pingAddressFunc(ctx, ips[0], p.Count, time.Duration(p.TimeoutMs)*time.Millisecond)
 	if err != nil {
 		return nil, err
 	}
@@ -85,18 +85,24 @@ func (p *PingProbe) Run(ctx context.Context, monitorID uuid.UUID) (results.IMoni
 	return &result, nil
 }
 
-func pingAddress(ip net.IP, count int, timeout time.Duration) ([]pingReply, error) {
+func pingAddress(ctx context.Context, ip net.IP, count int, timeout time.Duration) ([]pingReply, error) {
 	socket, err := icmp.ListenPacket("udp4", "0.0.0.0")
 	if err != nil {
 		return nil, err
 	}
 	defer socket.Close()
 
+	stopClosingOnCancel := context.AfterFunc(ctx, func() { _ = socket.Close() })
+	defer stopClosingOnCancel()
+
 	dst := &net.UDPAddr{IP: ip}
 	replies := make([]pingReply, 0, count)
 
 	for seq := range count {
 		rtt, pingErr := pingOnce(socket, dst, seq, timeout)
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return nil, ctxErr
+		}
 		replies = append(replies, pingReply{rtt: rtt, err: pingErr})
 	}
 

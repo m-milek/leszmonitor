@@ -35,7 +35,7 @@ func mockPingNetwork(t *testing.T, replies []pingReply, pingErr error) *int {
 	}
 
 	calls := 0
-	pingAddressFunc = func(ip net.IP, count int, timeout time.Duration) ([]pingReply, error) {
+	pingAddressFunc = func(_ context.Context, ip net.IP, count int, timeout time.Duration) ([]pingReply, error) {
 		calls++
 		assert.True(t, ip.Equal(net.IPv4(192, 0, 2, 1)))
 		assert.Equal(t, 3, count)
