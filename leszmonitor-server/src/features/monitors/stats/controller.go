@@ -20,12 +20,25 @@ func NewMonitorStatsAPIController(service MonitorStatsService) MonitorStatsAPICo
 	}
 }
 
+// @Summary	Get monitor stats
+// @Tags		monitors
+// @Produce	json
+// @Param		monitorId	path		string	true	"Monitor ID"
+// @Param		from		query		string	true	"Range start (RFC3339)"	format(date-time)
+// @Param		to			query		string	true	"Range end (RFC3339)"	format(date-time)
+// @Success	200			{object}	MonitorStats
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId}/stats [get]
 func (c *MonitorStatsAPIController) GetStatsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
 	if err != nil {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID"))
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 

@@ -4,6 +4,7 @@ import (
 	"embed"
 	"net/http"
 
+	"github.com/m-milek/leszmonitor/apidocs"
 	"github.com/m-milek/leszmonitor/features/auditlog"
 	"github.com/m-milek/leszmonitor/features/globalparameters"
 	"github.com/m-milek/leszmonitor/features/instance"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/auth"
+	"github.com/m-milek/leszmonitor/platform/constants"
 )
 
 func SetupRouters(
@@ -54,6 +56,12 @@ func SetupRouters(
 
 	// Health
 	protectedRouter.HandleFunc("GET /api/v1/health", GetHealthCheckHandler)
+
+	// API spec
+	protectedRouter.HandleFunc("GET /api/v1/swagger.json", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set(constants.HTTPHeaderContentType, constants.HTTPContentTypeJSON)
+		_, _ = w.Write(apidocs.Spec)
+	})
 
 	// SPA Handler for UI
 	publicRouter.Handle("/", newSPAHandler(staticFiles))

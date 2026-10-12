@@ -55,7 +55,7 @@ type UserRegisterPayload struct {
 }
 
 type LoginPayload struct {
-	jwt2.MapClaims
+	jwt2.MapClaims `swaggerignore:"true"`
 
 	Username string `json:"username"`
 	Password string `json:"password"`

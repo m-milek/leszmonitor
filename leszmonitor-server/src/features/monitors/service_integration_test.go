@@ -63,10 +63,10 @@ func TestIntegration_MonitorService_CreateMonitor(t *testing.T) {
 		resp, svcErr := monitorService.CreateMonitor(ctx, payload)
 		require.Nil(t, svcErr)
 		require.NotNil(t, resp)
-		assert.NotEmpty(t, resp.MonitorID)
+		assert.NotEmpty(t, resp.ID.String())
 
 		// Verify the monitor exists and fields match
-		monitorFromDB, svcErr := monitorService.GetMonitorByID(ctx, resp.MonitorID)
+		monitorFromDB, svcErr := monitorService.GetMonitorByID(ctx, resp.ID.String())
 		require.Nil(t, svcErr)
 		assert.Equal(t, "Ping API", monitorFromDB.Name)
 		assert.Equal(t, kind.HTTPConfigType, monitorFromDB.Type)
@@ -202,7 +202,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		monitor.Name = "Updated Name"
 		monitor.Interval = 120
 
-		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
+		_, svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.Nil(t, svcErr)
 
 		// Verify update in DB
@@ -236,7 +236,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		// Try to illegally change state
 		monitor.RunState = monitors.MonitorRunStateStopped
 
-		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
+		_, svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.Nil(t, svcErr)
 
 		updatedMonitor, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
@@ -255,7 +255,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 			ProbeConfig: "{}",
 		}
 
-		svcErr := monitorService.UpdateMonitor(ctx, fakeMonitor)
+		_, svcErr := monitorService.UpdateMonitor(ctx, fakeMonitor)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
@@ -266,7 +266,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		monitor := insertTestMonitor(ctx, t)
 		monitor.Name = "" // Invalid
 
-		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
+		_, svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -278,7 +278,7 @@ func TestIntegration_MonitorService_UpdateMonitor(t *testing.T) {
 		monitor.Type = kind.PushConfigType
 		monitor.ProbeConfig = `{"gracePeriodSeconds":30}`
 
-		svcErr := monitorService.UpdateMonitor(ctx, *monitor)
+		_, svcErr := monitorService.UpdateMonitor(ctx, *monitor)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 
@@ -293,7 +293,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(ctx, t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
+		_, svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
@@ -305,10 +305,10 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(ctx, t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
+		_, svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
 		require.Nil(t, svcErr)
 
-		svcErr = monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
+		_, svcErr = monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
 		require.Nil(t, svcErr)
 
 		retrieved, _ := monitorService.GetMonitorByID(ctx, monitor.ID.String())
@@ -320,7 +320,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 
 		monitor := insertTestMonitor(ctx, t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunState("invalid_state"))
+		_, svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunState("invalid_state"))
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
 	})
@@ -328,7 +328,7 @@ func TestIntegration_MonitorService_UpdateMonitorStateByID(t *testing.T) {
 	t.Run("Fails with 404 for nonexistent monitor", func(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), monitors.MonitorRunStateStopped)
+		_, svcErr := monitorService.UpdateMonitorStateByID(ctx, uuid.New(), monitors.MonitorRunStateStopped)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
@@ -355,7 +355,7 @@ func TestIntegration_MonitorService_RunMonitorManuallyByID(t *testing.T) {
 		created, svcErr := monitorService.CreateMonitor(ctx, payload)
 		require.Nil(t, svcErr)
 
-		monitor, svcErr := monitorService.GetMonitorByID(ctx, created.MonitorID)
+		monitor, svcErr := monitorService.GetMonitorByID(ctx, created.ID.String())
 		require.Nil(t, svcErr)
 
 		executeChannel := monitors.MonitorExecuteChannel.Subscribe()
@@ -412,7 +412,7 @@ func createPushMonitor(ctx context.Context, t *testing.T, monitorService *monito
 	created, svcErr := monitorService.CreateMonitor(ctx, payload)
 	require.Nil(t, svcErr)
 
-	monitor, svcErr := monitorService.GetMonitorByID(ctx, created.MonitorID)
+	monitor, svcErr := monitorService.GetMonitorByID(ctx, created.ID.String())
 	require.Nil(t, svcErr)
 	return monitor
 }
@@ -488,7 +488,7 @@ func TestIntegration_MonitorService_ReceivePush(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 		monitor := createPushMonitor(ctx, t, monitorService)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
+		_, svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
 		require.Nil(t, svcErr)
 
 		svcErr = monitorService.ReceivePush(ctx, monitor.ID, probe.PushProbePayload{})

@@ -48,7 +48,7 @@ const getBySlug = async (monitorSlug: string): Promise<Monitor> => {
   return normalizeMonitor(monitor);
 };
 
-const create = async (monitorData: MonitorCreatePayload) => {
+const create = async (monitorData: MonitorCreatePayload): Promise<Monitor> => {
   const res = await authFetch(`${SERVER_API_URL}/monitors`, {
     method: "POST",
     headers: {
@@ -57,10 +57,13 @@ const create = async (monitorData: MonitorCreatePayload) => {
     body: JSON.stringify(monitorData),
   });
 
-  return res.json();
+  return normalizeMonitor((await res.json()) as Monitor);
 };
 
-const update = async (monitorId: string, monitorData: MonitorUpdatePayload) => {
+const update = async (
+  monitorId: string,
+  monitorData: MonitorUpdatePayload,
+): Promise<Monitor> => {
   const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}`, {
     method: "PATCH",
     headers: {
@@ -69,10 +72,13 @@ const update = async (monitorId: string, monitorData: MonitorUpdatePayload) => {
     body: JSON.stringify(monitorData),
   });
 
-  return res.json();
+  return normalizeMonitor((await res.json()) as Monitor);
 };
 
-const updateState = async (monitorId: string, newState: string) => {
+const updateState = async (
+  monitorId: string,
+  newState: string,
+): Promise<Monitor> => {
   const res = await authFetch(`${SERVER_API_URL}/monitors/${monitorId}/state`, {
     method: "PATCH",
     headers: {
@@ -81,7 +87,7 @@ const updateState = async (monitorId: string, newState: string) => {
     body: JSON.stringify({ newState }),
   });
 
-  return res.json();
+  return normalizeMonitor((await res.json()) as Monitor);
 };
 
 const remove = async (monitorId: string) => {

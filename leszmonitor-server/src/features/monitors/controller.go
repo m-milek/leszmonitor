@@ -3,6 +3,8 @@ package monitors
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"slices"
@@ -25,12 +27,25 @@ func NewMonitorAPIController(service IMonitorService) MonitorAPIController {
 	}
 }
 
-const messageMonitorIDIsRequired = "Monitor ID is required"
+const messageMonitorIDIsRequired = "monitor ID is required"
 
 const maxPushBodyBytes = 5000
 
 // CreateMonitorHandler handles the addition of a new monitor.
 // It expects a JSON payload with the monitor config of appropriate type.
+//
+//	@Summary	Create a monitor
+//	@Tags		monitors
+//	@Accept		json
+//	@Produce	json
+//	@Param		body	body		Monitor	true	"Monitor definition; probeConfig is sent as a JSON object"
+//	@Success	201		{object}	Monitor
+//	@Failure	400		{object}	httpx.ErrorResponse
+//	@Failure	401		{object}	httpx.ErrorResponse
+//	@Failure	403		{object}	httpx.ErrorResponse
+//	@Failure	500		{object}	httpx.ErrorResponse
+//	@Security	BearerAuth
+//	@Router		/monitors [post]
 func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitor, err := decodeMonitorPayload(r)
@@ -40,13 +55,13 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 	}
 
 	if monitor.ProbeConfig == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "probeConfig is required")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("probeConfig is required"))
 		return
 	}
 
 	_, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid probe config: "+err.Error())
+		httpx.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("invalid probe config: %w", err))
 		return
 	}
 	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
@@ -54,20 +69,33 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	monitorCreateResponse, serviceErr := c.service.CreateMonitor(ctx, monitor)
+	createdMonitor, serviceErr := c.service.CreateMonitor(ctx, monitor)
 	if serviceErr != nil {
 		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
 	}
 
-	httpx.RespondJSON(ctx, w, http.StatusCreated, monitorCreateResponse)
+	httpx.RespondJSON(ctx, w, http.StatusCreated, createdMonitor)
 }
 
+// @Summary	Delete a monitor
+// @Tags		monitors
+// @Produce	json
+// @Param		monitorId	path	string	true	"Monitor ID"
+// @Success	204
+// @Failure	400	{object}	httpx.ErrorResponse
+// @Failure	401	{object}	httpx.ErrorResponse
+// @Failure	403	{object}	httpx.ErrorResponse
+// @Failure	404	{object}	httpx.ErrorResponse
+// @Failure	409	{object}	httpx.ErrorResponse
+// @Failure	500	{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId} [delete]
 func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageMonitorIDIsRequired))
 		return
 	}
 
@@ -81,9 +109,18 @@ func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	httpx.RespondMessage(ctx, w, http.StatusOK, "Monitor deleted successfully")
+	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary	List monitors
+// @Tags		monitors
+// @Produce	json
+// @Success	200	{array}		Monitor
+// @Failure	401	{object}	httpx.ErrorResponse
+// @Failure	403	{object}	httpx.ErrorResponse
+// @Failure	500	{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors [get]
 func (c *MonitorAPIController) GetAllMonitorsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -96,11 +133,23 @@ func (c *MonitorAPIController) GetAllMonitorsHandler(w http.ResponseWriter, r *h
 	httpx.RespondJSON(ctx, w, http.StatusOK, allMonitors)
 }
 
+// @Summary	Get a monitor
+// @Tags		monitors
+// @Produce	json
+// @Param		monitorId	path		string	true	"Monitor ID"
+// @Success	200			{object}	Monitor
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	404			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId} [get]
 func (c *MonitorAPIController) GetMonitorByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageMonitorIDIsRequired))
 		return
 	}
 
@@ -115,11 +164,27 @@ func (c *MonitorAPIController) GetMonitorByIDHandler(w http.ResponseWriter, r *h
 
 // UpdateMonitorHandler handles the update of an existing monitor.
 // TODO: Proper update mechanism, maybe custom payload so we can update only specific fields
+//
+//	@Summary	Update a monitor
+//	@Tags		monitors
+//	@Accept		json
+//	@Produce	json
+//	@Param		monitorId	path		string	true	"Monitor ID"
+//	@Param		body		body		Monitor	true	"Monitor definition; probeConfig is sent as a JSON object"
+//	@Success	200			{object}	Monitor
+//	@Failure	400			{object}	httpx.ErrorResponse
+//	@Failure	401			{object}	httpx.ErrorResponse
+//	@Failure	403			{object}	httpx.ErrorResponse
+//	@Failure	404			{object}	httpx.ErrorResponse
+//	@Failure	409			{object}	httpx.ErrorResponse
+//	@Failure	500			{object}	httpx.ErrorResponse
+//	@Security	BearerAuth
+//	@Router		/monitors/{monitorId} [patch]
 func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	monitorID := r.PathValue("monitorId")
-	if monitorID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+	monitorUUID, err := uuid.Parse(r.PathValue("monitorId"))
+	if err != nil {
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 
@@ -128,15 +193,16 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		httpx.RespondError(ctx, w, http.StatusBadRequest, err)
 		return
 	}
+	monitor.ID = monitorUUID
 
 	if monitor.ProbeConfig == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "probeConfig is required")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("probeConfig is required"))
 		return
 	}
 
 	_, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor config: "+err.Error())
+		httpx.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("invalid probe config: %w", err))
 		return
 	}
 
@@ -145,30 +211,45 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	serviceErr := c.service.UpdateMonitor(ctx, monitor)
+	updatedMonitor, serviceErr := c.service.UpdateMonitor(ctx, monitor)
 	if serviceErr != nil {
 		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
 		return
 	}
 
-	httpx.RespondMessage(ctx, w, http.StatusOK, "monitor updated successfully")
+	httpx.RespondJSON(ctx, w, http.StatusOK, updatedMonitor)
 }
 
 type UpdateMonitorStatePayload struct {
 	NewState string `json:"newState"`
 }
 
+// @Summary	Pause or resume a monitor
+// @Tags		monitors
+// @Accept		json
+// @Produce	json
+// @Param		monitorId	path		string						true	"Monitor ID"
+// @Param		body		body		UpdateMonitorStatePayload	true	"New run state (active or paused)"
+// @Success	200			{object}	Monitor
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	404			{object}	httpx.ErrorResponse
+// @Failure	409			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId}/state [patch]
 func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageMonitorIDIsRequired))
 		return
 	}
 
 	monitorUUID, err := uuid.Parse(monitorID)
 	if err != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 
@@ -179,7 +260,7 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 	}
 
 	if payload.NewState == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "newState is required")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("newState is required"))
 		return
 	}
 
@@ -188,7 +269,7 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	serviceErr := c.service.UpdateMonitorStateByID(
+	updatedMonitor, serviceErr := c.service.UpdateMonitorStateByID(
 		ctx,
 		monitorUUID,
 		MonitorRunState(payload.NewState),
@@ -198,20 +279,32 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	httpx.RespondMessage(ctx, w, http.StatusOK, "Monitor state updated successfully")
+	httpx.RespondJSON(ctx, w, http.StatusOK, updatedMonitor)
 }
 
+// @Summary	Run a monitor now
+// @Tags		monitors
+// @Produce	json
+// @Param		monitorId	path		string	true	"Monitor ID"
+// @Success	202			{object}	httpx.MessageResponse
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	404			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId}/run [post]
 func (c *MonitorAPIController) RunMonitorManuallyByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	monitorID := r.PathValue("monitorId")
 	if monitorID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageMonitorIDIsRequired)
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageMonitorIDIsRequired))
 		return
 	}
 
 	monitorUUID, err := uuid.Parse(monitorID)
 	if err != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 
@@ -226,21 +319,35 @@ func (c *MonitorAPIController) RunMonitorManuallyByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	httpx.RespondMessage(ctx, w, http.StatusAccepted, "Monitor run scheduled")
+	httpx.RespondMessage(ctx, w, http.StatusAccepted, "monitor run scheduled")
 }
 
+// @Summary		Report a push monitor heartbeat
+// @Description	POST may carry a raw body of up to 5000 bytes, stored with the result.
+// @Tags			push
+// @Produce		json
+// @Param			monitorId	path	string	true	"Monitor ID"
+// @Param			status		query	string	false	"Reported status"					Enums(up, down)
+// @Param			latency		query	int		false	"Reported latency in milliseconds"	minimum(0)
+// @Success		202
+// @Failure		400	{object}	httpx.ErrorResponse
+// @Failure		404	{object}	httpx.ErrorResponse
+// @Failure		409	{object}	httpx.ErrorResponse
+// @Failure		500	{object}	httpx.ErrorResponse
+// @Router			/push/{monitorId} [get]
+// @Router			/push/{monitorId} [post]
 func (c *MonitorAPIController) ReceivePushHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	monitorUUID, err := uuid.Parse(r.PathValue("monitorId"))
 	if err != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 
 	status := r.URL.Query().Get("status")
 	if !slices.Contains([]string{"up", "down", ""}, status) {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid status reported")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid status reported"))
 		return
 	}
 
@@ -248,7 +355,7 @@ func (c *MonitorAPIController) ReceivePushHandler(w http.ResponseWriter, r *http
 	if latencyStr := r.URL.Query().Get("latency"); latencyStr != "" {
 		parsed, err := strconv.ParseInt(latencyStr, 10, 64)
 		if err != nil || parsed < 0 {
-			httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid latency reported")
+			httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid latency reported"))
 			return
 		}
 		latency = &parsed
@@ -256,11 +363,11 @@ func (c *MonitorAPIController) ReceivePushHandler(w http.ResponseWriter, r *http
 
 	body, err := io.ReadAll(io.LimitReader(r.Body, maxPushBodyBytes+1))
 	if err != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Failed to read body")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("failed to read body"))
 		return
 	}
 	if len(body) > maxPushBodyBytes {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Body too large")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("body too large"))
 		return
 	}
 
@@ -276,15 +383,27 @@ func (c *MonitorAPIController) ReceivePushHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	httpx.RespondMessage(ctx, w, http.StatusAccepted, "")
+	w.WriteHeader(http.StatusAccepted)
 }
 
+// @Summary	Export a monitor as YAML config
+// @Tags		monitors
+// @Produce	plain
+// @Param		monitorId	path		string	true	"Monitor ID"
+// @Success	200			{string}	string	"Monitor config in YAML"
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	404			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId}/export [get]
 func (c *MonitorAPIController) ExportToYAMLHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
 	if err != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
 		return
 	}
 

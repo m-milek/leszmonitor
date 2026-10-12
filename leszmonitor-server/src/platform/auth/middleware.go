@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -15,7 +16,7 @@ func JwtAuth(next http.Handler) http.Handler {
 
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(rw, "Unauthorized: No token provided", http.StatusUnauthorized)
+			httpx.RespondError(r.Context(), rw, http.StatusUnauthorized, errors.New("no token provided"))
 			return
 		}
 
@@ -23,7 +24,7 @@ func JwtAuth(next http.Handler) http.Handler {
 
 		userClaims, err := ValidateJwt(tokenString)
 		if err != nil {
-			http.Error(rw, "Unauthorized: Invalid token", http.StatusUnauthorized)
+			httpx.RespondError(r.Context(), rw, http.StatusUnauthorized, errors.New("invalid token"))
 			return
 		}
 

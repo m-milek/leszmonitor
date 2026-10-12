@@ -303,7 +303,7 @@ func TestIntegration_MonitorService_ConfigBasedMonitorIsReadOnly(t *testing.T) {
 
 		updated := *monitor
 		updated.Name = "Changed"
-		svcErr := monitorService.UpdateMonitor(ctx, updated)
+		_, svcErr := monitorService.UpdateMonitor(ctx, updated)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusConflict, svcErr.Code)
 		assert.Equal(t, "API health", getMonitorBySlug(ctx, t, "api-health").Name)
@@ -321,7 +321,7 @@ func TestIntegration_MonitorService_ConfigBasedMonitorIsReadOnly(t *testing.T) {
 	t.Run("State update fails with 409", func(t *testing.T) {
 		ctx, monitorService, monitor := setup(t)
 
-		svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
+		_, svcErr := monitorService.UpdateMonitorStateByID(ctx, monitor.ID, monitors.MonitorRunStateStopped)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusConflict, svcErr.Code)
 		assert.Equal(t, monitors.MonitorRunStateActive, getMonitorBySlug(ctx, t, "api-health").RunState)

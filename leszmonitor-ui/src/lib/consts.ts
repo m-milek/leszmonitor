@@ -10,4 +10,5 @@ export const QUERY_KEYS = {
   MONITOR_STATUS_HISTORY: "monitorStatusHistory",
   TAGS: "tags",
   GLOBAL_PARAMETERS: "globalParameters",
+  API_SPEC: "apiSpec",
 };

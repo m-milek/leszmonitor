@@ -12,6 +12,13 @@ type healthCheckResponse struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// @Summary	Health check
+// @Tags		health
+// @Produce	json
+// @Success	200	{object}	healthCheckResponse
+// @Failure	401	{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/health [get]
 func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	response := healthCheckResponse{

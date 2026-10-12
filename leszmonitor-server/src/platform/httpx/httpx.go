@@ -20,12 +20,17 @@ func RespondJSON(ctx context.Context, w http.ResponseWriter, statusCode int, dat
 	}
 }
 
-type simpleResponse struct {
+type MessageResponse struct {
 	Message string `json:"message"`
 }
 
-type errorResponse struct {
+type ErrorBody struct {
 	Message string `json:"message"`
+}
+
+type ErrorResponse struct {
+	Status int       `json:"status"`
+	Error  ErrorBody `json:"error"`
 }
 
 func RespondMessage(ctx context.Context, w http.ResponseWriter, statusCode int, message string) {
@@ -33,7 +38,7 @@ func RespondMessage(ctx context.Context, w http.ResponseWriter, statusCode int, 
 	w.Header().Set(constants.HTTPHeaderContentType, constants.HTTPContentTypeJSON)
 	w.WriteHeader(statusCode)
 
-	response := simpleResponse{Message: message}
+	response := MessageResponse{Message: message}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		logger.Error().Err(err).Msg("Failed to encode JSON response")
@@ -54,9 +59,9 @@ func RespondError(ctx context.Context, w http.ResponseWriter, statusCode int, er
 		message = "Internal server error"
 	}
 
-	response := map[string]any{
-		"status": statusCode,
-		"error":  errorResponse{Message: message},
+	response := ErrorResponse{
+		Status: statusCode,
+		Error:  ErrorBody{Message: message},
 	}
 
 	if encodeErr := json.NewEncoder(w).Encode(response); encodeErr != nil {
