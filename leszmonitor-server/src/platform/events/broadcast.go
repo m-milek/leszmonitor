@@ -7,16 +7,25 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const defaultBufferSize = 100
+
 type EventBus[T any] struct {
 	mu          sync.Mutex
 	subscribers []chan T
+	bufferSize  int
 	logger      zerolog.Logger
 }
 
 func NewEventBus[T any](busName string) *EventBus[T] {
+	return NewEventBusWithBuffer[T](busName, defaultBufferSize)
+}
+
+// NewEventBusWithBuffer creates a bus whose subscribers get a buffer of bufferSize messages.
+func NewEventBusWithBuffer[T any](busName string, bufferSize int) *EventBus[T] {
 	logger := log.New().With().Str("component", "eventBus").Str("busName", busName).Logger()
 	return &EventBus[T]{
 		subscribers: make([]chan T, 0),
+		bufferSize:  bufferSize,
 		logger:      logger,
 	}
 }
@@ -25,7 +34,7 @@ func (b *EventBus[T]) Subscribe() <-chan T {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	ch := make(chan T, 100) // Buffered channel to avoid blocking
+	ch := make(chan T, b.bufferSize)
 	b.subscribers = append(b.subscribers, ch)
 	return ch
 }
