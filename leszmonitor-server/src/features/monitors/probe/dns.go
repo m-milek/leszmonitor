@@ -28,10 +28,10 @@ const (
 )
 
 type DNSProbe struct {
-	Hostname             string        `json:"hostname"`
-	DNSServer            string        `json:"dnsServer,omitempty"`
-	RecordType           DNSRecordType `json:"recordType"`
-	ExpectedRecordValues []string      `json:"expectedRecordValues"`
+	Hostname             string        `json:"hostname" yaml:"hostname"`
+	DNSServer            string        `json:"dnsServer,omitempty" yaml:"dnsServer,omitempty"`
+	RecordType           DNSRecordType `json:"recordType" yaml:"recordType"`
+	ExpectedRecordValues []string      `json:"expectedRecordValues" yaml:"expectedRecordValues"`
 }
 
 type DNSCNAMEExpectedValues struct {

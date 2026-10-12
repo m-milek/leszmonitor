@@ -11,7 +11,7 @@ import (
 )
 
 type PushProbe struct {
-	GracePeriodSeconds int `json:"gracePeriodSeconds"`
+	GracePeriodSeconds int `json:"gracePeriodSeconds" yaml:"gracePeriodSeconds"`
 }
 
 type PushProbePayload struct {

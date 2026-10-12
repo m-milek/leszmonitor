@@ -10,19 +10,19 @@ import (
 )
 
 type Monitor struct {
-	util.Timestamps
-	ID                     uuid.UUID       `json:"id"                     db:"id"`                       // ID is the unique identifier for the monitor, generated as a UUID
-	Slug                   string          `json:"slug"                   db:"slug"`                     // Slug is unique
-	Name                   string          `json:"name"                   db:"name"`                     // Name of the monitor
-	Description            string          `json:"description"            db:"description"`              // Description of the monitor
-	Interval               int             `json:"interval"               db:"interval"`                 // Interval determines how often to run the monitor in seconds
-	Type                   kind.ProbeType  `json:"type"                   db:"kind"`                     // Type of the monitor (http, tcp, etc.)
-	ProbeConfig            string          `json:"probeConfig"            db:"config"`                   // JSON string containing the specific configuration for the monitor type
-	ResultRetentionSeconds int             `json:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
-	RunState               MonitorRunState `json:"runState"               db:"run_state"`                // RunState indicates whether the monitor is currently running or stopped
-	OwnerID                uuid.UUID       `json:"ownerId"                db:"owner_id"`                 // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
-	TagIDs                 []uuid.UUID     `json:"tagIds"                 db:"-"`
-	Source                 MonitorSource   `json:"source"                 db:"source"`
+	util.Timestamps        `yaml:",inline"`
+	ID                     uuid.UUID       `json:"id"                     yaml:"id"                     db:"id"`                       // ID is the unique identifier for the monitor, generated as a UUID
+	Slug                   string          `json:"slug"                   yaml:"slug"                   db:"slug"`                     // Slug is unique
+	Name                   string          `json:"name"                   yaml:"name"                   db:"name"`                     // Name of the monitor
+	Description            string          `json:"description"            yaml:"description"            db:"description"`              // Description of the monitor
+	Interval               int             `json:"interval"               yaml:"interval"               db:"interval"`                 // Interval determines how often to run the monitor in seconds
+	Type                   kind.ProbeType  `json:"type"                   yaml:"type"                   db:"kind"`                     // Type of the monitor (http, tcp, etc.)
+	ProbeConfig            string          `json:"probeConfig"            yaml:"probeConfig"            db:"config"`                   // JSON string containing the specific configuration for the monitor type
+	ResultRetentionSeconds int             `json:"resultRetentionSeconds" yaml:"resultRetentionSeconds" db:"result_retention_seconds"` // ResultRetentionSeconds determines how long to keep the monitor results in seconds
+	RunState               MonitorRunState `json:"runState"               yaml:"runState"               db:"run_state"`                // RunState indicates whether the monitor is currently running or stopped
+	OwnerID                uuid.UUID       `json:"ownerId"                yaml:"ownerId"                db:"owner_id"`                 // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
+	TagIDs                 []uuid.UUID     `json:"tagIds"                 yaml:"tagIds"                 db:"-"`
+	Source                 MonitorSource   `json:"source"                 yaml:"source"                 db:"source"`
 }
 
 type MonitorRunState string

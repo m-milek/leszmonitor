@@ -21,9 +21,9 @@ const (
 )
 
 type PingProbe struct {
-	Host      string `json:"host"`
-	Count     int    `json:"count"`
-	TimeoutMs int    `json:"timeoutMs"`
+	Host      string `json:"host" yaml:"host"`
+	Count     int    `json:"count" yaml:"count"`
+	TimeoutMs int    `json:"timeoutMs" yaml:"timeoutMs"`
 }
 
 type pingReply struct {

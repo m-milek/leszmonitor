@@ -17,6 +17,9 @@ type LeszmonitorConfigFile struct {
 }
 
 var (
+	ForbiddenMonitorConfigKeys = []string{
+		"id", "slug", "runState", "ownerId", "tagIds", "source", "createdAt", "updatedAt",
+	}
 	fileConfig       = &LeszmonitorConfigFile{}
 	globalParameters = map[string]any{}
 )
