@@ -21,4 +21,21 @@ test.describe("Monitor Details", () => {
       page.getByRole("combobox").filter({ hasText: "Last 1 hour" }),
     ).toBeVisible();
   });
+
+  test("Exports the monitor as YAML", async ({ page }) => {
+    const name = uniqueName("Export Push Monitor");
+    await createMonitor(page, {
+      type: "Push",
+      name,
+      fillFields: () => page.getByLabel("Grace period (s)").fill("60"),
+    });
+
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Export" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText(`name: ${name}`);
+    await expect(dialog).toContainText("type: push");
+    await expect(dialog).toContainText("gracePeriodSeconds: 60");
+  });
 });
