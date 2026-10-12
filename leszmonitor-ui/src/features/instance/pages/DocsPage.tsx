@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
 import { PageContainer } from "@/components/common/PageContainer";
@@ -14,6 +16,13 @@ export function DocsPage() {
     queryFn: DocsApi.getSpec,
     queryKey: [QUERY_KEYS.API_SPEC],
   });
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark-mode", resolvedTheme === "dark");
+    return () => root.classList.remove("dark-mode");
+  }, [resolvedTheme]);
 
   return (
     <PageContainer>

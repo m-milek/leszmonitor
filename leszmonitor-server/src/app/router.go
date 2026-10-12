@@ -19,6 +19,7 @@ import (
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/httpx"
+	"github.com/m-milek/leszmonitor/platform/meta"
 )
 
 func SetupRouters(
@@ -58,9 +59,13 @@ func SetupRouters(
 	router.HandleFunc("GET /api/v1/health", GetHealthCheckHandler)
 
 	// API spec
+	spec, err := apidocs.SpecWithVersion(meta.Version)
+	if err != nil {
+		panic("Failed to prepare embedded API spec: " + err.Error())
+	}
 	router.HandleFunc("GET /api/v1/swagger.json", auth.RequireAuth(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set(constants.HTTPHeaderContentType, constants.HTTPContentTypeJSON)
-		_, _ = w.Write(apidocs.Spec)
+		_, _ = w.Write(spec)
 	}))
 
 	// Unknown API paths must not fall through to the SPA
