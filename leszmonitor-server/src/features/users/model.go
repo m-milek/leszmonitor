@@ -7,18 +7,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/auth"
-	config "github.com/m-milek/leszmonitor/platform/config"
+	"github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 // User represents a user in the system.
 type User struct {
-	util.Timestamps
 	ID              uuid.UUID `json:"id"              db:"id"`
 	Username        string    `json:"username"        db:"username"`
 	PasswordHash    string    `json:"-"               db:"password_hash"`
 	Role            auth.Role `json:"role"            db:"role"`
 	IsInstanceAdmin bool      `json:"isInstanceAdmin" db:"is_instance_admin"`
+	util.Timestamps
 }
 
 // NewUser creates a new User instance with the provided username, password, and email.

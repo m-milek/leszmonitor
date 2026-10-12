@@ -1,6 +1,7 @@
 package monitors
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -74,7 +75,7 @@ func SynchronizeConfigBasedMonitors(
 			return errors.Wrap(err, fmt.Sprintf("failed to validate monitor config (%s)", slug))
 		}
 
-		if _, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig); err != nil {
+		if _, err = probe.Parse[probe.Probe](monitor.Type, string(monitor.ProbeConfig)); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to parse monitor's probe config (%s)", slug))
 		}
 
@@ -167,4 +168,12 @@ func parseTagNames(rawTags any) ([]string, error) {
 	}
 
 	return tagNames, nil
+}
+
+func decodeMonitorJSON(data []byte) (Monitor, error) {
+	var monitor Monitor
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	err := dec.Decode(&monitor)
+	return monitor, err
 }

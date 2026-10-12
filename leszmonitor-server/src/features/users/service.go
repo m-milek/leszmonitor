@@ -55,7 +55,7 @@ type UserRegisterPayload struct {
 }
 
 type LoginPayload struct {
-	jwt2.MapClaims
+	jwt2.MapClaims `swaggerignore:"true"`
 
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -121,7 +121,7 @@ func (s *UserService) SetUserRole(
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	existingUser, getErr := s.internalGetUserByUsername(ctx, username)

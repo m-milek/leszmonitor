@@ -2,6 +2,7 @@ package httpx
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -61,7 +62,7 @@ func Recoverer(ctx context.Context, next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				logger := log.FromContext(r.Context())
 				logger.Error().Any("panic", err).Msg("Panic recovered")
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				RespondError(r.Context(), w, http.StatusInternalServerError, fmt.Errorf("panic: %v", err))
 			}
 		}()
 		next.ServeHTTP(w, r)

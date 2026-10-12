@@ -16,10 +16,10 @@ import (
 
 type ITagService interface {
 	CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.ServiceError)
-	GetTagByID(ctx context.Context, id string) (*Tag, *apperr.ServiceError)
+	GetTagByID(ctx context.Context, id uuid.UUID) (*Tag, *apperr.ServiceError)
 	GetAllTags(ctx context.Context) ([]Tag, *apperr.ServiceError)
 	UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.ServiceError)
-	DeleteTag(ctx context.Context, id string) *apperr.ServiceError
+	DeleteTag(ctx context.Context, id uuid.UUID) *apperr.ServiceError
 }
 
 // TagService handles tag-related CRUD operations.
@@ -45,7 +45,7 @@ func (s *TagService) CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	newTag := Tag{
@@ -91,27 +91,21 @@ func (s *TagService) CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 }
 
 // GetTagByID retrieves a single tag by its ID.
-func (s *TagService) GetTagByID(ctx context.Context, id string) (*Tag, *apperr.ServiceError) {
+func (s *TagService) GetTagByID(ctx context.Context, id uuid.UUID) (*Tag, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "GetTagByID")
-	logger.Trace().Str("id", id).Msg("Retrieving tag by ID")
+	logger.Trace().Str("id", id.String()).Msg("Retrieving tag by ID")
 
-	tagUUID, parseErr := uuid.Parse(id)
-	if parseErr != nil {
-		logger.Error().Str("id", id).Msg("Invalid tag ID format")
-		return nil, apperr.NewBadRequestError("invalid tag ID format: %w", parseErr)
-	}
-
-	tag, err := NewTagDAO(s.db.Querier()).GetTagByID(ctx, tagUUID)
+	tag, err := NewTagDAO(s.db.Querier()).GetTagByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Error().Str("id", id).Msg("Tag not found in database")
+			logger.Error().Str("id", id.String()).Msg("Tag not found in database")
 			return nil, apperr.NewNotFoundError("tag with ID %s not found", id)
 		}
-		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve tag from database")
+		logger.Error().Err(err).Str("id", id.String()).Msg("Failed to retrieve tag from database")
 		return nil, apperr.NewInternalError("failed to retrieve tag: %w", err)
 	}
 
-	logger.Debug().Str("id", id).Msg("Tag retrieved successfully")
+	logger.Debug().Str("id", id.String()).Msg("Tag retrieved successfully")
 	return tag, nil
 }
 
@@ -138,7 +132,7 @@ func (s *TagService) UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	tag.Normalize()
@@ -195,30 +189,24 @@ func (s *TagService) UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 }
 
 // DeleteTag deletes a tag by its ID.
-func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceError {
+func (s *TagService) DeleteTag(ctx context.Context, id uuid.UUID) *apperr.ServiceError {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameTag, "DeleteTag")
-	logger.Trace().Str("id", id).Msg("Deleting tag")
+	logger.Trace().Str("id", id.String()).Msg("Deleting tag")
 
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return apperr.NewUnauthorizedError("user claims not found in context")
-	}
-
-	tagUUID, err := uuid.Parse(id)
-	if err != nil {
-		logger.Error().Str("id", id).Msg("Invalid tag ID format")
-		return apperr.NewBadRequestError("invalid tag ID format: %w", err)
+		return apperr.NewInternalError("user claims not found in context")
 	}
 
 	txErr := audit.WithAuditedVoidTx(ctx, s.db, func(q db.Querier) (*audit.AuditLogParams, error) {
-		tagBeforeDelete, err := NewTagDAO(q).GetTagByID(ctx, tagUUID)
+		tagBeforeDelete, err := NewTagDAO(q).GetTagByID(ctx, id)
 		if err != nil {
 			if errors.Is(err, db.ErrNotFound) {
-				logger.Error().Str("id", id).Msg("Tag not found in database")
+				logger.Error().Str("id", id.String()).Msg("Tag not found in database")
 				return nil, apperr.NewNotFoundError("tag with ID %s not found", id)
 			}
-			logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve tag before deletion")
+			logger.Error().Err(err).Str("id", id.String()).Msg("Failed to retrieve tag before deletion")
 			return nil, fmt.Errorf("failed to retrieve tag before deletion: %w", err)
 		}
 
@@ -226,17 +214,17 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceEr
 			return nil, apperr.NewConflictError("tag %s is managed by config file", id)
 		}
 
-		if _, delErr := NewTagDAO(q).DeleteTagByID(ctx, tagUUID); delErr != nil {
-			logger.Error().Err(delErr).Str("id", id).Msg("Failed to delete tag in database")
+		if _, delErr := NewTagDAO(q).DeleteTagByID(ctx, id); delErr != nil {
+			logger.Error().Err(delErr).Str("id", id.String()).Msg("Failed to delete tag in database")
 			return nil, delErr
 		}
 
 		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
-			ResourceID: &tagUUID,
+			ResourceID: &id,
 			Action:     audit.ActionDeleteTag,
 			IsSuccess:  true,
-			Summary:    fmt.Sprintf("Tag with ID %s deleted", tagUUID),
+			Summary:    fmt.Sprintf("Tag with ID %s deleted", id),
 			Before:     tagBeforeDelete,
 		}
 		return params, nil
@@ -246,13 +234,13 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceEr
 			return serviceErr
 		}
 		if errors.Is(txErr, db.ErrNotFound) {
-			logger.Error().Str("id", id).Msg("Tag not found or already deleted")
+			logger.Error().Str("id", id.String()).Msg("Tag not found or already deleted")
 			return apperr.NewNotFoundError("tag not found or already deleted")
 		}
-		logger.Error().Err(txErr).Str("id", id).Msg("Failed to delete tag")
+		logger.Error().Err(txErr).Str("id", id.String()).Msg("Failed to delete tag")
 		return apperr.NewInternalError("failed to delete tag: %w", txErr)
 	}
 
-	logger.Debug().Str("id", id).Msg("Tag deleted")
+	logger.Debug().Str("id", id.String()).Msg("Tag deleted")
 	return nil
 }

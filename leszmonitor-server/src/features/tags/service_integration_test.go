@@ -104,7 +104,7 @@ func TestIntegration_TagService_GetTagByID(t *testing.T) {
 		})
 		require.Nil(t, svcErr)
 
-		found, svcErr := tagService.GetTagByID(ctx, created.ID.String())
+		found, svcErr := tagService.GetTagByID(ctx, created.ID)
 		require.Nil(t, svcErr)
 		assert.Equal(t, created.ID, found.ID)
 		assert.Equal(t, "Production", found.Name)
@@ -115,18 +115,11 @@ func TestIntegration_TagService_GetTagByID(t *testing.T) {
 	t.Run("Returns not found for an unknown ID", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		_, svcErr := tagService.GetTagByID(ctx, uuid.New().String())
+		_, svcErr := tagService.GetTagByID(ctx, uuid.New())
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
 
-	t.Run("Returns bad request for a malformed ID", func(t *testing.T) {
-		ctx, tagService, _, _ := setupTagIntegrationTest(t)
-
-		_, svcErr := tagService.GetTagByID(ctx, "not-a-uuid")
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
-	})
 }
 
 func TestIntegration_TagService_GetAllTags(t *testing.T) {
@@ -256,7 +249,7 @@ func TestIntegration_TagService_DeleteTag(t *testing.T) {
 		created, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
 
-		svcErr = tagService.DeleteTag(ctx, created.ID.String())
+		svcErr = tagService.DeleteTag(ctx, created.ID)
 		require.Nil(t, svcErr)
 
 		all, svcErr := tagService.GetAllTags(ctx)
@@ -282,18 +275,10 @@ func TestIntegration_TagService_DeleteTag(t *testing.T) {
 		assert.True(t, found, "expected a tag.delete audit log entry")
 	})
 
-	t.Run("Returns bad request for a malformed ID", func(t *testing.T) {
-		ctx, tagService, _, _ := setupTagIntegrationTest(t)
-
-		svcErr := tagService.DeleteTag(ctx, "not-a-uuid")
-		require.NotNil(t, svcErr)
-		assert.Equal(t, http.StatusBadRequest, svcErr.Code)
-	})
-
 	t.Run("Returns not found for an unknown ID", func(t *testing.T) {
 		ctx, tagService, _, _ := setupTagIntegrationTest(t)
 
-		svcErr := tagService.DeleteTag(ctx, uuid.New().String())
+		svcErr := tagService.DeleteTag(ctx, uuid.New())
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})

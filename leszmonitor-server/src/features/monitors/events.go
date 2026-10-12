@@ -6,7 +6,7 @@ import "github.com/m-milek/leszmonitor/platform/events"
 var MonitorLifecycleChannel = events.NewEventBus[MonitorLifecycleMessage]("monitor_lifecycle")
 
 // MonitorRunChannel distributes monitor run events (e.g., tcp results) to subscribers.
-var MonitorRunChannel = events.NewEventBus[MonitorRunMessage]("monitor_run")
+var MonitorRunChannel = events.NewEventBusWithBuffer[MonitorRunMessage]("monitor_run", 1000)
 
 // MonitorResultSavedChannel distributes monitor run events after their result has been persisted.
 var MonitorResultSavedChannel = events.NewEventBus[MonitorRunMessage]("monitor_result_saved")

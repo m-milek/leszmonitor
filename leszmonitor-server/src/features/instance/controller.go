@@ -16,6 +16,13 @@ func NewInstanceMetadataAPIController(service IInstanceMetadataService) Instance
 	}
 }
 
+// @Summary	Get instance metadata
+// @Tags		instance
+// @Produce	json
+// @Success	200	{object}	InstanceMetadata
+// @Failure	401	{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/instance-metadata [get]
 func (c *InstanceMetadataAPIController) GetInstanceMetadataHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

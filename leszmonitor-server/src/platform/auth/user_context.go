@@ -24,13 +24,13 @@ func GetUserClaimsFromContext(ctx context.Context) (*UserClaims, bool) {
 	return claims, ok
 }
 
-// ExtractUserOrRespond returns the user from context or writes a 401 response and returns nil, false.
+// ExtractUserOrRespond returns the user from context or writes a 500 response and returns nil, false.
 func ExtractUserOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request) (*UserClaims, bool) {
 	logger := log.FromContext(ctx)
 	user, ok := GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Warn().Msg("User claims not found in context")
-		httpx.RespondError(ctx, w, http.StatusUnauthorized, fmt.Errorf("user claims not found in context"))
+		httpx.RespondError(ctx, w, http.StatusInternalServerError, fmt.Errorf("user claims not found in context"))
 		return nil, false
 	}
 	return user, true

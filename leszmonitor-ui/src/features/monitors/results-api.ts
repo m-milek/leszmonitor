@@ -26,7 +26,7 @@ const getPage = async (
   );
   const queryParams = new URLSearchParams({
     page: pagination.page.toString(),
-    per_page: pagination.perPage.toString(),
+    perPage: pagination.perPage.toString(),
   });
   if (from) queryParams.set("from", from.toISOString());
   const res = await authFetch(

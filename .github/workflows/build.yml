@@ -36,6 +36,11 @@ jobs:
           mkdir -p leszmonitor-server/src/static &&
           touch leszmonitor-server/src/static/index.html
 
+      - name: Check OpenAPI spec is up to date
+        run: |
+          task server:swag
+          git diff --exit-code leszmonitor-server/src
+
       - name: Build Server
         run: task server:build
 

@@ -17,7 +17,7 @@ END;
 
 CREATE TABLE IF NOT EXISTS monitors (
     id                       TEXT PRIMARY KEY,
-    slug                     TEXT NOT NULL CHECK (LENGTH(slug) >= 2) CHECK (LENGTH(slug) <= 50),
+    slug                     TEXT NOT NULL,
     name                     TEXT NOT NULL CHECK (LENGTH(name) >= 2) CHECK (LENGTH(name) <= 100),
     description              TEXT NOT NULL CHECK (LENGTH(description) <= 1000),
     interval                 INT  NOT NULL CHECK (interval > 0),       -- in seconds

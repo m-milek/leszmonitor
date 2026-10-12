@@ -10,12 +10,12 @@ const getPage = async (
 ): Promise<MonitorStatusPeriod[]> => {
   const queryParams = new URLSearchParams({
     page: pagination.page.toString(),
-    per_page: pagination.perPage.toString(),
+    perPage: pagination.perPage.toString(),
     from: from.toISOString(),
     to: new Date().toISOString(),
   });
   const res = await authFetch(
-    `${SERVER_API_URL}/monitors/${monitorId}/statusHistory?${queryParams.toString()}`,
+    `${SERVER_API_URL}/monitors/${monitorId}/status-history?${queryParams.toString()}`,
   );
 
   if (!res.ok)

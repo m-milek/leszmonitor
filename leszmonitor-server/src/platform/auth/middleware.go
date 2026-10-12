@@ -1,12 +1,18 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/log"
 )
+
+// RequireAuth wraps a single handler with JwtAuth.
+func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return JwtAuth(next).ServeHTTP
+}
 
 // JwtAuth middleware validates JWT tokens from the Authorization header.
 func JwtAuth(next http.Handler) http.Handler {
@@ -15,7 +21,7 @@ func JwtAuth(next http.Handler) http.Handler {
 
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(rw, "Unauthorized: No token provided", http.StatusUnauthorized)
+			httpx.RespondError(r.Context(), rw, http.StatusUnauthorized, errors.New("no token provided"))
 			return
 		}
 
@@ -23,7 +29,7 @@ func JwtAuth(next http.Handler) http.Handler {
 
 		userClaims, err := ValidateJwt(tokenString)
 		if err != nil {
-			http.Error(rw, "Unauthorized: Invalid token", http.StatusUnauthorized)
+			httpx.RespondError(r.Context(), rw, http.StatusUnauthorized, errors.New("invalid token"))
 			return
 		}
 

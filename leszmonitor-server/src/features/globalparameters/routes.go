@@ -7,15 +7,15 @@ import (
 )
 
 func RegisterRoutes(
-	protectedRouter *http.ServeMux,
+	router *http.ServeMux,
 	c GlobalParameterAPIController,
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/global-parameters",
 		requirePermission(auth.PermissionReader)(c.GetAllParametersHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"PATCH /api/v1/global-parameters",
 		requirePermission(auth.PermissionInstanceAdmin)(c.SetParametersHandler),
 	)

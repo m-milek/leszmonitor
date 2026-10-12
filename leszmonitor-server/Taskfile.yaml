@@ -7,6 +7,7 @@ vars:
   SQLITE_DB_PATH: '{{.SERVER_SRC_DIR}}/leszmonitor.db'
   DUMP_FILE_PATH: '{{.TASKFILE_DIR}}/db_dump.sql'
   GOTESTSUM: 'gotest.tools/gotestsum@v1.13.0'
+  SWAG: 'github.com/swaggo/swag/cmd/swag@v1.16.6'
 
 env:
   LOG_LEVEL: 'TRACE'
@@ -86,6 +87,13 @@ tasks:
     generates:
       - 'coverage.out'
       - 'test-output.json'
+
+  swag:
+    desc: Generate the OpenAPI spec from handler annotations
+    dir: src
+    cmds:
+      - go run {{.SWAG}} fmt -d ./
+      - go run {{.SWAG}} init -g main.go -d ./ -o apidocs --ot json
 
   db:dump:
     desc: Dump the SQLite database to a file

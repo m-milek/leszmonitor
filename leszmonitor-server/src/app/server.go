@@ -11,12 +11,10 @@ import (
 	"time"
 
 	"github.com/logdyhq/logdy-core/logdy"
-	"github.com/m-milek/leszmonitor/platform/auth"
 	appconfig "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/log"
-	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/rs/cors"
 )
 
@@ -30,7 +28,7 @@ type ServerConfig struct {
 func DefaultServerConfig() ServerConfig {
 	return ServerConfig{
 		Host:         "0.0.0.0",
-		Port:         "7001",
+		Port:         os.Getenv(appconfig.APIPort),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
@@ -43,15 +41,13 @@ func createServer(
 	staticFiles embed.FS,
 	handlers Handlers,
 ) (*http.Server, error) {
-	publicRouter := http.NewServeMux()
-	protectedRouter := http.NewServeMux()
+	router := http.NewServeMux()
 
-	SetupRouters(publicRouter, protectedRouter, staticFiles, handlers)
+	SetupRouters(router, staticFiles, handlers)
 
 	logger := log.FromContext(ctx).With().Str("component", "api_server").Logger()
 	ctx = log.WithContext(ctx, &logger)
 
-	var protectedLogdy http.Handler
 	if strings.ToLower(os.Getenv(appconfig.EnableLogdy)) != "false" {
 		logger.Info().Msg("Initializing Logdy at /_logdy")
 		logdyMux := http.NewServeMux()
@@ -61,35 +57,9 @@ func createServer(
 			ConfigFilePath: os.Getenv(appconfig.LogdyConfigFilePath),
 		}, logdyMux)
 		log.LogdyGlobalWriter.Logger = logdyLogger
-		protectedLogdy = logdyMux
+		router.Handle("/_logdy", logdyMux)
+		router.Handle("/_logdy/", logdyMux)
 	}
-
-	combinedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-
-		if protectedLogdy != nil && (strings.HasPrefix(path, "/_logdy/") || path == "/_logdy") {
-			protectedLogdy.ServeHTTP(w, r)
-			return
-		}
-
-		if !strings.HasPrefix(path, "/api/") {
-			publicRouter.ServeHTTP(w, r)
-			return
-		}
-
-		publicAPIPaths := []string{
-			"/api/v1/auth/register",
-			"/api/v1/auth/login",
-			"/api/ws",
-		}
-		if util.SliceContains(publicAPIPaths, path) || strings.HasPrefix(path, "/api/v1/push/") {
-			publicRouter.ServeHTTP(w, r)
-			return
-		}
-
-		// Apply JWT auth to protected API paths
-		auth.JwtAuth(protectedRouter).ServeHTTP(w, r)
-	})
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -98,7 +68,7 @@ func createServer(
 		AllowCredentials: true,
 	})
 
-	handler := c.Handler(combinedHandler)
+	handler := c.Handler(router)
 
 	handler = httpx.Recoverer(ctx, handler)
 	handler = httpx.Logger(ctx, handler)

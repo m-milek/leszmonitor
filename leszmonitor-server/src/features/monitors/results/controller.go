@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -20,12 +19,23 @@ func NewMonitorResultsAPIController(service IMonitorResultsService) MonitorResul
 	}
 }
 
+// @Summary	Get the latest monitor result
+// @Tags		monitors
+// @Produce	json
+// @Param		monitorId	path		string	true	"Monitor ID"
+// @Success	200			{object}	MonitorResult
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	404			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId}/results/latest [get]
 func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
-	if err != nil {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
+	monitorID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "monitorId")
+	if !ok {
 		return
 	}
 
@@ -38,12 +48,26 @@ func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w
 	httpx.RespondJSON(ctx, w, http.StatusOK, result)
 }
 
+// @Summary	List monitor results
+// @Tags		monitors
+// @Produce	json
+// @Param		monitorId	path		string	true	"Monitor ID"
+// @Param		page		query		int		false	"Page number"								default(1)
+// @Param		perPage		query		int		false	"Items per page"							default(20)
+// @Param		from		query		string	false	"Only results after this time (RFC3339)"	format(date-time)
+// @Success	200			{array}		MonitorResult
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	404			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/monitors/{monitorId}/results [get]
 func (c *MonitorResultsAPIController) GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
-	if err != nil {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
+	monitorID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "monitorId")
+	if !ok {
 		return
 	}
 

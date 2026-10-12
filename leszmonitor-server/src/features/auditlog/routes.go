@@ -6,13 +6,13 @@ import (
 	"github.com/m-milek/leszmonitor/platform/auth"
 )
 
-// RegisterRoutes registers the audit log API routes on the protected router.
+// RegisterRoutes registers the audit log API routes.
 func RegisterRoutes(
-	protectedRouter *http.ServeMux,
+	router *http.ServeMux,
 	c AuditLogAPIController,
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/audit-log",
 		requirePermission(auth.PermissionInstanceAdmin)(c.GetAuditLogByQueryHandler),
 	)

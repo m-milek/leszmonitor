@@ -3,8 +3,6 @@ package tags
 import (
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
@@ -18,8 +16,6 @@ func NewTagAPIController(service ITagService) TagAPIController {
 	}
 }
 
-const messageTagIDIsRequired = "Tag ID is required"
-
 // TagPayload is the client-writable part of a tag. The ID and timestamps are server-side.
 type TagPayload struct {
 	Name        string `json:"name"`
@@ -28,15 +24,25 @@ type TagPayload struct {
 }
 
 // CreateTagHandler handles the creation of a new tag.
+//
+//	@Summary	Create a tag
+//	@Tags		tags
+//	@Accept		json
+//	@Produce	json
+//	@Param		body	body		TagPayload	true	"Tag fields"
+//	@Success	201		{object}	Tag
+//	@Failure	400		{object}	httpx.ErrorResponse
+//	@Failure	401		{object}	httpx.ErrorResponse
+//	@Failure	403		{object}	httpx.ErrorResponse
+//	@Failure	409		{object}	httpx.ErrorResponse
+//	@Failure	500		{object}	httpx.ErrorResponse
+//	@Security	BearerAuth
+//	@Router		/tags [post]
 func (c *TagAPIController) CreateTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	payload := TagPayload{}
 	if ok := httpx.DecodeJSONOrRespond(ctx, w, r, &payload); !ok {
-		return
-	}
-
-	if _, ok := auth.ExtractUserOrRespond(ctx, w, r); !ok {
 		return
 	}
 
@@ -53,6 +59,15 @@ func (c *TagAPIController) CreateTagHandler(w http.ResponseWriter, r *http.Reque
 	httpx.RespondJSON(ctx, w, http.StatusCreated, tag)
 }
 
+// @Summary	List tags
+// @Tags		tags
+// @Produce	json
+// @Success	200	{array}		Tag
+// @Failure	401	{object}	httpx.ErrorResponse
+// @Failure	403	{object}	httpx.ErrorResponse
+// @Failure	500	{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/tags [get]
 func (c *TagAPIController) GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -65,11 +80,22 @@ func (c *TagAPIController) GetAllTagsHandler(w http.ResponseWriter, r *http.Requ
 	httpx.RespondJSON(ctx, w, http.StatusOK, allTags)
 }
 
+// @Summary	Get a tag
+// @Tags		tags
+// @Produce	json
+// @Param		tagId	path		string	true	"Tag ID"
+// @Success	200		{object}	Tag
+// @Failure	400		{object}	httpx.ErrorResponse
+// @Failure	401		{object}	httpx.ErrorResponse
+// @Failure	403		{object}	httpx.ErrorResponse
+// @Failure	404		{object}	httpx.ErrorResponse
+// @Failure	500		{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/tags/{tagId} [get]
 func (c *TagAPIController) GetTagByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tagID := r.PathValue("tagId")
-	if tagID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageTagIDIsRequired)
+	tagID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "tagId")
+	if !ok {
 		return
 	}
 
@@ -83,26 +109,31 @@ func (c *TagAPIController) GetTagByIDHandler(w http.ResponseWriter, r *http.Requ
 }
 
 // UpdateTagHandler handles the update of an existing tag.
+//
+//	@Summary	Update a tag
+//	@Tags		tags
+//	@Accept		json
+//	@Produce	json
+//	@Param		tagId	path		string		true	"Tag ID"
+//	@Param		body	body		TagPayload	true	"Tag fields"
+//	@Success	200		{object}	Tag
+//	@Failure	400		{object}	httpx.ErrorResponse
+//	@Failure	401		{object}	httpx.ErrorResponse
+//	@Failure	403		{object}	httpx.ErrorResponse
+//	@Failure	404		{object}	httpx.ErrorResponse
+//	@Failure	409		{object}	httpx.ErrorResponse
+//	@Failure	500		{object}	httpx.ErrorResponse
+//	@Security	BearerAuth
+//	@Router		/tags/{tagId} [patch]
 func (c *TagAPIController) UpdateTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tagID := r.PathValue("tagId")
-	if tagID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageTagIDIsRequired)
-		return
-	}
-
-	tagUUID, parseErr := uuid.Parse(tagID)
-	if parseErr != nil {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid tag ID format")
+	tagUUID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "tagId")
+	if !ok {
 		return
 	}
 
 	payload := TagPayload{}
 	if ok := httpx.DecodeJSONOrRespond(ctx, w, r, &payload); !ok {
-		return
-	}
-
-	if _, ok := auth.ExtractUserOrRespond(ctx, w, r); !ok {
 		return
 	}
 
@@ -120,15 +151,23 @@ func (c *TagAPIController) UpdateTagHandler(w http.ResponseWriter, r *http.Reque
 	httpx.RespondJSON(ctx, w, http.StatusOK, tag)
 }
 
+// @Summary	Delete a tag
+// @Tags		tags
+// @Produce	json
+// @Param		tagId	path	string	true	"Tag ID"
+// @Success	204
+// @Failure	400	{object}	httpx.ErrorResponse
+// @Failure	401	{object}	httpx.ErrorResponse
+// @Failure	403	{object}	httpx.ErrorResponse
+// @Failure	404	{object}	httpx.ErrorResponse
+// @Failure	409	{object}	httpx.ErrorResponse
+// @Failure	500	{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/tags/{tagId} [delete]
 func (c *TagAPIController) DeleteTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tagID := r.PathValue("tagId")
-	if tagID == "" {
-		httpx.RespondMessage(ctx, w, http.StatusBadRequest, messageTagIDIsRequired)
-		return
-	}
-
-	if _, ok := auth.ExtractUserOrRespond(ctx, w, r); !ok {
+	tagID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "tagId")
+	if !ok {
 		return
 	}
 
@@ -137,5 +176,5 @@ func (c *TagAPIController) DeleteTagHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	httpx.RespondMessage(ctx, w, http.StatusOK, "Tag deleted successfully")
+	w.WriteHeader(http.StatusNoContent)
 }
