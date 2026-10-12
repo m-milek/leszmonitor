@@ -21,16 +21,16 @@ import (
 )
 
 type HTTPProbe struct {
-	Method                 string            `json:"method"`
-	URL                    string            `json:"url"`
-	Headers                map[string]string `json:"headers"`
-	Body                   string            `json:"body"`
-	SaveResponseBody       bool              `json:"saveResponseBody"`    // Whether to save the response body in the monitor response
-	SaveResponseHeaders    bool              `json:"saveResponseHeaders"` // Whether to save the response headers in the monitor response
-	ExpectedStatusCodes    []int             `json:"expectedStatusCodes"`
-	ExpectedBodyRegex      string            `json:"expectedBodyRegex"`
-	ExpectedHeaders        map[string]string `json:"expectedHeaders"`
-	ExpectedResponseTimeMs *int              `json:"expectedResponseTimeMs"`
+	Method                 string            `json:"method" yaml:"method"`
+	URL                    string            `json:"url" yaml:"url"`
+	Headers                map[string]string `json:"headers" yaml:"headers,omitempty"`
+	Body                   string            `json:"body" yaml:"body"`
+	SaveResponseBody       bool              `json:"saveResponseBody" yaml:"saveResponseBody"`       // Whether to save the response body in the monitor response
+	SaveResponseHeaders    bool              `json:"saveResponseHeaders" yaml:"saveResponseHeaders"` // Whether to save the response headers in the monitor response
+	ExpectedStatusCodes    []int             `json:"expectedStatusCodes" yaml:"expectedStatusCodes,flow"`
+	ExpectedBodyRegex      string            `json:"expectedBodyRegex" yaml:"expectedBodyRegex"`
+	ExpectedHeaders        map[string]string `json:"expectedHeaders" yaml:"expectedHeaders,omitempty"`
+	ExpectedResponseTimeMs *int              `json:"expectedResponseTimeMs" yaml:"expectedResponseTimeMs,omitempty"`
 }
 
 const httpTimeout = 10 * time.Second

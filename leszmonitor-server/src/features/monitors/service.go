@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/google/uuid"
@@ -35,6 +37,7 @@ type IMonitorService interface {
 	) *apperr.ServiceError
 	RunMonitorManuallyByID(ctx context.Context, monitorUUID uuid.UUID) *apperr.ServiceError
 	ReceivePush(ctx context.Context, monitorID uuid.UUID, payload probe.PushProbePayload) *apperr.ServiceError
+	ExportToYAML(ctx context.Context, monitorID uuid.UUID, w io.Writer) *apperr.ServiceError
 }
 
 // MonitorService handles monitor-related CRUD operations.
@@ -333,7 +336,7 @@ func (s *MonitorService) UpdateMonitorStateByID(
 		return apperr.NewUnauthorizedError("user claims not found in context")
 	}
 
-	if !IsValidMonitorState(string(state)) {
+	if !isValidMonitorState(string(state)) {
 		logger.Warn().Str("id", monitorID.String()).Str("state", string(state)).Msg("Invalid monitor state provided")
 		return apperr.NewBadRequestError("invalid monitor state: %s", state)
 	}
@@ -490,6 +493,28 @@ func (s *MonitorService) ReceivePush(ctx context.Context, monitorID uuid.UUID, p
 		Monitor: *monitor,
 		Result:  &result,
 	})
+
+	return nil
+}
+
+func (s *MonitorService) ExportToYAML(ctx context.Context, monitorID uuid.UUID, w io.Writer) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "ExportToYAML")
+	logger.Trace().Str("id", monitorID.String()).Msg("Exporting to YAML")
+
+	monitorsDAO := NewMonitorDAO(s.db.Querier())
+	tagsDAO := tags.NewTagDAO(s.db.Querier())
+
+	monitor, err := monitorsDAO.GetMonitorByID(ctx, monitorID)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return apperr.NewNotFoundError("monitor with ID %s not found", monitorID.String())
+		}
+		return apperr.NewInternalError("failed to retrieve monitor: %w", err)
+	}
+
+	if err = exportToYAML(ctx, *monitor, tagsDAO, w); err != nil {
+		return apperr.NewInternalError("failed to export monitor %s to YAML", monitor.Slug)
+	}
 
 	return nil
 }

@@ -98,6 +98,17 @@ const run = async (monitorId: string) => {
   return res.json();
 };
 
+const exportYaml = async (monitorId: string): Promise<string> => {
+  const res = await authFetch(
+    `${SERVER_API_URL}/monitors/${monitorId}/export`,
+    {
+      method: "GET",
+    },
+  );
+
+  return res.text();
+};
+
 export const MonitorsApi = {
   getAll,
   getBySlug,
@@ -106,6 +117,7 @@ export const MonitorsApi = {
   updateState,
   remove,
   run,
+  exportYaml,
   results: resultsApi,
   stats: statsApi,
   statusHistory: statusHistoryApi,

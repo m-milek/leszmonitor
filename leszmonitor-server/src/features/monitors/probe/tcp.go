@@ -22,10 +22,10 @@ var (
 )
 
 type TCPProbe struct {
-	Host            string `json:"host"`     // Host to call
-	Port            int    `json:"port"`     // Port to call
-	Protocol        string `json:"protocol"` // Protocol to use (tcp, udp, etc.)
-	Timeout         int    `json:"timeout"`  // Timeout in milliseconds for the connection attempt
+	Host            string `json:"host" yaml:"host"`         // Host to call
+	Port            int    `json:"port" yaml:"port"`         // Port to call
+	Protocol        string `json:"protocol" yaml:"protocol"` // Protocol to use (tcp, udp, etc.)
+	Timeout         int    `json:"timeout" yaml:"timeout"`   // Timeout in milliseconds for the connection attempt
 	dialAddressFunc func(protocol string, address string, timeout time.Duration) (time.Duration, error)
 }
 

@@ -10,15 +10,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
 	"github.com/m-milek/leszmonitor/features/tags"
+	"github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
 	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/pkg/errors"
 )
-
-var forbiddenKeys = []string{
-	"id", "slug", "runState", "ownerId", "tagIds", "source", "createdAt", "updatedAt",
-}
 
 var uuidNamespace = uuid.MustParse("feedface-dead-beef-cafe-baddecafbeef")
 
@@ -38,7 +35,7 @@ func SynchronizeConfigBasedMonitors(
 		}
 
 		for k := range entry {
-			if slices.Contains(forbiddenKeys, k) {
+			if slices.Contains(config.ForbiddenMonitorConfigKeys, k) {
 				return fmt.Errorf("forbidden key in monitor config (%s): %s", slug, k)
 			}
 		}
