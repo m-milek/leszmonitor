@@ -10,7 +10,6 @@ import (
 )
 
 type Monitor struct {
-	util.Timestamps        `yaml:",inline"`
 	ID                     uuid.UUID       `json:"id"                     yaml:"id"                     db:"id"`                                            // ID is the unique identifier for the monitor, generated as a UUID
 	Slug                   string          `json:"slug"                   yaml:"slug"                   db:"slug"`                                          // Slug is unique
 	Name                   string          `json:"name"                   yaml:"name"                   db:"name"`                                          // Name of the monitor
@@ -23,6 +22,7 @@ type Monitor struct {
 	OwnerID                uuid.UUID       `json:"ownerId"                yaml:"ownerId"                db:"owner_id"`                                      // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
 	TagIDs                 []uuid.UUID     `json:"tagIds"                 yaml:"tagIds"                 db:"-"`
 	Source                 MonitorSource   `json:"source"                 yaml:"source"                 db:"source"`
+	util.Timestamps        `yaml:",inline"`
 }
 
 // ProbeConfig is stored as JSON text but sent over the API as a JSON object.

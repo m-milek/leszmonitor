@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/m-milek/leszmonitor/platform/httpx"
+	"github.com/m-milek/leszmonitor/platform/log"
 )
 
 var upgrader = websocket.Upgrader{
@@ -19,7 +19,7 @@ func WebSocketConnectionHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		httpx.RespondError(ctx, w, http.StatusInternalServerError, err)
+		log.FromContext(ctx).Warn().Err(err).Msg("WebSocket upgrade failed")
 		return
 	}
 

@@ -10,12 +10,12 @@ import (
 )
 
 type Tag struct {
-	util.Timestamps
 	ID          uuid.UUID `json:"id"          db:"id"`
 	Name        string    `json:"name"        db:"name"`
 	Description string    `json:"description" db:"description"`
 	ColorHex    string    `json:"colorHex"    db:"color_hex"`
 	Source      TagSource `json:"source"      db:"source"`
+	util.Timestamps
 }
 
 type TagSource string
