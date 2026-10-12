@@ -2,6 +2,7 @@ package app
 
 import (
 	"embed"
+	"errors"
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/apidocs"
@@ -17,59 +18,66 @@ import (
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/constants"
+	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
 func SetupRouters(
-	publicRouter *http.ServeMux,
-	protectedRouter *http.ServeMux,
+	router *http.ServeMux,
 	staticFiles embed.FS,
 	h Handlers,
 ) {
 	// Users
-	users.RegisterRoutes(publicRouter, protectedRouter, h.User)
+	users.RegisterRoutes(router, h.User, auth.RequireAuth)
 
 	// Monitors
 	monitors.RegisterRoutes(
-		publicRouter,
-		protectedRouter,
+		router,
 		h.Monitor,
 		h.MonitorResults,
 		requirePermission(h),
 	)
-	stats.RegisterRoutes(protectedRouter, h.MonitorStats, requirePermission(h))
-	statuschange.RegisterRoutes(protectedRouter, h.MonitorStatusChange, requirePermission(h))
+	stats.RegisterRoutes(router, h.MonitorStats, requirePermission(h))
+	statuschange.RegisterRoutes(router, h.MonitorStatusChange, requirePermission(h))
 
 	// Tags
-	tags.RegisterRoutes(protectedRouter, h.Tag, requirePermission(h))
+	tags.RegisterRoutes(router, h.Tag, requirePermission(h))
 
 	// Audit log
-	auditlog.RegisterRoutes(protectedRouter, h.AuditLog, requirePermission(h))
+	auditlog.RegisterRoutes(router, h.AuditLog, requirePermission(h))
 
 	// Global parameters
-	globalparameters.RegisterRoutes(protectedRouter, h.GlobalParameter, requirePermission(h))
+	globalparameters.RegisterRoutes(router, h.GlobalParameter, requirePermission(h))
 
 	// Instance metadata
-	instance.RegisterRoutes(protectedRouter, h.InstanceMetadata)
+	instance.RegisterRoutes(router, h.InstanceMetadata, auth.RequireAuth)
 
 	// WebSocket
-	realtime.RegisterRoutes(publicRouter)
+	realtime.RegisterRoutes(router)
 
 	// Health
-	publicRouter.HandleFunc("GET /api/v1/health", GetHealthCheckHandler)
+	router.HandleFunc("GET /api/v1/health", GetHealthCheckHandler)
 
 	// API spec
-	protectedRouter.HandleFunc("GET /api/v1/swagger.json", func(w http.ResponseWriter, _ *http.Request) {
+	router.HandleFunc("GET /api/v1/swagger.json", auth.RequireAuth(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set(constants.HTTPHeaderContentType, constants.HTTPContentTypeJSON)
 		_, _ = w.Write(apidocs.Spec)
+	}))
+
+	// Unknown API paths must not fall through to the SPA
+	router.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+		httpx.RespondError(r.Context(), w, http.StatusNotFound, errors.New("not found"))
 	})
 
 	// SPA Handler for UI
-	publicRouter.Handle("/", newSPAHandler(staticFiles))
+	router.Handle("/", newSPAHandler(staticFiles))
 }
 
-// requirePermission builds the permission middleware factory handed to feature routers.
+// requirePermission builds the auth + permission middleware factory handed to feature routers.
 func requirePermission(h Handlers) func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc {
 	return func(perm auth.Permission) func(http.HandlerFunc) http.HandlerFunc {
-		return users.RequirePermission(h.AuthzMiddlewareService, perm)
+		check := users.RequirePermission(h.AuthzMiddlewareService, perm)
+		return func(next http.HandlerFunc) http.HandlerFunc {
+			return auth.RequireAuth(check(next))
+		}
 	}
 }

@@ -1,10 +1,8 @@
 package tags
 
 import (
-	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
@@ -17,8 +15,6 @@ func NewTagAPIController(service ITagService) TagAPIController {
 		service: service,
 	}
 }
-
-const messageTagIDIsRequired = "tag ID is required"
 
 // TagPayload is the client-writable part of a tag. The ID and timestamps are server-side.
 type TagPayload struct {
@@ -98,9 +94,8 @@ func (c *TagAPIController) GetAllTagsHandler(w http.ResponseWriter, r *http.Requ
 // @Router		/tags/{tagId} [get]
 func (c *TagAPIController) GetTagByIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tagID := r.PathValue("tagId")
-	if tagID == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageTagIDIsRequired))
+	tagID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "tagId")
+	if !ok {
 		return
 	}
 
@@ -132,15 +127,8 @@ func (c *TagAPIController) GetTagByIDHandler(w http.ResponseWriter, r *http.Requ
 //	@Router		/tags/{tagId} [patch]
 func (c *TagAPIController) UpdateTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tagID := r.PathValue("tagId")
-	if tagID == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageTagIDIsRequired))
-		return
-	}
-
-	tagUUID, parseErr := uuid.Parse(tagID)
-	if parseErr != nil {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid tag ID format"))
+	tagUUID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "tagId")
+	if !ok {
 		return
 	}
 
@@ -178,9 +166,8 @@ func (c *TagAPIController) UpdateTagHandler(w http.ResponseWriter, r *http.Reque
 // @Router		/tags/{tagId} [delete]
 func (c *TagAPIController) DeleteTagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	tagID := r.PathValue("tagId")
-	if tagID == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageTagIDIsRequired))
+	tagID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "tagId")
+	if !ok {
 		return
 	}
 

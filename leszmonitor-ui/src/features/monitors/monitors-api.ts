@@ -9,21 +9,6 @@ import type {
   MonitorUpdatePayload,
 } from "@/features/monitors/types";
 
-const normalizeMonitor = (monitor: Monitor): Monitor => {
-  if (typeof monitor.probeConfig === "string") {
-    try {
-      return {
-        ...monitor,
-        probeConfig: JSON.parse(monitor.probeConfig),
-      } as Monitor;
-    } catch {
-      return monitor;
-    }
-  }
-
-  return monitor;
-};
-
 const getAll = async (): Promise<Monitor[]> => {
   const res = await authFetch(`${SERVER_API_URL}/monitors`, {
     method: "GET",
@@ -32,8 +17,7 @@ const getAll = async (): Promise<Monitor[]> => {
     },
   });
 
-  const monitors = (await res.json()) as Monitor[];
-  return monitors.map(normalizeMonitor);
+  return (await res.json()) as Monitor[];
 };
 
 const getBySlug = async (monitorSlug: string): Promise<Monitor> => {
@@ -44,8 +28,7 @@ const getBySlug = async (monitorSlug: string): Promise<Monitor> => {
     },
   });
 
-  const monitor = (await res.json()) as Monitor;
-  return normalizeMonitor(monitor);
+  return (await res.json()) as Monitor;
 };
 
 const create = async (monitorData: MonitorCreatePayload): Promise<Monitor> => {
@@ -57,7 +40,7 @@ const create = async (monitorData: MonitorCreatePayload): Promise<Monitor> => {
     body: JSON.stringify(monitorData),
   });
 
-  return normalizeMonitor((await res.json()) as Monitor);
+  return (await res.json()) as Monitor;
 };
 
 const update = async (
@@ -72,7 +55,7 @@ const update = async (
     body: JSON.stringify(monitorData),
   });
 
-  return normalizeMonitor((await res.json()) as Monitor);
+  return (await res.json()) as Monitor;
 };
 
 const updateState = async (
@@ -87,7 +70,7 @@ const updateState = async (
     body: JSON.stringify({ newState }),
   });
 
-  return normalizeMonitor((await res.json()) as Monitor);
+  return (await res.json()) as Monitor;
 };
 
 const remove = async (monitorId: string) => {

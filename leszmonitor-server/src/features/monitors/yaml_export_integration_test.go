@@ -31,7 +31,7 @@ func insertExportTestMonitor(ctx context.Context, t *testing.T) *monitors.Monito
 	require.NoError(t, err)
 
 	monitor := testMonitor([]uuid.UUID{tag.ID})
-	monitor.ProbeConfig = string(probeConfig)
+	monitor.ProbeConfig = monitors.ProbeConfig(string(probeConfig))
 	created, err := monitors.NewMonitorDAO(db.Get().Querier()).InsertMonitor(ctx, monitor)
 	require.NoError(t, err)
 	return created

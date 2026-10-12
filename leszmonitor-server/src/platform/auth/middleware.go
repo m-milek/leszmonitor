@@ -9,6 +9,11 @@ import (
 	"github.com/m-milek/leszmonitor/platform/log"
 )
 
+// RequireAuth wraps a single handler with JwtAuth.
+func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
+	return JwtAuth(next).ServeHTTP
+}
+
 // JwtAuth middleware validates JWT tokens from the Authorization header.
 func JwtAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

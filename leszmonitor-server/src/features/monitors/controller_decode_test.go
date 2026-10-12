@@ -21,7 +21,7 @@ func TestDecodeMonitorJSON(t *testing.T) {
 		assert.Equal(t, "API health", monitor.Name)
 		assert.Equal(t, kind.HTTPConfigType, monitor.Type)
 		assert.Equal(t, 60, monitor.Interval)
-		assert.JSONEq(t, `{"method": "GET", "url": "https://example.com"}`, monitor.ProbeConfig)
+		assert.JSONEq(t, `{"method": "GET", "url": "https://example.com"}`, string(monitor.ProbeConfig))
 	})
 
 	t.Run("Leaves probeConfig empty when missing", func(t *testing.T) {

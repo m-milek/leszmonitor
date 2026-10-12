@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
+	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/log"
@@ -84,14 +86,14 @@ func DecodeJSONOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Req
 	return true
 }
 
-// ReadBodyOrRespond reads the whole request body, or writes a 400/413 response and returns false.
-func ReadBodyOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request) ([]byte, bool) {
-	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxRequestBodyBytes))
+// PathUUIDOrRespond parses the named path value as a UUID, or writes a 400 response and returns false.
+func PathUUIDOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request, name string) (uuid.UUID, bool) {
+	id, err := uuid.Parse(r.PathValue(name))
 	if err != nil {
-		RespondError(ctx, w, bodyErrorStatus(err), err)
-		return nil, false
+		RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("invalid %s format", name))
+		return uuid.Nil, false
 	}
-	return body, true
+	return id, true
 }
 
 func bodyErrorStatus(err error) int {

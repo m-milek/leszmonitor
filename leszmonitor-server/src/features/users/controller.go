@@ -1,7 +1,6 @@
 package users
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/platform/httpx"
@@ -102,10 +101,6 @@ func (c *UserAPIController) GetAllUsersHandler(w http.ResponseWriter, r *http.Re
 func (c *UserAPIController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	username := r.PathValue("username")
-	if username == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("username is required"))
-		return
-	}
 
 	user, err := c.service.GetUserByUsername(ctx, username)
 	if err != nil {
@@ -133,10 +128,6 @@ func (c *UserAPIController) GetUserHandler(w http.ResponseWriter, r *http.Reques
 func (c *UserAPIController) SetUserRoleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	username := r.PathValue("username")
-	if username == "" {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("username is required"))
-		return
-	}
 
 	var payload SetUserRolePayload
 	if !httpx.DecodeJSONOrRespond(ctx, w, r, &payload) {

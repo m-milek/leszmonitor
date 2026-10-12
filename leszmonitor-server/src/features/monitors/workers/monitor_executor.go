@@ -76,7 +76,7 @@ func (e *MonitorExecutor) execute(ctx context.Context, msg monitors.MonitorExecu
 		return
 	}
 
-	parsedProbe, err := probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
+	parsedProbe, err := probe.Parse[probe.Probe](monitor.Type, string(monitor.ProbeConfig))
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to parse probe config")
 		publishProbeError(msg, err)

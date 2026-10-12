@@ -66,7 +66,7 @@ func buildMonitorNode(monitor Monitor) (*yaml.Node, error) {
 }
 
 func buildProbeNode(monitor Monitor) (*yaml.Node, error) {
-	parsedProbe, err := probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
+	parsedProbe, err := probe.Parse[probe.Probe](monitor.Type, string(monitor.ProbeConfig))
 	if err != nil {
 		return nil, err
 	}

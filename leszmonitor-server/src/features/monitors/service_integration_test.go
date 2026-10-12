@@ -113,7 +113,7 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		monitor := insertTestMonitor(ctx, t)
 
 		// Delete it
-		svcErr := monitorService.DeleteMonitor(ctx, monitor.ID.String())
+		svcErr := monitorService.DeleteMonitor(ctx, monitor.ID)
 		require.Nil(t, svcErr)
 
 		// Verify it's gone
@@ -142,7 +142,7 @@ func TestIntegration_MonitorService_DeleteMonitor(t *testing.T) {
 		ctx, monitorService, _, _ := setupMonitorIntegrationTest(t)
 
 		// Use a random UUID
-		svcErr := monitorService.DeleteMonitor(ctx, uuid.New().String())
+		svcErr := monitorService.DeleteMonitor(ctx, uuid.New())
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusNotFound, svcErr.Code)
 	})
@@ -348,7 +348,7 @@ func TestIntegration_MonitorService_RunMonitorManuallyByID(t *testing.T) {
 			Description: "Monitor run manually in tests",
 			Interval:    60,
 			Type:        kind.HTTPConfigType,
-			ProbeConfig: fmt.Sprintf(`{"method":"GET","url":%q,"expectedStatusCodes":[200]}`, server.URL),
+			ProbeConfig: monitors.ProbeConfig(fmt.Sprintf(`{"method":"GET","url":%q,"expectedStatusCodes":[200]}`, server.URL)),
 		}
 		payload.GenerateSlug()
 

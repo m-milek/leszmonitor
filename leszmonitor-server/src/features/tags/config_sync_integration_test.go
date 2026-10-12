@@ -175,7 +175,7 @@ func TestIntegration_TagService_ConfigBasedTagIsReadOnly(t *testing.T) {
 	t.Run("Delete fails with 409", func(t *testing.T) {
 		ctx, tagService, tag := setup(t)
 
-		svcErr := tagService.DeleteTag(ctx, tag.ID.String())
+		svcErr := tagService.DeleteTag(ctx, tag.ID)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusConflict, svcErr.Code)
 		assert.Len(t, getAllTags(ctx, t), 1)

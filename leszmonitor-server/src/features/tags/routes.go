@@ -6,29 +6,29 @@ import (
 	"github.com/m-milek/leszmonitor/platform/auth"
 )
 
-// RegisterRoutes registers the tag API routes on the protected router.
+// RegisterRoutes registers the tag API routes.
 func RegisterRoutes(
-	protectedRouter *http.ServeMux,
+	router *http.ServeMux,
 	c TagAPIController,
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"POST /api/v1/tags",
 		requirePermission(auth.PermissionWriter)(c.CreateTagHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/tags",
 		requirePermission(auth.PermissionReader)(c.GetAllTagsHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/tags/{tagId}",
 		requirePermission(auth.PermissionReader)(c.GetTagByIDHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"PATCH /api/v1/tags/{tagId}",
 		requirePermission(auth.PermissionWriter)(c.UpdateTagHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"DELETE /api/v1/tags/{tagId}",
 		requirePermission(auth.PermissionWriter)(c.DeleteTagHandler),
 	)

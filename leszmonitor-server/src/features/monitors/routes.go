@@ -9,54 +9,53 @@ import (
 
 // RegisterRoutes registers the monitor and monitor result API routes.
 func RegisterRoutes(
-	publicRouter *http.ServeMux,
-	protectedRouter *http.ServeMux,
+	router *http.ServeMux,
 	c MonitorAPIController,
 	results results.MonitorResultsAPIController,
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"POST /api/v1/monitors",
 		requirePermission(auth.PermissionWriter)(c.CreateMonitorHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/monitors",
 		requirePermission(auth.PermissionReader)(c.GetAllMonitorsHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}",
 		requirePermission(auth.PermissionReader)(c.GetMonitorByIDHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"DELETE /api/v1/monitors/{monitorId}",
 		requirePermission(auth.PermissionWriter)(c.DeleteMonitorHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"PATCH /api/v1/monitors/{monitorId}",
 		requirePermission(auth.PermissionWriter)(c.UpdateMonitorHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"PATCH /api/v1/monitors/{monitorId}/state",
 		requirePermission(auth.PermissionWriter)(c.UpdateMonitorStateByIDHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"POST /api/v1/monitors/{monitorId}/run",
 		requirePermission(auth.PermissionWriter)(c.RunMonitorManuallyByIDHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/export",
 		requirePermission(auth.PermissionReader)(c.ExportToYAMLHandler),
 	)
 
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results/latest",
 		requirePermission(auth.PermissionReader)(results.GetLatestMonitorResultByMonitorIDHandler),
 	)
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results",
 		requirePermission(auth.PermissionReader)(results.GetMonitorResultsByMonitorIDHandler),
 	)
 
-	publicRouter.HandleFunc("GET /api/v1/push/{monitorId}", c.ReceivePushHandler)
-	publicRouter.HandleFunc("POST /api/v1/push/{monitorId}", c.ReceivePushHandler)
+	router.HandleFunc("GET /api/v1/push/{monitorId}", c.ReceivePushHandler)
+	router.HandleFunc("POST /api/v1/push/{monitorId}", c.ReceivePushHandler)
 }

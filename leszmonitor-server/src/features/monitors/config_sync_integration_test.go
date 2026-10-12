@@ -312,7 +312,7 @@ func TestIntegration_MonitorService_ConfigBasedMonitorIsReadOnly(t *testing.T) {
 	t.Run("Delete fails with 409", func(t *testing.T) {
 		ctx, monitorService, monitor := setup(t)
 
-		svcErr := monitorService.DeleteMonitor(ctx, monitor.ID.String())
+		svcErr := monitorService.DeleteMonitor(ctx, monitor.ID)
 		require.NotNil(t, svcErr)
 		assert.Equal(t, http.StatusConflict, svcErr.Code)
 		getMonitorBySlug(ctx, t, "api-health")

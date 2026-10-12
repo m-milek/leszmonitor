@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -35,9 +34,8 @@ func NewMonitorResultsAPIController(service IMonitorResultsService) MonitorResul
 func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
-	if err != nil {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
+	monitorID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "monitorId")
+	if !ok {
 		return
 	}
 
@@ -68,9 +66,8 @@ func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w
 func (c *MonitorResultsAPIController) GetMonitorResultsByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
-	if err != nil {
-		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
+	monitorID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "monitorId")
+	if !ok {
 		return
 	}
 

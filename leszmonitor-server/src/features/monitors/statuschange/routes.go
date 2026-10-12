@@ -7,11 +7,11 @@ import (
 )
 
 func RegisterRoutes(
-	protectedRouter *http.ServeMux,
+	router *http.ServeMux,
 	c MonitorStatusChangeAPIController,
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
-	protectedRouter.HandleFunc(
+	router.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/status-history",
 		requirePermission(auth.PermissionReader)(c.GetStatusHistoryByMonitorIDHandler),
 	)

@@ -26,7 +26,7 @@ type IMonitorService interface {
 		ctx context.Context,
 		monitor Monitor,
 	) (*Monitor, *apperr.ServiceError)
-	DeleteMonitor(ctx context.Context, id string) *apperr.ServiceError
+	DeleteMonitor(ctx context.Context, id uuid.UUID) *apperr.ServiceError
 	GetAllMonitors(ctx context.Context) ([]Monitor, *apperr.ServiceError)
 	GetMonitorByID(ctx context.Context, id string) (*Monitor, *apperr.ServiceError)
 	UpdateMonitor(ctx context.Context, monitor Monitor) (*Monitor, *apperr.ServiceError)
@@ -119,10 +119,10 @@ func (s *MonitorService) CreateMonitor(
 	return monitorFromDB, nil
 }
 
-// DeleteMonitor deletes a monitor by its slug.
-func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.ServiceError {
+// DeleteMonitor deletes a monitor by its ID.
+func (s *MonitorService) DeleteMonitor(ctx context.Context, id uuid.UUID) *apperr.ServiceError {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameMonitor, "DeleteMonitor")
-	logger.Trace().Str("id", id).Msg("Deleting monitor")
+	logger.Trace().Str("id", id.String()).Msg("Deleting monitor")
 
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
@@ -130,19 +130,13 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.S
 		return apperr.NewInternalError("user claims not found in context")
 	}
 
-	monitorUUID, err := uuid.Parse(id)
-	if err != nil {
-		logger.Error().Str("id", id).Msg("Invalid monitor ID format")
-		return apperr.NewBadRequestError("invalid monitor ID format: %w", err)
-	}
-
-	monitorBeforeDelete, err := NewMonitorDAO(s.db.Querier()).GetMonitorByID(ctx, monitorUUID)
+	monitorBeforeDelete, err := NewMonitorDAO(s.db.Querier()).GetMonitorByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			logger.Error().Str("id", id).Msg("Monitor not found in database")
+			logger.Error().Str("id", id.String()).Msg("Monitor not found in database")
 			return apperr.NewNotFoundError("monitor with ID %s not found", id)
 		}
-		logger.Error().Err(err).Str("id", id).Msg("Failed to retrieve monitor before deletion")
+		logger.Error().Err(err).Str("id", id.String()).Msg("Failed to retrieve monitor before deletion")
 		return apperr.NewInternalError("failed to retrieve monitor before deletion: %w", err)
 	}
 
@@ -151,7 +145,7 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.S
 	}
 
 	deletedID, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*uuid.UUID, *audit.AuditLogParams, error) {
-		delID, err := NewMonitorDAO(q).DeleteMonitorByID(ctx, monitorUUID)
+		delID, err := NewMonitorDAO(q).DeleteMonitorByID(ctx, id)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -161,10 +155,10 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.S
 
 		params := &audit.AuditLogParams{
 			Username:   &userClaims.Username,
-			ResourceID: &monitorUUID,
+			ResourceID: &id,
 			Action:     audit.ActionDeleteMonitor,
 			IsSuccess:  true,
-			Summary:    fmt.Sprintf("Monitor with ID %s deleted", monitorUUID.String()),
+			Summary:    fmt.Sprintf("Monitor with ID %s deleted", id.String()),
 			Before:     monitorBeforeDelete,
 		}
 
@@ -172,10 +166,10 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.S
 	})
 	if txErr != nil {
 		if errors.Is(txErr, db.ErrNotFound) {
-			logger.Error().Str("id", id).Msg("Monitor not found or already deleted")
+			logger.Error().Str("id", id.String()).Msg("Monitor not found or already deleted")
 			return apperr.NewNotFoundError("monitor not found or already deleted")
 		}
-		logger.Error().Err(txErr).Str("id", id).Msg("Failed to delete monitor")
+		logger.Error().Err(txErr).Str("id", id.String()).Msg("Failed to delete monitor")
 		return apperr.NewInternalError("failed to delete monitor: %w", txErr)
 	}
 
@@ -185,7 +179,7 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.S
 		Monitor: nil,
 	})
 
-	logger.Debug().Str("id", id).Msg("Monitor deleted")
+	logger.Debug().Str("id", id.String()).Msg("Monitor deleted")
 	return nil
 }
 
@@ -426,7 +420,7 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 		return apperr.NewBadRequestError("monitor validation failed: %w", err)
 	}
 
-	if _, err := probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig); err != nil {
+	if _, err := probe.Parse[probe.Probe](monitor.Type, string(monitor.ProbeConfig)); err != nil {
 		if errors.Is(err, probe.ErrInvalidProbeConfig) {
 			return apperr.NewBadRequestError("probe config validation failed for manual run: %w", err)
 		}
@@ -469,7 +463,7 @@ func (s *MonitorService) ReceivePush(ctx context.Context, monitorID uuid.UUID, p
 		return apperr.NewBadRequestError("monitor validation failed: %w", err)
 	}
 
-	if _, err := probe.Parse[*probe.PushProbe](monitor.Type, monitor.ProbeConfig); err != nil {
+	if _, err := probe.Parse[*probe.PushProbe](monitor.Type, string(monitor.ProbeConfig)); err != nil {
 		if errors.Is(err, probe.ErrInvalidProbeConfig) {
 			return apperr.NewBadRequestError("probe config validation failed: %w", err)
 		}
