@@ -12,7 +12,7 @@ func RegisterRoutes(
 	requirePermission func(auth.Permission) func(http.HandlerFunc) http.HandlerFunc,
 ) {
 	protectedRouter.HandleFunc(
-		"GET /api/v1/monitors/{monitorId}/statusHistory",
+		"GET /api/v1/monitors/{monitorId}/status-history",
 		requirePermission(auth.PermissionReader)(c.GetStatusHistoryByMonitorIDHandler),
 	)
 }

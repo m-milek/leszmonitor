@@ -55,7 +55,7 @@ func (c *MonitorResultsAPIController) GetLatestMonitorResultByMonitorIDHandler(w
 // @Produce	json
 // @Param		monitorId	path		string	true	"Monitor ID"
 // @Param		page		query		int		false	"Page number"								default(1)
-// @Param		per_page	query		int		false	"Items per page"							default(20)
+// @Param		perPage		query		int		false	"Items per page"							default(20)
 // @Param		from		query		string	false	"Only results after this time (RFC3339)"	format(date-time)
 // @Success	200			{array}		MonitorResult
 // @Failure	400			{object}	httpx.ErrorResponse

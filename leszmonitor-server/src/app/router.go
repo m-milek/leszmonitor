@@ -55,7 +55,7 @@ func SetupRouters(
 	realtime.RegisterRoutes(publicRouter)
 
 	// Health
-	protectedRouter.HandleFunc("GET /api/v1/health", GetHealthCheckHandler)
+	publicRouter.HandleFunc("GET /api/v1/health", GetHealthCheckHandler)
 
 	// API spec
 	protectedRouter.HandleFunc("GET /api/v1/swagger.json", func(w http.ResponseWriter, _ *http.Request) {

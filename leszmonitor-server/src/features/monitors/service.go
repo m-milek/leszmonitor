@@ -72,7 +72,7 @@ func (s *MonitorService) CreateMonitor(
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	owner, err := s.userDAO.GetUserByUsername(ctx, userClaims.Username)
@@ -127,7 +127,7 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id string) *apperr.S
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return apperr.NewUnauthorizedError("user claims not found in context")
+		return apperr.NewInternalError("user claims not found in context")
 	}
 
 	monitorUUID, err := uuid.Parse(id)
@@ -242,7 +242,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor Monitor) (*M
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	updatedMonitor, txErr := audit.WithAuditedTx(ctx, s.db, func(q db.Querier) (*Monitor, *audit.AuditLogParams, error) {
@@ -329,7 +329,7 @@ func (s *MonitorService) UpdateMonitorStateByID(
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	if !isValidMonitorState(string(state)) {
@@ -407,7 +407,7 @@ func (s *MonitorService) RunMonitorManuallyByID(ctx context.Context, monitorUUID
 
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
-		return apperr.NewUnauthorizedError("user claims not found in context")
+		return apperr.NewInternalError("user claims not found in context")
 	}
 
 	monitor, err := NewMonitorDAO(s.db.Querier()).GetMonitorByID(ctx, monitorUUID)

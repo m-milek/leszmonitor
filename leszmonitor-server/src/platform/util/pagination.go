@@ -19,7 +19,7 @@ func (p Pagination) Validate() error {
 		return fmt.Errorf("page must be at least 1")
 	}
 	if p.PerPage < 1 {
-		return fmt.Errorf("per_page must be at least 1")
+		return fmt.Errorf("perPage must be at least 1")
 	}
 	return nil
 }
@@ -37,10 +37,10 @@ func PaginationFromRequest(r *http.Request) (*Pagination, error) {
 		}
 	}
 
-	if perPageStr := query.Get("per_page"); perPageStr != "" {
+	if perPageStr := query.Get("perPage"); perPageStr != "" {
 		_, err := fmt.Sscanf(perPageStr, "%d", &perPage)
 		if err != nil {
-			return nil, fmt.Errorf("invalid per_page parameter: %w", err)
+			return nil, fmt.Errorf("invalid perPage parameter: %w", err)
 		}
 	}
 

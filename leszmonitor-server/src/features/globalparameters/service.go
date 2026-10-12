@@ -90,7 +90,7 @@ func (s *GlobalParameterService) SetParameters(ctx context.Context, values map[G
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	if len(values) == 0 {

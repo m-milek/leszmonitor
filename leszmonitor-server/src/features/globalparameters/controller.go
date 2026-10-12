@@ -3,7 +3,6 @@ package globalparameters
 import (
 	"net/http"
 
-	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
@@ -56,10 +55,6 @@ func (c *GlobalParameterAPIController) SetParametersHandler(w http.ResponseWrite
 
 	payload := map[GlobalParameterKey]any{}
 	if ok := httpx.DecodeJSONOrRespond(ctx, w, r, &payload); !ok {
-		return
-	}
-
-	if _, ok := auth.ExtractUserOrRespond(ctx, w, r); !ok {
 		return
 	}
 

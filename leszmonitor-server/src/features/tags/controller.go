@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
@@ -48,10 +47,6 @@ func (c *TagAPIController) CreateTagHandler(w http.ResponseWriter, r *http.Reque
 
 	payload := TagPayload{}
 	if ok := httpx.DecodeJSONOrRespond(ctx, w, r, &payload); !ok {
-		return
-	}
-
-	if _, ok := auth.ExtractUserOrRespond(ctx, w, r); !ok {
 		return
 	}
 
@@ -154,10 +149,6 @@ func (c *TagAPIController) UpdateTagHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if _, ok := auth.ExtractUserOrRespond(ctx, w, r); !ok {
-		return
-	}
-
 	tag, serviceErr := c.service.UpdateTag(ctx, Tag{
 		ID:          tagUUID,
 		Name:        payload.Name,
@@ -190,10 +181,6 @@ func (c *TagAPIController) DeleteTagHandler(w http.ResponseWriter, r *http.Reque
 	tagID := r.PathValue("tagId")
 	if tagID == "" {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New(messageTagIDIsRequired))
-		return
-	}
-
-	if _, ok := auth.ExtractUserOrRespond(ctx, w, r); !ok {
 		return
 	}
 

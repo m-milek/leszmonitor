@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/platform/audit"
-	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -23,7 +22,7 @@ func NewAuditLogAPIController(service AuditLogService) AuditLogAPIController {
 // @Tags		audit-log
 // @Produce	json
 // @Param		page		query		int		false	"Page number"		default(1)
-// @Param		per_page	query		int		false	"Items per page"	default(20)
+// @Param		perPage		query		int		false	"Items per page"	default(20)
 // @Param		username	query		string	false	"Filter by username"
 // @Param		resourceId	query		string	false	"Filter by resource ID"	format(uuid)
 // @Param		action		query		string	false	"Filter by action"
@@ -50,11 +49,6 @@ func (c *AuditLogAPIController) GetAuditLogByQueryHandler(w http.ResponseWriter,
 	filters, filtersErr := audit.AuditLogFilterFromRequest(r)
 	if filtersErr != nil {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, filtersErr)
-		return
-	}
-
-	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
 		return
 	}
 

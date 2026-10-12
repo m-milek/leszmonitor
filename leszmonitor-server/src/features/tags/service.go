@@ -45,7 +45,7 @@ func (s *TagService) CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	newTag := Tag{
@@ -138,7 +138,7 @@ func (s *TagService) UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return nil, apperr.NewUnauthorizedError("user claims not found in context")
+		return nil, apperr.NewInternalError("user claims not found in context")
 	}
 
 	tag.Normalize()
@@ -202,7 +202,7 @@ func (s *TagService) DeleteTag(ctx context.Context, id string) *apperr.ServiceEr
 	userClaims, ok := auth.GetUserClaimsFromContext(ctx)
 	if !ok {
 		logger.Error().Msg("User claims not found in context")
-		return apperr.NewUnauthorizedError("user claims not found in context")
+		return apperr.NewInternalError("user claims not found in context")
 	}
 
 	tagUUID, err := uuid.Parse(id)

@@ -30,7 +30,7 @@ type ServerConfig struct {
 func DefaultServerConfig() ServerConfig {
 	return ServerConfig{
 		Host:         "0.0.0.0",
-		Port:         "7001",
+		Port:         os.Getenv(appconfig.APIPort),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
@@ -80,7 +80,8 @@ func createServer(
 		publicAPIPaths := []string{
 			"/api/v1/auth/register",
 			"/api/v1/auth/login",
-			"/api/ws",
+			"/api/v1/ws",
+			"/api/v1/health",
 		}
 		if util.SliceContains(publicAPIPaths, path) || strings.HasPrefix(path, "/api/v1/push/") {
 			publicRouter.ServeHTTP(w, r)

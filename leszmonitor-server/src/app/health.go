@@ -16,8 +16,6 @@ type healthCheckResponse struct {
 // @Tags		health
 // @Produce	json
 // @Success	200	{object}	healthCheckResponse
-// @Failure	401	{object}	httpx.ErrorResponse
-// @Security	BearerAuth
 // @Router		/health [get]
 func GetHealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

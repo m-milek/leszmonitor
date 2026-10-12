@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
-	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
@@ -48,7 +47,12 @@ const maxPushBodyBytes = 5000
 //	@Router		/monitors [post]
 func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	monitor, err := decodeMonitorPayload(r)
+	body, ok := httpx.ReadBodyOrRespond(ctx, w, r)
+	if !ok {
+		return
+	}
+
+	monitor, err := decodeMonitorJSON(body)
 	if err != nil {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, err)
 		return
@@ -64,11 +68,6 @@ func (c *MonitorAPIController) CreateMonitorHandler(w http.ResponseWriter, r *ht
 		httpx.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("invalid probe config: %w", err))
 		return
 	}
-	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
-		return
-	}
-
 	createdMonitor, serviceErr := c.service.CreateMonitor(ctx, monitor)
 	if serviceErr != nil {
 		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
@@ -99,10 +98,6 @@ func (c *MonitorAPIController) DeleteMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
-		return
-	}
 	err := c.service.DeleteMonitor(ctx, monitorID)
 	if err != nil {
 		httpx.RespondError(ctx, w, err.Code, err.Err)
@@ -188,7 +183,12 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	monitor, err := decodeMonitorPayload(r)
+	body, ok := httpx.ReadBodyOrRespond(ctx, w, r)
+	if !ok {
+		return
+	}
+
+	monitor, err := decodeMonitorJSON(body)
 	if err != nil {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, err)
 		return
@@ -203,11 +203,6 @@ func (c *MonitorAPIController) UpdateMonitorHandler(w http.ResponseWriter, r *ht
 	_, err = probe.Parse[probe.Probe](monitor.Type, monitor.ProbeConfig)
 	if err != nil {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, fmt.Errorf("invalid probe config: %w", err))
-		return
-	}
-
-	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
 		return
 	}
 
@@ -264,11 +259,6 @@ func (c *MonitorAPIController) UpdateMonitorStateByIDHandler(w http.ResponseWrit
 		return
 	}
 
-	_, ok = auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
-		return
-	}
-
 	updatedMonitor, serviceErr := c.service.UpdateMonitorStateByID(
 		ctx,
 		monitorUUID,
@@ -305,11 +295,6 @@ func (c *MonitorAPIController) RunMonitorManuallyByIDHandler(w http.ResponseWrit
 	monitorUUID, err := uuid.Parse(monitorID)
 	if err != nil {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid monitor ID format"))
-		return
-	}
-
-	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
 		return
 	}
 
@@ -413,17 +398,8 @@ func (c *MonitorAPIController) ExportToYAMLHandler(w http.ResponseWriter, r *htt
 	}
 }
 
-// decodeMonitorPayload decodes the request body into Monitor, and probeConfig separately as string.
+// decodeMonitorJSON decodes the request body into Monitor, and probeConfig separately as string.
 // FE sends probeConfig as JSON object, but we want to store it as string in the database, so we need to handle it separately.
-func decodeMonitorPayload(r *http.Request) (Monitor, error) {
-	bodyBytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		return Monitor{}, err
-	}
-
-	return decodeMonitorJSON(bodyBytes)
-}
-
 func decodeMonitorJSON(data []byte) (Monitor, error) {
 	var rawPayload map[string]json.RawMessage
 	if err := json.Unmarshal(data, &rawPayload); err != nil {

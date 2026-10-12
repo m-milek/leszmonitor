@@ -38,8 +38,8 @@ func TestPaginationValidate(t *testing.T) {
 		{"valid pagination", 1, 20, false},
 		{"page 0 invalid", 0, 20, true},
 		{"negative page invalid", -1, 20, true},
-		{"per_page 0 invalid", 1, 0, true},
-		{"negative per_page invalid", 1, -10, true},
+		{"perPage 0 invalid", 1, 0, true},
+		{"negative perPage invalid", 1, -10, true},
 		{"large valid values", 999, 100, false},
 	}
 
@@ -63,25 +63,25 @@ func TestPaginationFromRequest(t *testing.T) {
 	}{
 		{"no parameters uses defaults", "http://example.com/api", &Pagination{Page: 1, PerPage: 20}, false},
 		{"page parameter only", "http://example.com/api?page=3", &Pagination{Page: 3, PerPage: 20}, false},
-		{"per_page parameter only", "http://example.com/api?per_page=50", &Pagination{Page: 1, PerPage: 50}, false},
-		{"both parameters", "http://example.com/api?page=5&per_page=30", &Pagination{Page: 5, PerPage: 30}, false},
+		{"perPage parameter only", "http://example.com/api?perPage=50", &Pagination{Page: 1, PerPage: 50}, false},
+		{"both parameters", "http://example.com/api?page=5&perPage=30", &Pagination{Page: 5, PerPage: 30}, false},
 		{"empty page parameter uses default", "http://example.com/api?page=", &Pagination{Page: 1, PerPage: 20}, false},
 		{
-			"empty per_page parameter uses default",
-			"http://example.com/api?per_page=",
+			"empty perPage parameter uses default",
+			"http://example.com/api?perPage=",
 			&Pagination{Page: 1, PerPage: 20},
 			false,
 		},
 		{
 			"extra parameters ignored",
-			"http://example.com/api?page=2&per_page=10&sort=name",
+			"http://example.com/api?page=2&perPage=10&sort=name",
 			&Pagination{Page: 2, PerPage: 10},
 			false,
 		},
 		{"invalid page parameter", "http://example.com/api?page=abc", nil, true},
-		{"invalid per_page parameter", "http://example.com/api?per_page=xyz", nil, true},
+		{"invalid perPage parameter", "http://example.com/api?perPage=xyz", nil, true},
 		{"page 0 fails validation", "http://example.com/api?page=0", nil, true},
-		{"per_page 0 fails validation", "http://example.com/api?per_page=0", nil, true},
+		{"perPage 0 fails validation", "http://example.com/api?perPage=0", nil, true},
 		{"negative page fails validation", "http://example.com/api?page=-5", nil, true},
 	}
 

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
@@ -59,11 +58,6 @@ func (c *MonitorStatsAPIController) GetStatsByMonitorIDHandler(w http.ResponseWr
 	to, err := time.Parse(time.RFC3339, toParam)
 	if err != nil {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'to' parameter format, expected RFC3339"))
-		return
-	}
-
-	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
 		return
 	}
 

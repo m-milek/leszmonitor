@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/m-milek/leszmonitor/platform/auth"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 	"github.com/m-milek/leszmonitor/platform/util"
 )
@@ -26,7 +25,7 @@ func NewMonitorStatusChangeAPIController(service MonitorStatusChangeService) Mon
 // @Produce	json
 // @Param		monitorId	path		string	true	"Monitor ID"
 // @Param		page		query		int		false	"Page number"			default(1)
-// @Param		per_page	query		int		false	"Items per page"		default(20)
+// @Param		perPage		query		int		false	"Items per page"		default(20)
 // @Param		from		query		string	true	"Range start (RFC3339)"	format(date-time)
 // @Param		to			query		string	true	"Range end (RFC3339)"	format(date-time)
 // @Success	200			{array}		MonitorStatusPeriod
@@ -36,7 +35,7 @@ func NewMonitorStatusChangeAPIController(service MonitorStatusChangeService) Mon
 // @Failure	404			{object}	httpx.ErrorResponse
 // @Failure	500			{object}	httpx.ErrorResponse
 // @Security	BearerAuth
-// @Router		/monitors/{monitorId}/statusHistory [get]
+// @Router		/monitors/{monitorId}/status-history [get]
 func (c *MonitorStatusChangeAPIController) GetStatusHistoryByMonitorIDHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -69,11 +68,6 @@ func (c *MonitorStatusChangeAPIController) GetStatusHistoryByMonitorIDHandler(w 
 	to, err := time.Parse(time.RFC3339, toParam)
 	if err != nil {
 		httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'to' parameter format, expected RFC3339"))
-		return
-	}
-
-	_, ok := auth.ExtractUserOrRespond(ctx, w, r)
-	if !ok {
 		return
 	}
 

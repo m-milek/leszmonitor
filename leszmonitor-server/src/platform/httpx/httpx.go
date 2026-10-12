@@ -3,6 +3,8 @@ package httpx
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 
 	"github.com/m-milek/leszmonitor/platform/constants"
@@ -69,13 +71,32 @@ func RespondError(ctx context.Context, w http.ResponseWriter, statusCode int, er
 	}
 }
 
-// DecodeJSONOrRespond decodes JSON from the request body into v, or writes a 400 response and returns false.
+const maxRequestBodyBytes = 1 << 20
+
+// DecodeJSONOrRespond decodes JSON from the request body into v, or writes a 400/413 response and returns false.
 func DecodeJSONOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request, v any) bool {
-	decoder := json.NewDecoder(r.Body)
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxRequestBodyBytes))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(v); err != nil {
-		RespondError(ctx, w, http.StatusBadRequest, err)
+		RespondError(ctx, w, bodyErrorStatus(err), err)
 		return false
 	}
 	return true
+}
+
+// ReadBodyOrRespond reads the whole request body, or writes a 400/413 response and returns false.
+func ReadBodyOrRespond(ctx context.Context, w http.ResponseWriter, r *http.Request) ([]byte, bool) {
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxRequestBodyBytes))
+	if err != nil {
+		RespondError(ctx, w, bodyErrorStatus(err), err)
+		return nil, false
+	}
+	return body, true
+}
+
+func bodyErrorStatus(err error) int {
+	if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
+		return http.StatusRequestEntityTooLarge
+	}
+	return http.StatusBadRequest
 }
