@@ -43,6 +43,10 @@ func RegisterRoutes(
 		"POST /api/v1/monitors/{monitorId}/run",
 		requirePermission(auth.PermissionWriter)(c.RunMonitorManuallyByIDHandler),
 	)
+	protectedRouter.HandleFunc(
+		"GET /api/v1/monitors/{monitorId}/export",
+		requirePermission(auth.PermissionReader)(c.ExportToYAMLHandler),
+	)
 
 	protectedRouter.HandleFunc(
 		"GET /api/v1/monitors/{monitorId}/results/latest",

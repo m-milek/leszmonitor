@@ -279,6 +279,21 @@ func (c *MonitorAPIController) ReceivePushHandler(w http.ResponseWriter, r *http
 	httpx.RespondMessage(ctx, w, http.StatusAccepted, "")
 }
 
+func (c *MonitorAPIController) ExportToYAMLHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	monitorID, err := uuid.Parse(r.PathValue("monitorId"))
+	if err != nil {
+		httpx.RespondMessage(ctx, w, http.StatusBadRequest, "Invalid monitor ID format")
+		return
+	}
+
+	if svcErr := c.service.ExportToYAML(ctx, monitorID, w); svcErr != nil {
+		httpx.RespondError(ctx, w, svcErr.Code, svcErr.Err)
+		return
+	}
+}
+
 // decodeMonitorPayload decodes the request body into Monitor, and probeConfig separately as string.
 // FE sends probeConfig as JSON object, but we want to store it as string in the database, so we need to handle it separately.
 func decodeMonitorPayload(r *http.Request) (Monitor, error) {

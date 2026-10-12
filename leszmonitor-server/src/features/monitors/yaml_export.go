@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ExportToYAML(ctx context.Context, monitor Monitor, tagsDAO tags.ITagDAO, writer io.Writer) error {
+func exportToYAML(ctx context.Context, monitor Monitor, tagsDAO tags.ITagDAO, writer io.Writer) error {
 	monitorNode, err := buildMonitorNode(monitor)
 	if err != nil {
 		return err
