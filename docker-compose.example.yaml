@@ -5,7 +5,6 @@ services:
     ports:
       - "7001:7001"
     environment:
-      LOG_LEVEL: INFO
       SQLITE_DB_PATH: /data/leszmonitor.db
       JWT_SECRET: ${JWT_SECRET}
       INSTANCE_ADMIN_USERNAME: ${INSTANCE_ADMIN_USERNAME}

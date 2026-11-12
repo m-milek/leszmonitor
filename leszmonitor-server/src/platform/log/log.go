@@ -44,8 +44,8 @@ type Config struct {
 
 func New() zerolog.Logger {
 	level, err := zerolog.ParseLevel(strings.ToLower(os.Getenv(appconfig.LogLevel)))
-	if err != nil {
-		level = zerolog.TraceLevel
+	if err != nil || level == zerolog.NoLevel {
+		level = zerolog.InfoLevel
 	}
 
 	zerolog.SetGlobalLevel(level)
