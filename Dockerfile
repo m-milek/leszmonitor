@@ -37,12 +37,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -X github.com/m-milek/leszmonitor/platform/meta.ImageTag=$IMAGE_TAG \
     -X github.com/m-milek/leszmonitor/platform/meta.Version=$VERSION" \
     -o main .
-RUN mkdir -p /var/log/leszmonitor
+RUN mkdir -p /var/log/leszmonitor /data
 
 FROM scratch
 
 COPY --from=server-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=server-builder --chown=65532:65532 /var/log/leszmonitor /var/log/leszmonitor
+COPY --from=server-builder --chown=65532:65532 /data /data
 COPY --from=server-builder --chown=65532:65532 /app/src/main /app/main
 
 WORKDIR /app
