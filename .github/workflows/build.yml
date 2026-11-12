@@ -22,7 +22,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.27.2'
+          go-version-file: leszmonitor-server/src/go.mod
           cache: true
           cache-dependency-path: leszmonitor-server/src/go.sum
 
@@ -75,7 +75,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: './leszmonitor-ui/package-lock.json'
 
@@ -159,7 +159,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: './leszmonitor-ui/package-lock.json'
 
@@ -173,3 +173,13 @@ jobs:
 
       - name: Run end-to-end tests
         run: task ui:test:e2e
+
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-results
+          path: |
+            leszmonitor-ui/test-results
+            leszmonitor-ui/playwright-report
+          retention-days: 7

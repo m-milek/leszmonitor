@@ -1,4 +1,4 @@
-FROM node:24-alpine AS ui-builder
+FROM node:26-alpine AS ui-builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY leszmonitor-ui/ .
 
 RUN npm run build
 
-FROM golang:1.27.3-alpine AS server-builder
+FROM golang:1.27.4-alpine AS server-builder
 
 ARG VERSION
 ARG GIT_COMMIT
