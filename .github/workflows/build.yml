@@ -173,3 +173,13 @@ jobs:
 
       - name: Run end-to-end tests
         run: task ui:test:e2e
+
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-results
+          path: |
+            leszmonitor-ui/test-results
+            leszmonitor-ui/playwright-report
+          retention-days: 7

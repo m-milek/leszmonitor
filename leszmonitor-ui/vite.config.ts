@@ -39,6 +39,9 @@ export default defineConfig({
   build: {
     outDir: uiDistDir,
   },
+  legacy: {
+    inconsistentCjsInterop: true,
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
