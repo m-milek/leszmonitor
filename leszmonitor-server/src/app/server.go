@@ -48,7 +48,7 @@ func createServer(
 	logger := log.FromContext(ctx).With().Str("component", "api_server").Logger()
 	ctx = log.WithContext(ctx, &logger)
 
-	if strings.ToLower(os.Getenv(appconfig.EnableLogdy)) != "false" {
+	if strings.ToLower(os.Getenv(appconfig.EnableLogdy)) == "true" {
 		logger.Info().Msg("Initializing Logdy at /_logdy")
 		logdyMux := http.NewServeMux()
 		logdyLogger := logdy.InitializeLogdy(logdy.Config{
