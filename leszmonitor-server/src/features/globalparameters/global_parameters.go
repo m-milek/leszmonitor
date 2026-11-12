@@ -49,7 +49,7 @@ var GlobalParameterDefinitions = map[GlobalParameterKey]GlobalParameterDefinitio
 		DisplayName:  "Allow Self-Registration",
 		Description:  "Whether to allow users to create their own accounts. If disabled, only admins/owners can create accounts.",
 		Type:         GlobalParameterBoolType,
-		DefaultValue: true,
+		DefaultValue: false,
 	},
 	GlobalParameterDefaultRole: {
 		Key:          GlobalParameterDefaultRole,

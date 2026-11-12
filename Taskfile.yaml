@@ -22,17 +22,17 @@ tasks:
   docker:up:
     desc: Start all services using Docker Compose
     cmds:
-      - docker compose up
+      - docker compose -f docker-compose.dev.yaml up
 
   docker:up:no-build:
     desc: Start without rebuilding
     cmds:
-      - docker compose up --no-build
+      - docker compose -f docker-compose.dev.yaml up --no-build
 
   docker:down:
     desc: Stop all services using Docker Compose
     cmds:
-      - docker compose down
+      - docker compose -f docker-compose.dev.yaml down
 
   dev:
     desc: Run both ui and server in development mode
