@@ -1,6 +1,10 @@
-const SERVER_HOSTNAME = "localhost:7001";
-export const SERVER_API_URL = `http://${SERVER_HOSTNAME}/api/v1`;
-export const SERVER_WS_URL = `ws://${SERVER_HOSTNAME}/api/v1/ws`;
+const SERVER_HOSTNAME = import.meta.env.DEV
+  ? "localhost:7001"
+  : window.location.host;
+const SECURE = !import.meta.env.DEV && window.location.protocol === "https:";
+
+export const SERVER_API_URL = `${SECURE ? "https" : "http"}://${SERVER_HOSTNAME}/api/v1`;
+export const SERVER_WS_URL = `${SECURE ? "wss" : "ws"}://${SERVER_HOSTNAME}/api/v1/ws`;
 
 export const QUERY_KEYS = {
   USERS: "users",
