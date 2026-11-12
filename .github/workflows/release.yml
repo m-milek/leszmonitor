@@ -1,19 +1,19 @@
 name: Release
 on:
-  release:
-    types:
-      - published
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_DESCRIPTION: "Release ${{ github.event.release.tag_name }}: ${{ github.event.release.html_url }}"
+  IMAGE: ghcr.io/${{ github.repository_owner }}/leszmonitor
 
 jobs:
-  build-and-push:
-    name: Build and Publish Docker Image
+  release:
+    name: Build image and create release
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -29,22 +29,12 @@ jobs:
       - name: Log in to Container Registry
         uses: docker/login-action@v4
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set lowercase repository name and version
-        id: vars
-        run: |
-          TAG="${{ github.event.release.tag_name }}"
-          
-          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Invalid version format: '$TAG'. Expected vX.Y.Z (e.g. v1.2.3)"
-            exit 1
-          fi
-          
-          echo "name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-          echo "version=$(echo "$TAG" | sed 's/^v//')" >> $GITHUB_OUTPUT
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
@@ -58,15 +48,14 @@ jobs:
           build-args: |
             CI_BUILD_NUMBER=${{ github.run_number }}
             GIT_COMMIT=${{ github.sha }}
-            IMAGE_TAG=${{ steps.vars.outputs.name }}:${{ steps.vars.outputs.version }}
-            VERSION=${{ steps.vars.outputs.version }}
+            IMAGE_TAG=${{ env.IMAGE }}:${{ env.VERSION }}
+            VERSION=${{ env.VERSION }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.vars.outputs.version }}
-            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
-          annotations: |
-            index:org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            index:org.opencontainers.image.version=${{ steps.vars.outputs.version }}
-            index:org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
-          tags: |
-            ${{ env.REGISTRY }}/${{ steps.vars.outputs.name }}:${{ steps.vars.outputs.version }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+          tags: ${{ env.IMAGE }}:${{ env.VERSION }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
