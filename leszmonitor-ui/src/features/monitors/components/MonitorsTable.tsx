@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ColumnDef } from "@tanstack/react-table";
 import {
   EllipsisIcon,
@@ -12,7 +12,6 @@ import {
   PlayIcon,
 } from "lucide-react";
 import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
-import { StatusDot } from "@/components/common/StatusDot";
 import { StyledLink } from "@/components/common/StyledLink";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,31 +29,23 @@ import {
 import { QUERY_KEYS } from "@/lib/consts";
 import { formatDuration } from "@/lib/utils";
 import { MonitorsApi } from "@/features/monitors/monitors-api";
-import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import type { MonitorWithStatus } from "@/features/monitors/types";
 import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge";
 import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill";
 import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog";
+import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { Tag } from "@/features/tags/components/Tag";
 import type { Tag as TagType } from "@/features/tags/types";
 
 const StatusCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   if (monitor.runState === "paused") {
-    return (
-      <div className="flex items-center gap-2">
-        <StatusDot status="paused" />
-        <MonitorStatePill monitor={monitor} />
-      </div>
-    );
+    return <MonitorStatePill monitor={monitor} />;
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <StatusDot status={monitorStatusToStatusDot(monitor.status)} />
-      <MonitorStatusBadge status={monitor.status}>
-        {monitor.status}
-      </MonitorStatusBadge>
-    </div>
+    <MonitorStatusBadge status={monitor.status}>
+      {monitor.status}
+    </MonitorStatusBadge>
   );
 };
 
@@ -86,6 +77,28 @@ const NameCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
           <TooltipContent>Monitor defined in config file</TooltipContent>
         </Tooltip>
       )}
+    </div>
+  );
+};
+
+const RECENT_RESULTS_COUNT = 10;
+
+const RecentResultsCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
+  const { data: results = [] } = useQuery({
+    queryKey: [QUERY_KEYS.MONITOR_RESULTS, monitor.id, "recent"],
+    queryFn: () =>
+      MonitorsApi.results.getPage(monitor.id, {
+        page: 1,
+        perPage: RECENT_RESULTS_COUNT,
+      }),
+  });
+
+  return (
+    <div className="w-40">
+      <BatteryChart
+        monitorResults={results ?? []}
+        config={{ barWidth: 16, heightClassName: "h-6", showTimeRange: false }}
+      />
     </div>
   );
 };
@@ -196,51 +209,61 @@ export interface MonitorsTableProps {
 }
 
 export const MonitorsTable = ({ monitors, tags }: MonitorsTableProps) => {
-  const columns: ColumnDef<typeof dataTableFeatures, MonitorWithStatus>[] = [
-    {
-      id: "status",
-      header: "Status",
-      cell: ({ row }) => <StatusCell monitor={row.original} />,
-    },
-    {
-      accessorKey: "name",
-      header: "Name",
-      cell: ({ row }) => <NameCell monitor={row.original} />,
-    },
-    {
-      accessorKey: "type",
-      header: "Type",
-      cell: ({ row }) => (
-        <Badge variant="outline">{row.original.type.toUpperCase()}</Badge>
-      ),
-    },
-    {
-      accessorKey: "interval",
-      header: "Interval",
-      cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {formatDuration(row.original.interval)}
-        </span>
-      ),
-    },
-    {
-      id: "tags",
-      header: "Tags",
-      cell: ({ row }) => (
-        <div className="flex flex-wrap gap-1">
-          {tags
-            .filter((tag) => row.original.tagIds?.includes(tag.id))
-            .map((tag) => (
-              <Tag key={tag.id} tag={tag} />
-            ))}
-        </div>
-      ),
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => <ActionsCell monitor={row.original} />,
-    },
-  ];
+  const columns = useMemo<
+    ColumnDef<typeof dataTableFeatures, MonitorWithStatus>[]
+  >(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => <NameCell monitor={row.original} />,
+      },
+      {
+        id: "status",
+        header: "Status",
+        cell: ({ row }) => <StatusCell monitor={row.original} />,
+      },
+      {
+        id: "recentResults",
+        header: "Recent checks",
+        cell: ({ row }) => <RecentResultsCell monitor={row.original} />,
+      },
+      {
+        id: "tags",
+        header: "Tags",
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            {tags
+              .filter((tag) => row.original.tagIds?.includes(tag.id))
+              .map((tag) => (
+                <Tag key={tag.id} tag={tag} />
+              ))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "type",
+        header: "Type",
+        cell: ({ row }) => (
+          <Badge variant="outline">{row.original.type.toUpperCase()}</Badge>
+        ),
+      },
+      {
+        accessorKey: "interval",
+        header: "Interval",
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {formatDuration(row.original.interval)}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        cell: ({ row }) => <ActionsCell monitor={row.original} />,
+      },
+    ],
+    [tags],
+  );
 
   return (
     <DataTable

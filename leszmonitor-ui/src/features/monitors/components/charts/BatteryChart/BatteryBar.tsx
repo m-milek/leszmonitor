@@ -6,7 +6,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Flex } from "@/components/common/Flex";
-import { BAR_WIDTH } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data";
 import { STATUS_BG_CLASS } from "@/components/common/StatusDot";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
@@ -15,9 +14,11 @@ import { cn } from "cn";
 export const BatteryBar = ({
   result,
   animate,
+  width,
 }: {
   result?: MonitorResult;
   animate?: boolean;
+  width: number;
 }) => {
   const [animateOnMount] = useState(animate);
   const colorClass =
@@ -29,7 +30,7 @@ export const BatteryBar = ({
     <Popover>
       <PopoverTrigger
         className="h-full shrink-0 cursor-pointer p-0.5 transition-opacity hover:opacity-50"
-        style={{ width: BAR_WIDTH }}
+        style={{ width }}
       >
         <div
           className={cn(

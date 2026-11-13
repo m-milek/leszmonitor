@@ -20,10 +20,6 @@ const getPage = async (
   pagination: Pagination,
   from?: Date,
 ): Promise<MonitorResult[] | null> => {
-  console.log(
-    `Fetching results for monitor ${monitorId} with pagination:`,
-    pagination,
-  );
   const queryParams = new URLSearchParams({
     page: pagination.page.toString(),
     perPage: pagination.perPage.toString(),
