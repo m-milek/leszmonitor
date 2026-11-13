@@ -7,6 +7,7 @@ import { TypographyH1 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MonitorsTable } from "@/features/monitors/components/MonitorsTable";
 import { QUERY_KEYS } from "@/lib/consts";
 import { TagsApi } from "@/features/tags/tags-api.ts";
@@ -20,7 +21,7 @@ import {
 } from "@/features/monitors/types.ts";
 
 export function MonitorsPage() {
-  const { data: monitors = [] } = useQuery({
+  const { data: monitors = [], isPending: isMonitorsPending } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS],
     queryFn: () => MonitorsApi.getAll(),
   });
@@ -36,10 +37,6 @@ export function MonitorsPage() {
       queryFn: () => MonitorsApi.results.getLatest(monitor.id),
     })),
   });
-
-  if (!monitors || !tags) {
-    return null;
-  }
 
   const monitorsWithStatuses: MonitorWithStatus[] = monitors.map(
     (monitor, index) => ({
@@ -134,7 +131,15 @@ export function MonitorsPage() {
           </Flex>
         </CardHeader>
         <CardContent>
-          <MonitorsTable monitors={filteredMonitors} tags={tags} />
+          {isMonitorsPending ? (
+            <Flex direction="column" className="gap-2">
+              {Array.from({ length: 5 }, (_, i) => (
+                <Skeleton key={i} className="h-9 w-full" />
+              ))}
+            </Flex>
+          ) : (
+            <MonitorsTable monitors={filteredMonitors} tags={tags} />
+          )}
         </CardContent>
       </Card>
     </PageContainer>
