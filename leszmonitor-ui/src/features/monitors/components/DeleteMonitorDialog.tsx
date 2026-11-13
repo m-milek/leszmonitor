@@ -19,14 +19,23 @@ import type { Monitor } from "@/features/monitors/types";
 export interface DeleteMonitorDialogProps {
   monitor: Monitor;
   onDeleted?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function DeleteMonitorDialog({
   monitor,
   onDeleted,
+  open,
+  onOpenChange,
 }: Readonly<DeleteMonitorDialogProps>) {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const setIsOpen = isControlled
+    ? (onOpenChange ?? (() => {}))
+    : setInternalOpen;
 
   const deleteMonitorMutation = useMutation({
     mutationFn: () => MonitorsApi.remove(monitor.id),
@@ -43,23 +52,25 @@ export function DeleteMonitorDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger
-        render={
-          <Button
-            variant="destructive"
-            size="lg"
-            className="border-destructive/30 dark:border-destructive/40"
-            title={`Delete monitor ${monitor.name}`}
-            aria-label={`Delete monitor ${monitor.name}`}
-            disabled={monitor.source === "config"}
-          >
-            <TrashIcon />
-            <span>Delete</span>
-          </Button>
-        }
-      >
-        <TrashIcon />
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger
+          render={
+            <Button
+              variant="destructive"
+              size="lg"
+              className="border-destructive/30 dark:border-destructive/40"
+              title={`Delete monitor ${monitor.name}`}
+              aria-label={`Delete monitor ${monitor.name}`}
+              disabled={monitor.source === "config"}
+            >
+              <TrashIcon />
+              <span>Delete</span>
+            </Button>
+          }
+        >
+          <TrashIcon />
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete monitor</DialogTitle>

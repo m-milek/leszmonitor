@@ -56,7 +56,7 @@ src/
 - Don't edit `src/components/ui/*`. Change appearance via variants, semantic tokens, CSS
   variables, or a wrapper component. The remaining intentional forks there are: `field.tsx`
   (`FieldContext` so `FieldLabel` derives `htmlFor`), `dropdown-menu.tsx`
-  (`DropdownMenuItemIcon`), `tooltip.tsx` (`arrowClassName`, `role="tooltip"`, `z-[9999]`,
+  (`DropdownMenuItemIcon`, `rounded-[18px]` on content), `tooltip.tsx` (`arrowClassName`, `role="tooltip"`, `z-[9999]`,
   self-wrapping `TooltipProvider`), `scroll-area.tsx` (both scrollbars), `card.tsx`
   (`ring-foreground/20`), `toast.tsx` (icon colours), `button.tsx` (`cursor-pointer`),
   `sidebar.tsx` (`SIDEBAR_WIDTH = 18rem`, overridden per-app via the `--sidebar-width` style

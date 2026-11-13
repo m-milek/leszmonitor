@@ -1,11 +1,6 @@
 import { MonitorsApi } from "@/features/monitors/monitors-api";
 import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { LucidePlusCircle, LucideX } from "lucide-react";
 import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1 } from "@/components/common/Typography";
@@ -25,8 +20,6 @@ import {
 } from "@/features/monitors/types.ts";
 
 export function MonitorsPage() {
-  const queryClient = useQueryClient();
-
   const { data: monitors = [] } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS],
     queryFn: () => MonitorsApi.getAll(),
@@ -48,18 +41,7 @@ export function MonitorsPage() {
     return null;
   }
 
-  const { mutateAsync: deleteMutation } = useMutation({
-    mutationFn: (monitorId: string) => MonitorsApi.remove(monitorId),
-  });
-
   const navigate = useNavigate();
-
-  const onDeleteMonitor = async (monitorId: string) => {
-    await deleteMutation(monitorId);
-    queryClient.invalidateQueries({
-      queryKey: [QUERY_KEYS.MONITORS],
-    });
-  };
 
   const navigateToEditMonitor = (monitorSlug: string) => {
     navigate({
@@ -166,7 +148,6 @@ export function MonitorsPage() {
               <MonitorListItem
                 key={monitor.id}
                 monitor={monitor}
-                onDeleteMonitor={onDeleteMonitor}
                 navigateToEditMonitor={navigateToEditMonitor}
               />
             ))}
