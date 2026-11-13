@@ -50,25 +50,14 @@ const StatusCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
 };
 
 const NameCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
-  const link = (
-    <StyledLink
-      to="/monitors/$monitorSlug"
-      params={{ monitorSlug: monitor.slug }}
-    >
-      {monitor.name}
-    </StyledLink>
-  );
-
   return (
     <div className="flex items-center gap-1">
-      {monitor.description ? (
-        <Tooltip>
-          <TooltipTrigger render={<span />}>{link}</TooltipTrigger>
-          <TooltipContent>{monitor.description}</TooltipContent>
-        </Tooltip>
-      ) : (
-        link
-      )}
+      <StyledLink
+        to="/monitors/$monitorSlug"
+        params={{ monitorSlug: monitor.slug }}
+      >
+        {monitor.name}
+      </StyledLink>
       {monitor.source === "config" && (
         <Tooltip>
           <TooltipTrigger render={<span className="text-muted-foreground" />}>
