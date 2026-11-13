@@ -1,5 +1,5 @@
 import { MonitorsApi } from "@/features/monitors/monitors-api";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { LucidePlusCircle, LucideX } from "lucide-react";
 import { PageContainer } from "@/components/common/PageContainer";
@@ -7,7 +7,7 @@ import { TypographyH1 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MonitorListItem } from "@/features/monitors/components/MonitorListItem";
+import { MonitorsTable } from "@/features/monitors/components/MonitorsTable";
 import { QUERY_KEYS } from "@/lib/consts";
 import { TagsApi } from "@/features/tags/tags-api.ts";
 import { useState } from "react";
@@ -40,15 +40,6 @@ export function MonitorsPage() {
   if (!monitors || !tags) {
     return null;
   }
-
-  const navigate = useNavigate();
-
-  const navigateToEditMonitor = (monitorSlug: string) => {
-    navigate({
-      to: "/monitors/$monitorSlug/edit",
-      params: { monitorSlug },
-    });
-  };
 
   const monitorsWithStatuses: MonitorWithStatus[] = monitors.map(
     (monitor, index) => ({
@@ -143,15 +134,7 @@ export function MonitorsPage() {
           </Flex>
         </CardHeader>
         <CardContent>
-          <Flex direction="column" className="gap-4">
-            {filteredMonitors.map((monitor) => (
-              <MonitorListItem
-                key={monitor.id}
-                monitor={monitor}
-                navigateToEditMonitor={navigateToEditMonitor}
-              />
-            ))}
-          </Flex>
+          <MonitorsTable monitors={filteredMonitors} tags={tags} />
         </CardContent>
       </Card>
     </PageContainer>
