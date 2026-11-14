@@ -8,6 +8,8 @@ import { Flex } from "@/components/common/Flex";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getEffectiveStatus } from "@/features/monitors/status";
+import { MonitorStatusSummary } from "@/features/monitors/components/MonitorStatusSummary";
 import { MonitorsTable } from "@/features/monitors/components/MonitorsTable";
 import { QUERY_KEYS } from "@/lib/consts";
 import { TagsApi } from "@/features/tags/tags-api.ts";
@@ -76,7 +78,8 @@ export function MonitorsPage() {
       filterTags.length === 0 ||
       filterTags.every((tagId) => monitor.tagIds?.some((id) => id === tagId));
     const matchesStatus =
-      statusFilter.length === 0 || statusFilter.includes(monitor.status);
+      statusFilter.length === 0 ||
+      statusFilter.includes(getEffectiveStatus(monitor));
 
     return matchesName && matchesTags && matchesStatus;
   });
@@ -127,6 +130,12 @@ export function MonitorsPage() {
                   <LucideX />
                 </Button>
               )}
+              <MonitorStatusSummary
+                className="ml-auto"
+                monitors={monitorsWithStatuses}
+                value={statusFilter}
+                onChange={onStatusFilterChange}
+              />
             </div>
           </Flex>
         </CardHeader>

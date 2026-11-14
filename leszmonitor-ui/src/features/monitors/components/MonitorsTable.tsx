@@ -33,6 +33,7 @@ import type {
   MonitorStatus,
   MonitorWithStatus,
 } from "@/features/monitors/types";
+import { getEffectiveStatus } from "@/features/monitors/status";
 import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge";
 import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill";
 import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog";
@@ -47,9 +48,6 @@ const STATUS_SORT_ORDER: MonitorStatus[] = [
   "paused",
   "up",
 ];
-
-const getEffectiveStatus = (monitor: MonitorWithStatus): MonitorStatus =>
-  monitor.runState === "paused" ? "paused" : monitor.status;
 
 const StatusCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   if (monitor.runState === "paused") {
