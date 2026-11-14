@@ -9,12 +9,15 @@ import {
 import {
   type ColumnDef,
   createPaginatedRowModel,
+  createSortedRowModel,
   flexRender,
   type RowData,
   rowPaginationFeature,
+  rowSortingFeature,
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -25,7 +28,9 @@ import {
 
 export const dataTableFeatures = tableFeatures({
   rowPaginationFeature,
+  rowSortingFeature,
   paginatedRowModel: createPaginatedRowModel(),
+  sortedRowModel: createSortedRowModel(),
 });
 
 export interface DataTableProps<T extends RowData> {
@@ -35,6 +40,7 @@ export interface DataTableProps<T extends RowData> {
   compact?: boolean;
   pageSize?: number;
   getRowId?: (row: T) => string;
+  sortable?: boolean;
 }
 
 const headRowClassName = "hover:bg-transparent";
@@ -47,6 +53,12 @@ const emptyClassName = "h-32 px-6 text-center";
 
 const disabledLinkClassName = "pointer-events-none opacity-50";
 
+const SortIcon = ({ direction }: { direction: false | "asc" | "desc" }) => {
+  if (direction === "asc") return <ArrowUp className="size-3.5" />;
+  if (direction === "desc") return <ArrowDown className="size-3.5" />;
+  return <ArrowUpDown className="size-3.5 opacity-40" />;
+};
+
 export const DataTable = <T extends RowData>({
   data,
   columns,
@@ -54,12 +66,15 @@ export const DataTable = <T extends RowData>({
   compact = false,
   pageSize,
   getRowId,
+  sortable = false,
 }: DataTableProps<T>) => {
   const table = useTable({
     features: dataTableFeatures,
     data: data || [],
     columns,
     getRowId,
+    enableSorting: sortable,
+    enableMultiSort: false,
     manualPagination: !pageSize,
     ...(pageSize && {
       autoResetPageIndex: false,
@@ -78,12 +93,24 @@ export const DataTable = <T extends RowData>({
                   key={header.id}
                   className={compact ? compactHeadClassName : headClassName}
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
+                  {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                    <button
+                      type="button"
+                      className="inline-flex cursor-pointer items-center gap-1 hover:text-foreground"
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {flexRender(
                         header.column.columnDef.header,
                         header.getContext(),
                       )}
+                      <SortIcon direction={header.column.getIsSorted()} />
+                    </button>
+                  ) : (
+                    flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )
+                  )}
                 </TableHead>
               );
             })}

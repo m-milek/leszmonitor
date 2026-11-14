@@ -29,13 +29,27 @@ import {
 import { QUERY_KEYS } from "@/lib/consts";
 import { formatDuration } from "@/lib/utils";
 import { MonitorsApi } from "@/features/monitors/monitors-api";
-import type { MonitorWithStatus } from "@/features/monitors/types";
+import type {
+  MonitorStatus,
+  MonitorWithStatus,
+} from "@/features/monitors/types";
 import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatusBadge";
 import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill";
 import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
 import { Tag } from "@/features/tags/components/Tag";
 import type { Tag as TagType } from "@/features/tags/types";
+
+const STATUS_SORT_ORDER: MonitorStatus[] = [
+  "down",
+  "unknown",
+  "maintenance",
+  "paused",
+  "up",
+];
+
+const getEffectiveStatus = (monitor: MonitorWithStatus): MonitorStatus =>
+  monitor.runState === "paused" ? "paused" : monitor.status;
 
 const StatusCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   if (monitor.runState === "paused") {
@@ -205,11 +219,19 @@ export const MonitorsTable = ({ monitors, tags }: MonitorsTableProps) => {
       {
         accessorKey: "name",
         header: "Name",
+        sortFn: (a, b) =>
+          a.original.name.localeCompare(b.original.name, undefined, {
+            sensitivity: "base",
+          }),
         cell: ({ row }) => <NameCell monitor={row.original} />,
       },
       {
         id: "status",
         header: "Status",
+        accessorFn: getEffectiveStatus,
+        sortFn: (a, b) =>
+          STATUS_SORT_ORDER.indexOf(getEffectiveStatus(a.original)) -
+          STATUS_SORT_ORDER.indexOf(getEffectiveStatus(b.original)),
         cell: ({ row }) => <StatusCell monitor={row.original} />,
       },
       {
@@ -233,6 +255,7 @@ export const MonitorsTable = ({ monitors, tags }: MonitorsTableProps) => {
       {
         accessorKey: "type",
         header: "Type",
+        sortFn: (a, b) => a.original.type.localeCompare(b.original.type),
         cell: ({ row }) => (
           <Badge variant="outline">{row.original.type.toUpperCase()}</Badge>
         ),
@@ -240,6 +263,7 @@ export const MonitorsTable = ({ monitors, tags }: MonitorsTableProps) => {
       {
         accessorKey: "interval",
         header: "Interval",
+        sortFn: (a, b) => a.original.interval - b.original.interval,
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
             {formatDuration(row.original.interval)}
@@ -260,6 +284,7 @@ export const MonitorsTable = ({ monitors, tags }: MonitorsTableProps) => {
       columns={columns}
       compact
       getRowId={(monitor) => monitor.id}
+      sortable
       emptyMessage="No monitors."
     />
   );
