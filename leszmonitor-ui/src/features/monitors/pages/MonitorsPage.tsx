@@ -13,16 +13,26 @@ import { MonitorStatusSummary } from "@/features/monitors/components/MonitorStat
 import { MonitorsTable } from "@/features/monitors/components/MonitorsTable";
 import { QUERY_KEYS } from "@/lib/consts";
 import { TagsApi } from "@/features/tags/tags-api.ts";
-import { useState } from "react";
 import { LMInputField } from "@/components/form/LMInputField.tsx";
 import { LMFacetedFilter } from "@/components/form/LMFacetedFilter";
 import { Tag } from "@/features/tags/components/Tag";
 import {
-  monitorStatuses,
+  monitorTypes,
+  type MonitorStatus,
+  type MonitorType,
   type MonitorWithStatus,
 } from "@/features/monitors/types.ts";
+import type { MonitorsSearch } from "@/features/monitors/monitors-search";
 
-export function MonitorsPage() {
+export interface MonitorsPageProps {
+  search: MonitorsSearch;
+  onSearchChange: (search: MonitorsSearch) => void;
+}
+
+export function MonitorsPage({
+  search,
+  onSearchChange,
+}: Readonly<MonitorsPageProps>) {
   const { data: monitors = [], isPending: isMonitorsPending } = useQuery({
     queryKey: [QUERY_KEYS.MONITORS],
     queryFn: () => MonitorsApi.getAll(),
@@ -47,27 +57,46 @@ export function MonitorsPage() {
     }),
   );
 
-  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const filterTags = search.tags ?? [];
   const onTagFilterChange = (selectedTags: string[]) => {
-    setFilterTags(selectedTags);
+    onSearchChange({
+      ...search,
+      tags: selectedTags.length > 0 ? selectedTags : undefined,
+    });
   };
 
-  const [filterName, setFilterName] = useState<string>("");
+  const filterName = search.q ?? "";
   const onNameFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFilterName(event.target.value);
+    onSearchChange({ ...search, q: event.target.value || undefined });
   };
 
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const statusFilter: string[] = search.status ?? [];
   const onStatusFilterChange = (selectedStatuses: string[]) => {
-    setStatusFilter(selectedStatuses);
+    onSearchChange({
+      ...search,
+      status:
+        selectedStatuses.length > 0
+          ? (selectedStatuses as MonitorStatus[])
+          : undefined,
+    });
+  };
+
+  const typeFilter: string[] = search.type ?? [];
+  const onTypeFilterChange = (selectedTypes: string[]) => {
+    onSearchChange({
+      ...search,
+      type:
+        selectedTypes.length > 0 ? (selectedTypes as MonitorType[]) : undefined,
+    });
   };
 
   const hasActiveFilters =
-    filterName !== "" || filterTags.length > 0 || statusFilter.length > 0;
+    filterName !== "" ||
+    filterTags.length > 0 ||
+    statusFilter.length > 0 ||
+    typeFilter.length > 0;
   const clearFilters = () => {
-    setFilterName("");
-    setFilterTags([]);
-    setStatusFilter([]);
+    onSearchChange({});
   };
 
   const filteredMonitors = monitorsWithStatuses.filter((monitor) => {
@@ -81,7 +110,10 @@ export function MonitorsPage() {
       statusFilter.length === 0 ||
       statusFilter.includes(getEffectiveStatus(monitor));
 
-    return matchesName && matchesTags && matchesStatus;
+    const matchesType =
+      typeFilter.length === 0 || typeFilter.includes(monitor.type);
+
+    return matchesName && matchesTags && matchesStatus && matchesType;
   });
 
   return (
@@ -116,13 +148,13 @@ export function MonitorsPage() {
                 onChange={onTagFilterChange}
               />
               <LMFacetedFilter
-                title="Status"
-                options={monitorStatuses.map((status) => ({
-                  value: status,
-                  label: status,
+                title="Type"
+                options={monitorTypes.map((type) => ({
+                  value: type,
+                  label: type.toUpperCase(),
                 }))}
-                value={statusFilter}
-                onChange={onStatusFilterChange}
+                value={typeFilter}
+                onChange={onTypeFilterChange}
               />
               {hasActiveFilters && (
                 <Button variant="ghost" onClick={clearFilters}>

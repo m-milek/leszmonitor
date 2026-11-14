@@ -13,7 +13,7 @@ export type MonitorRunState = "active" | "paused";
 
 export type MonitorSource = "ui" | "config";
 
-const monitorTypes = ["http", "tcp", "dns", "push", "ping"] as const;
+export const monitorTypes = ["http", "tcp", "dns", "push", "ping"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
 
 export const isValidMonitorType = (value: string): value is MonitorType => {
