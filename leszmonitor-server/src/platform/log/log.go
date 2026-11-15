@@ -2,40 +2,16 @@ package log
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/logdyhq/logdy-core/logdy"
 	appconfig "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )
-
-var LogdyGlobalWriter *logdyWriter
-
-type logdyWriter struct {
-	Logger logdy.Logdy
-}
-
-func (w *logdyWriter) Write(p []byte) (int, error) {
-	if w.Logger != nil {
-		var fields logdy.Fields
-		if err := json.Unmarshal(p, &fields); err == nil {
-			w.Logger.Log(fields)
-		} else {
-			w.Logger.LogString(string(p))
-		}
-	}
-	return len(p), nil
-}
-
-func init() {
-	LogdyGlobalWriter = &logdyWriter{}
-}
 
 type Config struct {
 	Level       zerolog.Level
@@ -60,8 +36,7 @@ func New() zerolog.Logger {
 		baseOutput = output
 	}
 
-	multi := zerolog.MultiLevelWriter(baseOutput, LogdyGlobalWriter)
-	return zerolog.New(multi).Level(level).With().Timestamp().Caller().Logger()
+	return zerolog.New(baseOutput).Level(level).With().Timestamp().Caller().Logger()
 }
 
 func FromContext(ctx context.Context) *zerolog.Logger {

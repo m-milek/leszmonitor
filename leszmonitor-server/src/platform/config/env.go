@@ -16,8 +16,6 @@ const (
 	JwtExpiryHours        = "JWT_EXPIRY_HOURS"
 	InstanceAdminUsername = "INSTANCE_ADMIN_USERNAME"
 	InstanceAdminPassword = "INSTANCE_ADMIN_PASSWORD"
-	EnableLogdy           = "ENABLE_LOGDY"
-	LogdyConfigFilePath   = "LOGDY_CONFIG_FILE_PATH"
 	ConfigFilePath        = "CONFIG_FILE_PATH"
 )
 
