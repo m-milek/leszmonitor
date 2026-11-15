@@ -26,7 +26,7 @@ export function DocsPage() {
 
   return (
     <PageContainer>
-      <TypographyH1>Documentation</TypographyH1>
+      <TypographyH1>API Reference</TypographyH1>
       {spec && (
         <SwaggerUI
           spec={{
