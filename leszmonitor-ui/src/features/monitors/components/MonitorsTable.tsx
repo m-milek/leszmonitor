@@ -51,6 +51,13 @@ const STATUS_SORT_ORDER: MonitorStatus[] = [
   "up",
 ];
 
+const compareStatus = (a: MonitorWithStatus, b: MonitorWithStatus) =>
+  STATUS_SORT_ORDER.indexOf(getEffectiveStatus(a)) -
+  STATUS_SORT_ORDER.indexOf(getEffectiveStatus(b));
+
+const compareName = (a: MonitorWithStatus, b: MonitorWithStatus) =>
+  a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+
 const StatusCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   if (monitor.runState === "paused") {
     return <MonitorStatePill monitor={monitor} />;
@@ -237,19 +244,14 @@ export const MonitorsTable = ({
       {
         accessorKey: "name",
         header: "Name",
-        sortFn: (a, b) =>
-          a.original.name.localeCompare(b.original.name, undefined, {
-            sensitivity: "base",
-          }),
+        sortFn: (a, b) => compareName(a.original, b.original),
         cell: ({ row }) => <NameCell monitor={row.original} />,
       },
       {
         id: "status",
         header: "Status",
         accessorFn: getEffectiveStatus,
-        sortFn: (a, b) =>
-          STATUS_SORT_ORDER.indexOf(getEffectiveStatus(a.original)) -
-          STATUS_SORT_ORDER.indexOf(getEffectiveStatus(b.original)),
+        sortFn: (a, b) => compareStatus(a.original, b.original),
         cell: ({ row }) => <StatusCell monitor={row.original} />,
       },
       {
@@ -298,7 +300,9 @@ export const MonitorsTable = ({
 
   return (
     <DataTable
-      data={monitors}
+      data={[...monitors].sort(
+        (a, b) => compareStatus(a, b) || compareName(a, b),
+      )}
       columns={columns}
       compact
       getRowId={(monitor) => monitor.id}
