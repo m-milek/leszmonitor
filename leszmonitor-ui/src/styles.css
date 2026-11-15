@@ -272,6 +272,10 @@
         @apply border-border outline-ring/50;
     }
 
+    html {
+        @apply bg-sidebar;
+    }
+
     body {
         @apply bg-background font-sans text-foreground;
         margin: 0;
