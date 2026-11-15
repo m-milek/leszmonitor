@@ -14,7 +14,6 @@ export function RegisterPage() {
 
   const handleSubmit = async (value: RegisterUserPayload) => {
     try {
-      console.log("Registering user with values:", value);
       await UsersApi.register(value);
 
       const established = await establishSession(value, {

@@ -7,6 +7,7 @@ import { routeTree } from "../routeTree.gen";
 
 import "../styles.css";
 import { ToasterProvider } from "@/app/providers/ToasterProvider";
+import { parseSearch, stringifySearch } from "@/lib/search-params";
 // import reportWebVitals from "../reportWebVitals";
 
 export const queryClient = new QueryClient({
@@ -30,6 +31,8 @@ const router = createRouter({
     queryClient,
   },
   defaultPreload: "intent",
+  stringifySearch,
+  parseSearch,
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,

@@ -1,4 +1,7 @@
-import type { MonitorStatus } from "@/features/monitors/types";
+import type {
+  MonitorStatus,
+  MonitorWithStatus,
+} from "@/features/monitors/types";
 import type { Status } from "@/components/common/StatusDot";
 
 export const monitorStatusToStatusDot = (
@@ -17,3 +20,7 @@ export const monitorStatusToStatusDot = (
       return "pending";
   }
 };
+
+export const getEffectiveStatus = (
+  monitor: MonitorWithStatus,
+): MonitorStatus => (monitor.runState === "paused" ? "paused" : monitor.status);

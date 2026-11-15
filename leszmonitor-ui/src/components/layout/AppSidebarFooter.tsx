@@ -57,7 +57,7 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
           >
             <LucideEllipsisVertical />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="rounded-[18px]">
+          <DropdownMenuContent align="end">
             <DropdownMenuItemIcon
               icon={LucideUserCog}
               onClick={() =>

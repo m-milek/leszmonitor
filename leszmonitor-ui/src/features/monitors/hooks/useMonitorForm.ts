@@ -32,9 +32,6 @@ export function useMonitorForm({
       await onSubmit(value);
       onReset?.();
     },
-    onSubmitInvalid: () => {
-      console.log("Invalid form submission");
-    },
   });
 }
 

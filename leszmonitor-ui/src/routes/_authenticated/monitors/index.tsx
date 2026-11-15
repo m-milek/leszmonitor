@@ -1,9 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MonitorsPage } from "@/features/monitors/pages/MonitorsPage";
+import { monitorsSearchSchema } from "@/features/monitors/monitors-search";
 
 export const Route = createFileRoute("/_authenticated/monitors/")({
+  validateSearch: monitorsSearchSchema,
   head: () => ({
     meta: [{ title: "Monitors | Leszmonitor" }],
   }),
-  component: MonitorsPage,
+  component: RouteComponent,
 });
+
+function RouteComponent() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+
+  return (
+    <MonitorsPage
+      search={search}
+      onSearchChange={(search) => navigate({ search, replace: true })}
+    />
+  );
+}
