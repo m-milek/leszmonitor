@@ -112,12 +112,6 @@ export const AppSidebar = () => {
                 href="/docs"
                 label="Documentation"
               />
-              <SidebarButton
-                icon={<LucideLogs />}
-                href="/_logdy"
-                label="Logs"
-                external
-              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

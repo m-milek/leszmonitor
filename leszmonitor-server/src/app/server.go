@@ -7,10 +7,8 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/logdyhq/logdy-core/logdy"
 	appconfig "github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/httpx"
@@ -47,19 +45,6 @@ func createServer(
 
 	logger := log.FromContext(ctx).With().Str("component", "api_server").Logger()
 	ctx = log.WithContext(ctx, &logger)
-
-	if strings.ToLower(os.Getenv(appconfig.EnableLogdy)) == "true" {
-		logger.Info().Msg("Initializing Logdy at /_logdy")
-		logdyMux := http.NewServeMux()
-		logdyLogger := logdy.InitializeLogdy(logdy.Config{
-			HttpPathPrefix: "_logdy",
-			UiPass:         os.Getenv(appconfig.InstanceAdminPassword),
-			ConfigFilePath: os.Getenv(appconfig.LogdyConfigFilePath),
-		}, logdyMux)
-		log.LogdyGlobalWriter.Logger = logdyLogger
-		router.Handle("/_logdy", logdyMux)
-		router.Handle("/_logdy/", logdyMux)
-	}
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
