@@ -39,7 +39,7 @@ export function WebSocketProvider({
         });
       }
     } catch {
-      console.log("Received WebSocket message:", event.data);
+      return;
     }
   }, []);
 
@@ -59,7 +59,6 @@ export function WebSocketProvider({
         timeout: 15000,
       },
       onOpen: () => {
-        console.log("WebSocket connection opened");
         setIsAuthenticated(false);
 
         void (async () => {
@@ -82,7 +81,6 @@ export function WebSocketProvider({
       },
       onClose: () => {
         setIsAuthenticated(false);
-        console.log("WebSocket connection closed");
       },
       onError: (event) => {
         setIsAuthenticated(false);
