@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getEffectiveStatus } from "@/features/monitors/status";
 import { MonitorStatusSummary } from "@/features/monitors/components/MonitorStatusSummary";
 import { MonitorsTable } from "@/features/monitors/components/MonitorsTable";
+import { MonitorsEmptyState } from "@/features/monitors/components/MonitorsEmptyState";
 import { QUERY_KEYS } from "@/lib/consts";
 import { TagsApi } from "@/features/tags/tags-api.ts";
 import { LMInputField } from "@/components/form/LMInputField.tsx";
@@ -189,24 +190,10 @@ export function MonitorsPage({
               monitors={filteredMonitors}
               tags={tags}
               emptyState={
-                monitors.length === 0 ? (
-                  <Flex direction="column" className="items-center gap-2">
-                    <span>No monitors yet.</span>
-                    <Link to="/monitors/new">
-                      <Button>
-                        <LucidePlusCircle />
-                        <span>Create your first monitor</span>
-                      </Button>
-                    </Link>
-                  </Flex>
-                ) : (
-                  <Flex direction="column" className="items-center gap-2">
-                    <span>No monitors match the filters.</span>
-                    <Button variant="outline" onClick={clearFilters}>
-                      Clear filters
-                    </Button>
-                  </Flex>
-                )
+                <MonitorsEmptyState
+                  hasMonitors={monitors.length > 0}
+                  onClearFilters={clearFilters}
+                />
               }
             />
           )}
