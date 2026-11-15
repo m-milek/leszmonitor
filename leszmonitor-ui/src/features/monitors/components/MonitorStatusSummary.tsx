@@ -26,7 +26,11 @@ export const MonitorStatusSummary = ({
   const counts = monitorStatuses
     .map((status) => ({
       status,
-      count: monitors.filter((m) => getEffectiveStatus(m) === status).length,
+      count: monitors.filter(
+        (m) =>
+          (m.runState === "paused" || !m.isStatusPending) &&
+          getEffectiveStatus(m) === status,
+      ).length,
     }))
     .filter(({ count }) => count > 0);
 

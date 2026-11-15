@@ -18,6 +18,8 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import type { ReactNode } from "react";
+import { cn } from "cn";
 import {
   Pagination,
   PaginationContent,
@@ -36,11 +38,12 @@ export const dataTableFeatures = tableFeatures({
 export interface DataTableProps<T extends RowData> {
   data: T[];
   columns: ColumnDef<typeof dataTableFeatures, T>[];
-  emptyMessage?: string;
+  emptyMessage?: ReactNode;
   compact?: boolean;
   pageSize?: number;
   getRowId?: (row: T) => string;
   sortable?: boolean;
+  onRowClick?: (row: T) => void;
 }
 
 const headRowClassName = "hover:bg-transparent";
@@ -67,6 +70,7 @@ export const DataTable = <T extends RowData>({
   pageSize,
   getRowId,
   sortable = false,
+  onRowClick,
 }: DataTableProps<T>) => {
   const table = useTable({
     features: dataTableFeatures,
@@ -120,7 +124,11 @@ export const DataTable = <T extends RowData>({
       <TableBody>
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id} className={bodyRowClassName}>
+            <TableRow
+              key={row.id}
+              className={cn(bodyRowClassName, onRowClick && "cursor-pointer")}
+              onClick={onRowClick && (() => onRowClick(row.original))}
+            >
               {row.getAllCells().map((cell) => (
                 <TableCell
                   key={cell.id}

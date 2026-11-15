@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ColumnDef } from "@tanstack/react-table";
 import {
   EllipsisIcon,
+  Loader2Icon,
   LucideCirclePlay,
   LucideEdit,
   LucideLock,
@@ -15,6 +16,7 @@ import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
 import { StyledLink } from "@/components/common/StyledLink";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -52,6 +54,10 @@ const STATUS_SORT_ORDER: MonitorStatus[] = [
 const StatusCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   if (monitor.runState === "paused") {
     return <MonitorStatePill monitor={monitor} />;
+  }
+
+  if (monitor.isStatusPending) {
+    return <Skeleton className="h-5 w-14" />;
   }
 
   return (
@@ -95,7 +101,7 @@ const RecentResultsCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   });
 
   return (
-    <div className="w-40">
+    <div className="w-40" onClick={(e) => e.stopPropagation()}>
       <BatteryChart
         monitorResults={results ?? []}
         config={{ barWidth: 16, heightClassName: "h-6", showTimeRange: false }}
@@ -129,7 +135,10 @@ const ActionsCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   });
 
   return (
-    <div className="flex items-center justify-end">
+    <div
+      className="flex items-center justify-end"
+      onClick={(e) => e.stopPropagation()}
+    >
       {monitor.type !== "push" && (
         <Tooltip>
           <TooltipTrigger
@@ -143,7 +152,11 @@ const ActionsCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
               />
             }
           >
-            <LucideCirclePlay />
+            {runMutation.isPending ? (
+              <Loader2Icon className="animate-spin" />
+            ) : (
+              <LucideCirclePlay />
+            )}
           </TooltipTrigger>
           <TooltipContent>Run now</TooltipContent>
         </Tooltip>
@@ -207,9 +220,16 @@ const ActionsCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
 export interface MonitorsTableProps {
   monitors: MonitorWithStatus[];
   tags: TagType[];
+  emptyState?: ReactNode;
 }
 
-export const MonitorsTable = ({ monitors, tags }: MonitorsTableProps) => {
+export const MonitorsTable = ({
+  monitors,
+  tags,
+  emptyState,
+}: MonitorsTableProps) => {
+  const navigate = useNavigate();
+
   const columns = useMemo<
     ColumnDef<typeof dataTableFeatures, MonitorWithStatus>[]
   >(
@@ -283,7 +303,13 @@ export const MonitorsTable = ({ monitors, tags }: MonitorsTableProps) => {
       compact
       getRowId={(monitor) => monitor.id}
       sortable
-      emptyMessage="No monitors."
+      emptyMessage={emptyState}
+      onRowClick={(monitor) =>
+        navigate({
+          to: "/monitors/$monitorSlug",
+          params: { monitorSlug: monitor.slug },
+        })
+      }
     />
   );
 };

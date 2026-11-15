@@ -54,6 +54,7 @@ export function MonitorsPage({
     (monitor, index) => ({
       ...monitor,
       status: latestResultQueries[index]?.data?.status ?? "unknown",
+      isStatusPending: latestResultQueries[index]?.isPending ?? true,
     }),
   );
 
@@ -157,10 +158,15 @@ export function MonitorsPage({
                 onChange={onTypeFilterChange}
               />
               {hasActiveFilters && (
-                <Button variant="ghost" onClick={clearFilters}>
-                  Clear
-                  <LucideX />
-                </Button>
+                <>
+                  <Button variant="ghost" onClick={clearFilters}>
+                    Clear
+                    <LucideX />
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Showing {filteredMonitors.length} of {monitors.length}
+                  </span>
+                </>
               )}
               <MonitorStatusSummary
                 className="ml-auto"
@@ -179,7 +185,30 @@ export function MonitorsPage({
               ))}
             </Flex>
           ) : (
-            <MonitorsTable monitors={filteredMonitors} tags={tags} />
+            <MonitorsTable
+              monitors={filteredMonitors}
+              tags={tags}
+              emptyState={
+                monitors.length === 0 ? (
+                  <Flex direction="column" className="items-center gap-2">
+                    <span>No monitors yet.</span>
+                    <Link to="/monitors/new">
+                      <Button>
+                        <LucidePlusCircle />
+                        <span>Create your first monitor</span>
+                      </Button>
+                    </Link>
+                  </Flex>
+                ) : (
+                  <Flex direction="column" className="items-center gap-2">
+                    <span>No monitors match the filters.</span>
+                    <Button variant="outline" onClick={clearFilters}>
+                      Clear filters
+                    </Button>
+                  </Flex>
+                )
+              }
+            />
           )}
         </CardContent>
       </Card>

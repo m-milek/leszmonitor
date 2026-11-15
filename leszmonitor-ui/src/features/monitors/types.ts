@@ -121,6 +121,7 @@ export type Monitor =
 
 export type MonitorWithStatus = Monitor & {
   status: MonitorStatus;
+  isStatusPending?: boolean;
 };
 
 export type {
