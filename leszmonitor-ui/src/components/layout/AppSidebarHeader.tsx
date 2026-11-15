@@ -7,7 +7,10 @@ import { WebSocketStatusIndicator } from "@/components/layout/WebSocketStatusInd
 export function AppSidebarHeader() {
   return (
     <SidebarHeader>
-      <Flex direction="row" className="justify-between items-center">
+      <Flex
+        direction="row"
+        className="justify-between items-center group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2"
+      >
         <Link to={"/monitors"}>
           <LeszmonitorLogo />
         </Link>

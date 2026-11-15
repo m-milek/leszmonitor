@@ -21,7 +21,8 @@ export const SidebarButton = ({
 }: SidebarButtonProps) => {
   const location = useLocation();
   const { setOpenMobile } = useSidebar();
-  const matchesCurrentUrl = location.pathname === href;
+  const matchesCurrentUrl =
+    location.pathname === href || location.pathname.startsWith(`${href}/`);
 
   return (
     <SidebarMenuItem>
@@ -34,6 +35,7 @@ export const SidebarButton = ({
           )
         }
         isActive={matchesCurrentUrl}
+        tooltip={label}
         onClick={() => setOpenMobile(false)}
         className="transition-colors hover:text-sidebar-foreground active:translate-y-px data-active:text-sidebar-primary [&[data-active]:hover]:text-sidebar-primary"
       >
