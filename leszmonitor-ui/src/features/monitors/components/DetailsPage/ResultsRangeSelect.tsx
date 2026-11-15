@@ -13,10 +13,12 @@ export const RESULTS_RANGE_OPTIONS = [HOUR, 4 * HOUR, 12 * HOUR, 24 * HOUR];
 
 export const DEFAULT_RESULTS_RANGE = 24 * HOUR;
 
-export const parseResultsRange = (value: unknown): number | undefined =>
-  typeof value === "number" && Number.isInteger(value) && value > 0
-    ? value
+export const parseResultsRange = (value: unknown): number | undefined => {
+  const range = typeof value === "string" ? Number(value) : value;
+  return typeof range === "number" && Number.isInteger(range) && range > 0
+    ? range
     : undefined;
+};
 
 export const resultsRangeStart = (rangeSeconds: number) =>
   new Date(Date.now() - rangeSeconds * 1000);

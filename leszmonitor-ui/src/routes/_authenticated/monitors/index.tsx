@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MonitorsPage } from "@/features/monitors/pages/MonitorsPage";
-import { parseMonitorsSearch } from "@/features/monitors/monitors-search";
+import { monitorsSearchSchema } from "@/features/monitors/monitors-search";
 
 export const Route = createFileRoute("/_authenticated/monitors/")({
-  validateSearch: parseMonitorsSearch,
+  validateSearch: monitorsSearchSchema,
   head: () => ({
     meta: [{ title: "Monitors | Leszmonitor" }],
   }),
