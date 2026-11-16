@@ -18,10 +18,11 @@ func NewStatusPageAPIController(service IStatusPageService) StatusPageAPIControl
 }
 
 type StatusPagePayload struct {
-	Slug        string      `json:"slug"`
-	Title       string      `json:"title"`
-	Description string      `json:"description"`
-	TagIDs      []uuid.UUID `json:"tagIds"`
+	Slug               string      `json:"slug"`
+	Title              string      `json:"title"`
+	Description        string      `json:"description"`
+	GroupMonitorsByTag bool        `json:"groupMonitorsByTag"`
+	TagIDs             []uuid.UUID `json:"tagIds"`
 }
 
 // @Summary	Create a status page
@@ -46,10 +47,11 @@ func (c *StatusPageAPIController) CreateStatusPageHandler(w http.ResponseWriter,
 	}
 
 	page, serviceErr := c.service.CreateStatusPage(ctx, StatusPage{
-		Slug:        payload.Slug,
-		Title:       payload.Title,
-		Description: payload.Description,
-		TagIDs:      payload.TagIDs,
+		Slug:               payload.Slug,
+		Title:              payload.Title,
+		Description:        payload.Description,
+		GroupMonitorsByTag: payload.GroupMonitorsByTag,
+		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {
 		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)
@@ -136,11 +138,12 @@ func (c *StatusPageAPIController) UpdateStatusPageHandler(w http.ResponseWriter,
 	}
 
 	page, serviceErr := c.service.UpdateStatusPage(ctx, StatusPage{
-		ID:          id,
-		Slug:        payload.Slug,
-		Title:       payload.Title,
-		Description: payload.Description,
-		TagIDs:      payload.TagIDs,
+		ID:                 id,
+		Slug:               payload.Slug,
+		Title:              payload.Title,
+		Description:        payload.Description,
+		GroupMonitorsByTag: payload.GroupMonitorsByTag,
+		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {
 		httpx.RespondError(ctx, w, serviceErr.Code, serviceErr.Err)

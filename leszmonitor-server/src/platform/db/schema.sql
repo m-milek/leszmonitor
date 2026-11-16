@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS status_pages (
     slug        TEXT     NOT NULL,
     title       TEXT     NOT NULL,
     description TEXT     NOT NULL,
+    group_monitors_by_tag BOOLEAN NOT NULL,
     source      TEXT     NOT NULL,
 
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -37,12 +37,13 @@ func (r *statusPageDAO) InsertStatusPage(ctx context.Context, page StatusPage) (
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO status_pages (id, slug, title, description, source)
-			VALUES ($1, $2, $3, $4, $5)`,
+			`INSERT INTO status_pages (id, slug, title, description, group_monitors_by_tag, source)
+			VALUES ($1, $2, $3, $4, $5, $6)`,
 			id,
 			page.Slug,
 			page.Title,
 			page.Description,
+			page.GroupMonitorsByTag,
 			page.Source,
 		)
 		if err != nil {
@@ -67,7 +68,7 @@ func (r *statusPageDAO) GetStatusPageByID(ctx context.Context, id uuid.UUID) (*S
 			ctx,
 			r.pool,
 			&page,
-			`SELECT p.id, p.slug, p.title, p.description, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.source, p.created_at, p.updated_at
 			 FROM status_pages p
 			 WHERE p.id = $1`,
 			id,
@@ -94,7 +95,7 @@ func (r *statusPageDAO) GetAllStatusPages(ctx context.Context) ([]StatusPage, er
 			ctx,
 			r.pool,
 			&pages,
-			`SELECT p.id, p.slug, p.title, p.description, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.source, p.created_at, p.updated_at
 			 FROM status_pages p
 			 ORDER BY p.title`,
 		)
@@ -118,11 +119,12 @@ func (r *statusPageDAO) UpdateStatusPage(ctx context.Context, page StatusPage) (
 		res, err := r.pool.ExecContext(
 			ctx,
 			`UPDATE status_pages
-			SET slug=$1, title=$2, description=$3
-			WHERE id=$4`,
+			SET slug=$1, title=$2, description=$3, group_monitors_by_tag=$4
+			WHERE id=$5`,
 			page.Slug,
 			page.Title,
 			page.Description,
+			page.GroupMonitorsByTag,
 			page.ID,
 		)
 		if err != nil {

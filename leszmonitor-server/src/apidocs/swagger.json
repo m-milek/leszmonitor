@@ -2654,6 +2654,9 @@
                 "description": {
                     "type": "string"
                 },
+                "groupMonitorsByTag": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -2682,6 +2685,9 @@
             "properties": {
                 "description": {
                     "type": "string"
+                },
+                "groupMonitorsByTag": {
+                    "type": "boolean"
                 },
                 "slug": {
                     "type": "string"

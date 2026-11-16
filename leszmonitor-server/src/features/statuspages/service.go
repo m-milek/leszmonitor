@@ -48,12 +48,13 @@ func (s *StatusPageService) CreateStatusPage(ctx context.Context, page StatusPag
 	}
 
 	newPage := StatusPage{
-		ID:          uuid.New(),
-		Slug:        page.Slug,
-		Title:       page.Title,
-		Description: page.Description,
-		Source:      util.ResourceSourceUI,
-		TagIDs:      page.TagIDs,
+		ID:                 uuid.New(),
+		Slug:               page.Slug,
+		Title:              page.Title,
+		Description:        page.Description,
+		GroupMonitorsByTag: page.GroupMonitorsByTag,
+		Source:             util.ResourceSourceUI,
+		TagIDs:             page.TagIDs,
 	}
 
 	if err := newPage.Validate(); err != nil {

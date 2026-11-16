@@ -8,12 +8,13 @@ import (
 )
 
 type StatusPage struct {
-	ID          uuid.UUID           `json:"id"          db:"id"`
-	Slug        string              `json:"slug"        db:"slug"`
-	Title       string              `json:"title"       db:"title"`
-	Description string              `json:"description" db:"description"`
-	Source      util.ResourceSource `json:"source"      db:"source"`
-	TagIDs      []uuid.UUID         `json:"tagIds"      db:"-"`
+	ID                 uuid.UUID           `json:"id"          db:"id"`
+	Slug               string              `json:"slug"        db:"slug"`
+	Title              string              `json:"title"       db:"title"`
+	Description        string              `json:"description" db:"description"`
+	GroupMonitorsByTag bool                `json:"groupMonitorsByTag" db:"group_monitors_by_tag"`
+	Source             util.ResourceSource `json:"source"      db:"source"`
+	TagIDs             []uuid.UUID         `json:"tagIds"      db:"-"`
 	util.Timestamps
 }
 

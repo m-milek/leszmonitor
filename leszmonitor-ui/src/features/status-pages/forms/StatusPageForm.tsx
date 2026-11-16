@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { LMInputField } from "@/components/form/LMInputField";
 import { LMTextareaField } from "@/components/form/LMTextareaField";
+import { LMSwitch } from "@/components/form/LMSwitch";
+import { Flex } from "@/components/common/Flex";
 import { getFirstError, isFieldInvalid } from "@/components/form/field-state";
 import { LMTagSelect } from "@/features/tags/components/LMTagSelect";
 import { TagsApi } from "@/features/tags/tags-api";
@@ -29,6 +31,7 @@ const formSchema = z.object({
       "Invalid slug format. Must be lowercase, alphanumeric, and can include hyphens.",
     ),
   description: z.string(),
+  groupMonitorsByTag: z.boolean(),
   tagIds: z.array(z.string()).min(1, "Select at least one tag"),
 });
 
@@ -50,6 +53,7 @@ export function StatusPageForm({
       title: defaultValues?.title ?? "",
       slug: defaultValues?.slug ?? "",
       description: defaultValues?.description ?? "",
+      groupMonitorsByTag: defaultValues?.groupMonitorsByTag ?? false,
       tagIds: defaultValues?.tagIds ?? [],
     },
     validators: {
@@ -60,6 +64,7 @@ export function StatusPageForm({
         title: value.title.trim(),
         slug: value.slug.trim(),
         description: value.description.trim(),
+        groupMonitorsByTag: value.groupMonitorsByTag,
         tagIds: value.tagIds,
       });
     },
@@ -148,6 +153,20 @@ export function StatusPageForm({
                 isInvalid={isFieldInvalid(field)}
                 errorMessage={getFirstError(field)}
               />
+            </Field>
+          )}
+        </form.Field>
+        <form.Field name="groupMonitorsByTag">
+          {(field) => (
+            <Field id={field.name}>
+              <Flex direction="row" className="justify-between">
+                <FieldLabel>Group Monitors by Tag</FieldLabel>
+                <LMSwitch
+                  name={field.name}
+                  checked={field.state.value}
+                  onCheckedChange={(checked) => field.handleChange(checked)}
+                />
+              </Flex>
             </Field>
           )}
         </form.Field>
