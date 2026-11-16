@@ -62,6 +62,12 @@ const update = async (
   return mapStatusPage(page);
 };
 
+const remove = async (id: string): Promise<void> => {
+  await authFetch(`${SERVER_API_URL}/status-pages/${id}`, {
+    method: "DELETE",
+  });
+};
+
 const publicFetch = async (url: string): Promise<Response> => {
   const token = await readToken();
   const res = await fetch(url, {
@@ -108,6 +114,7 @@ export const StatusPagesApi = {
   getAll,
   create,
   update,
+  remove,
   public: {
     get: getPublic,
     getMonitors: getPublicMonitors,

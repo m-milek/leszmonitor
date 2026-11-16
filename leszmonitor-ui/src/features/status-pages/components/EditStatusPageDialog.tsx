@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { LucidePencil } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import {
   Dialog,
@@ -9,14 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   StatusPagesApi,
   type StatusPagePayload,
@@ -27,13 +19,16 @@ import { QUERY_KEYS } from "@/lib/consts";
 
 export interface EditStatusPageDialogProps {
   statusPage: StatusPage;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function EditStatusPageDialog({
   statusPage,
+  open,
+  onOpenChange,
 }: EditStatusPageDialogProps) {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
   const formId = `edit-status-page-form-${statusPage.id}`;
 
   const updateMutation = useMutation({
@@ -44,37 +39,19 @@ export function EditStatusPageDialog({
         title: `Status page "${page.title}" updated`,
         type: "success",
       });
-      setIsOpen(false);
+      onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STATUS_PAGES] });
     },
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <DialogTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Edit status page"
-                />
-              }
-            />
-          }
-        >
-          <LucidePencil />
-        </TooltipTrigger>
-        <TooltipContent>Edit status page</TooltipContent>
-      </Tooltip>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Status Page</DialogTitle>
         </DialogHeader>
         <StatusPageForm
-          key={String(isOpen)}
+          key={String(open)}
           id={formId}
           defaultValues={statusPage}
           onSubmit={async (values) => {
