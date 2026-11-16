@@ -7,6 +7,7 @@ import (
 
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -51,7 +52,7 @@ func TestIntegration_SynchronizeConfigBasedTags(t *testing.T) {
 		tag := findTagByName(t, getAllTags(ctx, t), "production")
 		assert.Equal(t, "Defined in config", tag.Description)
 		assert.Equal(t, "#aabbcc", tag.ColorHex)
-		assert.Equal(t, tags.TagSourceConfig, tag.Source)
+		assert.Equal(t, util.ResourceSourceConfig, tag.Source)
 	})
 
 	t.Run("Derives the same ID on every run and updates fields", func(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,7 +29,7 @@ func setupMonitorTagsTest(t *testing.T) (context.Context, *db.Client) {
 func insertTestTag(ctx context.Context, t *testing.T, client *db.Client, name string) uuid.UUID {
 	t.Helper()
 	tag, err := tags.NewTagDAO(client.Querier()).
-		InsertTag(ctx, tags.Tag{Name: name, ColorHex: "#aabbcc", Source: tags.TagSourceUI})
+		InsertTag(ctx, tags.Tag{Name: name, ColorHex: "#aabbcc", Source: util.ResourceSourceUI})
 	require.NoError(t, err)
 	return tag.ID
 }
@@ -45,7 +46,7 @@ func testMonitor(tagIDs []uuid.UUID) monitors.Monitor {
 		RunState:               monitors.MonitorRunStateActive,
 		OwnerID:                uuid.New(),
 		TagIDs:                 tagIDs,
-		Source:                 monitors.MonitorSourceUI,
+		Source:                 util.ResourceSourceUI,
 	}
 }
 

@@ -1,3 +1,5 @@
+export type ResourceSource = "ui" | "config";
+
 export interface Timestamps {
   createdAt: Date;
   updatedAt: Date;

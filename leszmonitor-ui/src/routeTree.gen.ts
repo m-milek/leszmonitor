@@ -13,10 +13,12 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as RegisterIndexRouteImport } from './routes/register/index'
+import { Route as StatusSlugRouteImport } from './routes/status/$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAuditLogIndexRouteImport } from './routes/_authenticated/audit-log/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
 import { Route as AuthenticatedMonitorsIndexRouteImport } from './routes/_authenticated/monitors/index'
+import { Route as AuthenticatedStatusPagesIndexRouteImport } from './routes/_authenticated/statusPages/index'
 import { Route as AuthenticatedTagsIndexRouteImport } from './routes/_authenticated/tags/index'
 import { Route as AuthenticatedMonitorsMonitorSlugIndexRouteImport } from './routes/_authenticated/monitors/$monitorSlug/index'
 import { Route as AuthenticatedMonitorsMonitorSlugEditRouteImport } from './routes/_authenticated/monitors/$monitorSlug/edit'
@@ -43,6 +45,11 @@ const RegisterIndexRoute = RegisterIndexRouteImport.update({
   path: '/register/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StatusSlugRoute = StatusSlugRouteImport.update({
+  id: '/status/$slug',
+  path: '/status/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -63,6 +70,12 @@ const AuthenticatedMonitorsIndexRoute =
   AuthenticatedMonitorsIndexRouteImport.update({
     id: '/monitors/',
     path: '/monitors/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedStatusPagesIndexRoute =
+  AuthenticatedStatusPagesIndexRouteImport.update({
+    id: '/statusPages/',
+    path: '/statusPages/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedTagsIndexRoute = AuthenticatedTagsIndexRouteImport.update({
@@ -103,12 +116,14 @@ const AuthenticatedUserUsernameSettingsIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/status/$slug': typeof StatusSlugRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/audit-log/': typeof AuthenticatedAuditLogIndexRoute
   '/docs/': typeof AuthenticatedDocsIndexRoute
   '/monitors/': typeof AuthenticatedMonitorsIndexRoute
+  '/statusPages/': typeof AuthenticatedStatusPagesIndexRoute
   '/tags/': typeof AuthenticatedTagsIndexRoute
   '/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
   '/monitors/$monitorSlug/': typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -117,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/status/$slug': typeof StatusSlugRoute
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
   '/register': typeof RegisterIndexRoute
@@ -124,6 +140,7 @@ export interface FileRoutesByTo {
   '/audit-log': typeof AuthenticatedAuditLogIndexRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
   '/monitors': typeof AuthenticatedMonitorsIndexRoute
+  '/statusPages': typeof AuthenticatedStatusPagesIndexRoute
   '/tags': typeof AuthenticatedTagsIndexRoute
   '/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
   '/monitors/$monitorSlug': typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -134,6 +151,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/status/$slug': typeof StatusSlugRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
@@ -141,6 +159,7 @@ export interface FileRoutesById {
   '/_authenticated/audit-log/': typeof AuthenticatedAuditLogIndexRoute
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
   '/_authenticated/monitors/': typeof AuthenticatedMonitorsIndexRoute
+  '/_authenticated/statusPages/': typeof AuthenticatedStatusPagesIndexRoute
   '/_authenticated/tags/': typeof AuthenticatedTagsIndexRoute
   '/_authenticated/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
   '/_authenticated/monitors/$monitorSlug/': typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -152,12 +171,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/status/$slug'
     | '/login/'
     | '/register/'
     | '/admin/'
     | '/audit-log/'
     | '/docs/'
     | '/monitors/'
+    | '/statusPages/'
     | '/tags/'
     | '/monitors/$monitorSlug/edit'
     | '/monitors/$monitorSlug/'
@@ -166,6 +187,7 @@ export interface FileRouteTypes {
     | '/user/$username/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/status/$slug'
     | '/'
     | '/login'
     | '/register'
@@ -173,6 +195,7 @@ export interface FileRouteTypes {
     | '/audit-log'
     | '/docs'
     | '/monitors'
+    | '/statusPages'
     | '/tags'
     | '/monitors/$monitorSlug/edit'
     | '/monitors/$monitorSlug'
@@ -182,6 +205,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/status/$slug'
     | '/_authenticated/'
     | '/login/'
     | '/register/'
@@ -189,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/audit-log/'
     | '/_authenticated/docs/'
     | '/_authenticated/monitors/'
+    | '/_authenticated/statusPages/'
     | '/_authenticated/tags/'
     | '/_authenticated/monitors/$monitorSlug/edit'
     | '/_authenticated/monitors/$monitorSlug/'
@@ -199,6 +224,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  StatusSlugRoute: typeof StatusSlugRoute
   LoginIndexRoute: typeof LoginIndexRoute
   RegisterIndexRoute: typeof RegisterIndexRoute
 }
@@ -233,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/status/$slug': {
+      id: '/status/$slug'
+      path: '/status/$slug'
+      fullPath: '/status/$slug'
+      preLoaderRoute: typeof StatusSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/admin'
@@ -259,6 +292,13 @@ declare module '@tanstack/react-router' {
       path: '/monitors'
       fullPath: '/monitors/'
       preLoaderRoute: typeof AuthenticatedMonitorsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/statusPages/': {
+      id: '/_authenticated/statusPages/'
+      path: '/statusPages'
+      fullPath: '/statusPages/'
+      preLoaderRoute: typeof AuthenticatedStatusPagesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/tags/': {
@@ -312,6 +352,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAuditLogIndexRoute: typeof AuthenticatedAuditLogIndexRoute
   AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
   AuthenticatedMonitorsIndexRoute: typeof AuthenticatedMonitorsIndexRoute
+  AuthenticatedStatusPagesIndexRoute: typeof AuthenticatedStatusPagesIndexRoute
   AuthenticatedTagsIndexRoute: typeof AuthenticatedTagsIndexRoute
   AuthenticatedMonitorsMonitorSlugEditRoute: typeof AuthenticatedMonitorsMonitorSlugEditRoute
   AuthenticatedMonitorsMonitorSlugIndexRoute: typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -326,6 +367,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAuditLogIndexRoute: AuthenticatedAuditLogIndexRoute,
   AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
   AuthenticatedMonitorsIndexRoute: AuthenticatedMonitorsIndexRoute,
+  AuthenticatedStatusPagesIndexRoute: AuthenticatedStatusPagesIndexRoute,
   AuthenticatedTagsIndexRoute: AuthenticatedTagsIndexRoute,
   AuthenticatedMonitorsMonitorSlugEditRoute:
     AuthenticatedMonitorsMonitorSlugEditRoute,
@@ -343,6 +385,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  StatusSlugRoute: StatusSlugRoute,
   LoginIndexRoute: LoginIndexRoute,
   RegisterIndexRoute: RegisterIndexRoute,
 }

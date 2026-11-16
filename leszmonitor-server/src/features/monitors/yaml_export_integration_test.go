@@ -12,6 +12,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -20,7 +21,7 @@ import (
 func insertExportTestMonitor(ctx context.Context, t *testing.T) *monitors.Monitor {
 	t.Helper()
 	tag, err := tags.NewTagDAO(db.Get().Querier()).
-		InsertTag(ctx, tags.Tag{Name: "prod", ColorHex: "#aabbcc", Source: tags.TagSourceUI})
+		InsertTag(ctx, tags.Tag{Name: "prod", ColorHex: "#aabbcc", Source: util.ResourceSourceUI})
 	require.NoError(t, err)
 
 	probeConfig, err := json.Marshal(probe.HTTPProbe{

@@ -41,7 +41,7 @@ func SynchronizeConfigBasedMonitors(
 			}
 		}
 
-		tagNames, err := parseTagNames(entry["tags"])
+		tagNames, err := ParseTagNames(entry["tags"])
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid tags in monitor config (%s)", slug))
 		}
@@ -64,7 +64,7 @@ func SynchronizeConfigBasedMonitors(
 		monitor.ID = uuid.NewSHA1(uuidNamespace, []byte(uniqueKey))
 
 		monitor.Slug = slug
-		monitor.Source = MonitorSourceConfig
+		monitor.Source = util.ResourceSourceConfig
 		monitor.RunState = MonitorRunStateActive
 		monitor.OwnerID = ownerID
 		if monitor.ResultRetentionSeconds == 0 {
@@ -113,7 +113,7 @@ func SynchronizeConfigBasedMonitors(
 		}
 
 		for _, monitor := range allMonitors {
-			isNotConfigBased := monitor.Source != MonitorSourceConfig
+			isNotConfigBased := monitor.Source != util.ResourceSourceConfig
 			isInCurrentFile := slices.ContainsFunc(configBasedMonitors, func(m Monitor) bool {
 				return m.ID == monitor.ID
 			})
@@ -148,7 +148,7 @@ func SynchronizeConfigBasedMonitors(
 	return nil
 }
 
-func parseTagNames(rawTags any) ([]string, error) {
+func ParseTagNames(rawTags any) ([]string, error) {
 	if rawTags == nil {
 		return nil, nil
 	}

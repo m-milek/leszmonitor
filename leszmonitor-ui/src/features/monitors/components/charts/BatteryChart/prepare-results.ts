@@ -1,9 +1,14 @@
-import type { MonitorResult } from "@/features/monitors/types";
+import type { MonitorStatus } from "@/features/monitors/types";
 
-export const prepareResults = (
-  monitorResults: MonitorResult[],
+export interface BatteryChartResult {
+  status: MonitorStatus;
+  createdAt: Date;
+}
+
+export const prepareResults = <T extends BatteryChartResult>(
+  monitorResults: T[],
   length: number,
-): Array<MonitorResult | undefined> => {
+): Array<T | undefined> => {
   const safeLength = Math.max(0, Math.floor(length));
   if (safeLength === 0) return [];
 

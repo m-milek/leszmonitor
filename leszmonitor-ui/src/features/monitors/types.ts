@@ -1,4 +1,4 @@
-import type { Timestamps } from "@/lib/types";
+import type { ResourceSource, Timestamps } from "@/lib/types";
 
 export const monitorStatuses = [
   "up",
@@ -10,8 +10,6 @@ export const monitorStatuses = [
 export type MonitorStatus = (typeof monitorStatuses)[number];
 
 export type MonitorRunState = "active" | "paused";
-
-export type MonitorSource = "ui" | "config";
 
 export const monitorTypes = ["http", "tcp", "dns", "push", "ping"] as const;
 export type MonitorType = (typeof monitorTypes)[number];
@@ -84,7 +82,7 @@ interface BaseMonitor extends Timestamps {
   interval: number;
   // Retention seconds not configurable yet
   runState: MonitorRunState;
-  source: MonitorSource;
+  source: ResourceSource;
 }
 
 export interface HttpMonitor extends BaseMonitor {

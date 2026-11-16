@@ -41,6 +41,7 @@ import { MonitorStatusBadge } from "@/features/monitors/components/MonitorStatus
 import { MonitorStatePill } from "@/features/monitors/components/MonitorStatePill";
 import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
+import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data";
 import { Tag } from "@/features/tags/components/Tag";
 import type { Tag as TagType } from "@/features/tags/types";
 
@@ -119,6 +120,7 @@ const RecentResultsCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
       <BatteryChart
         monitorResults={results ?? []}
         config={{ barWidth: 16, heightClassName: "h-6", showTimeRange: false }}
+        formatResult={formatResultData}
       />
     </div>
   );

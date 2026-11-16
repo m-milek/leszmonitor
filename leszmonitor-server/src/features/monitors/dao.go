@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type IMonitorDAO interface {
@@ -301,7 +302,7 @@ func (r *monitorDAO) UpsertConfigBasedMonitor(ctx context.Context, monitor *Moni
 			monitor.RunState,
 			monitor.ProbeConfig,
 			monitor.OwnerID,
-			MonitorSourceConfig,
+			util.ResourceSourceConfig,
 		)
 		if err != nil {
 			if db.IsUniqueViolation(err) {

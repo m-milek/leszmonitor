@@ -1219,6 +1219,113 @@
                 }
             }
         },
+        "/public/status-pages/{slug}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "Get a public status page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Status page slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/statuspages.StatusPage"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/status-pages/{slug}/monitors": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "List monitors on a public status page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Status page slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/statuspages.PublicMonitor"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/push/{monitorId}": {
             "get": {
                 "description": "POST may carry a raw body of up to 5000 bytes, stored with the result.",
@@ -1338,6 +1445,380 @@
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/status-pages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "List status pages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/statuspages.StatusPage"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "Create a status page",
+                "parameters": [
+                    {
+                        "description": "Status page fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/statuspages.StatusPagePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/statuspages.StatusPage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/status-pages/{statusPageId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "Get a status page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Status page ID",
+                        "name": "statusPageId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/statuspages.StatusPage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "Delete a status page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Status page ID",
+                        "name": "statusPageId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "Update a status page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Status page ID",
+                        "name": "statusPageId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status page fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/statuspages.StatusPagePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/statuspages.StatusPage"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/status-pages/{statusPageId}/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "Export a status page as YAML config",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Status page ID",
+                        "name": "statusPageId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status page config in YAML",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/httpx.ErrorResponse"
                         }
@@ -1865,6 +2346,9 @@
                 "tag.create",
                 "tag.update",
                 "tag.delete",
+                "status_page.create",
+                "status_page.update",
+                "status_page.delete",
                 "auth.login",
                 "auth.failed_login",
                 "auth.password_change",
@@ -1881,6 +2365,9 @@
                 "ActionCreateTag",
                 "ActionUpdateTag",
                 "ActionDeleteTag",
+                "ActionCreateStatusPage",
+                "ActionUpdateStatusPage",
+                "ActionDeleteStatusPage",
                 "ActionLogin",
                 "ActionFailedLogin",
                 "ActionPasswordChange",
@@ -2137,7 +2624,7 @@
                     "type": "string"
                 },
                 "source": {
-                    "$ref": "#/definitions/monitors.MonitorSource"
+                    "$ref": "#/definitions/util.ResourceSource"
                 },
                 "tagIds": {
                     "type": "array",
@@ -2163,17 +2650,6 @@
             "x-enum-varnames": [
                 "MonitorRunStateActive",
                 "MonitorRunStateStopped"
-            ]
-        },
-        "monitors.MonitorSource": {
-            "type": "string",
-            "enum": [
-                "ui",
-                "config"
-            ],
-            "x-enum-varnames": [
-                "MonitorSourceUI",
-                "MonitorSourceConfig"
             ]
         },
         "monitors.UpdateMonitorStatePayload": {
@@ -2339,6 +2815,125 @@
                 }
             }
         },
+        "statuspages.PublicMonitor": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/statuspages.PublicMonitorResult"
+                    }
+                },
+                "stats": {
+                    "$ref": "#/definitions/stats.MonitorStats"
+                },
+                "status": {
+                    "$ref": "#/definitions/kind.MonitorStatus"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/tags.Tag"
+                    }
+                }
+            }
+        },
+        "statuspages.PublicMonitorResult": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/kind.MonitorStatus"
+                }
+            }
+        },
+        "statuspages.StatusPage": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "groupMonitorsByTag": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "monitorCount": {
+                    "type": "integer"
+                },
+                "requireAuth": {
+                    "type": "boolean"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "source": {
+                    "$ref": "#/definitions/util.ResourceSource"
+                },
+                "tagIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "timeWindowSeconds": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "statuspages.StatusPagePayload": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "groupMonitorsByTag": {
+                    "type": "boolean"
+                },
+                "requireAuth": {
+                    "type": "boolean"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "tagIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "timeWindowSeconds": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "tags.Tag": {
             "type": "object",
             "properties": {
@@ -2358,7 +2953,7 @@
                     "type": "string"
                 },
                 "source": {
-                    "$ref": "#/definitions/tags.TagSource"
+                    "$ref": "#/definitions/util.ResourceSource"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -2378,17 +2973,6 @@
                     "type": "string"
                 }
             }
-        },
-        "tags.TagSource": {
-            "type": "string",
-            "enum": [
-                "ui",
-                "config"
-            ],
-            "x-enum-varnames": [
-                "TagSourceUI",
-                "TagSourceConfig"
-            ]
         },
         "users.LoginPayload": {
             "type": "object",
@@ -2453,6 +3037,17 @@
                     "type": "string"
                 }
             }
+        },
+        "util.ResourceSource": {
+            "type": "string",
+            "enum": [
+                "ui",
+                "config"
+            ],
+            "x-enum-varnames": [
+                "ResourceSourceUI",
+                "ResourceSourceConfig"
+            ]
         }
     },
     "securityDefinitions": {

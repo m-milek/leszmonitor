@@ -18,21 +18,21 @@ func exportToYAML(ctx context.Context, monitor Monitor, tagsDAO tags.ITagDAO, wr
 		return err
 	}
 
-	tagNames, err := getTagNames(ctx, monitor.TagIDs, tagsDAO)
+	tagNames, err := GetTagNames(ctx, monitor.TagIDs, tagsDAO)
 	if err != nil {
 		return err
 	}
 	if len(tagNames) > 0 {
-		tagsNode, err := buildTagsNode(tagNames)
+		tagsNode, err := BuildTagsNode(tagNames)
 		if err != nil {
 			return err
 		}
-		monitorNode.Content = append(monitorNode.Content, stringNode("tags"), tagsNode)
+		monitorNode.Content = append(monitorNode.Content, StringNode("tags"), tagsNode)
 	}
 
 	rootNode := yaml.Node{
 		Kind:    yaml.MappingNode,
-		Content: []*yaml.Node{stringNode(monitor.Slug), monitorNode},
+		Content: []*yaml.Node{StringNode(monitor.Slug), monitorNode},
 	}
 
 	return yaml.NewEncoder(writer).Encode(&rootNode)
@@ -79,7 +79,7 @@ func buildProbeNode(monitor Monitor) (*yaml.Node, error) {
 	return &probeNode, nil
 }
 
-func buildTagsNode(tagNames []string) (*yaml.Node, error) {
+func BuildTagsNode(tagNames []string) (*yaml.Node, error) {
 	tagsNode := yaml.Node{}
 	if err := tagsNode.Encode(tagNames); err != nil {
 		return nil, err
@@ -89,11 +89,11 @@ func buildTagsNode(tagNames []string) (*yaml.Node, error) {
 	return &tagsNode, nil
 }
 
-func stringNode(value string) *yaml.Node {
+func StringNode(value string) *yaml.Node {
 	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: value}
 }
 
-func getTagNames(ctx context.Context, tagIDs []uuid.UUID, tagsDAO tags.ITagDAO) ([]string, error) {
+func GetTagNames(ctx context.Context, tagIDs []uuid.UUID, tagsDAO tags.ITagDAO) ([]string, error) {
 	allTags, err := tagsDAO.GetAllTags(ctx)
 	if err != nil {
 		return nil, err

@@ -10,20 +10,13 @@ import (
 )
 
 type Tag struct {
-	ID          uuid.UUID `json:"id"          db:"id"`
-	Name        string    `json:"name"        db:"name"`
-	Description string    `json:"description" db:"description"`
-	ColorHex    string    `json:"colorHex"    db:"color_hex"`
-	Source      TagSource `json:"source"      db:"source"`
+	ID          uuid.UUID           `json:"id"          db:"id"`
+	Name        string              `json:"name"        db:"name"`
+	Description string              `json:"description" db:"description"`
+	ColorHex    string              `json:"colorHex"    db:"color_hex"`
+	Source      util.ResourceSource `json:"source"      db:"source"`
 	util.Timestamps
 }
-
-type TagSource string
-
-const (
-	TagSourceUI     TagSource = "ui"
-	TagSourceConfig TagSource = "config"
-)
 
 func (t *Tag) Validate() error {
 	if t.Name == "" {

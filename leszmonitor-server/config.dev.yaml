@@ -66,3 +66,13 @@ monitors:
     interval: 86400
     probeConfig:
       gracePeriodSeconds: 600
+
+status_pages:
+  example:
+    title: Example
+    description: Monitors defined in the config file
+    groupMonitorsByTag: false
+    requireAuth: false
+    enabled: true
+    timeWindowSeconds: 86400
+    tags: [example]

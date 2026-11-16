@@ -89,7 +89,7 @@ func TestIntegration_TagService_CreateTag(t *testing.T) {
 
 		tag, svcErr := tagService.CreateTag(ctx, tags.Tag{Name: "Production", ColorHex: "#aabbcc"})
 		require.Nil(t, svcErr)
-		assert.Equal(t, tags.TagSourceUI, tag.Source)
+		assert.Equal(t, util.ResourceSourceUI, tag.Source)
 	})
 }
 

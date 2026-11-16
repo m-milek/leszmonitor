@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { type QueryKey, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -7,28 +7,28 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CopyToClipboardButton } from "@/components/common/CopyToClipboardButton";
-import { MonitorsApi } from "@/features/monitors/monitors-api";
-import { QUERY_KEYS } from "@/lib/consts";
-import type { Monitor } from "@/features/monitors/types";
 
-export interface ExportMonitorDialogProps {
-  monitor: Monitor;
+export interface ExportYamlDialogProps {
+  title: string;
+  queryKey: QueryKey;
+  queryFn: () => Promise<string>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const ExportMonitorContent = ({ monitor }: { monitor: Monitor }) => {
+const ExportYamlContent = ({
+  queryKey,
+  queryFn,
+}: Pick<ExportYamlDialogProps, "queryKey" | "queryFn">) => {
   const { data: yaml, isError } = useQuery({
-    queryKey: [QUERY_KEYS.MONITORS, monitor.id, "export"],
-    queryFn: () => MonitorsApi.exportYaml(monitor.id),
+    queryKey,
+    queryFn,
     staleTime: 0,
     gcTime: 0,
   });
 
   if (isError) {
-    return (
-      <span className="text-destructive">Failed to export the monitor.</span>
-    );
+    return <span className="text-destructive">Export failed.</span>;
   }
 
   if (yaml === undefined) {
@@ -47,17 +47,19 @@ const ExportMonitorContent = ({ monitor }: { monitor: Monitor }) => {
   );
 };
 
-export const ExportMonitorDialog = ({
-  monitor,
+export const ExportYamlDialog = ({
+  title,
+  queryKey,
+  queryFn,
   open,
   onOpenChange,
-}: ExportMonitorDialogProps) => (
+}: ExportYamlDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="sm:max-w-2xl">
       <DialogHeader>
-        <DialogTitle>Export {monitor.name}</DialogTitle>
+        <DialogTitle>{title}</DialogTitle>
       </DialogHeader>
-      <ExportMonitorContent monitor={monitor} />
+      <ExportYamlContent queryKey={queryKey} queryFn={queryFn} />
     </DialogContent>
   </Dialog>
 );

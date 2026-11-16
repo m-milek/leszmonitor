@@ -14,6 +14,7 @@ type LeszmonitorConfigFile struct {
 	GlobalParameters map[string]any            `yaml:"global_parameters"`
 	Tags             map[string]map[string]any `yaml:"tags"`
 	Monitors         map[string]map[string]any `yaml:"monitors"`
+	StatusPages      map[string]map[string]any `yaml:"status_pages"`
 }
 
 var (

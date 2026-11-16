@@ -13,6 +13,9 @@ export const QUERY_KEYS = {
   MONITOR_LATENCY_STATS: "monitorLatencyStats",
   MONITOR_STATUS_HISTORY: "monitorStatusHistory",
   TAGS: "tags",
+  STATUS_PAGES: "statusPages",
+  PUBLIC_STATUS_PAGES: "publicStatusPages",
+  PUBLIC_STATUS_PAGE_MONITORS: "publicStatusPageMonitors",
   GLOBAL_PARAMETERS: "globalParameters",
   API_SPEC: "apiSpec",
 };

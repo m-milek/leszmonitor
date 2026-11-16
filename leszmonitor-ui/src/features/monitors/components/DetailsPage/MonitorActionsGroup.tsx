@@ -18,7 +18,9 @@ import {
 import { DeleteMonitorDialog } from "@/features/monitors/components/DeleteMonitorDialog.tsx";
 import type { Monitor } from "@/features/monitors/types.ts";
 import { useNavigate } from "@tanstack/react-router";
-import { ExportMonitorDialog } from "@/features/monitors/components/DetailsPage/ExportMonitorDialog";
+import { ExportYamlDialog } from "@/components/common/ExportYamlDialog";
+import { MonitorsApi } from "@/features/monitors/monitors-api";
+import { QUERY_KEYS } from "@/lib/consts";
 
 export interface MonitorActionsGroupProps {
   monitor: Monitor;
@@ -102,8 +104,10 @@ export const MonitorActionsGroup = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>
-      <ExportMonitorDialog
-        monitor={monitor}
+      <ExportYamlDialog
+        title={`Export ${monitor.name}`}
+        queryKey={[QUERY_KEYS.MONITORS, monitor.id, "export"]}
+        queryFn={() => MonitorsApi.exportYaml(monitor.id)}
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
       />
