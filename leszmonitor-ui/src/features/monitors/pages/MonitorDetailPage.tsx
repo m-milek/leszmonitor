@@ -8,6 +8,7 @@ import { MonitorResultsCard } from "@/features/monitors/components/DetailsPage/M
 import { LineChart } from "@/features/monitors/components/charts/LineChartLazy";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BatteryChart } from "@/features/monitors/components/charts/BatteryChart/BatteryChart";
+import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data";
 import { formatTime } from "@/features/monitors/components/charts/utils";
 import type { MonitorResult } from "@/features/monitors/types";
 import { QUERY_KEYS } from "@/lib/consts";
@@ -189,7 +190,10 @@ export function MonitorDetailPage({
       <Card>
         <CardContent>
           {monitorResults ? (
-            <BatteryChart monitorResults={monitorResults} />
+            <BatteryChart
+              monitorResults={monitorResults}
+              formatResult={formatResultData}
+            />
           ) : (
             <Skeleton className="h-8 w-full" />
           )}

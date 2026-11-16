@@ -2773,7 +2773,7 @@
                 "tags": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/statuspages.PublicTag"
+                        "$ref": "#/definitions/tags.Tag"
                     }
                 },
                 "uptimePercent": {
@@ -2789,20 +2789,6 @@
                 },
                 "status": {
                     "$ref": "#/definitions/kind.MonitorStatus"
-                }
-            }
-        },
-        "statuspages.PublicTag": {
-            "type": "object",
-            "properties": {
-                "colorHex": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },

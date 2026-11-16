@@ -1,53 +1,117 @@
+import { useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 import { type ColumnDef } from "@tanstack/react-table";
-import { NoData } from "@/components/common/NoData";
-import type { StatusPage } from "@/features/status-pages/types";
+import { LucideExternalLink } from "lucide-react";
 import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
-import { ShortId } from "@/components/common/ShortId";
+import { NoData } from "@/components/common/NoData";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Tag } from "@/features/tags/components/Tag";
+import type { Tag as TagModel } from "@/features/tags/types";
+import type { StatusPage } from "@/features/status-pages/types";
 import { formatDate } from "@/lib/utils";
 
 export interface StatusPagesTableProps {
   statusPages: StatusPage[];
+  tags: TagModel[];
 }
 
-const columns: ColumnDef<typeof dataTableFeatures, StatusPage>[] = [
-  {
-    accessorKey: "title",
-    header: "Title",
-  },
-  {
-    accessorKey: "slug",
-    header: "Slug",
-    cell: ({ row }) => (
-      <code className="text-muted-foreground">{row.original.slug}</code>
-    ),
-  },
-  {
-    accessorKey: "description",
-    header: "Description",
-    cell: ({ row }) =>
-      row.original.description ? (
-        <span>{row.original.description}</span>
-      ) : (
-        <NoData label="No description" />
-      ),
-  },
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <ShortId value={row.original.id} />,
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Created",
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap">
-        {formatDate(row.original.createdAt)}
-      </span>
-    ),
-  },
-];
+export const StatusPagesTable = ({
+  statusPages,
+  tags,
+}: StatusPagesTableProps) => {
+  const columns = useMemo<ColumnDef<typeof dataTableFeatures, StatusPage>[]>(
+    () => [
+      {
+        accessorKey: "title",
+        header: "Title",
+        cell: ({ row }) => (
+          <span className="font-medium">{row.original.title}</span>
+        ),
+      },
+      {
+        id: "tags",
+        header: "Tags",
+        cell: ({ row }) => {
+          const pageTags = tags.filter((tag) =>
+            row.original.tagIds.includes(tag.id),
+          );
+          return pageTags.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {pageTags.map((tag) => (
+                <Tag key={tag.id} tag={tag} />
+              ))}
+            </div>
+          ) : (
+            <NoData label="No tags" />
+          );
+        },
+      },
+      {
+        accessorKey: "requireAuth",
+        header: "Access",
+        cell: ({ row }) => (
+          <span className="text-sm">
+            {row.original.requireAuth ? "Login required" : "Public"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "groupMonitorsByTag",
+        header: "Grouped by tag",
+        cell: ({ row }) => (
+          <span className="text-sm">
+            {row.original.groupMonitorsByTag ? "Yes" : "No"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Created",
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-sm text-muted-foreground">
+            {formatDate(row.original.createdAt)}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Open status page"
+                    nativeButton={false}
+                    render={
+                      <Link
+                        to="/status/$slug"
+                        params={{ slug: row.original.slug }}
+                        target="_blank"
+                      />
+                    }
+                  />
+                }
+              >
+                <LucideExternalLink />
+              </TooltipTrigger>
+              <TooltipContent>Open status page</TooltipContent>
+            </Tooltip>
+          </div>
+        ),
+      },
+    ],
+    [tags],
+  );
 
-export const StatusPagesTable = ({ statusPages }: StatusPagesTableProps) => {
   return (
     <DataTable
       data={statusPages}

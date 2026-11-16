@@ -247,8 +247,8 @@
     --lm-status-pending-foreground: rgb(20, 25, 37);
     --lm-status-paused: rgb(96, 165, 250);
     --lm-status-paused-foreground: rgb(20, 25, 37);
-    --lm-status-unknown: rgb(148, 163, 184);
-    --lm-status-unknown-foreground: rgb(20, 25, 37);
+    --lm-status-unknown: rgb(71, 85, 105);
+    --lm-status-unknown-foreground: rgb(255, 255, 255);
 }
 
 @theme inline {

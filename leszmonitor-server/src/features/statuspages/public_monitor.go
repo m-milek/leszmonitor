@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/tags"
 )
 
 // TODO: aggregate results into time buckets (e.g. daily) instead of returning the last N raw results.
@@ -16,14 +17,8 @@ type PublicMonitor struct {
 	Name          string                `json:"name"`
 	Status        kind.MonitorStatus    `json:"status"`
 	UptimePercent *float64              `json:"uptimePercent"`
-	Tags          []PublicTag           `json:"tags"`
+	Tags          []tags.Tag            `json:"tags"`
 	Results       []PublicMonitorResult `json:"results"`
-}
-
-type PublicTag struct {
-	ID       uuid.UUID `json:"id"       db:"id"`
-	Name     string    `json:"name"     db:"name"`
-	ColorHex string    `json:"colorHex" db:"color_hex"`
 }
 
 type PublicMonitorResult struct {
@@ -37,9 +32,9 @@ type publicMonitorRow struct {
 	RunState monitors.MonitorRunState `db:"run_state"`
 }
 
-func newPublicMonitor(row publicMonitorRow, tags []PublicTag, results []PublicMonitorResult) PublicMonitor {
-	if tags == nil {
-		tags = []PublicTag{}
+func newPublicMonitor(row publicMonitorRow, monitorTags []tags.Tag, results []PublicMonitorResult) PublicMonitor {
+	if monitorTags == nil {
+		monitorTags = []tags.Tag{}
 	}
 	if results == nil {
 		results = []PublicMonitorResult{}
@@ -70,7 +65,7 @@ func newPublicMonitor(row publicMonitorRow, tags []PublicTag, results []PublicMo
 		Name:          row.Name,
 		Status:        status,
 		UptimePercent: uptimePercent,
-		Tags:          tags,
+		Tags:          monitorTags,
 		Results:       results,
 	}
 }

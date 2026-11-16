@@ -29,7 +29,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       location.pathname === "/login" ||
       location.pathname === "/login/" ||
       location.pathname === "/register" ||
-      location.pathname === "/register/"
+      location.pathname === "/register/" ||
+      location.pathname.startsWith("/status/")
     ) {
       return;
     }

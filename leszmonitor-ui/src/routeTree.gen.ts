@@ -13,6 +13,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as RegisterIndexRouteImport } from './routes/register/index'
+import { Route as StatusSlugRouteImport } from './routes/status/$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAuditLogIndexRouteImport } from './routes/_authenticated/audit-log/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
@@ -42,6 +43,11 @@ const LoginIndexRoute = LoginIndexRouteImport.update({
 const RegisterIndexRoute = RegisterIndexRouteImport.update({
   id: '/register/',
   path: '/register/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusSlugRoute = StatusSlugRouteImport.update({
+  id: '/status/$slug',
+  path: '/status/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -110,6 +116,7 @@ const AuthenticatedUserUsernameSettingsIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/status/$slug': typeof StatusSlugRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/user/$username/settings/': typeof AuthenticatedUserUsernameSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/status/$slug': typeof StatusSlugRoute
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
   '/register': typeof RegisterIndexRoute
@@ -143,6 +151,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/status/$slug': typeof StatusSlugRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/status/$slug'
     | '/login/'
     | '/register/'
     | '/admin/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/user/$username/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/status/$slug'
     | '/'
     | '/login'
     | '/register'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/status/$slug'
     | '/_authenticated/'
     | '/login/'
     | '/register/'
@@ -212,6 +224,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  StatusSlugRoute: typeof StatusSlugRoute
   LoginIndexRoute: typeof LoginIndexRoute
   RegisterIndexRoute: typeof RegisterIndexRoute
 }
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register/'
       preLoaderRoute: typeof RegisterIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status/$slug': {
+      id: '/status/$slug'
+      path: '/status/$slug'
+      fullPath: '/status/$slug'
+      preLoaderRoute: typeof StatusSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -365,6 +385,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  StatusSlugRoute: StatusSlugRoute,
   LoginIndexRoute: LoginIndexRoute,
   RegisterIndexRoute: RegisterIndexRoute,
 }

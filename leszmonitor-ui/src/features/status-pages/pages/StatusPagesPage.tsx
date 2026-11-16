@@ -4,6 +4,7 @@ import { TypographyH1 } from "@/components/common/Typography";
 import { Flex } from "@/components/common/Flex";
 import { Card } from "@/components/ui/card";
 import { StatusPagesApi } from "@/features/status-pages/status-pages-api";
+import { TagsApi } from "@/features/tags/tags-api";
 import { StatusPagesTable } from "@/features/status-pages/components/StatusPagesTable";
 import { NewStatusPageDialog } from "@/features/status-pages/components/NewStatusPageDialog";
 import { QUERY_KEYS } from "@/lib/consts";
@@ -14,6 +15,11 @@ export function StatusPagesPage() {
     queryFn: () => StatusPagesApi.getAll(),
   });
 
+  const { data: tags = [] } = useQuery({
+    queryKey: [QUERY_KEYS.TAGS],
+    queryFn: () => TagsApi.getAll(),
+  });
+
   return (
     <PageContainer>
       <Flex className="items-center justify-between">
@@ -21,7 +27,9 @@ export function StatusPagesPage() {
         <NewStatusPageDialog />
       </Flex>
       <Card>
-        {statusPages && <StatusPagesTable statusPages={statusPages} />}
+        {statusPages && (
+          <StatusPagesTable statusPages={statusPages} tags={tags} />
+        )}
       </Card>
     </PageContainer>
   );

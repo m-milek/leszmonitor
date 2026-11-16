@@ -1,30 +1,36 @@
 import { useState } from "react";
-import type { MonitorResult } from "@/features/monitors/types";
+import type { BatteryChartResult } from "@/features/monitors/components/charts/BatteryChart/prepare-results";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Flex } from "@/components/common/Flex";
-import { formatResultData } from "@/features/monitors/components/charts/BatteryChart/format-result-data";
 import { STATUS_BG_CLASS } from "@/components/common/StatusDot";
 import { monitorStatusToStatusDot } from "@/features/monitors/status";
 import { cn } from "cn";
 
-export const BatteryBar = ({
+export const BatteryBar = <T extends BatteryChartResult>({
   result,
   animate,
   width,
+  formatResult,
 }: {
-  result?: MonitorResult;
+  result?: T;
   animate?: boolean;
   width: number;
+  formatResult: (result: T) => Record<string, string>;
 }) => {
   const [animateOnMount] = useState(animate);
-  const colorClass =
-    STATUS_BG_CLASS[
-      result ? monitorStatusToStatusDot(result.status) : "unknown"
-    ];
+  if (!result) {
+    return (
+      <div className="h-full shrink-0 p-0.5" style={{ width }}>
+        <div className={cn("h-full rounded-full", STATUS_BG_CLASS.unknown)} />
+      </div>
+    );
+  }
+
+  const colorClass = STATUS_BG_CLASS[monitorStatusToStatusDot(result.status)];
 
   return (
     <Popover>
@@ -43,18 +49,12 @@ export const BatteryBar = ({
       </PopoverTrigger>
       <PopoverContent className="w-auto text-sm">
         <Flex direction="column" className="gap-2">
-          {result
-            ? Object.entries(formatResultData(result)).map(([key, value]) => (
-                <Flex
-                  key={key}
-                  direction="row"
-                  className="justify-between gap-4"
-                >
-                  <span className="font-semibold">{key}</span>
-                  <pre className="font-mono">{value}</pre>
-                </Flex>
-              ))
-            : "No data"}
+          {Object.entries(formatResult(result)).map(([key, value]) => (
+            <Flex key={key} direction="row" className="justify-between gap-4">
+              <span className="font-semibold">{key}</span>
+              <pre className="font-mono">{value}</pre>
+            </Flex>
+          ))}
         </Flex>
       </PopoverContent>
     </Popover>

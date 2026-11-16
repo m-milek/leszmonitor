@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { MonitorResult } from "@/features/monitors/types";
 import { BatteryBar } from "@/features/monitors/components/charts/BatteryChart/BatteryBar";
-import { prepareResults } from "@/features/monitors/components/charts/BatteryChart/prepare-results";
+import {
+  type BatteryChartResult,
+  prepareResults,
+} from "@/features/monitors/components/charts/BatteryChart/prepare-results";
 import { cn } from "cn";
 import { Flex } from "@/components/common/Flex";
 import { formatDuration } from "@/lib/utils";
@@ -11,21 +13,35 @@ export interface BatteryChartConfig {
   barWidth: number;
   heightClassName: string;
   showTimeRange: boolean;
+  showNow: boolean;
 }
 
 const DEFAULT_CONFIG: BatteryChartConfig = {
   barWidth: 16,
   heightClassName: "h-10",
   showTimeRange: true,
+  showNow: true,
 };
 
-export interface BatteryChartProps {
-  monitorResults: MonitorResult[];
+export interface BatteryChartProps<T extends BatteryChartResult> {
+  monitorResults: T[];
   config?: Partial<BatteryChartConfig>;
+  formatResult?: (result: T) => Record<string, string>;
 }
 
-export const BatteryChart = ({ monitorResults, config }: BatteryChartProps) => {
-  const { barWidth, heightClassName, showTimeRange } = {
+const defaultFormatResult = (
+  result: BatteryChartResult,
+): Record<string, string> => ({
+  Status: result.status,
+  "Created At": result.createdAt.toLocaleString(),
+});
+
+export const BatteryChart = <T extends BatteryChartResult>({
+  monitorResults,
+  config,
+  formatResult = defaultFormatResult,
+}: BatteryChartProps<T>) => {
+  const { barWidth, heightClassName, showTimeRange, showNow } = {
     ...DEFAULT_CONFIG,
     ...config,
   };
@@ -55,10 +71,7 @@ export const BatteryChart = ({ monitorResults, config }: BatteryChartProps) => {
     lastSeenAtRef.current = newestAt;
   }, [newestAt]);
 
-  const oldestResultUntilNowSeconds = differenceInSeconds(
-    new Date(),
-    displayResults.at(0)?.createdAt ?? new Date(),
-  );
+  const oldestAt = displayResults.at(0)?.createdAt;
 
   return (
     <Flex direction="column">
@@ -68,8 +81,9 @@ export const BatteryChart = ({ monitorResults, config }: BatteryChartProps) => {
       >
         {displayResults.map((res, i) => (
           <BatteryBar
-            key={res?.id ?? `empty-${i}`}
+            key={res?.createdAt.toISOString() ?? `empty-${i}`}
             result={res}
+            formatResult={formatResult}
             width={barWidth}
             animate={
               res !== undefined &&
@@ -85,8 +99,12 @@ export const BatteryChart = ({ monitorResults, config }: BatteryChartProps) => {
           className="justify-between text-muted-foreground"
           style={{ width: displayResults.length * barWidth }}
         >
-          <span>{formatDuration(oldestResultUntilNowSeconds)} ago</span>
-          <span>now</span>
+          {oldestAt && (
+            <span>
+              {formatDuration(differenceInSeconds(new Date(), oldestAt))} ago
+            </span>
+          )}
+          {showNow && <span className="ml-auto">now</span>}
         </Flex>
       )}
     </Flex>

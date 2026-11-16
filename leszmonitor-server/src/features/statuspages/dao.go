@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/db"
 )
 
@@ -218,13 +219,13 @@ func (r *statusPageDAO) GetPublicMonitors(ctx context.Context, pageID uuid.UUID)
 
 		var tagRows []struct {
 			MonitorID uuid.UUID `db:"monitor_id"`
-			PublicTag
+			tags.Tag
 		}
 		err = sqlx.SelectContext(
 			ctx,
 			r.pool,
 			&tagRows,
-			`SELECT mt.monitor_id, t.id, t.name, t.color_hex
+			`SELECT mt.monitor_id, t.*
 			 FROM monitor_tags mt
 			 JOIN status_page_tags spt ON spt.tag_id = mt.tag_id
 			 JOIN tags t ON t.id = mt.tag_id
@@ -236,9 +237,9 @@ func (r *statusPageDAO) GetPublicMonitors(ctx context.Context, pageID uuid.UUID)
 			return nil, err
 		}
 
-		tagsByMonitorID := make(map[uuid.UUID][]PublicTag, len(rows))
+		tagsByMonitorID := make(map[uuid.UUID][]tags.Tag, len(rows))
 		for _, row := range tagRows {
-			tagsByMonitorID[row.MonitorID] = append(tagsByMonitorID[row.MonitorID], row.PublicTag)
+			tagsByMonitorID[row.MonitorID] = append(tagsByMonitorID[row.MonitorID], row.Tag)
 		}
 
 		publicMonitors := make([]PublicMonitor, 0, len(rows))
