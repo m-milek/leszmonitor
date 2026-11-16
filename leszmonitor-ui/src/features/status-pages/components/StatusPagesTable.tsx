@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Tag } from "@/features/tags/components/Tag";
+import { EditStatusPageDialog } from "@/features/status-pages/components/EditStatusPageDialog";
 import type { Tag as TagModel } from "@/features/tags/types";
 import type { StatusPage } from "@/features/status-pages/types";
 import { formatDate } from "@/lib/utils";
@@ -92,6 +93,7 @@ export const StatusPagesTable = ({
         header: "",
         cell: ({ row }) => (
           <div className="flex justify-end">
+            <EditStatusPageDialog statusPage={row.original} />
             <Tooltip>
               <TooltipTrigger
                 render={

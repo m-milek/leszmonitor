@@ -48,7 +48,9 @@ export function StatusPageForm({
     queryFn: () => TagsApi.getAll(),
   });
 
-  const [isSlugEdited, setIsSlugEdited] = useState(false);
+  const [isSlugEdited, setIsSlugEdited] = useState(
+    defaultValues?.slug !== undefined,
+  );
 
   const form = useForm({
     defaultValues: {

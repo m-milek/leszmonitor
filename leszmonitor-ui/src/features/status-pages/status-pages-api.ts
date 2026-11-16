@@ -46,6 +46,22 @@ const create = async (payload: StatusPagePayload): Promise<StatusPage> => {
   return mapStatusPage(page);
 };
 
+const update = async (
+  id: string,
+  payload: StatusPagePayload,
+): Promise<StatusPage> => {
+  const res = await authFetch(`${SERVER_API_URL}/status-pages/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const page = (await res.json()) as StatusPage;
+  return mapStatusPage(page);
+};
+
 const publicFetch = async (url: string): Promise<Response> => {
   const token = await readToken();
   const res = await fetch(url, {
@@ -91,6 +107,7 @@ const getPublicMonitors = async (slug: string): Promise<PublicMonitor[]> => {
 export const StatusPagesApi = {
   getAll,
   create,
+  update,
   public: {
     get: getPublic,
     getMonitors: getPublicMonitors,
