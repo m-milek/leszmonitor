@@ -1,4 +1,4 @@
-FROM node:26-alpine AS ui-builder
+FROM --platform=$BUILDPLATFORM node:26-alpine AS ui-builder
 
 WORKDIR /app
 
@@ -9,14 +9,15 @@ COPY leszmonitor-ui/ .
 
 RUN npm run build
 
-FROM golang:1.27.4-alpine AS server-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.4-alpine AS server-builder
+
+ARG TARGETOS
+ARG TARGETARCH
 
 ARG VERSION
 ARG GIT_COMMIT
 ARG CI_BUILD_NUMBER
 ARG IMAGE_TAG
-
-RUN apk add --no-cache gcc musl-dev sqlite-dev
 
 WORKDIR /app
 
@@ -30,7 +31,7 @@ COPY --from=ui-builder /app/dist ./src/static
 
 WORKDIR /app/src
 
-RUN CGO_ENABLED=0 GOOS=linux go build \
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
     -ldflags="-s -w \
     -X github.com/m-milek/leszmonitor/platform/meta.CIBuildNumber=$CI_BUILD_NUMBER \
     -X github.com/m-milek/leszmonitor/platform/meta.GitCommit=$GIT_COMMIT \
