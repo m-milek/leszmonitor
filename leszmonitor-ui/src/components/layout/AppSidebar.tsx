@@ -17,6 +17,7 @@ import {
   LucideActivity,
   LucideDiagramFlowVertical,
   LucideLogs,
+  LucidePanelsTopLeft,
   LucidePlusCircle,
   LucideSearch,
   LucideSettings,
@@ -93,6 +94,11 @@ export const AppSidebar = () => {
                 label="Monitors"
               />
               <SidebarButton icon={<LucideTag />} href="/tags" label="Tags" />
+              <SidebarButton
+                icon={<LucidePanelsTopLeft />}
+                href="/statusPages"
+                label="Status Pages"
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

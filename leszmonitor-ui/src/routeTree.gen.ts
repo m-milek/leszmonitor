@@ -17,6 +17,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAuditLogIndexRouteImport } from './routes/_authenticated/audit-log/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
 import { Route as AuthenticatedMonitorsIndexRouteImport } from './routes/_authenticated/monitors/index'
+import { Route as AuthenticatedStatusPagesIndexRouteImport } from './routes/_authenticated/statusPages/index'
 import { Route as AuthenticatedTagsIndexRouteImport } from './routes/_authenticated/tags/index'
 import { Route as AuthenticatedMonitorsMonitorSlugIndexRouteImport } from './routes/_authenticated/monitors/$monitorSlug/index'
 import { Route as AuthenticatedMonitorsMonitorSlugEditRouteImport } from './routes/_authenticated/monitors/$monitorSlug/edit'
@@ -65,6 +66,12 @@ const AuthenticatedMonitorsIndexRoute =
     path: '/monitors/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedStatusPagesIndexRoute =
+  AuthenticatedStatusPagesIndexRouteImport.update({
+    id: '/statusPages/',
+    path: '/statusPages/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTagsIndexRoute = AuthenticatedTagsIndexRouteImport.update({
   id: '/tags/',
   path: '/tags/',
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/audit-log/': typeof AuthenticatedAuditLogIndexRoute
   '/docs/': typeof AuthenticatedDocsIndexRoute
   '/monitors/': typeof AuthenticatedMonitorsIndexRoute
+  '/statusPages/': typeof AuthenticatedStatusPagesIndexRoute
   '/tags/': typeof AuthenticatedTagsIndexRoute
   '/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
   '/monitors/$monitorSlug/': typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/audit-log': typeof AuthenticatedAuditLogIndexRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
   '/monitors': typeof AuthenticatedMonitorsIndexRoute
+  '/statusPages': typeof AuthenticatedStatusPagesIndexRoute
   '/tags': typeof AuthenticatedTagsIndexRoute
   '/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
   '/monitors/$monitorSlug': typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/audit-log/': typeof AuthenticatedAuditLogIndexRoute
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
   '/_authenticated/monitors/': typeof AuthenticatedMonitorsIndexRoute
+  '/_authenticated/statusPages/': typeof AuthenticatedStatusPagesIndexRoute
   '/_authenticated/tags/': typeof AuthenticatedTagsIndexRoute
   '/_authenticated/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
   '/_authenticated/monitors/$monitorSlug/': typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/audit-log/'
     | '/docs/'
     | '/monitors/'
+    | '/statusPages/'
     | '/tags/'
     | '/monitors/$monitorSlug/edit'
     | '/monitors/$monitorSlug/'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/audit-log'
     | '/docs'
     | '/monitors'
+    | '/statusPages'
     | '/tags'
     | '/monitors/$monitorSlug/edit'
     | '/monitors/$monitorSlug'
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/audit-log/'
     | '/_authenticated/docs/'
     | '/_authenticated/monitors/'
+    | '/_authenticated/statusPages/'
     | '/_authenticated/tags/'
     | '/_authenticated/monitors/$monitorSlug/edit'
     | '/_authenticated/monitors/$monitorSlug/'
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMonitorsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/statusPages/': {
+      id: '/_authenticated/statusPages/'
+      path: '/statusPages'
+      fullPath: '/statusPages/'
+      preLoaderRoute: typeof AuthenticatedStatusPagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tags/': {
       id: '/_authenticated/tags/'
       path: '/tags'
@@ -312,6 +332,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAuditLogIndexRoute: typeof AuthenticatedAuditLogIndexRoute
   AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
   AuthenticatedMonitorsIndexRoute: typeof AuthenticatedMonitorsIndexRoute
+  AuthenticatedStatusPagesIndexRoute: typeof AuthenticatedStatusPagesIndexRoute
   AuthenticatedTagsIndexRoute: typeof AuthenticatedTagsIndexRoute
   AuthenticatedMonitorsMonitorSlugEditRoute: typeof AuthenticatedMonitorsMonitorSlugEditRoute
   AuthenticatedMonitorsMonitorSlugIndexRoute: typeof AuthenticatedMonitorsMonitorSlugIndexRoute
@@ -326,6 +347,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAuditLogIndexRoute: AuthenticatedAuditLogIndexRoute,
   AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
   AuthenticatedMonitorsIndexRoute: AuthenticatedMonitorsIndexRoute,
+  AuthenticatedStatusPagesIndexRoute: AuthenticatedStatusPagesIndexRoute,
   AuthenticatedTagsIndexRoute: AuthenticatedTagsIndexRoute,
   AuthenticatedMonitorsMonitorSlugEditRoute:
     AuthenticatedMonitorsMonitorSlugEditRoute,
