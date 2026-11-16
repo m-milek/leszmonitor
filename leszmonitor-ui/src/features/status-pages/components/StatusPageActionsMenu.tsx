@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditStatusPageDialog } from "@/features/status-pages/components/EditStatusPageDialog";
 import { DeleteStatusPageDialog } from "@/features/status-pages/components/DeleteStatusPageDialog";
-import { ExportStatusPageDialog } from "@/features/status-pages/components/ExportStatusPageDialog";
+import { ExportYamlDialog } from "@/components/common/ExportYamlDialog";
+import { StatusPagesApi } from "@/features/status-pages/status-pages-api";
+import { QUERY_KEYS } from "@/lib/consts";
 import type { StatusPage } from "@/features/status-pages/types";
 
 export interface StatusPageActionsMenuProps {
@@ -68,8 +70,10 @@ export function StatusPageActionsMenu({
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
       />
-      <ExportStatusPageDialog
-        statusPage={statusPage}
+      <ExportYamlDialog
+        title={`Export ${statusPage.title}`}
+        queryKey={[QUERY_KEYS.STATUS_PAGES, statusPage.id, "export"]}
+        queryFn={() => StatusPagesApi.exportYaml(statusPage.id)}
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
       />
