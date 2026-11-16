@@ -73,7 +73,11 @@ func (r *statusPageDAO) GetStatusPageByID(ctx context.Context, id uuid.UUID) (*S
 			ctx,
 			r.pool,
 			&page,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at,
+				(SELECT COUNT(DISTINCT mt.monitor_id)
+				 FROM monitor_tags mt
+				 JOIN status_page_tags spt ON spt.tag_id = mt.tag_id
+				 WHERE spt.status_page_id = p.id) AS monitor_count
 			 FROM status_pages p
 			 WHERE p.id = $1`,
 			id,
@@ -100,7 +104,11 @@ func (r *statusPageDAO) GetStatusPageBySlug(ctx context.Context, slug string) (*
 			ctx,
 			r.pool,
 			&page,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at,
+				(SELECT COUNT(DISTINCT mt.monitor_id)
+				 FROM monitor_tags mt
+				 JOIN status_page_tags spt ON spt.tag_id = mt.tag_id
+				 WHERE spt.status_page_id = p.id) AS monitor_count
 			 FROM status_pages p
 			 WHERE p.slug = $1`,
 			slug,
@@ -127,7 +135,11 @@ func (r *statusPageDAO) GetAllStatusPages(ctx context.Context) ([]StatusPage, er
 			ctx,
 			r.pool,
 			&pages,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at,
+				(SELECT COUNT(DISTINCT mt.monitor_id)
+				 FROM monitor_tags mt
+				 JOIN status_page_tags spt ON spt.tag_id = mt.tag_id
+				 WHERE spt.status_page_id = p.id) AS monitor_count
 			 FROM status_pages p
 			 ORDER BY p.title`,
 		)

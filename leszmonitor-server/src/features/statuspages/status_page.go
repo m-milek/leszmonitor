@@ -17,6 +17,7 @@ type StatusPage struct {
 	Enabled            bool                `json:"enabled"            db:"enabled"`
 	Source             util.ResourceSource `json:"source"             db:"source"`
 	TagIDs             []uuid.UUID         `json:"tagIds"             db:"-"`
+	MonitorCount       int                 `json:"monitorCount"       db:"monitor_count"`
 	util.Timestamps
 }
 

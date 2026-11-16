@@ -14,7 +14,6 @@ import { Tag } from "@/features/tags/components/Tag";
 import { StatusPageActionsMenu } from "@/features/status-pages/components/StatusPageActionsMenu";
 import type { Tag as TagModel } from "@/features/tags/types";
 import type { StatusPage } from "@/features/status-pages/types";
-import { formatDate } from "@/lib/utils";
 
 export interface StatusPagesTableProps {
   statusPages: StatusPage[];
@@ -53,6 +52,13 @@ export const StatusPagesTable = ({
         },
       },
       {
+        accessorKey: "monitorCount",
+        header: "Monitors",
+        cell: ({ row }) => (
+          <span className="text-sm">{row.original.monitorCount}</span>
+        ),
+      },
+      {
         accessorKey: "enabled",
         header: "Status",
         cell: ({ row }) => (
@@ -76,15 +82,6 @@ export const StatusPagesTable = ({
         cell: ({ row }) => (
           <span className="text-sm">
             {row.original.groupMonitorsByTag ? "Yes" : "No"}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Created",
-        cell: ({ row }) => (
-          <span className="whitespace-nowrap text-sm text-muted-foreground">
-            {formatDate(row.original.createdAt)}
           </span>
         ),
       },

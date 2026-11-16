@@ -2810,6 +2810,9 @@
                 "id": {
                     "type": "string"
                 },
+                "monitorCount": {
+                    "type": "integer"
+                },
                 "requireAuth": {
                     "type": "boolean"
                 },

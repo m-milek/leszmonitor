@@ -12,6 +12,7 @@ export interface StatusPage extends Timestamps {
   enabled: boolean;
   source: ResourceSource;
   tagIds: string[];
+  monitorCount: number;
 }
 
 export interface PublicMonitorResult {
