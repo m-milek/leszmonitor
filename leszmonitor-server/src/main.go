@@ -20,6 +20,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/features/monitors/workers"
+	"github.com/m-milek/leszmonitor/features/statuspages"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -128,6 +129,9 @@ func main() {
 	tagService := tags.NewTagService(tags.TagServiceDeps{
 		DB: database,
 	})
+	statusPageService := statuspages.NewStatusPageService(statuspages.StatusPageServiceDeps{
+		DB: database,
+	})
 	instanceMetadataService := instance.NewInstanceMetadataService(instance.InstanceMetadataServiceDeps{})
 
 	userAPIController := users.NewUserAPIController(userService)
@@ -137,6 +141,7 @@ func main() {
 	monitorStatusChangeAPIController := statuschange.NewMonitorStatusChangeAPIController(monitorStatusChangeService)
 	auditLogAPIController := auditlog.NewAuditLogAPIController(auditLogService)
 	tagAPIController := tags.NewTagAPIController(tagService)
+	statusPageAPIController := statuspages.NewStatusPageAPIController(statusPageService)
 	globalParameterAPIController := globalparameters.NewGlobalParameterAPIController(globalParameterService)
 	instanceMetadataAPIController := instance.NewInstanceMetadataAPIController(instanceMetadataService)
 
@@ -150,6 +155,7 @@ func main() {
 		MonitorStatusChange:    monitorStatusChangeAPIController,
 		AuditLog:               auditLogAPIController,
 		Tag:                    tagAPIController,
+		StatusPage:             statusPageAPIController,
 		InstanceMetadata:       instanceMetadataAPIController,
 		GlobalParameter:        globalParameterAPIController,
 		AuthzMiddlewareService: authzMiddlewareService,

@@ -8,6 +8,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
+	"github.com/m-milek/leszmonitor/features/statuspages"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/features/users"
 )
@@ -20,6 +21,7 @@ type Handlers struct {
 	AuditLog               auditlog.AuditLogAPIController
 	User                   users.UserAPIController
 	Tag                    tags.TagAPIController
+	StatusPage             statuspages.StatusPageAPIController
 	InstanceMetadata       instance.InstanceMetadataAPIController
 	GlobalParameter        globalparameters.GlobalParameterAPIController
 	AuthzMiddlewareService users.IAuthzMiddlewareService

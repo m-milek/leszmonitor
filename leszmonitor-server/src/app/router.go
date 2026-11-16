@@ -13,6 +13,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/features/realtime"
+	"github.com/m-milek/leszmonitor/features/statuspages"
 	"github.com/m-milek/leszmonitor/features/users"
 
 	"github.com/m-milek/leszmonitor/features/tags"
@@ -42,6 +43,9 @@ func SetupRouters(
 
 	// Tags
 	tags.RegisterRoutes(router, h.Tag, requirePermission(h))
+
+	// Status pages
+	statuspages.RegisterRoutes(router, h.StatusPage, requirePermission(h))
 
 	// Audit log
 	auditlog.RegisterRoutes(router, h.AuditLog, requirePermission(h))
