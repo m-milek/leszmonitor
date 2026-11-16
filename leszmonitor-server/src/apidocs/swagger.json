@@ -1287,22 +1287,6 @@
                         "name": "slug",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Stats range start (RFC3339)",
-                        "name": "from",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Stats range end (RFC3339)",
-                        "name": "to",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1313,12 +1297,6 @@
                             "items": {
                                 "$ref": "#/definitions/statuspages.PublicMonitor"
                             }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpx.ErrorResponse"
                         }
                     },
                     "401": {

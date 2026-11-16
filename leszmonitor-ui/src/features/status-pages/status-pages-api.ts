@@ -92,16 +92,9 @@ const getPublic = async (slug: string): Promise<StatusPage> => {
   return mapStatusPage(page);
 };
 
-const getPublicMonitors = async (
-  slug: string,
-  { from, to = new Date() }: { from: Date; to?: Date },
-): Promise<PublicMonitor[]> => {
-  const queryParams = new URLSearchParams({
-    from: from.toISOString(),
-    to: to.toISOString(),
-  });
+const getPublicMonitors = async (slug: string): Promise<PublicMonitor[]> => {
   const res = await publicFetch(
-    `${SERVER_API_URL}/public/status-pages/${slug}/monitors?${queryParams.toString()}`,
+    `${SERVER_API_URL}/public/status-pages/${slug}/monitors`,
   );
   const monitors = (await res.json()) as PublicMonitor[];
   return monitors.map((monitor) => ({

@@ -13,10 +13,6 @@ import { StatusPagesApi } from "@/features/status-pages/status-pages-api";
 import type { PublicMonitor } from "@/features/status-pages/types";
 import type { Tag as TagModel } from "@/features/tags/types";
 import { QUERY_KEYS } from "@/lib/consts";
-import {
-  DEFAULT_RESULTS_RANGE,
-  resultsRangeStart,
-} from "@/features/monitors/components/DetailsPage/ResultsRangeSelect";
 
 const REFETCH_INTERVAL_MS = 30_000;
 
@@ -91,17 +87,8 @@ export function PublicStatusPage({ slug }: PublicStatusPageProps) {
   });
 
   const monitorsQuery = useQuery({
-    queryKey: [
-      QUERY_KEYS.PUBLIC_STATUS_PAGE_MONITORS,
-      slug,
-      pageQuery.data?.timeWindowSeconds,
-    ],
-    queryFn: () =>
-      StatusPagesApi.public.getMonitors(slug, {
-        from: resultsRangeStart(
-          pageQuery.data?.timeWindowSeconds ?? DEFAULT_RESULTS_RANGE,
-        ),
-      }),
+    queryKey: [QUERY_KEYS.PUBLIC_STATUS_PAGE_MONITORS, slug],
+    queryFn: () => StatusPagesApi.public.getMonitors(slug),
     enabled: pageQuery.isSuccess,
     refetchInterval: REFETCH_INTERVAL_MS,
   });

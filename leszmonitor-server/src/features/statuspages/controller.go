@@ -1,7 +1,6 @@
 package statuspages
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -141,10 +140,7 @@ func (c *StatusPageAPIController) GetPublicStatusPageHandler(
 // @Tags		status-pages
 // @Produce	json
 // @Param		slug	path		string	true	"Status page slug"
-// @Param		from	query		string	true	"Stats range start (RFC3339)"	format(date-time)
-// @Param		to		query		string	true	"Stats range end (RFC3339)"		format(date-time)
 // @Success	200		{array}		PublicMonitor
-// @Failure	400		{object}	httpx.ErrorResponse
 // @Failure	401		{object}	httpx.ErrorResponse
 // @Failure	403		{object}	httpx.ErrorResponse
 // @Failure	404		{object}	httpx.ErrorResponse
@@ -156,17 +152,8 @@ func (c *StatusPageAPIController) GetPublicMonitorsHandler(
 	return c.withPublicStatusPage(requireReader, func(w http.ResponseWriter, r *http.Request, page *StatusPage) {
 		ctx := r.Context()
 
-		from, parseErr := time.Parse(time.RFC3339, r.URL.Query().Get("from"))
-		if parseErr != nil {
-			httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'from' parameter format, expected RFC3339"))
-			return
-		}
-
-		to, parseErr := time.Parse(time.RFC3339, r.URL.Query().Get("to"))
-		if parseErr != nil {
-			httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'to' parameter format, expected RFC3339"))
-			return
-		}
+		to := time.Now().UTC()
+		from := to.Add(-time.Duration(page.TimeWindowSeconds) * time.Second)
 
 		publicMonitors, err := c.service.GetPublicMonitors(ctx, page.ID, from, to)
 		if err != nil {
