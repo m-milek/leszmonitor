@@ -1271,6 +1271,61 @@
                 }
             }
         },
+        "/public/status-pages/{slug}/monitors": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "status-pages"
+                ],
+                "summary": "List monitors on a public status page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Status page slug",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/statuspages.PublicMonitor"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/push/{monitorId}": {
             "get": {
                 "description": "POST may carry a raw body of up to 5000 bytes, stored with the result.",
@@ -2694,6 +2749,60 @@
                 },
                 "status": {
                     "$ref": "#/definitions/kind.MonitorStatus"
+                }
+            }
+        },
+        "statuspages.PublicMonitor": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/statuspages.PublicMonitorResult"
+                    }
+                },
+                "status": {
+                    "$ref": "#/definitions/kind.MonitorStatus"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/statuspages.PublicTag"
+                    }
+                },
+                "uptimePercent": {
+                    "type": "number"
+                }
+            }
+        },
+        "statuspages.PublicMonitorResult": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/kind.MonitorStatus"
+                }
+            }
+        },
+        "statuspages.PublicTag": {
+            "type": "object",
+            "properties": {
+                "colorHex": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

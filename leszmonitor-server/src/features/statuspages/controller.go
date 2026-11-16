@@ -125,6 +125,41 @@ func (c *StatusPageAPIController) GetStatusPageByIDHandler(w http.ResponseWriter
 func (c *StatusPageAPIController) GetPublicStatusPageHandler(
 	requireReader func(http.HandlerFunc) http.HandlerFunc,
 ) http.HandlerFunc {
+	return c.withPublicStatusPage(requireReader, func(w http.ResponseWriter, r *http.Request, page *StatusPage) {
+		httpx.RespondJSON(r.Context(), w, http.StatusOK, page)
+	})
+}
+
+// @Summary	List monitors on a public status page
+// @Tags		status-pages
+// @Produce	json
+// @Param		slug	path		string	true	"Status page slug"
+// @Success	200		{array}		PublicMonitor
+// @Failure	401		{object}	httpx.ErrorResponse
+// @Failure	403		{object}	httpx.ErrorResponse
+// @Failure	404		{object}	httpx.ErrorResponse
+// @Failure	500		{object}	httpx.ErrorResponse
+// @Router		/public/status-pages/{slug}/monitors [get]
+func (c *StatusPageAPIController) GetPublicMonitorsHandler(
+	requireReader func(http.HandlerFunc) http.HandlerFunc,
+) http.HandlerFunc {
+	return c.withPublicStatusPage(requireReader, func(w http.ResponseWriter, r *http.Request, page *StatusPage) {
+		ctx := r.Context()
+
+		publicMonitors, err := c.service.GetPublicMonitors(ctx, page.ID)
+		if err != nil {
+			httpx.RespondError(ctx, w, err.Code, err.Err)
+			return
+		}
+
+		httpx.RespondJSON(ctx, w, http.StatusOK, publicMonitors)
+	})
+}
+
+func (c *StatusPageAPIController) withPublicStatusPage(
+	requireReader func(http.HandlerFunc) http.HandlerFunc,
+	next func(w http.ResponseWriter, r *http.Request, page *StatusPage),
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -134,16 +169,16 @@ func (c *StatusPageAPIController) GetPublicStatusPageHandler(
 			return
 		}
 
-		respond := func(w http.ResponseWriter, r *http.Request) {
-			httpx.RespondJSON(r.Context(), w, http.StatusOK, page)
+		handle := func(w http.ResponseWriter, r *http.Request) {
+			next(w, r, page)
 		}
 
 		if page.RequireAuth {
-			requireReader(respond)(w, r)
+			requireReader(handle)(w, r)
 			return
 		}
 
-		respond(w, r)
+		handle(w, r)
 	}
 }
 

@@ -1,0 +1,76 @@
+package statuspages
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors"
+	"github.com/m-milek/leszmonitor/features/monitors/kind"
+)
+
+// TODO: aggregate results into time buckets (e.g. daily) instead of returning the last N raw results.
+const publicMonitorResultsLimit = 50
+
+type PublicMonitor struct {
+	ID            uuid.UUID             `json:"id"`
+	Name          string                `json:"name"`
+	Status        kind.MonitorStatus    `json:"status"`
+	UptimePercent *float64              `json:"uptimePercent"`
+	Tags          []PublicTag           `json:"tags"`
+	Results       []PublicMonitorResult `json:"results"`
+}
+
+type PublicTag struct {
+	ID       uuid.UUID `json:"id"       db:"id"`
+	Name     string    `json:"name"     db:"name"`
+	ColorHex string    `json:"colorHex" db:"color_hex"`
+}
+
+type PublicMonitorResult struct {
+	Status    kind.MonitorStatus `json:"status"    db:"status"`
+	CreatedAt time.Time          `json:"createdAt" db:"created_at"`
+}
+
+type publicMonitorRow struct {
+	ID       uuid.UUID                `db:"id"`
+	Name     string                   `db:"name"`
+	RunState monitors.MonitorRunState `db:"run_state"`
+}
+
+func newPublicMonitor(row publicMonitorRow, tags []PublicTag, results []PublicMonitorResult) PublicMonitor {
+	if tags == nil {
+		tags = []PublicTag{}
+	}
+	if results == nil {
+		results = []PublicMonitorResult{}
+	}
+
+	status := kind.MonitorStatusUnknown
+	if len(results) > 0 {
+		status = results[0].Status
+	}
+	if row.RunState == monitors.MonitorRunStateStopped {
+		status = kind.MonitorStatusPaused
+	}
+
+	var uptimePercent *float64
+	if len(results) > 0 {
+		up := 0
+		for _, r := range results {
+			if r.Status == kind.MonitorStatusUp {
+				up++
+			}
+		}
+		percent := float64(up) / float64(len(results)) * 100
+		uptimePercent = &percent
+	}
+
+	return PublicMonitor{
+		ID:            row.ID,
+		Name:          row.Name,
+		Status:        status,
+		UptimePercent: uptimePercent,
+		Tags:          tags,
+		Results:       results,
+	}
+}

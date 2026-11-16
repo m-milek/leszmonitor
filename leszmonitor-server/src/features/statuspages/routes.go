@@ -28,6 +28,10 @@ func RegisterRoutes(
 		c.GetPublicStatusPageHandler(requirePermission(auth.PermissionReader)),
 	)
 	router.HandleFunc(
+		"GET /api/v1/public/status-pages/{slug}/monitors",
+		c.GetPublicMonitorsHandler(requirePermission(auth.PermissionReader)),
+	)
+	router.HandleFunc(
 		"PATCH /api/v1/status-pages/{statusPageId}",
 		requirePermission(auth.PermissionWriter)(c.UpdateStatusPageHandler),
 	)

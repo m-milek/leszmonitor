@@ -19,6 +19,7 @@ type IStatusPageService interface {
 	CreateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, *apperr.ServiceError)
 	GetStatusPageByID(ctx context.Context, id uuid.UUID) (*StatusPage, *apperr.ServiceError)
 	GetStatusPageBySlug(ctx context.Context, slug string) (*StatusPage, *apperr.ServiceError)
+	GetPublicMonitors(ctx context.Context, pageID uuid.UUID) ([]PublicMonitor, *apperr.ServiceError)
 	GetAllStatusPages(ctx context.Context) ([]StatusPage, *apperr.ServiceError)
 	UpdateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, *apperr.ServiceError)
 	DeleteStatusPage(ctx context.Context, id uuid.UUID) *apperr.ServiceError
@@ -124,6 +125,19 @@ func (s *StatusPageService) GetStatusPageBySlug(ctx context.Context, slug string
 	}
 
 	return page, nil
+}
+
+func (s *StatusPageService) GetPublicMonitors(ctx context.Context, pageID uuid.UUID) ([]PublicMonitor, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameStatusPage, "GetPublicMonitors")
+	logger.Trace().Str("id", pageID.String()).Msg("Retrieving public monitors for status page")
+
+	publicMonitors, err := NewStatusPageDAO(s.db.Querier()).GetPublicMonitors(ctx, pageID)
+	if err != nil {
+		logger.Error().Err(err).Str("id", pageID.String()).Msg("Failed to retrieve public monitors from database")
+		return nil, apperr.NewInternalError("failed to retrieve status page monitors: %w", err)
+	}
+
+	return publicMonitors, nil
 }
 
 func (s *StatusPageService) GetAllStatusPages(ctx context.Context) ([]StatusPage, *apperr.ServiceError) {

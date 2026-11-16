@@ -17,6 +17,7 @@ type IStatusPageDAO interface {
 	GetAllStatusPages(ctx context.Context) ([]StatusPage, error)
 	UpdateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, error)
 	DeleteStatusPageByID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error)
+	GetPublicMonitors(ctx context.Context, pageID uuid.UUID) ([]PublicMonitor, error)
 }
 
 type statusPageDAO struct {
@@ -193,6 +194,76 @@ func (r *statusPageDAO) DeleteStatusPageByID(ctx context.Context, id uuid.UUID) 
 		}
 
 		return &deletedID, nil
+	})
+}
+
+func (r *statusPageDAO) GetPublicMonitors(ctx context.Context, pageID uuid.UUID) ([]PublicMonitor, error) {
+	return db.Wrap(ctx, "GetPublicMonitors", func() ([]PublicMonitor, error) {
+		var rows []publicMonitorRow
+		err := sqlx.SelectContext(
+			ctx,
+			r.pool,
+			&rows,
+			`SELECT DISTINCT m.id, m.name, m.run_state
+			 FROM monitors m
+			 JOIN monitor_tags mt ON mt.monitor_id = m.id
+			 JOIN status_page_tags spt ON spt.tag_id = mt.tag_id
+			 WHERE spt.status_page_id = $1
+			 ORDER BY m.name`,
+			pageID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		var tagRows []struct {
+			MonitorID uuid.UUID `db:"monitor_id"`
+			PublicTag
+		}
+		err = sqlx.SelectContext(
+			ctx,
+			r.pool,
+			&tagRows,
+			`SELECT mt.monitor_id, t.id, t.name, t.color_hex
+			 FROM monitor_tags mt
+			 JOIN status_page_tags spt ON spt.tag_id = mt.tag_id
+			 JOIN tags t ON t.id = mt.tag_id
+			 WHERE spt.status_page_id = $1
+			 ORDER BY t.name`,
+			pageID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		tagsByMonitorID := make(map[uuid.UUID][]PublicTag, len(rows))
+		for _, row := range tagRows {
+			tagsByMonitorID[row.MonitorID] = append(tagsByMonitorID[row.MonitorID], row.PublicTag)
+		}
+
+		publicMonitors := make([]PublicMonitor, 0, len(rows))
+		for _, row := range rows {
+			var results []PublicMonitorResult
+			err = sqlx.SelectContext(
+				ctx,
+				r.pool,
+				&results,
+				`SELECT status, created_at
+				 FROM monitor_results
+				 WHERE monitor_id = $1
+				 ORDER BY created_at DESC
+				 LIMIT $2`,
+				row.ID,
+				publicMonitorResultsLimit,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			publicMonitors = append(publicMonitors, newPublicMonitor(row, tagsByMonitorID[row.ID], results))
+		}
+
+		return publicMonitors, nil
 	})
 }
 
