@@ -1,18 +1,24 @@
 import { MetadataApi } from "@/features/instance/metadata-api";
-import type { User } from "@/features/users/types";
+import { mapUserRoleToDisplayName, type User } from "@/features/users/types";
 import {
-  LucideEllipsisVertical,
+  LucideChevronsUpDown,
   LucideLogOut,
+  LucideUser,
   LucideUserCog,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItemIcon,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Flex } from "@/components/common/Flex";
 import { Metadata } from "@/components/layout/Metadata";
 import { useQuery } from "@tanstack/react-query";
@@ -39,47 +45,74 @@ export const AppSidebarFooter = ({ user }: AppSidebarFooterProps) => {
 
   return (
     <Flex direction="column">
-      <div className="flex items-center gap-1">
-        <Link
-          to="/user/$username"
-          params={{ username: user.username }}
-          className="flex flex-1 items-center rounded-lg p-1 hover:bg-sidebar-accent"
-        >
-          <Initial text={user.username} size="sm" />
-          <div className="ml-2">
-            <p className="font-medium">{user.username}</p>
-            <p className="text-sm">Logged in</p>
-          </div>
-        </Link>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="ghost" aria-label="User menu" />}
-          >
-            <LucideEllipsisVertical />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItemIcon
-              icon={LucideUserCog}
-              onClick={() =>
-                navigate({
-                  to: "/user/$username/settings",
-                  params: { username: user.username },
-                })
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <SidebarMenuButton
+                  size="lg"
+                  aria-label="User menu"
+                  className="data-open:bg-sidebar-accent"
+                />
               }
             >
-              Settings
-            </DropdownMenuItemIcon>
-            <DropdownMenuItemIcon
-              icon={LucideLogOut}
-              variant="destructive"
-              onClick={logOut}
-            >
-              Log out
-            </DropdownMenuItemIcon>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <Initial text={user.username} size="sm" className="shrink-0" />
+              <div className="grid flex-1 text-left leading-tight">
+                <span className="truncate font-medium">{user.username}</span>
+                <span className="truncate text-xs text-sidebar-foreground/70">
+                  {mapUserRoleToDisplayName[user.role]}
+                </span>
+              </div>
+              <LucideChevronsUpDown className="ml-auto" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="end" className="min-w-56">
+              <DropdownMenuItemIcon
+                icon={LucideUser}
+                onClick={() =>
+                  navigate({
+                    to: "/user/$username",
+                    params: { username: user.username },
+                  })
+                }
+              >
+                Profile
+              </DropdownMenuItemIcon>
+              <DropdownMenuItemIcon
+                icon={LucideUserCog}
+                onClick={() =>
+                  navigate({
+                    to: "/user/$username/settings",
+                    params: { username: user.username },
+                  })
+                }
+              >
+                Settings
+              </DropdownMenuItemIcon>
+              <DropdownMenuItemIcon
+                icon={LucideLogOut}
+                variant="destructive"
+                onClick={logOut}
+              >
+                Log out
+              </DropdownMenuItemIcon>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <div className="group-data-[collapsible=icon]:hidden">
+        <Metadata data={metadata} />
       </div>
-      <Metadata data={metadata} />
     </Flex>
   );
 };
+
+export const AppSidebarFooterSkeleton = () => (
+  <div className="flex h-12 items-center gap-2 p-2 group-data-[collapsible=icon]:p-0">
+    <Skeleton className="size-8 shrink-0 rounded-full" />
+    <div className="grid flex-1 gap-1 group-data-[collapsible=icon]:hidden">
+      <Skeleton className="h-3.5 w-24" />
+      <Skeleton className="h-3 w-14" />
+    </div>
+  </div>
+);

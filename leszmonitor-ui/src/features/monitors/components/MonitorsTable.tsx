@@ -1,3 +1,4 @@
+import { cn } from "cn";
 import { type ReactNode, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -108,7 +109,13 @@ const RecentResultsCell = ({ monitor }: { monitor: MonitorWithStatus }) => {
   });
 
   return (
-    <div className="w-40" onClick={(e) => e.stopPropagation()}>
+    <div
+      className={cn(
+        "w-40 transition-opacity",
+        monitor.runState === "paused" && "opacity-50",
+      )}
+      onClick={(e) => e.stopPropagation()}
+    >
       <BatteryChart
         monitorResults={results ?? []}
         config={{ barWidth: 16, heightClassName: "h-6", showTimeRange: false }}

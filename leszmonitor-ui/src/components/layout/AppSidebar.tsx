@@ -7,29 +7,35 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
+  useSidebar
 } from "@/components/ui/sidebar";
 
 import {
   LucideActivity,
-  LucideBookText,
+  LucideDiagramFlowVertical,
   LucideLogs,
+  LucidePlusCircle,
   LucideSearch,
   LucideSettings,
-  LucideTag,
+  LucideTag
 } from "lucide-react";
 import { useAppStore } from "@/app/store";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/jwt";
-import { AppSidebarFooter } from "@/components/layout/AppSidebarFooter";
+import { AppSidebarFooter, AppSidebarFooterSkeleton } from "@/components/layout/AppSidebarFooter";
 import { readToken } from "@/features/auth/lib/token";
 import { AppSidebarHeader } from "@/components/layout/AppSidebarHeader";
 import { SidebarButton } from "@/components/layout/SidebarButton";
+import { Link } from "@tanstack/react-router";
 
 export const AppSidebar = () => {
   const { username, setUsername, user, setUser } = useAppStore();
+  const { setOpenMobile } = useSidebar();
   const hasInitialized = useRef(false);
 
   useEffect(() => {
@@ -63,41 +69,52 @@ export const AppSidebar = () => {
   }, [userData, setUser]);
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar variant="inset" collapsible="icon">
       <AppSidebarHeader />
 
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 group-data-[collapsible=icon]:p-0">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
+              <SidebarMenuItem className="mb-2">
+                <SidebarMenuButton
+                  render={<Link to="/monitors/new" draggable={false} />}
+                  tooltip="New Monitor"
+                  onClick={() => setOpenMobile(false)}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+                >
+                  <LucidePlusCircle />
+                  <span>New Monitor</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarButton
                 icon={<LucideActivity />}
                 href="/monitors"
                 label="Monitors"
               />
               <SidebarButton icon={<LucideTag />} href="/tags" label="Tags" />
-              {(user?.role === "owner" || user?.role === "admin") && (
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        {(user?.role === "owner" || user?.role === "admin") && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                <SidebarButton
+                  icon={<LucideSettings />}
+                  href="/admin"
+                  label="Instance Settings"
+                />
                 <SidebarButton
                   icon={<LucideLogs />}
                   href="/audit-log"
                   label="Audit Log"
                 />
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              <SidebarButton
-                icon={<LucideSettings />}
-                href={`/admin`}
-                label="Administration"
-              />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         <SidebarGroup>
           <SidebarGroupLabel>Help</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -108,16 +125,18 @@ export const AppSidebar = () => {
                 label="Search"
               />
               <SidebarButton
-                icon={<LucideBookText />}
+                icon={<LucideDiagramFlowVertical />}
                 href="/docs"
-                label="Documentation"
+                label="API Reference"
               />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>{user && <AppSidebarFooter user={user} />}</SidebarFooter>
+      <SidebarFooter>
+        {user ? <AppSidebarFooter user={user} /> : <AppSidebarFooterSkeleton />}
+      </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>
