@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS monitors (
     owner_id                 TEXT NOT NULL,                            -- user who created the monitor
     kind                     TEXT NOT NULL,
     result_retention_seconds INT  NOT NULL CHECK (result_retention_seconds > 0),
+    failure_threshold        INT  NOT NULL CHECK (failure_threshold > 0),
+    recovery_threshold       INT  NOT NULL CHECK (recovery_threshold > 0),
     run_state                TEXT NOT NULL,
     config                   TEXT NOT NULL CHECK (JSON_VALID(config)), -- JSON string
     source                   TEXT NOT NULL,

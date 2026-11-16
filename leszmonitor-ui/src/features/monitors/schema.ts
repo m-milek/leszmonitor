@@ -67,6 +67,14 @@ const baseMonitorFields = {
   interval: z
     .number({ message: "Interval must be a number" })
     .min(1, "Interval must be at least 1 second"),
+  failureThreshold: z
+    .number({ message: "Failure threshold must be a number" })
+    .int("Failure threshold must be a whole number")
+    .min(1, "Failure threshold must be at least 1"),
+  recoveryThreshold: z
+    .number({ message: "Recovery threshold must be a number" })
+    .int("Recovery threshold must be a whole number")
+    .min(1, "Recovery threshold must be at least 1"),
   resultRetentionSeconds: z
     .number({ message: "Retention period must be a number" })
     .min(1, "Retention period must be at least 1 second")
@@ -119,6 +127,8 @@ export const newMonitorSchemaDefaultValues = {
   description: "",
   tagIds: [],
   interval: 60,
+  failureThreshold: 1,
+  recoveryThreshold: 1,
   resultRetentionSeconds: 43200,
 } satisfies Partial<MonitorFormValues>;
 
@@ -171,6 +181,8 @@ export const mapMonitorToFormValues = (monitor: Monitor): MonitorFormValues => {
     description: monitor.description ?? "",
     tagIds: monitor.tagIds ?? [],
     interval: monitor.interval,
+    failureThreshold: monitor.failureThreshold,
+    recoveryThreshold: monitor.recoveryThreshold,
     type: monitor.type,
     probeConfig: {
       ...configDefaults,

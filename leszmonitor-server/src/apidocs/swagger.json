@@ -2587,6 +2587,9 @@
                     "description": "Description of the monitor",
                     "type": "string"
                 },
+                "failureThreshold": {
+                    "type": "integer"
+                },
                 "id": {
                     "description": "ID is the unique identifier for the monitor, generated as a UUID",
                     "type": "string"
@@ -2606,6 +2609,9 @@
                 "probeConfig": {
                     "description": "JSON configuration specific to the monitor type",
                     "type": "object"
+                },
+                "recoveryThreshold": {
+                    "type": "integer"
                 },
                 "resultRetentionSeconds": {
                     "description": "ResultRetentionSeconds determines how long to keep the monitor results in seconds",

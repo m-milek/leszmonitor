@@ -80,6 +80,8 @@ interface BaseMonitor extends Timestamps {
   tagIds: string[];
   ownerId: string;
   interval: number;
+  failureThreshold: number;
+  recoveryThreshold: number;
   // Retention seconds not configurable yet
   runState: MonitorRunState;
   source: ResourceSource;

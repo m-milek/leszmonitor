@@ -70,6 +70,7 @@ func SynchronizeConfigBasedMonitors(
 		if monitor.ResultRetentionSeconds == 0 {
 			monitor.ResultRetentionSeconds = defaultResultRetentionSeconds
 		}
+		monitor.applyDefaultThresholds()
 
 		if err = monitor.Validate(); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to validate monitor config (%s)", slug))

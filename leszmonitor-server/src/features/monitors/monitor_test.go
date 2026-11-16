@@ -18,6 +18,8 @@ func createTestBaseMonitor() Monitor {
 		Interval:               60,
 		Type:                   kind.HTTPConfigType,
 		ResultRetentionSeconds: 60,
+		FailureThreshold:       1,
+		RecoveryThreshold:      1,
 		RunState:               MonitorRunStateActive,
 	}
 }

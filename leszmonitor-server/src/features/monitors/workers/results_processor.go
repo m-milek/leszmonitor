@@ -11,6 +11,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/pkg/errors"
 )
 
@@ -64,13 +65,55 @@ func processMonitorRunMessage(ctx context.Context, database db.DB, msg monitors.
 		previousStatus = kind.MonitorStatus(latestStatusChange.NextStatus)
 	}
 
-	if previousStatus != msg.Result.GetStatus() {
-		err = handleStatusChange(ctx, database, msg.Monitor, previousStatus, msg.Result)
+	if previousStatus == msg.Result.GetStatus() {
+		return nil
+	}
+
+	if previousStatus != kind.MonitorStatusUnknown {
+		confirmed, err := isStatusConfirmed(ctx, database, msg.Monitor, msg.Result.GetStatus())
 		if err != nil {
-			return errors.Wrap(err, "failed to handle status change")
+			return errors.Wrap(err, "failed to check status threshold")
+		}
+		if !confirmed {
+			return nil
 		}
 	}
+
+	err = handleStatusChange(ctx, database, msg.Monitor, previousStatus, msg.Result)
+	if err != nil {
+		return errors.Wrap(err, "failed to handle status change")
+	}
 	return nil
+}
+
+func isStatusConfirmed(
+	ctx context.Context,
+	database db.DB,
+	monitor monitors.Monitor,
+	status kind.MonitorStatus,
+) (bool, error) {
+	threshold := monitor.RecoveryThreshold
+	if status == kind.MonitorStatusDown {
+		threshold = monitor.FailureThreshold
+	}
+	if threshold <= 1 {
+		return true, nil
+	}
+
+	latest, err := results.NewMonitorResultDAO(database.Querier()).
+		GetMonitorResultsByMonitorID(ctx, monitor.ID, &util.Pagination{Page: 1, PerPage: threshold}, nil)
+	if err != nil {
+		return false, err
+	}
+	if len(latest) < threshold {
+		return false, nil
+	}
+	for _, result := range latest {
+		if result.GetStatus() != status {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func handleStatusChange(

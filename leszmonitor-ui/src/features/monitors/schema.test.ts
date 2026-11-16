@@ -14,6 +14,8 @@ const serverMonitor = (overrides: Partial<Monitor>): Monitor =>
     name: "Example",
     slug: "example",
     interval: 60,
+    failureThreshold: 1,
+    recoveryThreshold: 1,
     runState: "active",
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),

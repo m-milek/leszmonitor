@@ -215,6 +215,38 @@ export function MonitorForm({
               </Field>
             )}
           </form.Field>
+          <form.Field name="failureThreshold">
+            {(field) => (
+              <Field id={field.name}>
+                <FieldLabel>Failures before down</FieldLabel>
+                <LMInputField
+                  name={field.name}
+                  type="number"
+                  inputMode="numeric"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(Number(e.target.value))}
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
+          </form.Field>
+          <form.Field name="recoveryThreshold">
+            {(field) => (
+              <Field id={field.name}>
+                <FieldLabel>Successes before up</FieldLabel>
+                <LMInputField
+                  name={field.name}
+                  type="number"
+                  inputMode="numeric"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(Number(e.target.value))}
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
+          </form.Field>
         </FieldGroup>
         <form.Subscribe selector={(form) => form.values.type}>
           {(type) => {
