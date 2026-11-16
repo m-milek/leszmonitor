@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
+	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/auth"
@@ -25,6 +27,7 @@ type IStatusPageService interface {
 	GetAllStatusPages(ctx context.Context) ([]StatusPage, *apperr.ServiceError)
 	UpdateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, *apperr.ServiceError)
 	DeleteStatusPage(ctx context.Context, id uuid.UUID) *apperr.ServiceError
+	ExportToYAML(ctx context.Context, id uuid.UUID, w io.Writer) *apperr.ServiceError
 }
 
 type StatusPageService struct {
@@ -194,6 +197,10 @@ func (s *StatusPageService) UpdateStatusPage(ctx context.Context, page StatusPag
 			return nil, nil, fmt.Errorf("failed to retrieve existing status page for update: %w", err)
 		}
 
+		if existing.Source == util.ResourceSourceConfig {
+			return nil, nil, apperr.NewConflictError("status page %s is managed by config file", page.ID)
+		}
+
 		p, updateErr := dao.UpdateStatusPage(ctx, page)
 		if updateErr != nil {
 			return nil, nil, updateErr
@@ -245,6 +252,10 @@ func (s *StatusPageService) DeleteStatusPage(ctx context.Context, id uuid.UUID) 
 			return nil, fmt.Errorf("failed to retrieve status page before deletion: %w", err)
 		}
 
+		if existing.Source == util.ResourceSourceConfig {
+			return nil, apperr.NewConflictError("status page %s is managed by config file", id)
+		}
+
 		if _, delErr := dao.DeleteStatusPageByID(ctx, id); delErr != nil {
 			return nil, delErr
 		}
@@ -268,5 +279,24 @@ func (s *StatusPageService) DeleteStatusPage(ctx context.Context, id uuid.UUID) 
 	}
 
 	logger.Debug().Str("id", id.String()).Msg("Status page deleted")
+	return nil
+}
+
+func (s *StatusPageService) ExportToYAML(ctx context.Context, id uuid.UUID, w io.Writer) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameStatusPage, "ExportToYAML")
+	logger.Trace().Str("id", id.String()).Msg("Exporting to YAML")
+
+	page, err := NewStatusPageDAO(s.db.Querier()).GetStatusPageByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return apperr.NewNotFoundError("status page with ID %s not found", id)
+		}
+		return apperr.NewInternalError("failed to retrieve status page: %w", err)
+	}
+
+	if err = exportToYAML(ctx, *page, tags.NewTagDAO(s.db.Querier()), w); err != nil {
+		return apperr.NewInternalError("failed to export status page %s to YAML", page.Slug)
+	}
+
 	return nil
 }

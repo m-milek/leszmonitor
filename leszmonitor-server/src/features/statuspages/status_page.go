@@ -8,18 +8,18 @@ import (
 )
 
 type StatusPage struct {
-	ID                 uuid.UUID           `json:"id"                 db:"id"`
-	Slug               string              `json:"slug"               db:"slug"`
-	Title              string              `json:"title"              db:"title"`
-	Description        string              `json:"description"        db:"description"`
-	GroupMonitorsByTag bool                `json:"groupMonitorsByTag" db:"group_monitors_by_tag"`
-	RequireAuth        bool                `json:"requireAuth"        db:"require_auth"`
-	Enabled            bool                `json:"enabled"            db:"enabled"`
-	TimeWindowSeconds  int                 `json:"timeWindowSeconds"  db:"time_window_seconds"`
-	Source             util.ResourceSource `json:"source"             db:"source"`
-	TagIDs             []uuid.UUID         `json:"tagIds"             db:"-"`
-	MonitorCount       int                 `json:"monitorCount"       db:"monitor_count"`
-	util.Timestamps
+	ID                 uuid.UUID           `json:"id"                 yaml:"id"                 db:"id"`
+	Slug               string              `json:"slug"               yaml:"slug"               db:"slug"`
+	Title              string              `json:"title"              yaml:"title"              db:"title"`
+	Description        string              `json:"description"        yaml:"description"        db:"description"`
+	GroupMonitorsByTag bool                `json:"groupMonitorsByTag" yaml:"groupMonitorsByTag" db:"group_monitors_by_tag"`
+	RequireAuth        bool                `json:"requireAuth"        yaml:"requireAuth"        db:"require_auth"`
+	Enabled            bool                `json:"enabled"            yaml:"enabled"            db:"enabled"`
+	TimeWindowSeconds  int                 `json:"timeWindowSeconds"  yaml:"timeWindowSeconds"  db:"time_window_seconds"`
+	Source             util.ResourceSource `json:"source"             yaml:"source"             db:"source"`
+	TagIDs             []uuid.UUID         `json:"tagIds"             yaml:"tagIds"             db:"-"`
+	MonitorCount       int                 `json:"monitorCount"       yaml:"monitorCount"       db:"monitor_count"`
+	util.Timestamps    `yaml:",inline"`
 }
 
 func (p *StatusPage) Validate() error {

@@ -41,7 +41,7 @@ func SynchronizeConfigBasedMonitors(
 			}
 		}
 
-		tagNames, err := parseTagNames(entry["tags"])
+		tagNames, err := ParseTagNames(entry["tags"])
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid tags in monitor config (%s)", slug))
 		}
@@ -148,7 +148,7 @@ func SynchronizeConfigBasedMonitors(
 	return nil
 }
 
-func parseTagNames(rawTags any) ([]string, error) {
+func ParseTagNames(rawTags any) ([]string, error) {
 	if rawTags == nil {
 		return nil, nil
 	}

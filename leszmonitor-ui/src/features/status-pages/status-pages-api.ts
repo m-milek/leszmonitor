@@ -69,6 +69,14 @@ const remove = async (id: string): Promise<void> => {
   });
 };
 
+const exportYaml = async (id: string): Promise<string> => {
+  const res = await authFetch(`${SERVER_API_URL}/status-pages/${id}/export`, {
+    method: "GET",
+  });
+
+  return res.text();
+};
+
 const publicFetch = async (url: string): Promise<Response> => {
   const token = await readToken();
   const res = await fetch(url, {
@@ -116,6 +124,7 @@ export const StatusPagesApi = {
   create,
   update,
   remove,
+  exportYaml,
   public: {
     get: getPublic,
     getMonitors: getPublicMonitors,

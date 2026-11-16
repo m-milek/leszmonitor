@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { type ColumnDef } from "@tanstack/react-table";
-import { LucideExternalLink } from "lucide-react";
+import { LucideExternalLink, LucideLock } from "lucide-react";
 import { DataTable, dataTableFeatures } from "@/components/common/DataTable";
 import { NoData } from "@/components/common/NoData";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,21 @@ export const StatusPagesTable = ({
         accessorKey: "title",
         header: "Title",
         cell: ({ row }) => (
-          <span className="font-medium">{row.original.title}</span>
+          <div className="flex items-center gap-1">
+            <span className="font-medium">{row.original.title}</span>
+            {row.original.source === "config" && (
+              <Tooltip>
+                <TooltipTrigger
+                  render={<span className="text-muted-foreground" />}
+                >
+                  <LucideLock className="size-4" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Status page defined in config file
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
         ),
       },
       {

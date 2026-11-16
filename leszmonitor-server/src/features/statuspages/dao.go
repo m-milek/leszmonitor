@@ -19,6 +19,7 @@ type IStatusPageDAO interface {
 	UpdateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, error)
 	DeleteStatusPageByID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error)
 	GetPublicMonitors(ctx context.Context, pageID uuid.UUID) ([]PublicMonitor, error)
+	UpsertConfigBasedStatusPage(ctx context.Context, page *StatusPage) error
 }
 
 type statusPageDAO struct {
@@ -330,6 +331,40 @@ func (r *statusPageDAO) attachTagsToAll(ctx context.Context, pages []StatusPage)
 	}
 
 	return nil
+}
+
+func (r *statusPageDAO) UpsertConfigBasedStatusPage(ctx context.Context, page *StatusPage) error {
+	_, err := db.Wrap(ctx, "UpsertConfigBasedStatusPage", func() (any, error) {
+		_, err := r.pool.ExecContext(
+			ctx,
+			`INSERT INTO status_pages (id, slug, title, description, group_monitors_by_tag, require_auth, enabled, time_window_seconds, source)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			ON CONFLICT (id) DO UPDATE SET
+				slug = excluded.slug,
+				title = excluded.title,
+				description = excluded.description,
+				group_monitors_by_tag = excluded.group_monitors_by_tag,
+				require_auth = excluded.require_auth,
+				enabled = excluded.enabled,
+				time_window_seconds = excluded.time_window_seconds,
+				source = excluded.source`,
+			page.ID,
+			page.Slug,
+			page.Title,
+			page.Description,
+			page.GroupMonitorsByTag,
+			page.RequireAuth,
+			page.Enabled,
+			page.TimeWindowSeconds,
+			page.Source,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, r.replaceStatusPageTags(ctx, page.ID, page.TagIDs)
+	})
+	return err
 }
 
 func (r *statusPageDAO) replaceStatusPageTags(ctx context.Context, pageID uuid.UUID, tagIDs []uuid.UUID) error {

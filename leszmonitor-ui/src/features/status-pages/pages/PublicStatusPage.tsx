@@ -43,24 +43,23 @@ const OverallStatus = ({ monitors }: { monitors: PublicMonitor[] }) => {
   const downCount = monitors.filter((m) => m.status === "down").length;
   const isAllUp = monitors.every((m) => m.status === "up");
 
-  if (downCount > 0) {
-    return (
-      <Flex direction="row" className="items-center gap-3">
-        <StatusDot status="down" size="lg" />
-        <TypographyH3>
-          {downCount} of {monitors.length} services down
-        </TypographyH3>
-      </Flex>
-    );
+  if (isAllUp) {
+    return null;
   }
 
   return (
-    <Flex direction="row" className="items-center gap-3">
-      <StatusDot status={isAllUp ? "up" : "unknown"} size="lg" />
-      <TypographyH3>
-        {isAllUp ? "All systems operational" : "Some services have no data"}
-      </TypographyH3>
-    </Flex>
+    <Card>
+      <CardContent>
+        <Flex direction="row" className="items-center gap-3">
+          <StatusDot status={downCount > 0 ? "down" : "unknown"} size="lg" />
+          <TypographyH3>
+            {downCount > 0
+              ? `${downCount} of ${monitors.length} services down`
+              : "Some services have no data"}
+          </TypographyH3>
+        </Flex>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -120,7 +119,7 @@ export function PublicStatusPage({ slug }: PublicStatusPageProps) {
     : [];
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6 max-md:p-4">
+    <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-col gap-6 p-6 max-md:p-4">
       <LeszmonitorLogo />
       {page ? (
         <Flex direction="column" className="gap-1">
@@ -134,11 +133,7 @@ export function PublicStatusPage({ slug }: PublicStatusPageProps) {
       )}
       {monitors ? (
         <>
-          <Card>
-            <CardContent>
-              <OverallStatus monitors={monitors} />
-            </CardContent>
-          </Card>
+          <OverallStatus monitors={monitors} />
           {groups.map((group) => (
             <Card key={group.tag?.id ?? "all"}>
               <CardContent>

@@ -183,6 +183,11 @@ func main() {
 			logger.Fatal().Err(err).Msg("Failed to synchronize config-based monitors")
 			return
 		}
+		err = statuspages.SynchronizeConfigBasedStatusPages(appCtx, database, config.File().StatusPages)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to synchronize config-based status pages")
+			return
+		}
 	}
 
 	serverConfig := app.DefaultServerConfig()

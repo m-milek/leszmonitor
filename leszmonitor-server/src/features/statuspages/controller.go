@@ -269,3 +269,29 @@ func (c *StatusPageAPIController) DeleteStatusPageHandler(w http.ResponseWriter,
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// @Summary	Export a status page as YAML config
+// @Tags		status-pages
+// @Produce	plain
+// @Param		statusPageId	path		string	true	"Status page ID"
+// @Success	200				{string}	string	"Status page config in YAML"
+// @Failure	400				{object}	httpx.ErrorResponse
+// @Failure	401				{object}	httpx.ErrorResponse
+// @Failure	403				{object}	httpx.ErrorResponse
+// @Failure	404				{object}	httpx.ErrorResponse
+// @Failure	500				{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/status-pages/{statusPageId}/export [get]
+func (c *StatusPageAPIController) ExportToYAMLHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, ok := httpx.PathUUIDOrRespond(ctx, w, r, "statusPageId")
+	if !ok {
+		return
+	}
+
+	if svcErr := c.service.ExportToYAML(ctx, id, w); svcErr != nil {
+		httpx.RespondError(ctx, w, svcErr.Code, svcErr.Err)
+		return
+	}
+}
