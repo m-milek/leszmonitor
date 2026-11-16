@@ -40,14 +40,15 @@ func (r *statusPageDAO) InsertStatusPage(ctx context.Context, page StatusPage) (
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO status_pages (id, slug, title, description, group_monitors_by_tag, require_auth, source)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			`INSERT INTO status_pages (id, slug, title, description, group_monitors_by_tag, require_auth, enabled, source)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			id,
 			page.Slug,
 			page.Title,
 			page.Description,
 			page.GroupMonitorsByTag,
 			page.RequireAuth,
+			page.Enabled,
 			page.Source,
 		)
 		if err != nil {
@@ -72,7 +73,7 @@ func (r *statusPageDAO) GetStatusPageByID(ctx context.Context, id uuid.UUID) (*S
 			ctx,
 			r.pool,
 			&page,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at
 			 FROM status_pages p
 			 WHERE p.id = $1`,
 			id,
@@ -99,7 +100,7 @@ func (r *statusPageDAO) GetStatusPageBySlug(ctx context.Context, slug string) (*
 			ctx,
 			r.pool,
 			&page,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at
 			 FROM status_pages p
 			 WHERE p.slug = $1`,
 			slug,
@@ -126,7 +127,7 @@ func (r *statusPageDAO) GetAllStatusPages(ctx context.Context) ([]StatusPage, er
 			ctx,
 			r.pool,
 			&pages,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.enabled, p.source, p.created_at, p.updated_at
 			 FROM status_pages p
 			 ORDER BY p.title`,
 		)
@@ -150,13 +151,14 @@ func (r *statusPageDAO) UpdateStatusPage(ctx context.Context, page StatusPage) (
 		res, err := r.pool.ExecContext(
 			ctx,
 			`UPDATE status_pages
-			SET slug=$1, title=$2, description=$3, group_monitors_by_tag=$4, require_auth=$5
-			WHERE id=$6`,
+			SET slug=$1, title=$2, description=$3, group_monitors_by_tag=$4, require_auth=$5, enabled=$6
+			WHERE id=$7`,
 			page.Slug,
 			page.Title,
 			page.Description,
 			page.GroupMonitorsByTag,
 			page.RequireAuth,
+			page.Enabled,
 			page.ID,
 		)
 		if err != nil {

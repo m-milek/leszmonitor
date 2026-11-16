@@ -52,6 +52,15 @@ export const StatusPagesTable = ({
         },
       },
       {
+        accessorKey: "enabled",
+        header: "Status",
+        cell: ({ row }) => (
+          <span className="text-sm">
+            {row.original.enabled ? "Enabled" : "Disabled"}
+          </span>
+        ),
+      },
+      {
         accessorKey: "requireAuth",
         header: "Access",
         cell: ({ row }) => (

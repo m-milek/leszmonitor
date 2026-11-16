@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS status_pages (
     description TEXT     NOT NULL,
     group_monitors_by_tag BOOLEAN NOT NULL,
     require_auth BOOLEAN NOT NULL DEFAULT FALSE,
+    enabled     BOOLEAN NOT NULL DEFAULT TRUE,
     source      TEXT     NOT NULL,
 
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/httpx"
 )
 
@@ -23,6 +24,7 @@ type StatusPagePayload struct {
 	Description        string      `json:"description"`
 	GroupMonitorsByTag bool        `json:"groupMonitorsByTag"`
 	RequireAuth        bool        `json:"requireAuth"`
+	Enabled            bool        `json:"enabled"`
 	TagIDs             []uuid.UUID `json:"tagIds"`
 }
 
@@ -53,6 +55,7 @@ func (c *StatusPageAPIController) CreateStatusPageHandler(w http.ResponseWriter,
 		Description:        payload.Description,
 		GroupMonitorsByTag: payload.GroupMonitorsByTag,
 		RequireAuth:        payload.RequireAuth,
+		Enabled:            payload.Enabled,
 		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {
@@ -169,6 +172,12 @@ func (c *StatusPageAPIController) withPublicStatusPage(
 			return
 		}
 
+		if !page.Enabled {
+			notFound := apperr.NewNotFoundError("status page with slug %s not found", page.Slug)
+			httpx.RespondError(ctx, w, notFound.Code, notFound.Err)
+			return
+		}
+
 		handle := func(w http.ResponseWriter, r *http.Request) {
 			next(w, r, page)
 		}
@@ -216,6 +225,7 @@ func (c *StatusPageAPIController) UpdateStatusPageHandler(w http.ResponseWriter,
 		Description:        payload.Description,
 		GroupMonitorsByTag: payload.GroupMonitorsByTag,
 		RequireAuth:        payload.RequireAuth,
+		Enabled:            payload.Enabled,
 		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {

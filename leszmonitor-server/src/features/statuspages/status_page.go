@@ -14,6 +14,7 @@ type StatusPage struct {
 	Description        string              `json:"description"        db:"description"`
 	GroupMonitorsByTag bool                `json:"groupMonitorsByTag" db:"group_monitors_by_tag"`
 	RequireAuth        bool                `json:"requireAuth"        db:"require_auth"`
+	Enabled            bool                `json:"enabled"            db:"enabled"`
 	Source             util.ResourceSource `json:"source"             db:"source"`
 	TagIDs             []uuid.UUID         `json:"tagIds"             db:"-"`
 	util.Timestamps

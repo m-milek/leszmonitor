@@ -56,6 +56,7 @@ func (s *StatusPageService) CreateStatusPage(ctx context.Context, page StatusPag
 		Description:        page.Description,
 		GroupMonitorsByTag: page.GroupMonitorsByTag,
 		RequireAuth:        page.RequireAuth,
+		Enabled:            page.Enabled,
 		Source:             util.ResourceSourceUI,
 		TagIDs:             page.TagIDs,
 	}

@@ -33,6 +33,7 @@ const formSchema = z.object({
   description: z.string(),
   groupMonitorsByTag: z.boolean(),
   requireAuth: z.boolean(),
+  enabled: z.boolean(),
   tagIds: z.array(z.string()).min(1, "Select at least one tag"),
 });
 
@@ -56,6 +57,7 @@ export function StatusPageForm({
       description: defaultValues?.description ?? "",
       groupMonitorsByTag: defaultValues?.groupMonitorsByTag ?? false,
       requireAuth: defaultValues?.requireAuth ?? false,
+      enabled: defaultValues?.enabled ?? true,
       tagIds: defaultValues?.tagIds ?? [],
     },
     validators: {
@@ -68,6 +70,7 @@ export function StatusPageForm({
         description: value.description.trim(),
         groupMonitorsByTag: value.groupMonitorsByTag,
         requireAuth: value.requireAuth,
+        enabled: value.enabled,
         tagIds: value.tagIds,
       });
     },
@@ -178,6 +181,20 @@ export function StatusPageForm({
             <Field id={field.name}>
               <Flex direction="row" className="justify-between">
                 <FieldLabel>Require Login</FieldLabel>
+                <LMSwitch
+                  name={field.name}
+                  checked={field.state.value}
+                  onCheckedChange={(checked) => field.handleChange(checked)}
+                />
+              </Flex>
+            </Field>
+          )}
+        </form.Field>
+        <form.Field name="enabled">
+          {(field) => (
+            <Field id={field.name}>
+              <Flex direction="row" className="justify-between">
+                <FieldLabel>Enabled</FieldLabel>
                 <LMSwitch
                   name={field.name}
                   checked={field.state.value}

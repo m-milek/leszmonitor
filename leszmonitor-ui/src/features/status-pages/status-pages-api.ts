@@ -9,6 +9,7 @@ export interface StatusPagePayload {
   description: string;
   groupMonitorsByTag: boolean;
   requireAuth: boolean;
+  enabled: boolean;
   tagIds: string[];
 }
 
