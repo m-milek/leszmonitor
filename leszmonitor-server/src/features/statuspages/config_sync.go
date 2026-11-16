@@ -77,10 +77,6 @@ func SynchronizeConfigBasedStatusPages(ctx context.Context, database db.DB, rawE
 		page.Slug = slug
 		page.Source = util.ResourceSourceConfig
 
-		if err = page.Validate(); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to validate status page config (%s)", slug))
-		}
-
 		configBasedPages = append(configBasedPages, page)
 	}
 
@@ -105,6 +101,10 @@ func SynchronizeConfigBasedStatusPages(ctx context.Context, database db.DB, rawE
 					return fmt.Errorf("unknown tag in status page config (%s): %s", page.Slug, tagName)
 				}
 				page.TagIDs = append(page.TagIDs, tagID)
+			}
+
+			if err = page.Validate(); err != nil {
+				return errors.Wrap(err, fmt.Sprintf("failed to validate status page config (%s)", page.Slug))
 			}
 		}
 

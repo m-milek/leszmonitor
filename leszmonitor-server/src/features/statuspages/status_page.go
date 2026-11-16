@@ -26,11 +26,17 @@ func (p *StatusPage) Validate() error {
 	if p.Slug == "" {
 		return fmt.Errorf("status page slug cannot be empty")
 	}
+	if p.Slug != util.SlugFromString(p.Slug) {
+		return fmt.Errorf("invalid status page slug: %s", p.Slug)
+	}
 	if p.Title == "" {
 		return fmt.Errorf("status page title cannot be empty")
 	}
 	if p.TimeWindowSeconds <= 0 {
 		return fmt.Errorf("status page time window must be positive")
+	}
+	if len(p.TagIDs) == 0 {
+		return fmt.Errorf("status page must have at least one tag")
 	}
 	return nil
 }
