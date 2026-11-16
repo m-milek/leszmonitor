@@ -141,3 +141,35 @@ CREATE TRIGGER IF NOT EXISTS update_global_parameters_updated_at
 BEGIN
     UPDATE global_parameters SET updated_at = CURRENT_TIMESTAMP WHERE key = new.key;
 END;
+
+CREATE TABLE IF NOT EXISTS status_pages (
+    id          TEXT PRIMARY KEY,
+    slug        TEXT     NOT NULL,
+    title       TEXT     NOT NULL,
+    description TEXT     NOT NULL,
+    source      TEXT     NOT NULL,
+
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (slug)
+);
+
+CREATE TRIGGER IF NOT EXISTS update_status_pages_updated_at
+    AFTER UPDATE
+    ON status_pages
+    FOR EACH ROW
+BEGIN
+    UPDATE status_pages SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+
+CREATE TABLE IF NOT EXISTS status_page_tags (
+    status_page_id TEXT NOT NULL,
+    tag_id         TEXT NOT NULL,
+
+    PRIMARY KEY (status_page_id, tag_id),
+    FOREIGN KEY (status_page_id) REFERENCES status_pages (id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_status_page_tags_tag_id ON status_page_tags (tag_id);

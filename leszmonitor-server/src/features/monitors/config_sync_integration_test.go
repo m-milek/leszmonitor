@@ -12,6 +12,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/features/users"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -72,7 +73,7 @@ func TestIntegration_SynchronizeConfigBasedMonitors(t *testing.T) {
 		api := getMonitorBySlug(ctx, t, "api-health")
 		assert.Equal(t, "API health", api.Name)
 		assert.Equal(t, kind.HTTPConfigType, api.Type)
-		assert.Equal(t, monitors.MonitorSourceConfig, api.Source)
+		assert.Equal(t, util.ResourceSourceConfig, api.Source)
 		assert.Equal(t, monitors.MonitorRunStateActive, api.RunState)
 		assert.Equal(t, owner.ID, api.OwnerID)
 		assert.Equal(t, 172800, api.ResultRetentionSeconds)
@@ -153,7 +154,7 @@ func TestIntegration_SynchronizeConfigBasedMonitors(t *testing.T) {
 		_, err := monitors.NewMonitorDAO(db.Get().Querier()).GetMonitorBySlug(ctx, "backup-job")
 		require.ErrorIs(t, err, db.ErrNotFound)
 		assert.Len(t, getAllMonitors(ctx, t), 2)
-		assert.Equal(t, monitors.MonitorSourceUI, getMonitorBySlug(ctx, t, uiMonitor.Slug).Source)
+		assert.Equal(t, util.ResourceSourceUI, getMonitorBySlug(ctx, t, uiMonitor.Slug).Source)
 	})
 
 	t.Run("Deletes all config monitors when config has none", func(t *testing.T) {

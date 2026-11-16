@@ -12,6 +12,7 @@ import (
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type ITagService interface {
@@ -53,7 +54,7 @@ func (s *TagService) CreateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 		Name:        tag.Name,
 		Description: tag.Description,
 		ColorHex:    tag.ColorHex,
-		Source:      TagSourceUI,
+		Source:      util.ResourceSourceUI,
 	}
 	newTag.Normalize()
 
@@ -152,7 +153,7 @@ func (s *TagService) UpdateTag(ctx context.Context, tag Tag) (*Tag, *apperr.Serv
 			return nil, nil, fmt.Errorf("failed to retrieve existing tag for update: %w", err)
 		}
 
-		if existingTag.Source == TagSourceConfig {
+		if existingTag.Source == util.ResourceSourceConfig {
 			return nil, nil, apperr.NewConflictError("tag %s is managed by config file", tag.ID)
 		}
 
@@ -210,7 +211,7 @@ func (s *TagService) DeleteTag(ctx context.Context, id uuid.UUID) *apperr.Servic
 			return nil, fmt.Errorf("failed to retrieve tag before deletion: %w", err)
 		}
 
-		if tagBeforeDelete.Source == TagSourceConfig {
+		if tagBeforeDelete.Source == util.ResourceSourceConfig {
 			return nil, apperr.NewConflictError("tag %s is managed by config file", id)
 		}
 

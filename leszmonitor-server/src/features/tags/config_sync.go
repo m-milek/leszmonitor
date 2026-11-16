@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
+	"github.com/m-milek/leszmonitor/platform/util"
 	"github.com/pkg/errors"
 )
 
@@ -48,7 +49,7 @@ func SynchronizeConfigBasedTags(ctx context.Context, database db.DB, rawEntries 
 		}
 
 		tag.ID = uuid.NewSHA1(uuidNamespace, []byte(name))
-		tag.Source = TagSourceConfig
+		tag.Source = util.ResourceSourceConfig
 
 		if err = tag.Validate(); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to validate tag config (%s)", name))
@@ -66,7 +67,7 @@ func SynchronizeConfigBasedTags(ctx context.Context, database db.DB, rawEntries 
 		}
 
 		for _, tag := range allTags {
-			isNotConfigBased := tag.Source != TagSourceConfig
+			isNotConfigBased := tag.Source != util.ResourceSourceConfig
 			isInCurrentFile := slices.ContainsFunc(configBasedTags, func(t Tag) bool {
 				return t.ID == tag.ID
 			})

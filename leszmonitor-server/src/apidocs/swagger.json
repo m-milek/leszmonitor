@@ -2137,7 +2137,7 @@
                     "type": "string"
                 },
                 "source": {
-                    "$ref": "#/definitions/monitors.MonitorSource"
+                    "$ref": "#/definitions/util.ResourceSource"
                 },
                 "tagIds": {
                     "type": "array",
@@ -2163,17 +2163,6 @@
             "x-enum-varnames": [
                 "MonitorRunStateActive",
                 "MonitorRunStateStopped"
-            ]
-        },
-        "monitors.MonitorSource": {
-            "type": "string",
-            "enum": [
-                "ui",
-                "config"
-            ],
-            "x-enum-varnames": [
-                "MonitorSourceUI",
-                "MonitorSourceConfig"
             ]
         },
         "monitors.UpdateMonitorStatePayload": {
@@ -2358,7 +2347,7 @@
                     "type": "string"
                 },
                 "source": {
-                    "$ref": "#/definitions/tags.TagSource"
+                    "$ref": "#/definitions/util.ResourceSource"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -2378,17 +2367,6 @@
                     "type": "string"
                 }
             }
-        },
-        "tags.TagSource": {
-            "type": "string",
-            "enum": [
-                "ui",
-                "config"
-            ],
-            "x-enum-varnames": [
-                "TagSourceUI",
-                "TagSourceConfig"
-            ]
         },
         "users.LoginPayload": {
             "type": "object",
@@ -2453,6 +2431,17 @@
                     "type": "string"
                 }
             }
+        },
+        "util.ResourceSource": {
+            "type": "string",
+            "enum": [
+                "ui",
+                "config"
+            ],
+            "x-enum-varnames": [
+                "ResourceSourceUI",
+                "ResourceSourceConfig"
+            ]
         }
     },
     "securityDefinitions": {

@@ -19,6 +19,7 @@ import (
 	"github.com/m-milek/leszmonitor/platform/constants"
 	"github.com/m-milek/leszmonitor/platform/db"
 	"github.com/m-milek/leszmonitor/platform/log"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type IMonitorService interface {
@@ -140,7 +141,7 @@ func (s *MonitorService) DeleteMonitor(ctx context.Context, id uuid.UUID) *apper
 		return apperr.NewInternalError("failed to retrieve monitor before deletion: %w", err)
 	}
 
-	if monitorBeforeDelete.Source == MonitorSourceConfig {
+	if monitorBeforeDelete.Source == util.ResourceSourceConfig {
 		return apperr.NewConflictError("monitor %s is managed by config file", id)
 	}
 
@@ -250,7 +251,7 @@ func (s *MonitorService) UpdateMonitor(ctx context.Context, monitor Monitor) (*M
 			return nil, nil, fmt.Errorf("failed to retrieve existing monitor for update: %w", err)
 		}
 
-		if existingMonitor.Source == MonitorSourceConfig {
+		if existingMonitor.Source == util.ResourceSourceConfig {
 			return nil, nil, apperr.NewConflictError("monitor %s is managed by config file", monitor.ID)
 		}
 
@@ -342,7 +343,7 @@ func (s *MonitorService) UpdateMonitorStateByID(
 			return nil, nil, apperr.NewInternalError("failed to retrieve monitor for state update: %w", err)
 		}
 
-		if monitor.Source == MonitorSourceConfig {
+		if monitor.Source == util.ResourceSourceConfig {
 			return nil, nil, apperr.NewConflictError("monitor %s is managed by config file", monitorID)
 		}
 

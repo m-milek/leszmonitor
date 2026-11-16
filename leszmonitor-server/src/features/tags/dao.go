@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type ITagDAO interface {
@@ -162,7 +163,7 @@ func (r *tagDAO) UpsertConfigBasedTag(ctx context.Context, tag *Tag) error {
 			tag.Name,
 			tag.Description,
 			tag.ColorHex,
-			TagSourceConfig,
+			util.ResourceSourceConfig,
 		)
 		if err != nil {
 			if db.IsUniqueViolation(err) {
