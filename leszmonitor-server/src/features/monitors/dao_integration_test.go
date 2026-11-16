@@ -43,6 +43,8 @@ func testMonitor(tagIDs []uuid.UUID) monitors.Monitor {
 		Type:                   kind.HTTPConfigType,
 		ProbeConfig:            `{"method":"GET","url":"http://example.com"}`,
 		ResultRetentionSeconds: 3600,
+		FailureThreshold:       1,
+		RecoveryThreshold:      1,
 		RunState:               monitors.MonitorRunStateActive,
 		OwnerID:                uuid.New(),
 		TagIDs:                 tagIDs,

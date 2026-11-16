@@ -18,8 +18,10 @@ type Monitor struct {
 	Type                   kind.ProbeType      `json:"type"                   yaml:"type"                   db:"kind"`                                          // Type of the monitor (http, tcp, etc.)
 	ProbeConfig            ProbeConfig         `json:"probeConfig"            yaml:"probeConfig"            db:"config"                   swaggertype:"object"` // JSON configuration specific to the monitor type
 	ResultRetentionSeconds int                 `json:"resultRetentionSeconds" yaml:"resultRetentionSeconds" db:"result_retention_seconds"`                      // ResultRetentionSeconds determines how long to keep the monitor results in seconds
-	RunState               MonitorRunState     `json:"runState"               yaml:"runState"               db:"run_state"`                                     // RunState indicates whether the monitor is currently running or stopped
-	OwnerID                uuid.UUID           `json:"ownerId"                yaml:"ownerId"                db:"owner_id"`                                      // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
+	FailureThreshold       int                 `json:"failureThreshold"       yaml:"failureThreshold"       db:"failure_threshold"`
+	RecoveryThreshold      int                 `json:"recoveryThreshold"      yaml:"recoveryThreshold"      db:"recovery_threshold"`
+	RunState               MonitorRunState     `json:"runState"               yaml:"runState"               db:"run_state"` // RunState indicates whether the monitor is currently running or stopped
+	OwnerID                uuid.UUID           `json:"ownerId"                yaml:"ownerId"                db:"owner_id"`  // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
 	TagIDs                 []uuid.UUID         `json:"tagIds"                 yaml:"tagIds"                 db:"-"`
 	Source                 util.ResourceSource `json:"source"                 yaml:"source"                 db:"source"`
 	util.Timestamps        `yaml:",inline"`
@@ -53,12 +55,23 @@ const (
 
 var defaultResultRetentionSeconds = int(48 * time.Hour.Seconds())
 
+const defaultStatusThreshold = 1
+
+func (m *Monitor) applyDefaultThresholds() {
+	if m.FailureThreshold == 0 {
+		m.FailureThreshold = defaultStatusThreshold
+	}
+	if m.RecoveryThreshold == 0 {
+		m.RecoveryThreshold = defaultStatusThreshold
+	}
+}
+
 func isValidMonitorState(state string) bool {
 	return state == string(MonitorRunStateActive) || state == string(MonitorRunStateStopped)
 }
 
 func NewMonitorFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
-	return &Monitor{
+	monitor := &Monitor{
 		ID:                     uuid.New(),
 		OwnerID:                ownerID,
 		Slug:                   payload.Slug,
@@ -70,8 +83,12 @@ func NewMonitorFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
 		ResultRetentionSeconds: defaultResultRetentionSeconds,
 		RunState:               MonitorRunStateActive,
 		TagIDs:                 payload.TagIDs,
+		FailureThreshold:       payload.FailureThreshold,
+		RecoveryThreshold:      payload.RecoveryThreshold,
 		Source:                 util.ResourceSourceUI,
 	}
+	monitor.applyDefaultThresholds()
+	return monitor
 }
 
 func (m *Monitor) Validate() error {
@@ -92,6 +109,12 @@ func (m *Monitor) Validate() error {
 	}
 	if m.ResultRetentionSeconds <= 0 {
 		return fmt.Errorf("monitor result retention period must be greater than zero")
+	}
+	if m.FailureThreshold <= 0 {
+		return fmt.Errorf("monitor failure threshold must be greater than zero")
+	}
+	if m.RecoveryThreshold <= 0 {
+		return fmt.Errorf("monitor recovery threshold must be greater than zero")
 	}
 	if !isValidMonitorState(string(m.RunState)) {
 		return fmt.Errorf("monitor state must be either 'running' or 'stopped'")

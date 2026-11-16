@@ -41,7 +41,7 @@ func (r *monitorDAO) GetMonitorBySlug(
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.source, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.failure_threshold, m.recovery_threshold, m.run_state, m.config, m.owner_id, m.source, m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.slug = $1`,
 			slug,
@@ -68,7 +68,7 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*Monitor
 			ctx,
 			r.pool,
 			&monitor,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.source,  m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.failure_threshold, m.recovery_threshold, m.run_state, m.config, m.owner_id, m.source,  m.created_at, m.updated_at
 			 FROM monitors m
 			 WHERE m.id = $1`,
 			id,
@@ -95,7 +95,7 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]Monitor, error) {
 			ctx,
 			r.pool,
 			&allMonitors,
-			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.run_state, m.config, m.owner_id, m.source, m.created_at, m.updated_at
+			`SELECT m.id, m.slug, m.name, m.description, m.interval, m.kind, m.result_retention_seconds, m.failure_threshold, m.recovery_threshold, m.run_state, m.config, m.owner_id, m.source, m.created_at, m.updated_at
 			 FROM monitors m`,
 		)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -212,8 +212,8 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor Monitor) (*Monit
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config, owner_id, source)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, failure_threshold, recovery_threshold, run_state, config, owner_id, source)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 			id,
 			monitor.Slug,
 			monitor.Name,
@@ -221,6 +221,8 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor Monitor) (*Monit
 			monitor.Interval,
 			monitor.Type,
 			monitor.ResultRetentionSeconds,
+			monitor.FailureThreshold,
+			monitor.RecoveryThreshold,
 			monitor.RunState,
 			monitor.ProbeConfig,
 			monitor.OwnerID,
@@ -245,8 +247,8 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor Monitor) (any
 	return db.Wrap(ctx, "UpdateMonitor", func() (any, error) {
 		res, err := r.pool.ExecContext(ctx,
 			`UPDATE monitors
-			SET slug=$1, name=$2, description=$3, interval=$4, kind=$5, run_state=$6, config=$7
-			WHERE id=$8`,
+			SET slug=$1, name=$2, description=$3, interval=$4, kind=$5, run_state=$6, config=$7, failure_threshold=$8, recovery_threshold=$9
+			WHERE id=$10`,
 			newMonitor.Slug,
 			newMonitor.Name,
 			newMonitor.Description,
@@ -254,6 +256,8 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor Monitor) (any
 			newMonitor.Type,
 			newMonitor.RunState,
 			newMonitor.ProbeConfig,
+			newMonitor.FailureThreshold,
+			newMonitor.RecoveryThreshold,
 			newMonitor.ID,
 		)
 		if err != nil {
@@ -283,14 +287,16 @@ func (r *monitorDAO) UpsertConfigBasedMonitor(ctx context.Context, monitor *Moni
 	_, err := db.Wrap(ctx, "UpsertConfigBasedMonitor", func() (any, error) {
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, run_state, config, owner_id, source)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			`INSERT INTO monitors (id, slug, name, description, interval, kind, result_retention_seconds, failure_threshold, recovery_threshold, run_state, config, owner_id, source)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 			ON CONFLICT (id) DO UPDATE SET
 				slug = excluded.slug,
 				name = excluded.name,
 				description = excluded.description,
 				interval = excluded.interval,
 				result_retention_seconds = excluded.result_retention_seconds,
+				failure_threshold = excluded.failure_threshold,
+				recovery_threshold = excluded.recovery_threshold,
 				config = excluded.config`,
 			monitor.ID,
 			monitor.Slug,
@@ -299,6 +305,8 @@ func (r *monitorDAO) UpsertConfigBasedMonitor(ctx context.Context, monitor *Moni
 			monitor.Interval,
 			monitor.Type,
 			monitor.ResultRetentionSeconds,
+			monitor.FailureThreshold,
+			monitor.RecoveryThreshold,
 			monitor.RunState,
 			monitor.ProbeConfig,
 			monitor.OwnerID,
