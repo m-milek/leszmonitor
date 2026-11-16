@@ -18,6 +18,7 @@ import (
 type IStatusPageService interface {
 	CreateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, *apperr.ServiceError)
 	GetStatusPageByID(ctx context.Context, id uuid.UUID) (*StatusPage, *apperr.ServiceError)
+	GetStatusPageBySlug(ctx context.Context, slug string) (*StatusPage, *apperr.ServiceError)
 	GetAllStatusPages(ctx context.Context) ([]StatusPage, *apperr.ServiceError)
 	UpdateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, *apperr.ServiceError)
 	DeleteStatusPage(ctx context.Context, id uuid.UUID) *apperr.ServiceError
@@ -53,6 +54,7 @@ func (s *StatusPageService) CreateStatusPage(ctx context.Context, page StatusPag
 		Title:              page.Title,
 		Description:        page.Description,
 		GroupMonitorsByTag: page.GroupMonitorsByTag,
+		RequireAuth:        page.RequireAuth,
 		Source:             util.ResourceSourceUI,
 		TagIDs:             page.TagIDs,
 	}
@@ -105,6 +107,22 @@ func (s *StatusPageService) GetStatusPageByID(ctx context.Context, id uuid.UUID)
 	}
 
 	logger.Debug().Str("id", id.String()).Msg("Status page retrieved successfully")
+	return page, nil
+}
+
+func (s *StatusPageService) GetStatusPageBySlug(ctx context.Context, slug string) (*StatusPage, *apperr.ServiceError) {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameStatusPage, "GetStatusPageBySlug")
+	logger.Trace().Str("slug", slug).Msg("Retrieving status page by slug")
+
+	page, err := NewStatusPageDAO(s.db.Querier()).GetStatusPageBySlug(ctx, slug)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return nil, apperr.NewNotFoundError("status page with slug %s not found", slug)
+		}
+		logger.Error().Err(err).Str("slug", slug).Msg("Failed to retrieve status page from database")
+		return nil, apperr.NewInternalError("failed to retrieve status page: %w", err)
+	}
+
 	return page, nil
 }
 

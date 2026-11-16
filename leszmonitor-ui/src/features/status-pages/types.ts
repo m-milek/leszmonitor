@@ -6,6 +6,7 @@ export interface StatusPage extends Timestamps {
   title: string;
   description: string;
   groupMonitorsByTag: boolean;
+  requireAuth: boolean;
   source: ResourceSource;
   tagIds: string[];
 }

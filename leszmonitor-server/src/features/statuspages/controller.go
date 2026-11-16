@@ -22,6 +22,7 @@ type StatusPagePayload struct {
 	Title              string      `json:"title"`
 	Description        string      `json:"description"`
 	GroupMonitorsByTag bool        `json:"groupMonitorsByTag"`
+	RequireAuth        bool        `json:"requireAuth"`
 	TagIDs             []uuid.UUID `json:"tagIds"`
 }
 
@@ -51,6 +52,7 @@ func (c *StatusPageAPIController) CreateStatusPageHandler(w http.ResponseWriter,
 		Title:              payload.Title,
 		Description:        payload.Description,
 		GroupMonitorsByTag: payload.GroupMonitorsByTag,
+		RequireAuth:        payload.RequireAuth,
 		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {
@@ -110,6 +112,41 @@ func (c *StatusPageAPIController) GetStatusPageByIDHandler(w http.ResponseWriter
 	httpx.RespondJSON(ctx, w, http.StatusOK, page)
 }
 
+// @Summary	Get a public status page
+// @Tags		status-pages
+// @Produce	json
+// @Param		slug	path		string	true	"Status page slug"
+// @Success	200		{object}	StatusPage
+// @Failure	401		{object}	httpx.ErrorResponse
+// @Failure	403		{object}	httpx.ErrorResponse
+// @Failure	404		{object}	httpx.ErrorResponse
+// @Failure	500		{object}	httpx.ErrorResponse
+// @Router		/public/status-pages/{slug} [get]
+func (c *StatusPageAPIController) GetPublicStatusPageHandler(
+	requireReader func(http.HandlerFunc) http.HandlerFunc,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		page, err := c.service.GetStatusPageBySlug(ctx, r.PathValue("slug"))
+		if err != nil {
+			httpx.RespondError(ctx, w, err.Code, err.Err)
+			return
+		}
+
+		respond := func(w http.ResponseWriter, r *http.Request) {
+			httpx.RespondJSON(r.Context(), w, http.StatusOK, page)
+		}
+
+		if page.RequireAuth {
+			requireReader(respond)(w, r)
+			return
+		}
+
+		respond(w, r)
+	}
+}
+
 // @Summary	Update a status page
 // @Tags		status-pages
 // @Accept		json
@@ -143,6 +180,7 @@ func (c *StatusPageAPIController) UpdateStatusPageHandler(w http.ResponseWriter,
 		Title:              payload.Title,
 		Description:        payload.Description,
 		GroupMonitorsByTag: payload.GroupMonitorsByTag,
+		RequireAuth:        payload.RequireAuth,
 		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {

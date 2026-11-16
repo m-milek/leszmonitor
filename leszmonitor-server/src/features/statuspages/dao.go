@@ -13,6 +13,7 @@ import (
 type IStatusPageDAO interface {
 	InsertStatusPage(ctx context.Context, page StatusPage) (*StatusPage, error)
 	GetStatusPageByID(ctx context.Context, id uuid.UUID) (*StatusPage, error)
+	GetStatusPageBySlug(ctx context.Context, slug string) (*StatusPage, error)
 	GetAllStatusPages(ctx context.Context) ([]StatusPage, error)
 	UpdateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, error)
 	DeleteStatusPageByID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error)
@@ -37,13 +38,14 @@ func (r *statusPageDAO) InsertStatusPage(ctx context.Context, page StatusPage) (
 
 		_, err := r.pool.ExecContext(
 			ctx,
-			`INSERT INTO status_pages (id, slug, title, description, group_monitors_by_tag, source)
-			VALUES ($1, $2, $3, $4, $5, $6)`,
+			`INSERT INTO status_pages (id, slug, title, description, group_monitors_by_tag, require_auth, source)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 			id,
 			page.Slug,
 			page.Title,
 			page.Description,
 			page.GroupMonitorsByTag,
+			page.RequireAuth,
 			page.Source,
 		)
 		if err != nil {
@@ -68,10 +70,37 @@ func (r *statusPageDAO) GetStatusPageByID(ctx context.Context, id uuid.UUID) (*S
 			ctx,
 			r.pool,
 			&page,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.source, p.created_at, p.updated_at
 			 FROM status_pages p
 			 WHERE p.id = $1`,
 			id,
+		)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, db.ErrNotFound
+			}
+			return nil, err
+		}
+
+		if err = r.attachTags(ctx, &page); err != nil {
+			return nil, err
+		}
+
+		return &page, nil
+	})
+}
+
+func (r *statusPageDAO) GetStatusPageBySlug(ctx context.Context, slug string) (*StatusPage, error) {
+	return db.Wrap(ctx, "GetStatusPageBySlug", func() (*StatusPage, error) {
+		var page StatusPage
+		err := sqlx.GetContext(
+			ctx,
+			r.pool,
+			&page,
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.source, p.created_at, p.updated_at
+			 FROM status_pages p
+			 WHERE p.slug = $1`,
+			slug,
 		)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -95,7 +124,7 @@ func (r *statusPageDAO) GetAllStatusPages(ctx context.Context) ([]StatusPage, er
 			ctx,
 			r.pool,
 			&pages,
-			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.source, p.created_at, p.updated_at
+			`SELECT p.id, p.slug, p.title, p.description, p.group_monitors_by_tag, p.require_auth, p.source, p.created_at, p.updated_at
 			 FROM status_pages p
 			 ORDER BY p.title`,
 		)
@@ -119,12 +148,13 @@ func (r *statusPageDAO) UpdateStatusPage(ctx context.Context, page StatusPage) (
 		res, err := r.pool.ExecContext(
 			ctx,
 			`UPDATE status_pages
-			SET slug=$1, title=$2, description=$3, group_monitors_by_tag=$4
-			WHERE id=$5`,
+			SET slug=$1, title=$2, description=$3, group_monitors_by_tag=$4, require_auth=$5
+			WHERE id=$6`,
 			page.Slug,
 			page.Title,
 			page.Description,
 			page.GroupMonitorsByTag,
+			page.RequireAuth,
 			page.ID,
 		)
 		if err != nil {
