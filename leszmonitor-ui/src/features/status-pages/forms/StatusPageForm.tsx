@@ -13,6 +13,10 @@ import { TagsApi } from "@/features/tags/tags-api";
 import type { StatusPagePayload } from "@/features/status-pages/status-pages-api";
 import { isSlugValid, slugFromString } from "@/lib/slugFromString";
 import { QUERY_KEYS } from "@/lib/consts";
+import {
+  DEFAULT_RESULTS_RANGE,
+  ResultsRangeSelect,
+} from "@/features/monitors/components/DetailsPage/ResultsRangeSelect";
 
 export interface StatusPageFormProps {
   id?: string;
@@ -34,6 +38,7 @@ const formSchema = z.object({
   groupMonitorsByTag: z.boolean(),
   requireAuth: z.boolean(),
   enabled: z.boolean(),
+  timeWindowSeconds: z.number().int().positive(),
   tagIds: z.array(z.string()).min(1, "Select at least one tag"),
 });
 
@@ -60,6 +65,8 @@ export function StatusPageForm({
       groupMonitorsByTag: defaultValues?.groupMonitorsByTag ?? false,
       requireAuth: defaultValues?.requireAuth ?? false,
       enabled: defaultValues?.enabled ?? true,
+      timeWindowSeconds:
+        defaultValues?.timeWindowSeconds ?? DEFAULT_RESULTS_RANGE,
       tagIds: defaultValues?.tagIds ?? [],
     },
     validators: {
@@ -73,6 +80,7 @@ export function StatusPageForm({
         groupMonitorsByTag: value.groupMonitorsByTag,
         requireAuth: value.requireAuth,
         enabled: value.enabled,
+        timeWindowSeconds: value.timeWindowSeconds,
         tagIds: value.tagIds,
       });
     },
@@ -161,6 +169,19 @@ export function StatusPageForm({
                 isInvalid={isFieldInvalid(field)}
                 errorMessage={getFirstError(field)}
               />
+            </Field>
+          )}
+        </form.Field>
+        <form.Field name="timeWindowSeconds">
+          {(field) => (
+            <Field id={field.name}>
+              <Flex direction="row" className="items-center justify-between">
+                <FieldLabel>Time Window</FieldLabel>
+                <ResultsRangeSelect
+                  value={field.state.value}
+                  onChange={(value) => field.handleChange(value)}
+                />
+              </Flex>
             </Field>
           )}
         </form.Field>

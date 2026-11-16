@@ -1,4 +1,4 @@
-import type { MonitorStatus } from "@/features/monitors/types";
+import type { MonitorStats, MonitorStatus } from "@/features/monitors/types";
 import type { Tag } from "@/features/tags/types";
 import type { ResourceSource, Timestamps } from "@/lib/types";
 
@@ -10,6 +10,7 @@ export interface StatusPage extends Timestamps {
   groupMonitorsByTag: boolean;
   requireAuth: boolean;
   enabled: boolean;
+  timeWindowSeconds: number;
   source: ResourceSource;
   tagIds: string[];
   monitorCount: number;
@@ -24,7 +25,7 @@ export interface PublicMonitor {
   id: string;
   name: string;
   status: MonitorStatus;
-  uptimePercent: number | null;
+  stats: MonitorStats;
   tags: Tag[];
   results: PublicMonitorResult[];
 }

@@ -130,7 +130,8 @@ func main() {
 		DB: database,
 	})
 	statusPageService := statuspages.NewStatusPageService(statuspages.StatusPageServiceDeps{
-		DB: database,
+		DB:    database,
+		Stats: &monitorStatsService,
 	})
 	instanceMetadataService := instance.NewInstanceMetadataService(instance.InstanceMetadataServiceDeps{})
 

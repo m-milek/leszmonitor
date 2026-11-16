@@ -15,6 +15,7 @@ type StatusPage struct {
 	GroupMonitorsByTag bool                `json:"groupMonitorsByTag" db:"group_monitors_by_tag"`
 	RequireAuth        bool                `json:"requireAuth"        db:"require_auth"`
 	Enabled            bool                `json:"enabled"            db:"enabled"`
+	TimeWindowSeconds  int                 `json:"timeWindowSeconds"  db:"time_window_seconds"`
 	Source             util.ResourceSource `json:"source"             db:"source"`
 	TagIDs             []uuid.UUID         `json:"tagIds"             db:"-"`
 	MonitorCount       int                 `json:"monitorCount"       db:"monitor_count"`
@@ -27,6 +28,9 @@ func (p *StatusPage) Validate() error {
 	}
 	if p.Title == "" {
 		return fmt.Errorf("status page title cannot be empty")
+	}
+	if p.TimeWindowSeconds <= 0 {
+		return fmt.Errorf("status page time window must be positive")
 	}
 	return nil
 }

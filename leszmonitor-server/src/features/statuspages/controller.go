@@ -1,7 +1,9 @@
 package statuspages
 
 import (
+	"errors"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/apperr"
@@ -25,6 +27,7 @@ type StatusPagePayload struct {
 	GroupMonitorsByTag bool        `json:"groupMonitorsByTag"`
 	RequireAuth        bool        `json:"requireAuth"`
 	Enabled            bool        `json:"enabled"`
+	TimeWindowSeconds  int         `json:"timeWindowSeconds"`
 	TagIDs             []uuid.UUID `json:"tagIds"`
 }
 
@@ -56,6 +59,7 @@ func (c *StatusPageAPIController) CreateStatusPageHandler(w http.ResponseWriter,
 		GroupMonitorsByTag: payload.GroupMonitorsByTag,
 		RequireAuth:        payload.RequireAuth,
 		Enabled:            payload.Enabled,
+		TimeWindowSeconds:  payload.TimeWindowSeconds,
 		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {
@@ -137,7 +141,10 @@ func (c *StatusPageAPIController) GetPublicStatusPageHandler(
 // @Tags		status-pages
 // @Produce	json
 // @Param		slug	path		string	true	"Status page slug"
+// @Param		from	query		string	true	"Stats range start (RFC3339)"	format(date-time)
+// @Param		to		query		string	true	"Stats range end (RFC3339)"		format(date-time)
 // @Success	200		{array}		PublicMonitor
+// @Failure	400		{object}	httpx.ErrorResponse
 // @Failure	401		{object}	httpx.ErrorResponse
 // @Failure	403		{object}	httpx.ErrorResponse
 // @Failure	404		{object}	httpx.ErrorResponse
@@ -149,7 +156,19 @@ func (c *StatusPageAPIController) GetPublicMonitorsHandler(
 	return c.withPublicStatusPage(requireReader, func(w http.ResponseWriter, r *http.Request, page *StatusPage) {
 		ctx := r.Context()
 
-		publicMonitors, err := c.service.GetPublicMonitors(ctx, page.ID)
+		from, parseErr := time.Parse(time.RFC3339, r.URL.Query().Get("from"))
+		if parseErr != nil {
+			httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'from' parameter format, expected RFC3339"))
+			return
+		}
+
+		to, parseErr := time.Parse(time.RFC3339, r.URL.Query().Get("to"))
+		if parseErr != nil {
+			httpx.RespondError(ctx, w, http.StatusBadRequest, errors.New("invalid 'to' parameter format, expected RFC3339"))
+			return
+		}
+
+		publicMonitors, err := c.service.GetPublicMonitors(ctx, page.ID, from, to)
 		if err != nil {
 			httpx.RespondError(ctx, w, err.Code, err.Err)
 			return
@@ -226,6 +245,7 @@ func (c *StatusPageAPIController) UpdateStatusPageHandler(w http.ResponseWriter,
 		GroupMonitorsByTag: payload.GroupMonitorsByTag,
 		RequireAuth:        payload.RequireAuth,
 		Enabled:            payload.Enabled,
+		TimeWindowSeconds:  payload.TimeWindowSeconds,
 		TagIDs:             payload.TagIDs,
 	})
 	if serviceErr != nil {

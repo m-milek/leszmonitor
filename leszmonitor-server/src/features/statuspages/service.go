@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/platform/apperr"
 	"github.com/m-milek/leszmonitor/platform/audit"
 	"github.com/m-milek/leszmonitor/platform/auth"
@@ -19,23 +21,26 @@ type IStatusPageService interface {
 	CreateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, *apperr.ServiceError)
 	GetStatusPageByID(ctx context.Context, id uuid.UUID) (*StatusPage, *apperr.ServiceError)
 	GetStatusPageBySlug(ctx context.Context, slug string) (*StatusPage, *apperr.ServiceError)
-	GetPublicMonitors(ctx context.Context, pageID uuid.UUID) ([]PublicMonitor, *apperr.ServiceError)
+	GetPublicMonitors(ctx context.Context, pageID uuid.UUID, from time.Time, to time.Time) ([]PublicMonitor, *apperr.ServiceError)
 	GetAllStatusPages(ctx context.Context) ([]StatusPage, *apperr.ServiceError)
 	UpdateStatusPage(ctx context.Context, page StatusPage) (*StatusPage, *apperr.ServiceError)
 	DeleteStatusPage(ctx context.Context, id uuid.UUID) *apperr.ServiceError
 }
 
 type StatusPageService struct {
-	db db.DB
+	db    db.DB
+	stats stats.IMonitorStatsService
 }
 
 type StatusPageServiceDeps struct {
-	DB db.DB
+	DB    db.DB
+	Stats stats.IMonitorStatsService
 }
 
 func NewStatusPageService(deps StatusPageServiceDeps) *StatusPageService {
 	return &StatusPageService{
-		db: deps.DB,
+		db:    deps.DB,
+		stats: deps.Stats,
 	}
 }
 
@@ -57,6 +62,7 @@ func (s *StatusPageService) CreateStatusPage(ctx context.Context, page StatusPag
 		GroupMonitorsByTag: page.GroupMonitorsByTag,
 		RequireAuth:        page.RequireAuth,
 		Enabled:            page.Enabled,
+		TimeWindowSeconds:  page.TimeWindowSeconds,
 		Source:             util.ResourceSourceUI,
 		TagIDs:             page.TagIDs,
 	}
@@ -128,7 +134,7 @@ func (s *StatusPageService) GetStatusPageBySlug(ctx context.Context, slug string
 	return page, nil
 }
 
-func (s *StatusPageService) GetPublicMonitors(ctx context.Context, pageID uuid.UUID) ([]PublicMonitor, *apperr.ServiceError) {
+func (s *StatusPageService) GetPublicMonitors(ctx context.Context, pageID uuid.UUID, from time.Time, to time.Time) ([]PublicMonitor, *apperr.ServiceError) {
 	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameStatusPage, "GetPublicMonitors")
 	logger.Trace().Str("id", pageID.String()).Msg("Retrieving public monitors for status page")
 
@@ -136,6 +142,14 @@ func (s *StatusPageService) GetPublicMonitors(ctx context.Context, pageID uuid.U
 	if err != nil {
 		logger.Error().Err(err).Str("id", pageID.String()).Msg("Failed to retrieve public monitors from database")
 		return nil, apperr.NewInternalError("failed to retrieve status page monitors: %w", err)
+	}
+
+	for i := range publicMonitors {
+		monitorStats, statsErr := s.stats.GetStatsByMonitorID(ctx, publicMonitors[i].ID, from, to)
+		if statsErr != nil {
+			return nil, statsErr
+		}
+		publicMonitors[i].Stats = monitorStats
 	}
 
 	return publicMonitors, nil

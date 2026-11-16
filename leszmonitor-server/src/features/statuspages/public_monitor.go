@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
+	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/tags"
 )
 
@@ -13,12 +14,12 @@ import (
 const publicMonitorResultsLimit = 50
 
 type PublicMonitor struct {
-	ID            uuid.UUID             `json:"id"`
-	Name          string                `json:"name"`
-	Status        kind.MonitorStatus    `json:"status"`
-	UptimePercent *float64              `json:"uptimePercent"`
-	Tags          []tags.Tag            `json:"tags"`
-	Results       []PublicMonitorResult `json:"results"`
+	ID      uuid.UUID             `json:"id"`
+	Name    string                `json:"name"`
+	Status  kind.MonitorStatus    `json:"status"`
+	Stats   stats.MonitorStats    `json:"stats"`
+	Tags    []tags.Tag            `json:"tags"`
+	Results []PublicMonitorResult `json:"results"`
 }
 
 type PublicMonitorResult struct {
@@ -48,24 +49,11 @@ func newPublicMonitor(row publicMonitorRow, monitorTags []tags.Tag, results []Pu
 		status = kind.MonitorStatusPaused
 	}
 
-	var uptimePercent *float64
-	if len(results) > 0 {
-		up := 0
-		for _, r := range results {
-			if r.Status == kind.MonitorStatusUp {
-				up++
-			}
-		}
-		percent := float64(up) / float64(len(results)) * 100
-		uptimePercent = &percent
-	}
-
 	return PublicMonitor{
-		ID:            row.ID,
-		Name:          row.Name,
-		Status:        status,
-		UptimePercent: uptimePercent,
-		Tags:          monitorTags,
-		Results:       results,
+		ID:      row.ID,
+		Name:    row.Name,
+		Status:  status,
+		Tags:    monitorTags,
+		Results: results,
 	}
 }

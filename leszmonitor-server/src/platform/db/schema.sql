@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS status_pages (
     group_monitors_by_tag BOOLEAN NOT NULL,
     require_auth BOOLEAN NOT NULL DEFAULT FALSE,
     enabled     BOOLEAN NOT NULL DEFAULT TRUE,
+    time_window_seconds INTEGER NOT NULL DEFAULT 86400,
     source      TEXT     NOT NULL,
 
     created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
