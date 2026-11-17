@@ -6,8 +6,8 @@ import (
 )
 
 type WebhookConfig struct {
-	URL     string            `json:"url"`
-	Headers map[string]string `json:"headers,omitempty"`
+	URL     string            `json:"url" yaml:"url"`
+	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
 }
 
 func (c *WebhookConfig) Validate() error {
@@ -40,5 +40,11 @@ func (c *WebhookConfig) KeepSecretsFrom(previous Config) {
 		if value == "" {
 			c.Headers[name] = prev.Headers[name]
 		}
+	}
+}
+
+func (c *WebhookConfig) PlaceholderSecrets(envPrefix string) {
+	for name := range c.Headers {
+		c.Headers[name] = envPlaceholder(envPrefix, "header", name)
 	}
 }

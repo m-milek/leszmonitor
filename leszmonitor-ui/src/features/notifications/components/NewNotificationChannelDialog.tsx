@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -50,9 +49,6 @@ export function NewNotificationChannelDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Notification Channel</DialogTitle>
-          <DialogDescription>
-            Where to send alerts when a monitor changes status.
-          </DialogDescription>
         </DialogHeader>
         <NotificationChannelForm
           key={String(isOpen)}

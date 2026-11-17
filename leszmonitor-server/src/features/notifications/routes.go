@@ -31,4 +31,8 @@ func RegisterRoutes(
 		"DELETE /api/v1/notification-channels/{channelId}",
 		requirePermission(auth.PermissionWriter)(c.DeleteChannelHandler),
 	)
+	router.HandleFunc(
+		"GET /api/v1/notification-channels/{channelId}/export",
+		requirePermission(auth.PermissionReader)(c.ExportToYAMLHandler),
+	)
 }

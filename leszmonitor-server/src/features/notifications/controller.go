@@ -177,3 +177,27 @@ func (c *NotificationChannelAPIController) DeleteChannelHandler(w http.ResponseW
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// @Summary	Export a notification channel as YAML config
+// @Tags		notification-channels
+// @Produce	plain
+// @Param		channelId	path		string	true	"Notification channel ID"
+// @Success	200			{string}	string	"Notification channel config in YAML, secrets replaced with ${ENV} placeholders"
+// @Failure	400			{object}	httpx.ErrorResponse
+// @Failure	401			{object}	httpx.ErrorResponse
+// @Failure	403			{object}	httpx.ErrorResponse
+// @Failure	404			{object}	httpx.ErrorResponse
+// @Failure	500			{object}	httpx.ErrorResponse
+// @Security	BearerAuth
+// @Router		/notification-channels/{channelId}/export [get]
+func (c *NotificationChannelAPIController) ExportToYAMLHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	channelID, ok := httpx.PathUUIDOrRespond(ctx, w, r, "channelId")
+	if !ok {
+		return
+	}
+
+	if err := c.service.ExportToYAML(ctx, channelID, w); err != nil {
+		httpx.RespondError(ctx, w, err.Code, err.Err)
+	}
+}

@@ -15,6 +15,7 @@ import {
 } from "@/features/notifications/types";
 import { EditNotificationChannelDialog } from "@/features/notifications/components/EditNotificationChannelDialog";
 import { DeleteNotificationChannelDialog } from "@/features/notifications/components/DeleteNotificationChannelDialog";
+import { ExportNotificationChannelButton } from "@/features/notifications/components/ExportNotificationChannelButton";
 
 const channelTarget = (channel: NotificationChannel): string => {
   switch (channel.kind) {
@@ -95,6 +96,7 @@ const columns: ColumnDef<typeof dataTableFeatures, NotificationChannel>[] = [
     header: "",
     cell: ({ row }) => (
       <div className="flex justify-end">
+        <ExportNotificationChannelButton channel={row.original} />
         <EditNotificationChannelDialog channel={row.original} />
         <DeleteNotificationChannelDialog channel={row.original} />
       </div>

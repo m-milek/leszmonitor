@@ -410,6 +410,9 @@ func (r *monitorDAO) UpsertConfigBasedMonitor(ctx context.Context, monitor *Moni
 		if err = r.replaceMonitorTags(ctx, monitor.ID, monitor.TagIDs); err != nil {
 			return nil, err
 		}
+		if err = r.replaceMonitorNotificationChannels(ctx, monitor.ID, monitor.NotificationChannelIDs); err != nil {
+			return nil, err
+		}
 
 		return nil, nil
 	})

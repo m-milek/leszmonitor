@@ -3,9 +3,9 @@ package providers
 import "fmt"
 
 type GotifyConfig struct {
-	ServerURL string `json:"serverUrl"`
-	AppToken  string `json:"appToken,omitempty"`
-	Priority  int    `json:"priority"`
+	ServerURL string `json:"serverUrl" yaml:"serverUrl"`
+	AppToken  string `json:"appToken,omitempty" yaml:"appToken,omitempty"`
+	Priority  int    `json:"priority" yaml:"priority"`
 }
 
 func (c *GotifyConfig) Validate() error {
@@ -33,4 +33,8 @@ func (c *GotifyConfig) KeepSecretsFrom(previous Config) {
 	if c.AppToken == "" {
 		c.AppToken = prev.AppToken
 	}
+}
+
+func (c *GotifyConfig) PlaceholderSecrets(envPrefix string) {
+	c.AppToken = envPlaceholder(envPrefix, "app_token")
 }

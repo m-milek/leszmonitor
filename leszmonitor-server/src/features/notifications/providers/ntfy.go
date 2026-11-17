@@ -6,12 +6,12 @@ import (
 )
 
 type NtfyConfig struct {
-	ServerURL string `json:"serverUrl"`
-	Topic     string `json:"topic"`
-	Token     string `json:"token,omitempty"`
-	Username  string `json:"username,omitempty"`
-	Password  string `json:"password,omitempty"`
-	Priority  int    `json:"priority,omitempty"`
+	ServerURL string `json:"serverUrl" yaml:"serverUrl"`
+	Topic     string `json:"topic" yaml:"topic"`
+	Token     string `json:"token,omitempty" yaml:"token,omitempty"`
+	Username  string `json:"username,omitempty" yaml:"username,omitempty"`
+	Password  string `json:"password,omitempty" yaml:"password,omitempty"`
+	Priority  int    `json:"priority,omitempty" yaml:"priority,omitempty"`
 }
 
 func (c *NtfyConfig) Validate() error {
@@ -48,5 +48,14 @@ func (c *NtfyConfig) KeepSecretsFrom(previous Config) {
 	}
 	if c.Password == "" && c.Username != "" && c.Username == prev.Username {
 		c.Password = prev.Password
+	}
+}
+
+func (c *NtfyConfig) PlaceholderSecrets(envPrefix string) {
+	if c.Token != "" {
+		c.Token = envPlaceholder(envPrefix, "token")
+	}
+	if c.Password != "" {
+		c.Password = envPlaceholder(envPrefix, "password")
 	}
 }

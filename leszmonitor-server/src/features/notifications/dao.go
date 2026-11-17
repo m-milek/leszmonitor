@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/m-milek/leszmonitor/platform/db"
+	"github.com/m-milek/leszmonitor/platform/util"
 )
 
 type INotificationChannelDAO interface {
@@ -16,6 +17,7 @@ type INotificationChannelDAO interface {
 	GetAllChannels(ctx context.Context) ([]NotificationChannel, error)
 	UpdateChannel(ctx context.Context, channel NotificationChannel) (*NotificationChannel, error)
 	DeleteChannelByID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error)
+	UpsertConfigBasedChannel(ctx context.Context, channel *NotificationChannel) error
 }
 
 type notificationChannelDAO struct {
@@ -140,4 +142,33 @@ func (r *notificationChannelDAO) DeleteChannelByID(ctx context.Context, id uuid.
 
 		return &deletedID, nil
 	})
+}
+
+func (r *notificationChannelDAO) UpsertConfigBasedChannel(ctx context.Context, channel *NotificationChannel) error {
+	_, err := db.Wrap(ctx, "UpsertConfigBasedChannel", func() (any, error) {
+		_, err := r.pool.ExecContext(
+			ctx,
+			`INSERT INTO notification_channels (id, name, kind, enabled, config, source)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			ON CONFLICT (id) DO UPDATE SET
+				kind = excluded.kind,
+				enabled = excluded.enabled,
+				config = excluded.config`,
+			channel.ID,
+			channel.Name,
+			channel.Kind,
+			channel.Enabled,
+			channel.Config,
+			util.ResourceSourceConfig,
+		)
+		if err != nil {
+			if db.IsUniqueViolation(err) {
+				return nil, db.ErrAlreadyExists
+			}
+			return nil, err
+		}
+
+		return nil, nil
+	})
+	return err
 }

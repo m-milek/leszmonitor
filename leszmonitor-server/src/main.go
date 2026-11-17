@@ -184,6 +184,11 @@ func main() {
 			logger.Fatal().Err(err).Msg("Failed to synchronize config-based tags")
 			return
 		}
+		err = notifications.SynchronizeConfigBasedChannels(appCtx, database, config.File().NotificationChannels)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to synchronize config-based notification channels")
+			return
+		}
 		err = monitors.SynchronizeConfigBasedMonitors(appCtx, database, config.File().Monitors, admin.ID)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("Failed to synchronize config-based monitors")

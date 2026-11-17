@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/platform/apperr"
@@ -21,6 +22,7 @@ type INotificationChannelService interface {
 	GetAllChannels(ctx context.Context) ([]NotificationChannel, *apperr.ServiceError)
 	UpdateChannel(ctx context.Context, channel NotificationChannel) (*NotificationChannel, *apperr.ServiceError)
 	DeleteChannel(ctx context.Context, id uuid.UUID) *apperr.ServiceError
+	ExportToYAML(ctx context.Context, id uuid.UUID, w io.Writer) *apperr.ServiceError
 }
 
 type NotificationChannelService struct {
@@ -177,6 +179,10 @@ func (s *NotificationChannelService) UpdateChannel(
 				return nil, nil, fmt.Errorf("failed to retrieve existing notification channel for update: %w", err)
 			}
 
+			if existing.Source == util.ResourceSourceConfig {
+				return nil, nil, apperr.NewConflictError("notification channel %s is managed by config file", channel.ID)
+			}
+
 			if prepareErr := channel.prepare(existing); prepareErr != nil {
 				logger.Error().Err(prepareErr).Str("id", channel.ID.String()).Msg("Invalid notification channel")
 				return nil, nil, apperr.NewBadRequestError("invalid notification channel: %w", prepareErr)
@@ -245,6 +251,10 @@ func (s *NotificationChannelService) DeleteChannel(ctx context.Context, id uuid.
 			return nil, fmt.Errorf("failed to retrieve notification channel before deletion: %w", err)
 		}
 
+		if existing.Source == util.ResourceSourceConfig {
+			return nil, apperr.NewConflictError("notification channel %s is managed by config file", id)
+		}
+
 		if _, delErr := NewNotificationChannelDAO(q).DeleteChannelByID(ctx, id); delErr != nil {
 			logger.Error().Err(delErr).Str("id", id.String()).Msg("Failed to delete notification channel in database")
 			return nil, delErr
@@ -278,5 +288,25 @@ func (s *NotificationChannelService) DeleteChannel(ctx context.Context, id uuid.
 	}
 
 	logger.Debug().Str("id", id.String()).Msg("Notification channel deleted")
+	return nil
+}
+
+func (s *NotificationChannelService) ExportToYAML(ctx context.Context, id uuid.UUID, w io.Writer) *apperr.ServiceError {
+	logger := log.MethodLoggerFromContext(ctx, constants.ServiceNameNotificationChannel, "ExportToYAML")
+	logger.Trace().Str("id", id.String()).Msg("Exporting to YAML")
+
+	channel, err := NewNotificationChannelDAO(s.db.Querier()).GetChannelByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return apperr.NewNotFoundError("notification channel with ID %s not found", id)
+		}
+		return apperr.NewInternalError("failed to retrieve notification channel: %w", err)
+	}
+
+	if err = exportToYAML(*channel, w); err != nil {
+		logger.Error().Err(err).Str("id", id.String()).Msg("Failed to export notification channel to YAML")
+		return apperr.NewInternalError("failed to export notification channel %s to YAML", channel.Name)
+	}
+
 	return nil
 }

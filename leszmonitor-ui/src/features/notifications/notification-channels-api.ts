@@ -70,9 +70,21 @@ const remove = async (channelId: string): Promise<void> => {
   });
 };
 
+const exportYaml = async (channelId: string): Promise<string> => {
+  const res = await authFetch(
+    `${SERVER_API_URL}/notification-channels/${channelId}/export`,
+    {
+      method: "GET",
+    },
+  );
+
+  return res.text();
+};
+
 export const NotificationChannelsApi = {
   getAll,
   create,
   update,
   remove,
+  exportYaml,
 };
