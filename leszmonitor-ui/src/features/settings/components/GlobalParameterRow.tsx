@@ -11,12 +11,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { GlobalParameterInput } from "@/features/instance/components/GlobalParameterInput";
-import { GlobalParameterSourceBadge } from "@/features/instance/components/GlobalParameterSourceBadge";
+import { GlobalParameterInput } from "@/features/settings/components/GlobalParameterInput";
+import { GlobalParameterSourceBadge } from "@/features/settings/components/GlobalParameterSourceBadge";
 import type {
   GlobalParameter,
   GlobalParameterValue,
-} from "@/features/instance/global-parameters-api";
+} from "@/features/settings/global-parameters-api";
 
 export interface GlobalParameterRowProps {
   id: string;

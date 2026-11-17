@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 import {
@@ -21,14 +21,17 @@ import {
   LucidePlusCircle,
   LucideSearch,
   LucideSettings,
-  LucideTag
+  LucideTag,
 } from "lucide-react";
 import { useAppStore } from "@/app/store";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import type { JwtClaims } from "@/lib/jwt";
-import { AppSidebarFooter, AppSidebarFooterSkeleton } from "@/components/layout/AppSidebarFooter";
+import {
+  AppSidebarFooter,
+  AppSidebarFooterSkeleton,
+} from "@/components/layout/AppSidebarFooter";
 import { readToken } from "@/features/auth/lib/token";
 import { AppSidebarHeader } from "@/components/layout/AppSidebarHeader";
 import { SidebarButton } from "@/components/layout/SidebarButton";
@@ -109,8 +112,8 @@ export const AppSidebar = () => {
               <SidebarMenu className="gap-1">
                 <SidebarButton
                   icon={<LucideSettings />}
-                  href="/admin"
-                  label="Instance Settings"
+                  href="/settings"
+                  label="Settings"
                 />
                 <SidebarButton
                   icon={<LucideLogs />}

@@ -11,15 +11,16 @@ import (
 )
 
 type LeszmonitorConfigFile struct {
-	GlobalParameters map[string]any            `yaml:"global_parameters"`
-	Tags             map[string]map[string]any `yaml:"tags"`
-	Monitors         map[string]map[string]any `yaml:"monitors"`
-	StatusPages      map[string]map[string]any `yaml:"status_pages"`
+	GlobalParameters     map[string]any            `yaml:"global_parameters"`
+	Tags                 map[string]map[string]any `yaml:"tags"`
+	Monitors             map[string]map[string]any `yaml:"monitors"`
+	StatusPages          map[string]map[string]any `yaml:"status_pages"`
+	NotificationChannels map[string]map[string]any `yaml:"notification_channels"`
 }
 
 var (
 	ForbiddenMonitorConfigKeys = []string{
-		"id", "slug", "runState", "ownerId", "tagIds", "source", "createdAt", "updatedAt",
+		"id", "slug", "runState", "ownerId", "tagIds", "notificationChannelIds", "source", "createdAt", "updatedAt",
 	}
 	fileConfig       = &LeszmonitorConfigFile{}
 	globalParameters = map[string]any{}

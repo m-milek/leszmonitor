@@ -64,6 +64,7 @@ const baseMonitorFields = {
     ),
   description: z.string().optional(),
   tagIds: z.array(z.string()).default([]),
+  notificationChannelIds: z.array(z.string()).default([]),
   interval: z
     .number({ message: "Interval must be a number" })
     .min(1, "Interval must be at least 1 second"),
@@ -126,6 +127,7 @@ export const newMonitorSchemaDefaultValues = {
   slug: "",
   description: "",
   tagIds: [],
+  notificationChannelIds: [],
   interval: 60,
   failureThreshold: 1,
   recoveryThreshold: 1,
@@ -180,6 +182,7 @@ export const mapMonitorToFormValues = (monitor: Monitor): MonitorFormValues => {
     slug: monitor.slug,
     description: monitor.description ?? "",
     tagIds: monitor.tagIds ?? [],
+    notificationChannelIds: monitor.notificationChannelIds ?? [],
     interval: monitor.interval,
     failureThreshold: monitor.failureThreshold,
     recoveryThreshold: monitor.recoveryThreshold,

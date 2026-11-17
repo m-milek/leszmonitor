@@ -7,12 +7,19 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
+	"github.com/m-milek/leszmonitor/features/notifications"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/config"
 	"gopkg.in/yaml.v3"
 )
 
-func exportToYAML(ctx context.Context, monitor Monitor, tagsDAO tags.ITagDAO, writer io.Writer) error {
+func exportToYAML(
+	ctx context.Context,
+	monitor Monitor,
+	tagsDAO tags.ITagDAO,
+	channelsDAO notifications.INotificationChannelDAO,
+	writer io.Writer,
+) error {
 	monitorNode, err := buildMonitorNode(monitor)
 	if err != nil {
 		return err
@@ -28,6 +35,18 @@ func exportToYAML(ctx context.Context, monitor Monitor, tagsDAO tags.ITagDAO, wr
 			return err
 		}
 		monitorNode.Content = append(monitorNode.Content, StringNode("tags"), tagsNode)
+	}
+
+	channelNames, err := getNotificationChannelNames(ctx, monitor.NotificationChannelIDs, channelsDAO)
+	if err != nil {
+		return err
+	}
+	if len(channelNames) > 0 {
+		channelsNode, err := BuildTagsNode(channelNames)
+		if err != nil {
+			return err
+		}
+		monitorNode.Content = append(monitorNode.Content, StringNode("notificationChannels"), channelsNode)
 	}
 
 	rootNode := yaml.Node{
@@ -112,4 +131,29 @@ func GetTagNames(ctx context.Context, tagIDs []uuid.UUID, tagsDAO tags.ITagDAO) 
 	}
 
 	return tagNames, nil
+}
+
+func getNotificationChannelNames(
+	ctx context.Context,
+	channelIDs []uuid.UUID,
+	channelsDAO notifications.INotificationChannelDAO,
+) ([]string, error) {
+	allChannels, err := channelsDAO.GetAllChannels(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	channelsByID := make(map[uuid.UUID]notifications.NotificationChannel, len(allChannels))
+	for _, channel := range allChannels {
+		channelsByID[channel.ID] = channel
+	}
+
+	var names []string
+	for _, channelID := range channelIDs {
+		if channel, found := channelsByID[channelID]; found {
+			names = append(names, channel.Name)
+		}
+	}
+
+	return names, nil
 }

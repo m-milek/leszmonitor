@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { GlobalParameterSource } from "@/features/instance/global-parameters-api";
+import type { GlobalParameterSource } from "@/features/settings/global-parameters-api";
 
 export interface GlobalParameterSourceBadgeProps {
   source: GlobalParameterSource;

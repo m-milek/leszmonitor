@@ -14,10 +14,10 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as StatusSlugRouteImport } from './routes/status/$slug'
-import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAuditLogIndexRouteImport } from './routes/_authenticated/audit-log/index'
 import { Route as AuthenticatedDocsIndexRouteImport } from './routes/_authenticated/docs/index'
 import { Route as AuthenticatedMonitorsIndexRouteImport } from './routes/_authenticated/monitors/index'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedStatusPagesIndexRouteImport } from './routes/_authenticated/statusPages/index'
 import { Route as AuthenticatedTagsIndexRouteImport } from './routes/_authenticated/tags/index'
 import { Route as AuthenticatedMonitorsMonitorSlugIndexRouteImport } from './routes/_authenticated/monitors/$monitorSlug/index'
@@ -50,11 +50,6 @@ const StatusSlugRoute = StatusSlugRouteImport.update({
   path: '/status/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedAuditLogIndexRoute =
   AuthenticatedAuditLogIndexRouteImport.update({
     id: '/audit-log/',
@@ -70,6 +65,12 @@ const AuthenticatedMonitorsIndexRoute =
   AuthenticatedMonitorsIndexRouteImport.update({
     id: '/monitors/',
     path: '/monitors/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedStatusPagesIndexRoute =
@@ -119,10 +120,10 @@ export interface FileRoutesByFullPath {
   '/status/$slug': typeof StatusSlugRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
-  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/audit-log/': typeof AuthenticatedAuditLogIndexRoute
   '/docs/': typeof AuthenticatedDocsIndexRoute
   '/monitors/': typeof AuthenticatedMonitorsIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/statusPages/': typeof AuthenticatedStatusPagesIndexRoute
   '/tags/': typeof AuthenticatedTagsIndexRoute
   '/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
@@ -136,10 +137,10 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginIndexRoute
   '/register': typeof RegisterIndexRoute
-  '/admin': typeof AuthenticatedAdminIndexRoute
   '/audit-log': typeof AuthenticatedAuditLogIndexRoute
   '/docs': typeof AuthenticatedDocsIndexRoute
   '/monitors': typeof AuthenticatedMonitorsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
   '/statusPages': typeof AuthenticatedStatusPagesIndexRoute
   '/tags': typeof AuthenticatedTagsIndexRoute
   '/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
@@ -155,10 +156,10 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/register/': typeof RegisterIndexRoute
-  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/audit-log/': typeof AuthenticatedAuditLogIndexRoute
   '/_authenticated/docs/': typeof AuthenticatedDocsIndexRoute
   '/_authenticated/monitors/': typeof AuthenticatedMonitorsIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/statusPages/': typeof AuthenticatedStatusPagesIndexRoute
   '/_authenticated/tags/': typeof AuthenticatedTagsIndexRoute
   '/_authenticated/monitors/$monitorSlug/edit': typeof AuthenticatedMonitorsMonitorSlugEditRoute
@@ -174,10 +175,10 @@ export interface FileRouteTypes {
     | '/status/$slug'
     | '/login/'
     | '/register/'
-    | '/admin/'
     | '/audit-log/'
     | '/docs/'
     | '/monitors/'
+    | '/settings/'
     | '/statusPages/'
     | '/tags/'
     | '/monitors/$monitorSlug/edit'
@@ -191,10 +192,10 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/admin'
     | '/audit-log'
     | '/docs'
     | '/monitors'
+    | '/settings'
     | '/statusPages'
     | '/tags'
     | '/monitors/$monitorSlug/edit'
@@ -209,10 +210,10 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/login/'
     | '/register/'
-    | '/_authenticated/admin/'
     | '/_authenticated/audit-log/'
     | '/_authenticated/docs/'
     | '/_authenticated/monitors/'
+    | '/_authenticated/settings/'
     | '/_authenticated/statusPages/'
     | '/_authenticated/tags/'
     | '/_authenticated/monitors/$monitorSlug/edit'
@@ -266,13 +267,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin/': {
-      id: '/_authenticated/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/audit-log/': {
       id: '/_authenticated/audit-log/'
       path: '/audit-log'
@@ -292,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/monitors'
       fullPath: '/monitors/'
       preLoaderRoute: typeof AuthenticatedMonitorsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/statusPages/': {
@@ -348,10 +349,10 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAuditLogIndexRoute: typeof AuthenticatedAuditLogIndexRoute
   AuthenticatedDocsIndexRoute: typeof AuthenticatedDocsIndexRoute
   AuthenticatedMonitorsIndexRoute: typeof AuthenticatedMonitorsIndexRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedStatusPagesIndexRoute: typeof AuthenticatedStatusPagesIndexRoute
   AuthenticatedTagsIndexRoute: typeof AuthenticatedTagsIndexRoute
   AuthenticatedMonitorsMonitorSlugEditRoute: typeof AuthenticatedMonitorsMonitorSlugEditRoute
@@ -363,10 +364,10 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAuditLogIndexRoute: AuthenticatedAuditLogIndexRoute,
   AuthenticatedDocsIndexRoute: AuthenticatedDocsIndexRoute,
   AuthenticatedMonitorsIndexRoute: AuthenticatedMonitorsIndexRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedStatusPagesIndexRoute: AuthenticatedStatusPagesIndexRoute,
   AuthenticatedTagsIndexRoute: AuthenticatedTagsIndexRoute,
   AuthenticatedMonitorsMonitorSlugEditRoute:

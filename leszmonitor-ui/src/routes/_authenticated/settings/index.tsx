@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminPage } from "@/features/instance/pages/AdminPage";
+import { AdminPage } from "@/features/settings/pages/AdminPage";
 
-export const Route = createFileRoute("/_authenticated/admin/")({
+export const Route = createFileRoute("/_authenticated/settings/")({
   head: () => ({
     meta: [{ title: "Administration | Leszmonitor" }],
   }),

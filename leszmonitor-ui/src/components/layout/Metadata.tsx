@@ -1,4 +1,4 @@
-import type { MetadataResponse } from "@/features/instance/metadata-api";
+import type { MetadataResponse } from "@/features/settings/metadata-api";
 import { LucideInfo } from "lucide-react";
 import {
   Popover,

@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
+	"github.com/m-milek/leszmonitor/features/notifications"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/config"
 	"github.com/m-milek/leszmonitor/platform/db"
@@ -28,6 +29,7 @@ func SynchronizeConfigBasedMonitors(
 ) error {
 	configBasedMonitors := make([]Monitor, 0)
 	tagNamesBySlug := make(map[string][]string)
+	channelNamesBySlug := make(map[string][]string)
 
 	for slug, entry := range rawEntries {
 		isSlugValid := slug == util.SlugFromString(slug) && len(slug) >= 2 && len(slug) <= 50
@@ -47,8 +49,15 @@ func SynchronizeConfigBasedMonitors(
 		}
 		tagNamesBySlug[slug] = tagNames
 
+		channelNames, err := parseNameList(entry["notificationChannels"], "notificationChannels")
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid notification channels in monitor config (%s)", slug))
+		}
+		channelNamesBySlug[slug] = channelNames
+
 		monitorEntry := maps.Clone(entry)
 		delete(monitorEntry, "tags")
+		delete(monitorEntry, "notificationChannels")
 
 		jsonMonitorConfig, err := json.Marshal(monitorEntry)
 		if err != nil {
@@ -107,6 +116,28 @@ func SynchronizeConfigBasedMonitors(
 			}
 		}
 
+		allChannels, err := notifications.NewNotificationChannelDAO(database).GetAllChannels(ctx)
+		if err != nil {
+			return err
+		}
+
+		channelIDsByName := make(map[string]uuid.UUID, len(allChannels))
+		for _, channel := range allChannels {
+			channelIDsByName[channel.Name] = channel.ID
+		}
+
+		for i := range configBasedMonitors {
+			monitor := &configBasedMonitors[i]
+			monitor.NotificationChannelIDs = make([]uuid.UUID, 0)
+			for _, channelName := range channelNamesBySlug[monitor.Slug] {
+				channelID, ok := channelIDsByName[channelName]
+				if !ok {
+					return fmt.Errorf("unknown notification channel in monitor config (%s): %s", monitor.Slug, channelName)
+				}
+				monitor.NotificationChannelIDs = append(monitor.NotificationChannelIDs, channelID)
+			}
+		}
+
 		dao := NewMonitorDAO(database)
 		allMonitors, err := dao.GetAllMonitors(ctx)
 		if err != nil {
@@ -150,25 +181,29 @@ func SynchronizeConfigBasedMonitors(
 }
 
 func ParseTagNames(rawTags any) ([]string, error) {
-	if rawTags == nil {
+	return parseNameList(rawTags, "tags")
+}
+
+func parseNameList(raw any, field string) ([]string, error) {
+	if raw == nil {
 		return nil, nil
 	}
 
-	list, ok := rawTags.([]any)
+	list, ok := raw.([]any)
 	if !ok {
-		return nil, fmt.Errorf("tags must be a list of tag names")
+		return nil, fmt.Errorf("%s must be a list of names", field)
 	}
 
-	tagNames := make([]string, 0, len(list))
-	for _, rawTag := range list {
-		tagName, isString := rawTag.(string)
+	names := make([]string, 0, len(list))
+	for _, rawName := range list {
+		name, isString := rawName.(string)
 		if !isString {
-			return nil, fmt.Errorf("tags must be a list of tag names")
+			return nil, fmt.Errorf("%s must be a list of names", field)
 		}
-		tagNames = append(tagNames, tagName)
+		names = append(names, name)
 	}
 
-	return tagNames, nil
+	return names, nil
 }
 
 func decodeMonitorJSON(data []byte) (Monitor, error) {
