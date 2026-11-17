@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import {
@@ -18,10 +18,12 @@ import {
   type NotificationChannelPayload,
 } from "@/features/notifications/notification-channels-api";
 import { NotificationChannelForm } from "@/features/notifications/forms/NotificationChannelForm";
+import { QUERY_KEYS } from "@/lib/consts";
 
 const FORM_ID = "new-notification-channel-form";
 
 export function NewNotificationChannelDialog() {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
 
   const createMutation = useMutation({
@@ -33,6 +35,9 @@ export function NewNotificationChannelDialog() {
         type: "success",
       });
       setIsOpen(false);
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.NOTIFICATION_CHANNELS],
+      });
     },
   });
 

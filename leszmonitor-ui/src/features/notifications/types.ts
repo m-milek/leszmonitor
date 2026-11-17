@@ -3,6 +3,15 @@ import type { ResourceSource, Timestamps } from "@/lib/types";
 export const notificationChannelKinds = ["webhook", "ntfy", "gotify"] as const;
 export type NotificationChannelKind = (typeof notificationChannelKinds)[number];
 
+export const notificationChannelKindLabels: Record<
+  NotificationChannelKind,
+  string
+> = {
+  webhook: "Webhook",
+  ntfy: "ntfy",
+  gotify: "Gotify",
+};
+
 export interface WebhookConfig {
   url: string;
   headers?: Record<string, string>;

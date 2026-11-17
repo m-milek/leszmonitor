@@ -5,10 +5,12 @@ import type { NotificationChannelFormApi } from "@/features/notifications/hooks/
 
 export interface GotifyConfigFieldsProps {
   form: NotificationChannelFormApi;
+  isEdit: boolean;
 }
 
 export function GotifyConfigFields({
   form,
+  isEdit,
 }: Readonly<GotifyConfigFieldsProps>) {
   return (
     <FieldGroup>
@@ -37,6 +39,7 @@ export function GotifyConfigFields({
               type="password"
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
+              placeholder={isEdit ? "Unchanged" : undefined}
               isInvalid={isFieldInvalid(field)}
               errorMessage={getFirstError(field)}
             />

@@ -15,9 +15,15 @@ const priorityItems = [
 
 export interface NtfyConfigFieldsProps {
   form: NotificationChannelFormApi;
+  isEdit: boolean;
 }
 
-export function NtfyConfigFields({ form }: Readonly<NtfyConfigFieldsProps>) {
+export function NtfyConfigFields({
+  form,
+  isEdit,
+}: Readonly<NtfyConfigFieldsProps>) {
+  const secretPlaceholder = isEdit ? "Unchanged" : "Optional";
+
   return (
     <FieldGroup>
       <form.Field name="config.serverUrl">
@@ -60,7 +66,7 @@ export function NtfyConfigFields({ form }: Readonly<NtfyConfigFieldsProps>) {
               type="password"
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
-              placeholder="Optional"
+              placeholder={secretPlaceholder}
               isInvalid={isFieldInvalid(field)}
               errorMessage={getFirstError(field)}
             />
@@ -93,7 +99,7 @@ export function NtfyConfigFields({ form }: Readonly<NtfyConfigFieldsProps>) {
               type="password"
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
-              placeholder="Optional"
+              placeholder={secretPlaceholder}
               isInvalid={isFieldInvalid(field)}
               errorMessage={getFirstError(field)}
             />

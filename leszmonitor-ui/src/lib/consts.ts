@@ -17,5 +17,6 @@ export const QUERY_KEYS = {
   PUBLIC_STATUS_PAGES: "publicStatusPages",
   PUBLIC_STATUS_PAGE_MONITORS: "publicStatusPageMonitors",
   GLOBAL_PARAMETERS: "globalParameters",
+  NOTIFICATION_CHANNELS: "notificationChannels",
   API_SPEC: "apiSpec",
 };

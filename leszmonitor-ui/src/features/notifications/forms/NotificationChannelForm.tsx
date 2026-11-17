@@ -9,6 +9,7 @@ import {
   type NotificationChannelFormValues,
 } from "@/features/notifications/schema";
 import {
+  notificationChannelKindLabels,
   notificationChannelKinds,
   type NotificationChannelKind,
 } from "@/features/notifications/types";
@@ -17,27 +18,31 @@ import { WebhookConfigFields } from "@/features/notifications/forms/fields/Webho
 import { NtfyConfigFields } from "@/features/notifications/forms/fields/NtfyConfigFields";
 import { GotifyConfigFields } from "@/features/notifications/forms/fields/GotifyConfigFields";
 
-const kindItems: { value: NotificationChannelKind; label: string }[] = [
-  { value: "webhook", label: "Webhook" },
-  { value: "ntfy", label: "ntfy" },
-  { value: "gotify", label: "Gotify" },
-];
+const kindItems = notificationChannelKinds.map((kind) => ({
+  value: kind,
+  label: notificationChannelKindLabels[kind],
+}));
 
 const isChannelKind = (value: string): value is NotificationChannelKind =>
   (notificationChannelKinds as readonly string[]).includes(value);
 
 export interface NotificationChannelFormProps {
   id?: string;
+  defaultValues?: NotificationChannelFormValues;
+  isEdit?: boolean;
   onSubmit: (values: NotificationChannelFormValues) => Promise<void>;
 }
 
 export function NotificationChannelForm({
   id = "notification-channel-form",
+  defaultValues = newNotificationChannelDefaultValues,
+  isEdit = false,
   onSubmit,
 }: Readonly<NotificationChannelFormProps>) {
   const form = useNotificationChannelForm({
-    defaultValues: newNotificationChannelDefaultValues,
+    defaultValues,
     onSubmit,
+    isEdit,
   });
 
   return (
@@ -71,6 +76,7 @@ export function NotificationChannelForm({
                   }
                 }}
                 items={kindItems}
+                disabled={isEdit}
                 isInvalid={isFieldInvalid(field)}
                 errorMessage={getFirstError(field)}
               />
@@ -110,11 +116,11 @@ export function NotificationChannelForm({
           {(kind) => {
             switch (kind) {
               case "webhook":
-                return <WebhookConfigFields form={form} />;
+                return <WebhookConfigFields form={form} isEdit={isEdit} />;
               case "ntfy":
-                return <NtfyConfigFields form={form} />;
+                return <NtfyConfigFields form={form} isEdit={isEdit} />;
               case "gotify":
-                return <GotifyConfigFields form={form} />;
+                return <GotifyConfigFields form={form} isEdit={isEdit} />;
               default:
                 return null;
             }

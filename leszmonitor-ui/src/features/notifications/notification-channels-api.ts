@@ -18,6 +18,18 @@ const mapChannel = (channel: NotificationChannel): NotificationChannel => {
   };
 };
 
+const getAll = async (): Promise<NotificationChannel[]> => {
+  const res = await authFetch(`${SERVER_API_URL}/notification-channels`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const channels = (await res.json()) as NotificationChannel[];
+  return channels.map(mapChannel);
+};
+
 const create = async (
   payload: NotificationChannelPayload,
 ): Promise<NotificationChannel> => {
@@ -33,6 +45,34 @@ const create = async (
   return mapChannel(channel);
 };
 
+const update = async (
+  channelId: string,
+  payload: NotificationChannelPayload,
+): Promise<NotificationChannel> => {
+  const res = await authFetch(
+    `${SERVER_API_URL}/notification-channels/${channelId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const channel = (await res.json()) as NotificationChannel;
+  return mapChannel(channel);
+};
+
+const remove = async (channelId: string): Promise<void> => {
+  await authFetch(`${SERVER_API_URL}/notification-channels/${channelId}`, {
+    method: "DELETE",
+  });
+};
+
 export const NotificationChannelsApi = {
+  getAll,
   create,
+  update,
+  remove,
 };

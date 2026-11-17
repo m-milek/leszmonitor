@@ -6,10 +6,12 @@ import type { NotificationChannelFormApi } from "@/features/notifications/hooks/
 
 export interface WebhookConfigFieldsProps {
   form: NotificationChannelFormApi;
+  isEdit: boolean;
 }
 
 export function WebhookConfigFields({
   form,
+  isEdit,
 }: Readonly<WebhookConfigFieldsProps>) {
   return (
     <FieldGroup>
@@ -38,7 +40,7 @@ export function WebhookConfigFields({
               value={field.state.value}
               onChange={(value) => field.handleChange(value)}
               keyPlaceholder="Authorization"
-              valuePlaceholder="Bearer ..."
+              valuePlaceholder={isEdit ? "Unchanged" : "Bearer ..."}
               addButtonText="Add header"
               isInvalid={isFieldInvalid(field)}
               errorMessage={getFirstError(field)}
