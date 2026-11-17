@@ -78,6 +78,7 @@ interface BaseMonitor extends Timestamps {
   slug: string;
   description?: string;
   tagIds: string[];
+  notificationChannelIds: string[];
   ownerId: string;
   interval: number;
   failureThreshold: number;
@@ -113,11 +114,7 @@ export interface PingMonitor extends BaseMonitor {
 }
 
 export type Monitor =
-  | HttpMonitor
-  | TcpMonitor
-  | DnsMonitor
-  | PushMonitor
-  | PingMonitor;
+  HttpMonitor | TcpMonitor | DnsMonitor | PushMonitor | PingMonitor;
 
 export type MonitorWithStatus = Monitor & {
   status: MonitorStatus;

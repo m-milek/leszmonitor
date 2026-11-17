@@ -56,6 +56,9 @@ func (r *monitorDAO) GetMonitorBySlug(
 		if err = r.attachTags(ctx, &monitor); err != nil {
 			return nil, err
 		}
+		if err = r.attachNotificationChannels(ctx, &monitor); err != nil {
+			return nil, err
+		}
 
 		return &monitor, nil
 	})
@@ -83,6 +86,9 @@ func (r *monitorDAO) GetMonitorByID(ctx context.Context, id uuid.UUID) (*Monitor
 		if err = r.attachTags(ctx, &monitor); err != nil {
 			return nil, err
 		}
+		if err = r.attachNotificationChannels(ctx, &monitor); err != nil {
+			return nil, err
+		}
 
 		return &monitor, nil
 	})
@@ -106,6 +112,9 @@ func (r *monitorDAO) GetAllMonitors(ctx context.Context) ([]Monitor, error) {
 		}
 
 		if err = r.attachTagsToAll(ctx, allMonitors); err != nil {
+			return nil, err
+		}
+		if err = r.attachNotificationChannelsToAll(ctx, allMonitors); err != nil {
 			return nil, err
 		}
 
@@ -202,6 +211,79 @@ func (r *monitorDAO) replaceMonitorTags(
 	return nil
 }
 
+func (r *monitorDAO) attachNotificationChannels(ctx context.Context, monitor *Monitor) error {
+	channelIDs := []uuid.UUID{}
+	err := sqlx.SelectContext(
+		ctx,
+		r.pool,
+		&channelIDs,
+		`SELECT channel_id FROM monitor_notification_channels WHERE monitor_id = $1 ORDER BY channel_id`,
+		monitor.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	monitor.NotificationChannelIDs = channelIDs
+	return nil
+}
+
+func (r *monitorDAO) attachNotificationChannelsToAll(ctx context.Context, allMonitors []Monitor) error {
+	var rows []struct {
+		MonitorID uuid.UUID `db:"monitor_id"`
+		ChannelID uuid.UUID `db:"channel_id"`
+	}
+	err := sqlx.SelectContext(
+		ctx,
+		r.pool,
+		&rows,
+		`SELECT monitor_id, channel_id FROM monitor_notification_channels ORDER BY channel_id`,
+	)
+	if err != nil {
+		return err
+	}
+
+	byMonitorID := make(map[uuid.UUID][]uuid.UUID, len(allMonitors))
+	for _, row := range rows {
+		byMonitorID[row.MonitorID] = append(byMonitorID[row.MonitorID], row.ChannelID)
+	}
+
+	for i := range allMonitors {
+		channelIDs := byMonitorID[allMonitors[i].ID]
+		if channelIDs == nil {
+			channelIDs = []uuid.UUID{}
+		}
+		allMonitors[i].NotificationChannelIDs = channelIDs
+	}
+
+	return nil
+}
+
+func (r *monitorDAO) replaceMonitorNotificationChannels(
+	ctx context.Context,
+	monitorID uuid.UUID,
+	channelIDs []uuid.UUID,
+) error {
+	_, err := r.pool.ExecContext(ctx, `DELETE FROM monitor_notification_channels WHERE monitor_id = $1`, monitorID)
+	if err != nil {
+		return err
+	}
+
+	for _, channelID := range channelIDs {
+		_, err = r.pool.ExecContext(
+			ctx,
+			`INSERT OR IGNORE INTO monitor_notification_channels (monitor_id, channel_id) VALUES ($1, $2)`,
+			monitorID,
+			channelID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // InsertMonitor adds a new monitor to the database and returns the created monitor.
 func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor Monitor) (*Monitor, error) {
 	return db.Wrap(ctx, "InsertMonitor", func() (*Monitor, error) {
@@ -236,6 +318,9 @@ func (r *monitorDAO) InsertMonitor(ctx context.Context, monitor Monitor) (*Monit
 		}
 
 		if err = r.replaceMonitorTags(ctx, id, monitor.TagIDs); err != nil {
+			return nil, err
+		}
+		if err = r.replaceMonitorNotificationChannels(ctx, id, monitor.NotificationChannelIDs); err != nil {
 			return nil, err
 		}
 
@@ -276,6 +361,9 @@ func (r *monitorDAO) UpdateMonitor(ctx context.Context, newMonitor Monitor) (any
 		}
 
 		if err = r.replaceMonitorTags(ctx, newMonitor.ID, newMonitor.TagIDs); err != nil {
+			return nil, err
+		}
+		if err = r.replaceMonitorNotificationChannels(ctx, newMonitor.ID, newMonitor.NotificationChannelIDs); err != nil {
 			return nil, err
 		}
 

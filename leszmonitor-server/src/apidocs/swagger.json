@@ -2919,6 +2919,12 @@
                     "description": "Name of the monitor",
                     "type": "string"
                 },
+                "notificationChannelIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "ownerId": {
                     "description": "OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.",
                     "type": "string"

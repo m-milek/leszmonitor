@@ -28,6 +28,8 @@ import { MonitorConfigFields } from "@/features/monitors/forms/fields/MonitorCon
 import { useMonitorForm } from "@/features/monitors/hooks/useMonitorForm";
 import { LMTagSelect } from "@/features/tags/components/LMTagSelect";
 import { QUERY_KEYS } from "@/lib/consts";
+import { NotificationChannelsApi } from "@/features/notifications/notification-channels-api";
+import { LMNotificationChannelSelect } from "@/features/notifications/components/LMNotificationChannelSelect";
 
 export interface MonitorFormProps {
   formId?: string;
@@ -49,6 +51,11 @@ export function MonitorForm({
   const { data: tags = [] } = useQuery({
     queryKey: [QUERY_KEYS.TAGS],
     queryFn: () => TagsApi.getAll(),
+  });
+
+  const { data: notificationChannels = [] } = useQuery({
+    queryKey: [QUERY_KEYS.NOTIFICATION_CHANNELS],
+    queryFn: () => NotificationChannelsApi.getAll(),
   });
 
   const form = useMonitorForm({
@@ -195,6 +202,23 @@ export function MonitorForm({
                   onChange={(tagIds) => field.handleChange(tagIds)}
                   placeholder="Add tag"
                   emptyMessage="No tags found."
+                  isInvalid={isFieldInvalid(field)}
+                  errorMessage={getFirstError(field)}
+                />
+              </Field>
+            )}
+          </form.Field>
+          <form.Field name="notificationChannelIds">
+            {(field) => (
+              <Field id={field.name}>
+                <FieldLabel>Notification channels</FieldLabel>
+                <LMNotificationChannelSelect
+                  id={field.name}
+                  name={field.name}
+                  channels={notificationChannels}
+                  value={field.state.value}
+                  onChange={(channelIds) => field.handleChange(channelIds)}
+                  placeholder="Add channel"
                   isInvalid={isFieldInvalid(field)}
                   errorMessage={getFirstError(field)}
                 />
