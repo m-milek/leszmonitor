@@ -5,7 +5,7 @@ import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
 import { PageContainer } from "@/components/common/PageContainer";
 import { TypographyH1 } from "@/components/common/Typography";
-import { DocsApi } from "@/features/instance/docs-api";
+import { DocsApi } from "@/features/settings/docs-api";
 import { readToken } from "@/features/auth/lib/token";
 import { QUERY_KEYS, SERVER_API_URL } from "@/lib/consts";
 

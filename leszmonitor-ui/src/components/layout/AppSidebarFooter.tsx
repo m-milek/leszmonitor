@@ -1,4 +1,4 @@
-import { MetadataApi } from "@/features/instance/metadata-api";
+import { MetadataApi } from "@/features/settings/metadata-api";
 import { mapUserRoleToDisplayName, type User } from "@/features/users/types";
 import {
   LucideChevronsUpDown,
