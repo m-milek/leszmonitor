@@ -17,4 +17,5 @@ const (
 	ServiceNameAuthzMiddleware     = "AuthzMiddlewareService"
 	ServiceNameGlobalParameter     = "GlobalParameterService"
 	ServiceNameStatusPage          = "StatusPageService"
+	ServiceNameNotificationChannel = "NotificationChannelService"
 )
