@@ -10,10 +10,10 @@ import { toast } from "@/components/ui/toast";
 import {
   GlobalParametersApi,
   type GlobalParameterValue,
-} from "@/features/instance/global-parameters-api";
+} from "@/features/settings/global-parameters-api";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { GlobalParametersForm } from "@/features/instance/forms/GlobalParametersForm";
+import { GlobalParametersForm } from "@/features/settings/forms/GlobalParametersForm";
 import { QUERY_KEYS } from "@/lib/consts.ts";
 
 const FORM_ID = "global-parameters-form";

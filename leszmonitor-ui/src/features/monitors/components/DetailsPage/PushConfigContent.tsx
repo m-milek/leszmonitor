@@ -3,7 +3,7 @@ import { ConfigTable } from "@/features/monitors/components/DetailsPage/ConfigTa
 import { type FieldConfig } from "@/features/monitors/components/DetailsPage/config-fields";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/lib/consts";
-import { GlobalParametersApi } from "@/features/instance/global-parameters-api";
+import { GlobalParametersApi } from "@/features/settings/global-parameters-api";
 import { Flex } from "@/components/common/Flex";
 import { CopyToClipboardButton } from "@/components/common/CopyToClipboardButton";
 import { Info } from "lucide-react";

@@ -9,6 +9,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/kind"
 	"github.com/m-milek/leszmonitor/features/monitors/probe"
 	"github.com/m-milek/leszmonitor/features/monitors/results"
+	"github.com/m-milek/leszmonitor/features/notifications"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/features/users"
 
@@ -503,7 +504,8 @@ func (s *MonitorService) ExportToYAML(ctx context.Context, monitorID uuid.UUID, 
 		return apperr.NewInternalError("failed to retrieve monitor: %w", err)
 	}
 
-	if err = exportToYAML(ctx, *monitor, tagsDAO, w); err != nil {
+	channelsDAO := notifications.NewNotificationChannelDAO(s.db.Querier())
+	if err = exportToYAML(ctx, *monitor, tagsDAO, channelsDAO, w); err != nil {
 		return apperr.NewInternalError("failed to export monitor %s to YAML", monitor.Slug)
 	}
 

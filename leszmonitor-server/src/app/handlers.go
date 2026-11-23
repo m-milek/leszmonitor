@@ -8,6 +8,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/results"
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
+	"github.com/m-milek/leszmonitor/features/notifications"
 	"github.com/m-milek/leszmonitor/features/statuspages"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/features/users"
@@ -22,6 +23,7 @@ type Handlers struct {
 	User                   users.UserAPIController
 	Tag                    tags.TagAPIController
 	StatusPage             statuspages.StatusPageAPIController
+	NotificationChannel    notifications.NotificationChannelAPIController
 	InstanceMetadata       instance.InstanceMetadataAPIController
 	GlobalParameter        globalparameters.GlobalParameterAPIController
 	AuthzMiddlewareService users.IAuthzMiddlewareService

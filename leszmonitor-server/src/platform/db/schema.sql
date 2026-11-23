@@ -145,18 +145,18 @@ BEGIN
 END;
 
 CREATE TABLE IF NOT EXISTS status_pages (
-    id          TEXT PRIMARY KEY,
-    slug        TEXT     NOT NULL,
-    title       TEXT     NOT NULL,
-    description TEXT     NOT NULL,
-    group_monitors_by_tag BOOLEAN NOT NULL,
-    require_auth BOOLEAN NOT NULL DEFAULT FALSE,
-    enabled     BOOLEAN NOT NULL DEFAULT TRUE,
-    time_window_seconds INTEGER NOT NULL DEFAULT 86400,
-    source      TEXT     NOT NULL,
+    id                    TEXT PRIMARY KEY,
+    slug                  TEXT     NOT NULL,
+    title                 TEXT     NOT NULL,
+    description           TEXT     NOT NULL,
+    group_monitors_by_tag BOOLEAN  NOT NULL,
+    require_auth          BOOLEAN  NOT NULL DEFAULT FALSE,
+    enabled               BOOLEAN  NOT NULL DEFAULT TRUE,
+    time_window_seconds   INTEGER  NOT NULL DEFAULT 86400,
+    source                TEXT     NOT NULL,
 
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     UNIQUE (slug)
 );
@@ -179,3 +179,35 @@ CREATE TABLE IF NOT EXISTS status_page_tags (
 );
 
 CREATE INDEX IF NOT EXISTS idx_status_page_tags_tag_id ON status_page_tags (tag_id);
+
+CREATE TABLE IF NOT EXISTS notification_channels (
+    id         TEXT PRIMARY KEY,
+    name       TEXT     NOT NULL,
+    kind       TEXT     NOT NULL,
+    enabled    BOOLEAN  NOT NULL DEFAULT TRUE,
+    config     TEXT     NOT NULL,
+    source     TEXT     NOT NULL,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (name)
+);
+
+CREATE TRIGGER IF NOT EXISTS update_notification_channels_updated_at
+    AFTER UPDATE
+    ON notification_channels
+    FOR EACH ROW
+BEGIN
+    UPDATE notification_channels SET updated_at = CURRENT_TIMESTAMP WHERE id = new.id;
+END;
+
+CREATE TABLE IF NOT EXISTS monitor_notification_channels (
+    monitor_id TEXT NOT NULL,
+    channel_id TEXT NOT NULL,
+
+    PRIMARY KEY (monitor_id, channel_id),
+    FOREIGN KEY (monitor_id) REFERENCES monitors (id) ON DELETE CASCADE,
+    FOREIGN KEY (channel_id) REFERENCES notification_channels (id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_monitor_notification_channels_channel_id ON monitor_notification_channels (channel_id);

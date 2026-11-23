@@ -12,6 +12,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors"
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
+	"github.com/m-milek/leszmonitor/features/notifications"
 	"github.com/m-milek/leszmonitor/features/realtime"
 	"github.com/m-milek/leszmonitor/features/statuspages"
 	"github.com/m-milek/leszmonitor/features/users"
@@ -46,6 +47,9 @@ func SetupRouters(
 
 	// Status pages
 	statuspages.RegisterRoutes(router, h.StatusPage, requirePermission(h))
+
+	// Notification channels
+	notifications.RegisterRoutes(router, h.NotificationChannel, requirePermission(h))
 
 	// Audit log
 	auditlog.RegisterRoutes(router, h.AuditLog, requirePermission(h))

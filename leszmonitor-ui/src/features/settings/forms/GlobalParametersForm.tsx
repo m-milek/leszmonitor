@@ -6,11 +6,11 @@ import {
   FieldSeparator,
   FieldSet,
 } from "@/components/ui/field";
-import { GlobalParameterRow } from "@/features/instance/components/GlobalParameterRow";
+import { GlobalParameterRow } from "@/features/settings/components/GlobalParameterRow";
 import type {
   GlobalParameter,
   GlobalParameterValue,
-} from "@/features/instance/global-parameters-api";
+} from "@/features/settings/global-parameters-api";
 
 export interface GlobalParametersFormProps {
   id?: string;

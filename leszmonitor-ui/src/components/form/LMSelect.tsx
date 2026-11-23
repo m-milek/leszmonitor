@@ -29,6 +29,7 @@ export function LMSelect(props: Readonly<LMSelectProps>) {
   return (
     <Select
       value={props.value}
+      items={props.items}
       onValueChange={(value) => props.onValueChange?.(value ?? "")}
       disabled={props.disabled}
     >

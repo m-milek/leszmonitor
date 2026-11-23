@@ -13,7 +13,7 @@ test.describe("Instance Settings", () => {
     const jwt = await loginAs(page, adminAuth);
 
     try {
-      await page.goto("/admin");
+      await page.goto("/settings");
       await page.getByLabel("Public URL").fill(PUBLIC_URL);
       await page.getByRole("button", { name: "Save" }).click();
       await expect(page.getByText("Global parameters saved")).toBeVisible();

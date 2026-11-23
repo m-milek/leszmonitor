@@ -1219,6 +1219,380 @@
                 }
             }
         },
+        "/notification-channels": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification-channels"
+                ],
+                "summary": "List notification channels",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/notifications.NotificationChannel"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification-channels"
+                ],
+                "summary": "Create a notification channel",
+                "parameters": [
+                    {
+                        "description": "Notification channel fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/notifications.NotificationChannelPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/notifications.NotificationChannel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notification-channels/{channelId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification-channels"
+                ],
+                "summary": "Get a notification channel",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification channel ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notifications.NotificationChannel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification-channels"
+                ],
+                "summary": "Delete a notification channel",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification channel ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification-channels"
+                ],
+                "summary": "Update a notification channel",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification channel ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Notification channel fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/notifications.NotificationChannelPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notifications.NotificationChannel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notification-channels/{channelId}/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "notification-channels"
+                ],
+                "summary": "Export a notification channel as YAML config",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification channel ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification channel config in YAML, secrets replaced with ${ENV} placeholders",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpx.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/public/status-pages/{slug}": {
             "get": {
                 "produces": [
@@ -2349,6 +2723,9 @@
                 "status_page.create",
                 "status_page.update",
                 "status_page.delete",
+                "notification_channel.create",
+                "notification_channel.update",
+                "notification_channel.delete",
                 "auth.login",
                 "auth.failed_login",
                 "auth.password_change",
@@ -2368,6 +2745,9 @@
                 "ActionCreateStatusPage",
                 "ActionUpdateStatusPage",
                 "ActionDeleteStatusPage",
+                "ActionCreateNotificationChannel",
+                "ActionUpdateNotificationChannel",
+                "ActionDeleteNotificationChannel",
                 "ActionLogin",
                 "ActionFailedLogin",
                 "ActionPasswordChange",
@@ -2602,6 +2982,12 @@
                     "description": "Name of the monitor",
                     "type": "string"
                 },
+                "notificationChannelIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "ownerId": {
                     "description": "OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.",
                     "type": "string"
@@ -2662,6 +3048,65 @@
             "type": "object",
             "properties": {
                 "newState": {
+                    "type": "string"
+                }
+            }
+        },
+        "notifications.NotificationChannel": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "kind": {
+                    "$ref": "#/definitions/notifications.NotificationChannelKind"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "source": {
+                    "$ref": "#/definitions/util.ResourceSource"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "notifications.NotificationChannelKind": {
+            "type": "string",
+            "enum": [
+                "webhook",
+                "ntfy",
+                "gotify"
+            ],
+            "x-enum-varnames": [
+                "ChannelKindWebhook",
+                "ChannelKindNtfy",
+                "ChannelKindGotify"
+            ]
+        },
+        "notifications.NotificationChannelPayload": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "$ref": "#/definitions/notifications.NotificationChannelKind"
+                },
+                "name": {
                     "type": "string"
                 }
             }

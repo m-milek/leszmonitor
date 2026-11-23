@@ -23,6 +23,7 @@ type Monitor struct {
 	RunState               MonitorRunState     `json:"runState"               yaml:"runState"               db:"run_state"` // RunState indicates whether the monitor is currently running or stopped
 	OwnerID                uuid.UUID           `json:"ownerId"                yaml:"ownerId"                db:"owner_id"`  // OwnerID is the user who created the monitor. Informational metadata only; not used for visibility filtering.
 	TagIDs                 []uuid.UUID         `json:"tagIds"                 yaml:"tagIds"                 db:"-"`
+	NotificationChannelIDs []uuid.UUID         `json:"notificationChannelIds" yaml:"-"                      db:"-"`
 	Source                 util.ResourceSource `json:"source"                 yaml:"source"                 db:"source"`
 	util.Timestamps        `yaml:",inline"`
 }
@@ -83,6 +84,7 @@ func NewMonitorFromPayload(payload Monitor, ownerID uuid.UUID) *Monitor {
 		ResultRetentionSeconds: defaultResultRetentionSeconds,
 		RunState:               MonitorRunStateActive,
 		TagIDs:                 payload.TagIDs,
+		NotificationChannelIDs: payload.NotificationChannelIDs,
 		FailureThreshold:       payload.FailureThreshold,
 		RecoveryThreshold:      payload.RecoveryThreshold,
 		Source:                 util.ResourceSourceUI,

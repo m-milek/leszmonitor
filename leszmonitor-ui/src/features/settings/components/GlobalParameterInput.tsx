@@ -4,7 +4,7 @@ import { LMSwitch } from "@/components/form/LMSwitch";
 import type {
   GlobalParameter,
   GlobalParameterValue,
-} from "@/features/instance/global-parameters-api";
+} from "@/features/settings/global-parameters-api";
 
 export interface GlobalParameterInputProps {
   id: string;

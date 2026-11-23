@@ -20,6 +20,7 @@ import (
 	"github.com/m-milek/leszmonitor/features/monitors/stats"
 	"github.com/m-milek/leszmonitor/features/monitors/statuschange"
 	"github.com/m-milek/leszmonitor/features/monitors/workers"
+	"github.com/m-milek/leszmonitor/features/notifications"
 	"github.com/m-milek/leszmonitor/features/statuspages"
 	"github.com/m-milek/leszmonitor/features/tags"
 	"github.com/m-milek/leszmonitor/platform/config"
@@ -133,6 +134,9 @@ func main() {
 		DB:    database,
 		Stats: &monitorStatsService,
 	})
+	notificationChannelService := notifications.NewNotificationChannelService(notifications.NotificationChannelServiceDeps{
+		DB: database,
+	})
 	instanceMetadataService := instance.NewInstanceMetadataService(instance.InstanceMetadataServiceDeps{})
 
 	userAPIController := users.NewUserAPIController(userService)
@@ -143,6 +147,7 @@ func main() {
 	auditLogAPIController := auditlog.NewAuditLogAPIController(auditLogService)
 	tagAPIController := tags.NewTagAPIController(tagService)
 	statusPageAPIController := statuspages.NewStatusPageAPIController(statusPageService)
+	notificationChannelAPIController := notifications.NewNotificationChannelAPIController(notificationChannelService)
 	globalParameterAPIController := globalparameters.NewGlobalParameterAPIController(globalParameterService)
 	instanceMetadataAPIController := instance.NewInstanceMetadataAPIController(instanceMetadataService)
 
@@ -157,6 +162,7 @@ func main() {
 		AuditLog:               auditLogAPIController,
 		Tag:                    tagAPIController,
 		StatusPage:             statusPageAPIController,
+		NotificationChannel:    notificationChannelAPIController,
 		InstanceMetadata:       instanceMetadataAPIController,
 		GlobalParameter:        globalParameterAPIController,
 		AuthzMiddlewareService: authzMiddlewareService,
@@ -176,6 +182,11 @@ func main() {
 		err = tags.SynchronizeConfigBasedTags(appCtx, database, config.File().Tags)
 		if err != nil {
 			logger.Fatal().Err(err).Msg("Failed to synchronize config-based tags")
+			return
+		}
+		err = notifications.SynchronizeConfigBasedChannels(appCtx, database, config.File().NotificationChannels)
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to synchronize config-based notification channels")
 			return
 		}
 		err = monitors.SynchronizeConfigBasedMonitors(appCtx, database, config.File().Monitors, admin.ID)
