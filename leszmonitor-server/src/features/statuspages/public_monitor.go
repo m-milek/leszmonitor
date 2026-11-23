@@ -11,7 +11,7 @@ import (
 )
 
 // TODO: aggregate results into time buckets (e.g. daily) instead of returning the last N raw results.
-const publicMonitorResultsLimit = 50
+const publicMonitorResultsLimit = 100
 
 type PublicMonitor struct {
 	ID      uuid.UUID             `json:"id"`
